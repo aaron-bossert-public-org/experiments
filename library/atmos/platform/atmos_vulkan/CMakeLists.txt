@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.1)
 
 # atmos_vulkan_src construction
-foreach(folder app compute model shader system texture)
+foreach(folder app compute model perf shader system texture)
 	file(GLOB files
 		"${CMAKE_CURRENT_SOURCE_DIR}/${folder}/*.h"
 		"${CMAKE_CURRENT_SOURCE_DIR}/${folder}/*.cpp"

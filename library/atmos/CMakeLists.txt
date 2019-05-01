@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.1)
 
 
 # atmos_src construction
-foreach(folder app compute concurrent model shader system tests texture)
+foreach(folder app compute concurrent model perf shader system tests texture)
 	file(GLOB files
 		"${CMAKE_CURRENT_SOURCE_DIR}/${folder}/*.h"
 		"${CMAKE_CURRENT_SOURCE_DIR}/${folder}/*.cpp"
