@@ -18,5 +18,4 @@ add_executable(dcs_test ${all_SRCS})
 
 target_link_libraries(dcs_test library)
 
-set(CMAKE_WORKING_DIRECTORY TEST_TEST_TEST)
 set_property(TARGET dcs_test PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
