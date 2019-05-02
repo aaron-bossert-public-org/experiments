@@ -15,3 +15,5 @@ target_include_directories(dcs
 		"${CMAKE_CURRENT_SOURCE_DIR}"
 		"${CMAKE_CURRENT_SOURCE_DIR}/.."
 )
+
+WARNINGS_AS_ERRORS(dcs)

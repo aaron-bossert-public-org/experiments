@@ -15,15 +15,9 @@ endforeach()
 add_library(atmos_vulkan STATIC ${atmos_vulkan_src})
 target_include_directories(atmos_vulkan 
 	PRIVATE
-		"${CMAKE_CURRENT_SOURCE_DIR}"
+		"${CMAKE_CURRENT_SOURCE_DIR}/.."
 		"${CMAKE_CURRENT_SOURCE_DIR}/../../.."
-		"${CMAKE_CURRENT_SOURCE_DIR}/../../third_party"
-		"${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/glm"
-		"${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/gli"
-		"${CMAKE_CURRENT_SOURCE_DIR}/third_party/vulkan/Include")
-
-target_include_directories(atmos_vulkan PRIVATE
-	"${CMAKE_CURRENT_SOURCE_DIR}/third_party/atmos_vulkan/Include")
+		"${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/glm")
 
 IF (CMAKE_CL_64)
 
@@ -46,3 +40,5 @@ ENDIF()
 set(ATMOS_PLATFORM "atmos_vulkan"
 	CACHE INTERNAL "Platform implementation library to link atmos against" FORCE
 )
+
+WARNINGS_AS_ERRORS(atmos_vulkan)

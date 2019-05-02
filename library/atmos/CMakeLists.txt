@@ -15,10 +15,10 @@ endforeach()
 
 # atmos creation
 add_library(atmos STATIC ${atmos_src})
+
 target_include_directories(atmos 
 	PRIVATE
 		"${CMAKE_CURRENT_SOURCE_DIR}/.."
-		"${CMAKE_CURRENT_SOURCE_DIR}/third_party"
 		"${CMAKE_CURRENT_SOURCE_DIR}/third_party/glm"
 		"${CMAKE_CURRENT_SOURCE_DIR}/third_party/gli"
 	INTERFACE
@@ -30,3 +30,4 @@ add_subdirectory(platform)
 message("ATMOS_PLATFORM " ${ATMOS_PLATFORM})
 target_link_libraries(atmos ${ATMOS_PLATFORM})
 
+WARNINGS_AS_ERRORS(atmos)

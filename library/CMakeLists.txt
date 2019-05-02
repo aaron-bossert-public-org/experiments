@@ -17,3 +17,5 @@ target_include_directories(library
 	INTERFACE
 		"${CMAKE_CURRENT_SOURCE_DIR}"
 )
+
+WARNINGS_AS_ERRORS(library)
