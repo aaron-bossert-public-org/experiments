@@ -1,18 +1,18 @@
 
 #pragma once
 #include <type_traits>
+#include <atmos/partial.h>
+#include <chrono>
 
-namespace platform
+namespace perf
 {
-	// Class exists as a way to have partial class definitions in c++.
-	// Platform implementations of T must specialize partial<T> and replace these behaviours 
-	// in compilation units that are allowed to define lifetimes.
-	template <typename T>
-	class partial
+	// So long as this is alive, perf info will be gathered and relayed back to client layer.
+	class perf_observer : platform::partial <perf_observer>
 	{
-		partial() = delete;
-		partial(const partial&) = delete;
-		partial& operator = (const partial&) = delete;
-		~partial() = delete;
+	public:
+		using duration_t = std::chrono::duration<double>;
+		~perf_observer();
+
+		duration_t frame_time() const;
 	};
 }

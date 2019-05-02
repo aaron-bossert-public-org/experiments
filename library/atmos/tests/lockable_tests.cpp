@@ -18,7 +18,7 @@ namespace {
 	void run_test(TestFlags flags, results* res)
 	{
 		lockable_t<test_type> lockable;
-		const auto& c_lockable = lockable;
+		(const lockable_t<test_type>&)lockable;
 
 		{
 			auto write = lockable.write_lock();

@@ -21,6 +21,7 @@ std::unique_ptr<dcs_test> dcs_test::make()
 
 dcs_test::dcs_test()
 	: _application { app::application::make() }
+	, _app_perf_observer { _application->make_perf_observer() }
 {
 }
 
@@ -30,6 +31,8 @@ dcs_test::~dcs_test()
 
 bool dcs_test::advance()
 {
+	std::cout << "Frame Time(ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(_app_perf_observer->frame_time()).count() << std::endl;
+
 	_time.advance();
 
 	update();

@@ -1,6 +1,6 @@
 #pragma once
 #include <atmos/partial.h>
-#include <vulkan/vulkan.h>
+#include <atmos_vulkan/third_party/vulkan_includes.h>
 #include <functional>
 #include  <string_view>
 

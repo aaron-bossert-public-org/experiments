@@ -1,8 +1,9 @@
 #pragma once
 #include <atmos/partial.h>
-#include <vulkan/vulkan.h>
-
-#include "window_vulkan.h"
+#include <atmos_vulkan/app/application_vulkan.h>
+#include <atmos_vulkan/app/window_vulkan.h>
+#include <atmos_vulkan/perf/perf_observer_vulkan.h>
+#include <atmos_vulkan/third_party/vulkan_includes.h>
 #include <memory>
 
 namespace app { 
@@ -13,7 +14,8 @@ namespace app {
 	public:
 
 	protected:
-		std::unique_ptr<app::window> _window;
+		std::unique_ptr<window> _window;
+		std::weak_ptr<perf::perf_observer> _weak_perf_observer;
 	};
 }
 

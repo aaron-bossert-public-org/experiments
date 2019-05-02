@@ -19,6 +19,7 @@ private:
 	void render();
 
 	std::unique_ptr<app::application> _application;
+	std::shared_ptr<perf::perf_observer> _app_perf_observer;
 	app::time _time;
 
 };

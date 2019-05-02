@@ -14,7 +14,7 @@ namespace {
 	using c_lock_ptr = const lock_ptr<T>;
 }
 
-void lock_ptr_tests::run(results* res)
+void lock_ptr_tests::run(results* /* res */)
 {
 	// lock_ptr<test_t>& conversions
 	static_assert(true ==  std::is_convertible<  lock_ptr<  test_t>&, c_lock_ptr<  test_t>&>::value, "expect to be able to ref t to const ref t");

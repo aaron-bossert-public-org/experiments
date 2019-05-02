@@ -1,18 +1,23 @@
 
-#pragma once
-#include <type_traits>
+#include "perf_observer_vulkan.h"
+using namespace perf;
+using namespace platform;
 
-namespace platform
+
+perf_observer::duration_t perf_observer::frame_time() const
 {
-	// Class exists as a way to have partial class definitions in c++.
-	// Platform implementations of T must specialize partial<T> and replace these behaviours 
-	// in compilation units that are allowed to define lifetimes.
-	template <typename T>
-	class partial
-	{
-		partial() = delete;
-		partial(const partial&) = delete;
-		partial& operator = (const partial&) = delete;
-		~partial() = delete;
-	};
+	//VkQueryPoolCreateInfo createInfo = {};
+	//createInfo.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+	//createInfo.pNext = nullptr;
+	//createInfo.queryType = VK_QUERY_TYPE_TIMESTAMP;
+	//createInfo.queryCount = 2;
+
+	//VkResult res = vkCreateQueryPool(GContext.lDevice.device, &createInfo, nullptr, &rs.queryPool);
+	//assert(res == VK_SUCCESS);
+	return {};
+}
+
+perf_observer::~perf_observer()
+{
+
 }

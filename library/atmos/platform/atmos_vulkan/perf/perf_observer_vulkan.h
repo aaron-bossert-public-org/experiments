@@ -1,18 +1,24 @@
 
 #pragma once
-#include <type_traits>
+#include <atmos/partial.h>
+
+namespace perf {
+	class perf_observer;
+
+	class perf_observer_vulkan
+	{
+	public:
+
+	protected:
+	};
+}
 
 namespace platform
 {
-	// Class exists as a way to have partial class definitions in c++.
-	// Platform implementations of T must specialize partial<T> and replace these behaviours 
-	// in compilation units that are allowed to define lifetimes.
-	template <typename T>
-	class partial
+	template<>
+	class partial<perf::perf_observer> : public perf::perf_observer_vulkan
 	{
-		partial() = delete;
-		partial(const partial&) = delete;
-		partial& operator = (const partial&) = delete;
-		~partial() = delete;
 	};
 }
+
+#include <atmos/perf/perf_observer.h>

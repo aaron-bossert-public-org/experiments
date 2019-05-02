@@ -1,9 +1,7 @@
 
-#pragma once
 #include "window_vulkan.h"
 #include <GLFW/glfw3.h>
 using namespace app;
-using namespace platform;
 
 window_vulkan::window_vulkan(
 	GLFWwindow* glfw_window,
@@ -42,7 +40,7 @@ std::unique_ptr<window> window::make(
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-	auto glfw_window = glfwCreateWindow((int)width, (int)height, "Vulkan", nullptr, nullptr);
+	auto glfw_window = glfwCreateWindow((int)width, (int)height, title.data(), nullptr, nullptr);
 
 	auto w = std::unique_ptr<window>(new window(glfw_window, [](size_t, size_t) {}));
 
