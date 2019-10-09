@@ -1,9 +1,15 @@
 
-#include "dcs_test.h"
-#include <atmos/tests.h>
+#include <dcs_test/include/dcs_test.h>
+
+#include <framework/logging/log.h>
+#include <framework_tests/main/tests.h>
+#include <igpu/context/context.h>
+#include <igpu/window/window.h>
+
 #include <iostream>
 
-std::unique_ptr<dcs_test> dcs_test::make()
+
+std::unique_ptr<dcs_test> dcs_test::make(std::unique_ptr<igpu::context> context)
 {
 	auto results = tests::run();
 	if (results.success())
@@ -16,12 +22,23 @@ std::unique_ptr<dcs_test> dcs_test::make()
 		throw std::runtime_error(results.failures());
 	}
 
-	return std::unique_ptr<dcs_test>(new dcs_test());
+	if (!context)
+	{
+		LOG_CONTEXT(CRITICAL, "context is null");
+	}
+	else
+	{
+		return std::unique_ptr<dcs_test>(
+			new dcs_test(
+				std::move(context));
+	}
+
+	return nullptr;
 }
 
-dcs_test::dcs_test()
-	: _application { app::application::make() }
-	, _app_perf_observer { _application->make_perf_observer() }
+dcs_test::dcs_test(
+	std::unique_ptr<igpu::context> context,
+	: _context { std::move(context) }
 {
 }
 
@@ -31,17 +48,13 @@ dcs_test::~dcs_test()
 
 bool dcs_test::advance()
 {
-	std::cout << "Frame Time(ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(_app_perf_observer->frame_time()).count() << std::endl;
-
-	_time.advance();
-
 	update();
 
 	handle_input();
 
 	render();
 
-	return _application->present();
+	return _window->present() != igpu::window::status::CLOSED;
 }
 
 void dcs_test::update()

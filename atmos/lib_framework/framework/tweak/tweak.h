@@ -1,0 +1,11 @@
+
+#pragma once
+
+#define TWEAK_VARIABLE(IDENTIFIER, INITIALIZER, DESCRIPTION) auto IDENTIFIER = INITIALIZER
+
+#define TWEAK_CALLBACK(IDENTIFIER, DESCRIPTION)            \
+	/* callback body here */
+
+
+#define TWEAK_VARIABLE_WITH_CALLBACK(IDENTIFIER, INITIALIZER, DESCRIPTION)
+		/* callback body here */

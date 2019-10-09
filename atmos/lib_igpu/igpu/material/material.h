@@ -1,0 +1,42 @@
+
+#pragma once
+
+#include <igpu/material/primitive.h>
+#include <igpu/material/render_states.h>
+
+namespace igpu
+{
+	class program;
+
+	class material
+	{
+	public:
+
+		struct config
+		{
+			std::string name;
+			std::shared_ptr<program> program;
+			std::shared_ptr<render_states> render_states;
+			std::vector<primitive_kv> primitives;
+		};
+
+		ptrdiff_t compare_parameters(const material* other) const;
+
+		virtual ~material() {}
+
+		const config& cfg() const;
+
+		const std::vector<primitive>& primitives() const;
+
+	protected:
+
+		material(config, std::vector<primitive>);
+		material(const material&) = delete;
+		material& operator= (const material&) = delete;
+
+	private:
+
+		const config _cfg;
+		const std::vector<primitive> _primitives;
+	};
+}

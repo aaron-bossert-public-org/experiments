@@ -1,25 +1,30 @@
 #pragma once
-#include <atmos/app.h>
 #include <memory>
+
+namespace igpu
+{
+	class context;
+	class window;
+}
 
 class dcs_test
 {
 public:
 
-	static std::unique_ptr<dcs_test> make();
+	static std::unique_ptr<dcs_test> make(
+		std::unique_ptr<igpu::context>);
 	~dcs_test();
 
 	bool advance();
 
 private:
 
-	dcs_test();
+	dcs_test(
+		std::unique_ptr<igpu::context>);
+
 	void update();
 	void handle_input();
 	void render();
 
-	std::unique_ptr<app::application> _application;
-	std::shared_ptr<perf::perf_observer> _app_perf_observer;
-	app::time _time;
-
+	std::unique_ptr<igpu::context> _context;
 };
