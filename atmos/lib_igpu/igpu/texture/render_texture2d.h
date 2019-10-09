@@ -20,20 +20,13 @@ namespace igpu
 			color_format format;
 		};
 
-        const config& cfg() const;
-        
-        const glm::ivec2& resolution() const override;
-        
-        virtual ~render_texture2d() {}
+		virtual const config& cfg() const;
+
+		virtual ~render_texture2d() {}
         
     protected:
         
-        render_texture2d(const config&);
-        
-    protected:
-        
-		config _cfg;
-        
+		render_texture2d() = default;
         render_texture2d (const render_texture2d&) = delete;
         render_texture2d& operator= (const render_texture2d&) = delete;
     };

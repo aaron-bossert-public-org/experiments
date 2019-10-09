@@ -9,7 +9,7 @@
 
 namespace igpu
 {
-    class vulkan_command_composer;
+    class vulkan_resource_mediator;
 	class vulkan_program;
     class vulkan_vertex_resource;
     class vulkan_index_resource;
@@ -35,13 +35,13 @@ namespace igpu
 			std::vector<std::shared_ptr<vertex_resource>>,
 			std::shared_ptr<index_resource>) override;
 
-		std::unique_ptr<vertex_resource> make_vertex_resource(
+		std::unique_ptr<vertex_resource> make_resource(
 			const vertex_resource::config&) override;
 
-		std::unique_ptr<index_resource> make_index_resource(
+		std::unique_ptr<index_resource> make_resource(
 			const index_resource::config&) override;
 
-		std::unique_ptr<compute_resource> make_compute_resource(
+		std::unique_ptr<compute_resource> make_resource(
 			const compute_resource::config&) override;
 		
 		const igpu::batch_constraints& batch_constraints() const override;
@@ -58,7 +58,7 @@ namespace igpu
         
 		vulkan_context(
 			const config&,
-			std::shared_ptr<vulkan_command_composer>);
+			std::shared_ptr<vulkan_resource_mediator>);
         
     private:
 		const config _cfg;
@@ -67,7 +67,7 @@ namespace igpu
 		igpu::material_constraints _material_constraints;
 		igpu::vertex_constraints _vertex_constraints;
 
-		const std::shared_ptr<vulkan_command_composer> _command_composer;
+		const std::shared_ptr<vulkan_resource_mediator> _resource_mediator;
 		const std::shared_ptr<vulkan_window> _window;
 
 #if ATMOS_PERFORMANCE_TRACKING

@@ -55,6 +55,11 @@ namespace
     }
 }
 
+const gl_transparent_batch::binding::config& gl_transparent_batch::binding::cfg() const
+{
+	return _cfg;
+}
+
 gl_transparent_batch::binding::binding(
 	gl_transparent_batch* gl_transparent_batch,
 	const batch_binding::config& cfg,
@@ -62,6 +67,7 @@ gl_transparent_batch::binding::binding(
 	: batch_binding(
 		cfg,
 		visibility_sphere)
+	, _cfg(cfg)
 	, _gl_transparent_batch(gl_transparent_batch)
 {
 	ASSERT_CONTEXT(_gl_transparent_batch);

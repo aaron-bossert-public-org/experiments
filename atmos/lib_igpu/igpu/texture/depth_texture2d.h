@@ -19,20 +19,16 @@ namespace igpu
 			glm::ivec2 res;
 			sampler sampler;
 		};
-        
-        const config& cfg() const;
-        
-        const glm::ivec2& resolution() const;
+
+		virtual const config& cfg() const = 0;
         
         virtual ~depth_texture2d() {}
         
     protected:
         
-        depth_texture2d(const config&);
+        depth_texture2d();
         
     protected:
-        
-		config _cfg;
         
         depth_texture2d (const depth_texture2d&) = delete;
         depth_texture2d& operator= (const depth_texture2d&) = delete;

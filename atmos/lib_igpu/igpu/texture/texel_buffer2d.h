@@ -22,7 +22,7 @@ namespace igpu
 			texture_format format = texture_format::DEFAULT;
 		};
 
-        const config& cfg() const;
+		const config& cfg() const;
         
         const buffer_view<char>& texture_data() const;
        
@@ -38,7 +38,7 @@ namespace igpu
 
     private:
         
-		config _cfg;
+		const config _cfg;
 		buffer_view<char> _texture_data;
         std::shared_ptr<const char[]> _intermediate_data;
     };

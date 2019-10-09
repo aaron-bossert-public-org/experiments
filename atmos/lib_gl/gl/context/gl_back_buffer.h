@@ -12,8 +12,6 @@ namespace igpu
     {
     public:
         
-		struct config : back_buffer::config {};
-
 		const config& cfg() const override;
 
         int gl_handle() const;

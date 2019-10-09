@@ -16,7 +16,7 @@ namespace igpu
 
 		static std::unique_ptr<vulkan_texture2d> make(const texel_buffer2d&);
 
-		virtual ~vulkan_texture2d();
+		~vulkan_texture2d() override;
 
 		vulkan_texture2d(
 			const texel_buffer2d::config&,

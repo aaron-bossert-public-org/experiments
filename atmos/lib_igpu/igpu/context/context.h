@@ -41,13 +41,13 @@ namespace igpu
 			std::vector<std::shared_ptr<vertex_resource>>,
 			std::shared_ptr<index_resource>) = 0;
 
-		virtual std::unique_ptr<vertex_resource> make_vertex_resource(
+		virtual std::unique_ptr<vertex_resource> make_resource(
 			const vertex_resource::config&) = 0;
 
-		virtual std::unique_ptr<index_resource> make_index_resource(
+		virtual std::unique_ptr<index_resource> make_resource(
 			const index_resource::config&) = 0;
 
-		virtual std::unique_ptr<compute_resource> make_compute_resource(
+		virtual std::unique_ptr<compute_resource> make_resource(
 			const compute_resource::config&) = 0;
 		
 		virtual ~context() = 0;

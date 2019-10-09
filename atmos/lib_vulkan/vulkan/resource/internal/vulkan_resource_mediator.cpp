@@ -1,6 +1,8 @@
 
-#include <vulkan/context/vulkan_command_composer.h>
+#include <vulkan/resource/internal/vulkan_resource_mediator.h>
+
 #include <vulkan/defines/vulkan_includes.h>
+#include <vulkan/resource/internal/vulkan_resource.h>
 
 using namespace igpu;
 
@@ -12,23 +14,56 @@ const char* device_extensions[] = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-const vulkan_command_composer::config& vulkan_command_composer::cfg() const
+const vulkan_resource_mediator::config& vulkan_resource_mediator::cfg() const
 {
 	return _cfg;
 }
 
-vulkan_command_composer::~vulkan_command_composer()
+vulkan_resource_mediator::~vulkan_resource_mediator()
 {
 
 }
 
-std::unique_ptr<vulkan_command_composer> vulkan_command_composer::make(const config&)
+std::unique_ptr<vulkan_resource_mediator> vulkan_resource_mediator::make(const config&)
 {
 
 }
 
-vulkan_command_composer::vulkan_command_composer(const config& cfg)
+std::unique_ptr<compute_resource> vulkan_resource_mediator::make_resource(const compute_resource::config& cfg)
+{
+	return vulkan_resource_t<compute_resource>::make(
+		cfg,
+		"gpu compute mem",
+		{ cfg.usage, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT });
+}
+
+std::unique_ptr<index_resource> vulkan_resource_mediator::make_resource(const index_resource::config& cfg)
+{
+	return vulkan_resource_t<index_resource>::make(
+		cfg,
+		"gpu index mem",
+		{ cfg.usage, VK_BUFFER_USAGE_INDEX_BUFFER_BIT });
+}
+
+std::unique_ptr<vertex_resource> vulkan_resource_mediator::make_resource(const vertex_resource::config& cfg)
+{
+	return vulkan_resource_t<vertex_resource>::make(
+		cfg,
+		"gpu vertex mem",
+		{ cfg.usage, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT });
+}
+
+vulkan_resource_mediator::vulkan_resource_mediator(
+	const config& cfg,
+	std::unique_ptr<vulkan_queue> present_queue,
+	std::unique_ptr<vulkan_queue> graphics_queue,
+	std::unique_ptr<vulkan_queue> compute_queue,
+	std::unique_ptr<vulkan_queue> transfer_queue)
 	: _cfg(cfg)
+	, _present_queue(std::move(present_queue))
+	, _graphics_queue(std::move(graphics_queue))
+	, _compute_queue(std::move(compute_queue))
+	, _transfer_queue(std::move(transfer_queue))
 {
 }
 
@@ -57,6 +92,61 @@ vulkan_command_composer::vulkan_command_composer(const config& cfg)
 
 
 
+
+struct Vertex
+{
+	glm::vec3 pos;
+	glm::vec3 color;
+	glm::vec2 tex_coord;
+
+	static VkVertexInputBindingDescription get_binding_description()
+	{
+		VkVertexInputBindingDescription binding_description = {};
+		binding_description.binding = 0;
+		binding_description.stride = sizeof(Vertex);
+		binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+		return binding_description;
+	}
+
+	static std::array<VkVertexInputAttributeDescription, 3> get_attribute_descriptions()
+	{
+		std::array<VkVertexInputAttributeDescription, 3> attribute_descriptions = {};
+
+		attribute_descriptions[0].binding = 0;
+		attribute_descriptions[0].location = 0;
+		attribute_descriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attribute_descriptions[0].offset = offsetof(Vertex, pos);
+
+		attribute_descriptions[1].binding = 0;
+		attribute_descriptions[1].location = 1;
+		attribute_descriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attribute_descriptions[1].offset = offsetof(Vertex, color);
+
+		attribute_descriptions[2].binding = 0;
+		attribute_descriptions[2].location = 2;
+		attribute_descriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+		attribute_descriptions[2].offset = offsetof(Vertex, tex_coord);
+
+		return attribute_descriptions;
+	}
+
+	bool operator==(const Vertex& other) const
+	{
+		return pos == other.pos && color == other.color && tex_coord == other.tex_coord;
+	}
+};
+
+namespace std
+{
+	template<> struct hash<Vertex>
+	{
+		size_t operator()(Vertex const& vertex) const
+		{
+			return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.tex_coord) << 1);
+		}
+	};
+}
 
 struct UniformBufferObject
 {

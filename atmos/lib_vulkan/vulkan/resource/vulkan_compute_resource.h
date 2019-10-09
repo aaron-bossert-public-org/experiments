@@ -5,7 +5,7 @@
 
 #include <igpu/resource/compute_resource.h>
 
-#include <vulkan/resource/vulkan_resource.h>
+#include <vulkan/resource/internal/vulkan_resource.h>
 
 namespace igpu
 {
@@ -26,14 +26,5 @@ namespace igpu
 		size_t capacity() const override;
 
 		static std::unique_ptr<vulkan_compute_resource> make(const config&);
-
-	protected:
-
-		vulkan_compute_resource(const config&);
-
-	private:
-
-		const config _cfg;
-		vulkan_resource _vulkan_resource;
 	};
 }

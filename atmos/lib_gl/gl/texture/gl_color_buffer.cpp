@@ -7,6 +7,16 @@
 
 using namespace igpu;
 
+const gl_color_buffer::config& gl_color_buffer::cfg() const
+{
+	return _cfg;
+}
+
+const glm::ivec2& gl_color_buffer::resolution() const
+{
+	return _cfg.res;
+}
+
 void gl_color_buffer::attach()
 {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, _gl_handle);
@@ -76,7 +86,7 @@ std::unique_ptr<gl_color_buffer> gl_color_buffer::make(const config& cfg)
 }
 
 gl_color_buffer::gl_color_buffer(const config& cfg, int gl_handle)
-: color_buffer(cfg)
+: _cfg(cfg)
 , _gl_handle(gl_handle)
 , _gpu_mem_metric(perf::category::GPU_MEM_USAGE, "GPU Color Buffer Mem")
 {

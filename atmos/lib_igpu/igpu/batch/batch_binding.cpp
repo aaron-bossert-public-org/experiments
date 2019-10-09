@@ -26,11 +26,6 @@ namespace
 	}
 }
 
-const batch_binding::config& batch_binding::cfg() const
-{
-    return _cfg;
-}
-
 const utility::sphere& batch_binding::visibility_sphere() const
 {
     return _visibility_sphere;
@@ -49,8 +44,7 @@ const igpu::primitive_block& batch_binding::primitive_block() const
 batch_binding::batch_binding(
 	const config& cfg,
 	const utility::sphere& visibility_sphere)
-: _cfg(cfg)
-, _visibility_sphere(visibility_sphere)
+: _visibility_sphere(visibility_sphere)
 , _primitive_block(make_batch_binding_primitive_block(cfg))
 {
 }

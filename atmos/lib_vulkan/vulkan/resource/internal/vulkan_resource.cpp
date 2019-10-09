@@ -1,8 +1,8 @@
 
-#include <vulkan/resource/vulkan_resource.h>
+#include <vulkan/resource/internal/vulkan_resource.h>
 
 // Vulkan implementation includes - begin
-#include <vulkan/context/vulkan_command_composer.h>
+#include <vulkan/context/internal/vulkan_resource_mediator.h>
 #include <vulkan/defines/vulkan_includes.h>
 // Vulkan implementation includes - end
 
@@ -28,8 +28,8 @@ vulkan_resource::vulkan_resource(
 
 vulkan_resource::~vulkan_resource()
 {
-	_cfg.command_composer->destroy(&_cpu_payload);
-	_cfg.command_composer->destroy(&_gpu_payload);
+	_cfg.resource_mediator->destroy(&_cpu_payload);
+	_cfg.resource_mediator->destroy(&_gpu_payload);
 }
 
 const vulkan_resource::config& vulkan_resource::cfg() const
@@ -46,7 +46,7 @@ void vulkan_resource::map(buffer_view_base& resource_view, size_t count)
 	else
 	{
 		size_t required_capacity = resource_view.stride() * count;
-		_cfg.command_composer->ensure_capacity(&_gpu_payload, required_capacity);
+		_cfg.resource_mediator->ensure_capacity(&_gpu_payload, required_capacity);
 		
 		if (_capacity < required_capacity)
 		{

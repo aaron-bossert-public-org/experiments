@@ -67,8 +67,15 @@ size_t geometry_batch::size() const
 //-------------------------------------------------------------------------
 //
 //
+
+const geometry_batch::binding::config& geometry_batch::binding::cfg() const
+{
+	return _cfg;
+}
+
 geometry_batch::binding::binding(geometry_batch* geometry_batch, const batch_binding::config& cfg, const utility::sphere visibility_sphere)
 : batch_binding(cfg, visibility_sphere)
+, _cfg(cfg)
 , _geometry_batch(geometry_batch)
 {
     ASSERT_CONTEXT(_geometry_batch);

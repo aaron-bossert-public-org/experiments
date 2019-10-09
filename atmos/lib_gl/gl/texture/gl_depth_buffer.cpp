@@ -7,6 +7,16 @@
 
 using namespace igpu;
 
+const gl_depth_buffer::config& gl_depth_buffer::cfg() const
+{
+	return _cfg;
+}
+
+const glm::ivec2& gl_depth_buffer::resolution() const
+{
+	return _cfg.res;
+}
+
 void gl_depth_buffer::attach()
 {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _gl_handle);
@@ -69,7 +79,7 @@ std::unique_ptr<gl_depth_buffer> gl_depth_buffer::make(const config& cfg)
 }
 
 gl_depth_buffer::gl_depth_buffer(const config& cfg, int gl_handle)
-: depth_buffer(cfg)
+: _cfg(cfg)
 , _gl_handle(gl_handle)
 , _gpu_mem_metric(perf::category::GPU_MEM_USAGE, "GPU Depth Buffer Mem")
 {

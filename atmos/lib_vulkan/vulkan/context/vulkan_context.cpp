@@ -1,9 +1,9 @@
 #include <vulkan/context/vulkan_context.h>
 
 // Vulkan implementation includes - begin
-#include <vulkan/context/vulkan_command_composer.h>
 #include <vulkan/defines/vulkan_includes.h>
 #include <vulkan/material/vulkan_program.h>
+#include <vulkan/resource/internal/vulkan_resource_mediator.h>
 #include <vulkan/resource/vulkan_compute_resource.h>
 #include <vulkan/resource/vulkan_index_resource.h>
 #include <vulkan/resource/vulkan_vertex_resource.h>
@@ -15,20 +15,20 @@ using namespace igpu;
 
 std::unique_ptr<vulkan_context> vulkan_context::make(const config& cfg)
 {
-	vulkan_command_composer::config command_composer_cfg;
+	vulkan_resource_mediator::config resource_mediator_cfg;
 
 #if ATMOS_DEBUG
-	command_composer_cfg.enable_validation_layers = true;
+	resource_mediator_cfg.enable_validation_layers = true;
 #else 
-	command_composer_cfg.enable_validation_layers = false;
+	resource_mediator_cfg.enable_validation_layers = false;
 #endif
 
-	if (auto command_composer = vulkan_command_composer::make(command_composer_cfg))
+	if (auto resource_mediator = vulkan_resource_mediator::make(resource_mediator_cfg))
 	{
 		return std::unique_ptr<vulkan_context>(
 			new vulkan_context(
 				cfg,
-				std::move(command_composer)));
+				std::move(resource_mediator)));
 	}
 
 	return nullptr;
@@ -75,23 +75,22 @@ std::unique_ptr<geometry> vulkan_context::make_geometry(
 	return nullptr;
 }
 
-std::unique_ptr<vertex_resource> vulkan_context::make_vertex_resource(
+std::unique_ptr<vertex_resource> vulkan_context::make_resource(
 	const vertex_resource::config& cfg)
 {
-	return vulkan_vertex_resource::make(
-		cfg);
+	return _resource_mediator->make_resource(cfg);
 }
 
-std::unique_ptr<index_resource> vulkan_context::make_index_resource(
+std::unique_ptr<index_resource> vulkan_context::make_resource(
 	const index_resource::config& cfg)
 {
-	return vulkan_index_resource::make(cfg);
+	return _resource_mediator->make_resource(cfg);
 }
 
-std::unique_ptr<compute_resource> vulkan_context::make_compute_resource(
+std::unique_ptr<compute_resource> vulkan_context::make_resource(
 	const compute_resource::config& cfg)
 {
-	return vulkan_compute_resource::make(cfg);
+	return _resource_mediator->make_resource(cfg);
 }
 
 const batch_constraints& vulkan_context::batch_constraints() const
@@ -116,12 +115,12 @@ const window& vulkan_context::window() const
 
 vulkan_context::vulkan_context(
 	const config& cfg,
-	std::shared_ptr<vulkan_command_composer> command_composer)
+	std::shared_ptr<vulkan_resource_mediator> resource_mediator)
 	: _cfg(cfg)
 	, _batch_constraints(cfg.batch_constraints)
 	, _material_constraints(cfg.material_constraints)
 	, _vertex_constraints(cfg.vertex_constraints)
-	, _command_composer(std::move(command_composer))
+	, _resource_mediator(std::move(resource_mediator))
 	, _window(vulkan_window::make("vulkan", glm::ivec2(800, 600)))
 #if ATMOS_PERFORMANCE_TRACKING
 	, _renderstate_switch_metric(perf::category::SWITCH_RENDER_STATES, "Renderstates")

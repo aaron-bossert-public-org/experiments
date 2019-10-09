@@ -6,7 +6,7 @@
 #include <igpu/resource/index_resource.h>
 #include <igpu/resource/index_format.h>
 
-#include <vulkan/resource/vulkan_resource.h>
+#include <vulkan/resource/internal/vulkan_resource.h>
 
 namespace igpu
 {

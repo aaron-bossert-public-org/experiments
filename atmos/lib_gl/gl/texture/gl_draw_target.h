@@ -10,7 +10,7 @@ namespace igpu
     class gl_draw_target : public draw_target
     {
     public:
-        
+
         unsigned int frame_buffer() const;
         
         static bool validate_framebuffer_status(int status);
@@ -19,7 +19,7 @@ namespace igpu
             const std::shared_ptr<color_target>&,
             const std::shared_ptr<depth_target>&);
         
-        virtual ~gl_draw_target();
+        ~gl_draw_target() override;
         
     private:
         gl_draw_target(unsigned int frame_buffer,

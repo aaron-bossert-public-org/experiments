@@ -16,6 +16,8 @@ namespace igpu
         
         struct binding : batch_binding
         {
+			const config& cfg() const override;
+
             binding(
 				gl_transparent_batch*,
 				const batch_binding::config&,
@@ -27,6 +29,7 @@ namespace igpu
             
 		private:
 
+			const config _cfg;
             gl_transparent_batch * _gl_transparent_batch;
         };
         

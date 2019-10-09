@@ -8,6 +8,16 @@
 
 using namespace igpu;
 
+const gl_depth_texture2d::config& gl_depth_texture2d::cfg() const
+{
+	return _cfg;
+}
+
+const glm::ivec2& gl_depth_texture2d::resolution() const
+{
+	return _cfg.res;
+}
+
 void gl_depth_texture2d::attach()
 {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _gl_handle, 0);
@@ -79,7 +89,7 @@ std::unique_ptr<gl_depth_texture2d> gl_depth_texture2d::make(const config& cfg)
 }
 
 gl_depth_texture2d::gl_depth_texture2d(const config& cfg, GLuint gl_handle)
-: depth_texture2d(cfg)
+: _cfg(cfg)
 , _gl_handle(gl_handle)
 , _gpu_mem_metric(perf::category::GPU_MEM_USAGE, "GPU Depth Texture Buffer Mem")
 {

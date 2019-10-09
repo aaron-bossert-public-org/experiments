@@ -22,21 +22,14 @@ namespace igpu
 		};
         
         const std::string& name() const;
-        
-        const config& cfg() const;
-        
-        const glm::ivec2& resolution() const override;
+
+		virtual const config& cfg() const = 0;
         
         virtual ~color_buffer() {}
         
     protected:
         
-        color_buffer(const config&);
-        
-    protected:
-        
-        config _cfg;
-        
+		color_buffer() = default;
         color_buffer (const color_buffer&) = delete;
         color_buffer& operator= (const color_buffer&) = delete;
     };

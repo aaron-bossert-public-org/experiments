@@ -25,7 +25,7 @@ namespace igpu
         
         virtual void unbind() = 0;
         
-        const config& cfg() const;
+        virtual const config& cfg() const = 0;
         
         const utility::sphere& visibility_sphere() const;
         
@@ -41,7 +41,6 @@ namespace igpu
         
     private:
         
-		config _cfg;
         utility::sphere _visibility_sphere;
 		igpu::primitive_block _primitive_block;
     };

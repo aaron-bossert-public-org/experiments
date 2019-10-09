@@ -6,7 +6,7 @@
  #include <igpu/resource/vertex_resource.h>
  #include <igpu/resource/vertex_format.h>
  
-#include <vulkan/resource/vulkan_resource.h>
+#include <vulkan/resource/internal/vulkan_resource.h>
  
  namespace igpu
  {

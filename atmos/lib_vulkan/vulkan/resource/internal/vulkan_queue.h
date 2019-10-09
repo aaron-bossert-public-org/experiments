@@ -7,7 +7,7 @@
 
 namespace igpu
 {
-	class vulkan_meta_queue
+	class vulkan_queue
 	{
 	public:
 
@@ -18,7 +18,7 @@ namespace igpu
 			VkQueue queue = nullptr;
 		};
 
-		vulkan_meta_queue(const config&);
+		vulkan_queue(const config&);
 
 		const config& cfg() const;
 

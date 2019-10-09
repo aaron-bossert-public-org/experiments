@@ -40,13 +40,13 @@ namespace igpu
 			std::vector<std::shared_ptr<vertex_resource>>,
 			std::shared_ptr<index_resource>) override;
 
-		std::unique_ptr<vertex_resource> make_vertex_resource(
+		std::unique_ptr<vertex_resource> make_resource(
 			const vertex_resource::config&) override;
 
-		std::unique_ptr<index_resource> make_index_resource(
+		std::unique_ptr<index_resource> make_resource(
 			const index_resource::config&) override;
 
-		std::unique_ptr<compute_resource> make_compute_resource(
+		std::unique_ptr<compute_resource> make_resource(
 			const compute_resource::config&) override;
 
 		const igpu::batch_constraints& batch_constraints() const override;

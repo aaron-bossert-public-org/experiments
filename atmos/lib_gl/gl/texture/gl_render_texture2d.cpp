@@ -8,6 +8,16 @@
 
 using namespace igpu;
 
+const gl_render_texture2d::config& gl_render_texture2d::cfg() const
+{
+	return _cfg;
+}
+
+const glm::ivec2& gl_render_texture2d::resolution() const
+{
+	return _cfg.res;
+}
+
 void gl_render_texture2d::attach()
 {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _gl_handle, 0);
@@ -80,7 +90,7 @@ gl_render_texture2d::~gl_render_texture2d()
 }
     
 gl_render_texture2d::gl_render_texture2d(const config& cfg, GLuint gl_handle)
-: render_texture2d(cfg)
+: _cfg(cfg)
 , _gl_handle(gl_handle)
 , _gpu_mem_metric(perf::category::GPU_MEM_USAGE, "GPU Render Texture Buffer Mem")
 {

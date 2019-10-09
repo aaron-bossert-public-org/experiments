@@ -170,6 +170,8 @@ namespace igpu
         
         struct binding : public batch_binding
         {
+			const config& cfg() const override;
+
             binding(
 				geometry_batch*,
                 const batch_binding::config&,
@@ -181,6 +183,7 @@ namespace igpu
             
         private:
 
+			const config _cfg;
             geometry_batch* _geometry_batch;
         };
         
@@ -190,6 +193,7 @@ namespace igpu
         
         using bindings_t = std::unordered_map<const batch_binding*, binding_t>;
         
+
         static token keygen(const batch_binding::config&);
         
         geometry_batch(const batch_binding::config&);

@@ -9,7 +9,11 @@ namespace igpu
     class gl_depth_buffer : public depth_buffer
     {
     public:
-        
+
+		const config& cfg() const override;
+
+		const glm::ivec2& resolution() const override;
+
         void attach() override;
         
         void gl_handle(int gl_handle);
@@ -28,6 +32,7 @@ namespace igpu
         
     private:
         
+		const config _cfg;
         int _gl_handle = 0;
 		perf::metric _gpu_mem_metric;
     };

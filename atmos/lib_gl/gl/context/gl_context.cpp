@@ -81,7 +81,7 @@ std::unique_ptr<geometry> gl_context::make_geometry(
 	return nullptr;
 }
 
-std::unique_ptr<vertex_resource> gl_context::make_vertex_resource(
+std::unique_ptr<vertex_resource> gl_context::make_resource(
 	const vertex_resource::config& cfg)
 {
 	return gl_vertex_resource::make(
@@ -89,13 +89,13 @@ std::unique_ptr<vertex_resource> gl_context::make_vertex_resource(
 		vertex_constraints());
 }
 
-std::unique_ptr<index_resource> gl_context::make_index_resource(
+std::unique_ptr<index_resource> gl_context::make_resource(
 	const index_resource::config& cfg)
 {
 	return gl_index_resource::make(cfg);
 }
 
-std::unique_ptr<compute_resource> gl_context::make_compute_resource(
+std::unique_ptr<compute_resource> gl_context::make_resource(
 	const compute_resource::config& cfg)
 {
 	return gl_compute_resource::make(cfg);

@@ -18,7 +18,7 @@
 //         static std::unique_ptr<vulkan_draw_target> make(const std::shared_ptr<color_target>&,
 //                                                     const std::shared_ptr<depth_target>&);
         
-//         virtual ~vulkan_draw_target();
+//         ~vulkan_draw_target() override;
         
 //     private:
 //         vulkan_draw_target(unsigned int frame_buffer,

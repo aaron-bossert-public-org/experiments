@@ -9,7 +9,11 @@ namespace igpu
     class gl_depth_texture2d : public depth_texture2d
     {
     public:
-        
+
+		const config& cfg() const override;
+
+		const glm::ivec2& resolution() const override;
+
         void attach() override;
         
         unsigned gl_handle() const;
@@ -24,6 +28,7 @@ namespace igpu
         
     private:
         
+		const config _cfg;
         unsigned _gl_handle = 0;
         perf::metric _gpu_mem_metric;
     };

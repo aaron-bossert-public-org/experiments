@@ -12,7 +12,6 @@
 
 using namespace igpu;
 
-
 std::unique_ptr<gl_texture2d> gl_texture2d::make(const texel_buffer2d& raw)
 {
 	GLuint gl_handle;
@@ -128,10 +127,10 @@ std::unique_ptr<gl_texture2d> gl_texture2d::make(const texel_buffer2d& raw)
 }
 
 gl_texture2d::gl_texture2d(
-	const texel_buffer2d::config& cfg,
+	const config& cfg,
 	size_t size,
 	unsigned gl_handle)
-	: texture2d(cfg, size)
+	: _cfg(cfg)
 	, _gl_handle(gl_handle)
 	, _gpu_mem_metric(perf::category::GPU_MEM_USAGE, "GPU Texture 2D Mem")
 {

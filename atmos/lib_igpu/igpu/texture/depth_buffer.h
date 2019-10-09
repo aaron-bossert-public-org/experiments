@@ -20,23 +20,14 @@ namespace igpu
 			sampler sampler;
 			glm::ivec2 res;
 		};
+
+		virtual const config& cfg() const = 0;
         
-        const config& cfg() const;
-        
-        const glm::ivec2& resolution() const override;
-        
-        static bool validate(const config&);
-        
-        virtual ~depth_buffer() {}
+		virtual ~depth_buffer() = 0;
         
     protected:
         
-        depth_buffer(const config&);
-        
-    protected:
-        
-		config _cfg;
-        
+		depth_buffer() = default;
         depth_buffer (const depth_buffer&) = delete;
         depth_buffer& operator= (const depth_buffer&) = delete;
     };
