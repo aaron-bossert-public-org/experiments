@@ -11,7 +11,7 @@ namespace igpu
 	{
 	public:
 
-		virtual ~buffer() = 0;
+		virtual ~buffer() {}
 
 		virtual void map(buffer_view_base&, size_t byte_size) = 0;
 

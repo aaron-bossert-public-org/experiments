@@ -20,13 +20,13 @@ namespace logging {
 		(INFORM, 3)
 	);
 	
-	void log_context(const char* file, int line, const char* func, severity, const std::string_view& fmt, ...);
+	void log_context(const char* file, int line, const char* func, severity, const char* fmt, ...);
 
-	bool assert_context(const char* file, int line, const char* func, const char* expr, bool cond, const std::string_view& fmt, ...);
+	bool assert_context(const char* file, int line, const char* func, const char* expr, bool cond, const char* fmt, ...);
 	
 	bool assert_context(const char* file, int line, const char* func, const char* expr, bool cond);
 	
-	std::string exception_string(const char* file, int line, const char* func, const std::string_view& fmt, ...);
+	std::string exception_string(const char* file, int line, const char* func, const char* fmt, ...);
 
 	void debug_break();
 }

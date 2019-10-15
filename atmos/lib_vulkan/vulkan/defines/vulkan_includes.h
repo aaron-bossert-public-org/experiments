@@ -27,3 +27,8 @@
 #	include <vulkan.h>
 #	include <VulkanMemoryAllocator\src\vk_mem_alloc.h>
 #endif
+
+#if ATMOS_BUILD_WINDOWS
+#	undef far
+#	undef near
+#endif

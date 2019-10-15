@@ -31,48 +31,43 @@ bool ends_with(const_ref string, const std::string& ending)
 	}
 }
 
-void string_utils::format_with_va_args(std::string* result, const_ref fmt, const std::va_list& args)
+void string_utils::format_with_va_args(std::string* result, const char* fmt, const std::va_list& args)
 {
-	size_t size = result->length();
-	int added_size = 0;
+	va_list args1;
+	va_copy(args1, args);
+	result->resize(1 + vsnprintf(NULL, 0, fmt, args1));
+	va_end(args1);
 
-	do
-	{
-		va_list copy_args;
-		va_copy(copy_args, args);
-		result->resize(size + added_size);
-		added_size = vsnprintf(result->data() + size, added_size, fmt.data(), copy_args);
-		va_end(copy_args);
-
-	} while (size + added_size < result->length());
+	va_list args2;
+	va_copy(args2, args);
+	vsnprintf(result->data(), result->size(), fmt, args2);
+	va_end(args2);
 }
 
-std::string string_utils::format_with_va_args(const_ref fmt, const std::va_list& args)
+std::string string_utils::format_with_va_args(const char* fmt, const std::va_list& args)
 {
 	std::string result;
 	format_with_va_args(&result, fmt, args);
 	return result;
 }
 
-std::string string_utils::format(const_ref fmt, ...)
+std::string string_utils::format(const char* fmt, ...)
 {
 	std::va_list args;
-	const char* fmt_cstr = fmt.data();
-	va_start(args, fmt_cstr);
-	auto result = format_with_va_args(fmt, args);
+	va_start(args, fmt);
+	std::string result = string_utils::format_with_va_args(fmt, args);
 	va_end(args);
+
 	return result;
 }
 
-void string_utils::format(std::string* result, const_ref fmt, ...)
+void string_utils::format(std::string* result, const char* fmt, ...)
 {
 	std::va_list args;
-	const char* fmt_cstr = fmt.data();
-	va_start(args, fmt_cstr);
+	va_start(args, fmt);
 	format_with_va_args(result, fmt, args);
 	va_end(args);
 }
-
 
 template<typename C>
 void string_split_internal(const_ref s, const char* d, C& ret)

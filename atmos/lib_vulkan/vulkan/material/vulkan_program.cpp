@@ -65,7 +65,7 @@ const primitive& vulkan_program::default_instance_primitive(size_t instance_para
 		parameter::type type = instance_parameter.cfg().type;
 		switch (type)
 		{
-		case parameter::type::COMPUTE_buffer:
+		case parameter::type::COMPUTE_BUFFER:
 			return default_compute;
 		case parameter::type::TEXTURE2D:
 			return default_texture;

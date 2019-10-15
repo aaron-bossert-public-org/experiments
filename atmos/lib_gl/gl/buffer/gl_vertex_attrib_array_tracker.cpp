@@ -86,7 +86,7 @@ bool gl_vertex_attrib_array_tracker::state_caching_enabled() const
 
 void gl_vertex_attrib_array_tracker::set_active_vertex_buffers(const gl_geometry& geometry)
 {
-    for(const auto& vertex_buffer : geometry.cfg().vertex_buffers())
+    for(const auto& vertex_buffer : geometry.cfg().vertex_buffers)
     {
 		const gl_vertex_buffer* gl_v_buffer = (const gl_vertex_buffer*)vertex_buffer.get();
         glBindBuffer(GL_ARRAY_BUFFER, gl_v_buffer->gl_handle());

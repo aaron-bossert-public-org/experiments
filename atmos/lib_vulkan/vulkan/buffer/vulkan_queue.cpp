@@ -30,6 +30,11 @@ const vulkan_queue::config& vulkan_queue::cfg() const
 	return _cfg;
 }
 
+VkQueue vulkan_queue::get()
+{
+	return _queue;
+}
+
 VkCommandPool vulkan_queue::command_pool()
 {
 	return _command_pool;

@@ -96,6 +96,12 @@ buffer_view<T>::buffer_view(size_t size, T* data)
 }
 
 template <typename T>
+buffer_view<T>::buffer_view(size_t size, T* data, size_t stride)
+	: buffer_view_base(size, (void*)data, stride)
+{
+}
+
+template <typename T>
 const T& buffer_view<T>::operator[](size_t i) const
 {
     return *(T*)at(i);

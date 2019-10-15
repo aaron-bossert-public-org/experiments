@@ -23,9 +23,6 @@ function(set_sources target source_folders)
             "${CMAKE_CURRENT_SOURCE_DIR}/${target}/${folder}/*.cpp"
             )
         set(results ${results} ${files})
-
-        message("globbbing ${target}/${folder} :")
-        message("${files}")
     endforeach()
     set(sources ${results} PARENT_SCOPE)
 endfunction()
@@ -102,5 +99,5 @@ target_include_directories(dcs_test
 add_subdirectory(atmos)
 target_link_libraries(dcs_test vulkan framework_tests)
 
-set_property(TARGET dcs_test PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+set_property(TARGET dcs_test PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/dcs_test")
 set_property (DIRECTORY PROPERTY VS_STARTUP_PROJECT dcs_test)

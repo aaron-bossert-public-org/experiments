@@ -27,13 +27,13 @@ namespace string_utils
 	
 	bool ends_with(const_ref string, const std::string& ending);
 
-	std::string format_with_va_args(                     const_ref fmt, const std::va_list&);
+	std::string format_with_va_args(                     const char* fmt, const std::va_list&);
 
-	void        format_with_va_args(std::string* result, const_ref fmt, const std::va_list&);
+	void        format_with_va_args(std::string* result, const char* fmt, const std::va_list&);
 
-	std::string format(                                  const_ref fmt, ...);
+	std::string format(                                  const char* fmt, ...);
 
-	void        format(             std::string* result, const_ref fmt, ...);
+	void        format(             std::string* result, const char* fmt, ...);
 
 	void                     split(std::vector<std::string>* result,              const_ref in,     const_ref delim);
 

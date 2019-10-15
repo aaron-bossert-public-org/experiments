@@ -9,7 +9,7 @@
 #include <iostream>
 
 
-std::unique_ptr<dcs_test> dcs_test::make(std::unique_ptr<igpu::context> context)
+std::unique_ptr<dcs_test> dcs_test::make(const config& cfg)
 {
 	auto results = tests::run();
 	if (results.success())
@@ -22,7 +22,7 @@ std::unique_ptr<dcs_test> dcs_test::make(std::unique_ptr<igpu::context> context)
 		throw std::runtime_error(results.failures());
 	}
 
-	if (!context)
+	if (!cfg.context)
 	{
 		LOG_CONTEXT(CRITICAL, "context is null");
 	}
@@ -30,16 +30,20 @@ std::unique_ptr<dcs_test> dcs_test::make(std::unique_ptr<igpu::context> context)
 	{
 		return std::unique_ptr<dcs_test>(
 			new dcs_test(
-				std::move(context));
+				cfg));
 	}
 
 	return nullptr;
 }
 
+void test_init_vulkan_context(const std::shared_ptr < igpu::vulkan_context >& context);
+bool test_loop_vulkan_context();
+
 dcs_test::dcs_test(
-	std::unique_ptr<igpu::context> context,
-	: _context { std::move(context) }
+	const config& cfg)
+	: _cfg(cfg)
 {
+	test_init_vulkan_context(_cfg.context);
 }
 
 dcs_test::~dcs_test()
@@ -54,7 +58,7 @@ bool dcs_test::advance()
 
 	render();
 
-	return _window->present() != igpu::window::status::CLOSED;
+	return test_loop_vulkan_context();
 }
 
 void dcs_test::update()

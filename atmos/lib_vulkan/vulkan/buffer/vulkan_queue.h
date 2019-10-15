@@ -28,6 +28,8 @@ namespace igpu
 
 		const config& cfg() const;
 
+		VkQueue get();
+
 		VkCommandPool command_pool();
 
 		std::list < vulkan_command_buffer >& pending_commands();
@@ -35,7 +37,7 @@ namespace igpu
 		void free_completed_commands();
 
 		~vulkan_queue();
-
+		
 	private:
 
 		vulkan_queue(

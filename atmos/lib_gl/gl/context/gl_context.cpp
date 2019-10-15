@@ -41,6 +41,11 @@ std::unique_ptr<gl_context> gl_context::make(const config& cfg)
 	return nullptr;
 }
 
+const gl_context::config& gl_context::cfg() const
+{
+	return _cfg;
+}
+
 std::unique_ptr<program> gl_context::make_program(
 	const buffer_view<uint8_t>& vertex_code,
 	const buffer_view<uint8_t>& pixel_code)
@@ -95,11 +100,6 @@ const vertex_constraints& gl_context::vertex_constraints() const
 const window& gl_context::window() const
 {
 	return *_gl_window;
-}
-
-context::~context()
-{
-
 }
 
 gl_context::gl_context(

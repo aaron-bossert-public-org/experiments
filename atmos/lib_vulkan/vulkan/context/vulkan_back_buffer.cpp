@@ -38,29 +38,29 @@ vulkan_back_buffer::vulkan_back_buffer(const config& cfg)
 {
 }
 
-SwapChainSupportDetails query_swap_chain_support(VkPhysicalDevice device)
-{
-	SwapChainSupportDetails details;
-
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, _surface, &details.capabilities);
-
-	uint32_t format_count;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(device, _surface, &formatCount, nullptr);
-
-	if (formatCount != 0)
-	{
-		details.formats.resize(formatCount);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(device, _surface, &formatCount, details.formats.data());
-	}
-
-	uint32_t present_mode_count;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(device, _surface, &presentModeCount, nullptr);
-
-	if (presentModeCount != 0)
-	{
-		details.presentModes.resize(presentModeCount);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(device, _surface, &presentModeCount, details.presentModes.data());
-	}
-
-	return details;
-}
+//SwapChainSupportDetails query_swap_chain_support(VkPhysicalDevice device)
+//{
+//	SwapChainSupportDetails details;
+//
+//	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, _surface, &details.capabilities);
+//
+//	uint32_t format_count;
+//	vkGetPhysicalDeviceSurfaceFormatsKHR(device, _surface, &formatCount, nullptr);
+//
+//	if (formatCount != 0)
+//	{
+//		details.formats.resize(formatCount);
+//		vkGetPhysicalDeviceSurfaceFormatsKHR(device, _surface, &formatCount, details.formats.data());
+//	}
+//
+//	uint32_t present_mode_count;
+//	vkGetPhysicalDeviceSurfacePresentModesKHR(device, _surface, &presentModeCount, nullptr);
+//
+//	if (presentModeCount != 0)
+//	{
+//		details.presentModes.resize(presentModeCount);
+//		vkGetPhysicalDeviceSurfacePresentModesKHR(device, _surface, &presentModeCount, details.presentModes.data());
+//	}
+//
+//	return details;
+//}

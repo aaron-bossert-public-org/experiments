@@ -24,7 +24,7 @@ namespace igpu
 			std::vector<std::shared_ptr<vertex_buffer>> vertex_buffers;
 		};
 
-        virtual ~geometry();
+		virtual ~geometry() {}
 
 		virtual const config& cfg() const = 0;
         

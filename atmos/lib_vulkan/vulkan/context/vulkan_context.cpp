@@ -1,3 +1,4 @@
+
 #include <vulkan/context/vulkan_context.h>
 
 // Vulkan implementation includes - begin
@@ -15,11 +16,35 @@
 #include <optional>
 #include <set>
 #include <vector>
+#include <iostream>
 
 using namespace igpu;
 
 namespace
 {
+	VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* p_create_info, const VkAllocationCallbacks* p_allocator, VkDebugUtilsMessengerEXT* p_debug_messenger)
+	{
+		auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+		if (func != nullptr)
+		{
+			return func(instance, p_create_info, p_allocator, p_debug_messenger);
+		}
+	
+		return VK_ERROR_EXTENSION_NOT_PRESENT;
+	}
+
+	VkResult DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debug_messenger, const VkAllocationCallbacks* p_allocator)
+	{
+		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+		if (func != nullptr)
+		{
+			func(instance, debug_messenger, p_allocator);
+			return VK_SUCCESS;
+		}
+
+		return VK_ERROR_EXTENSION_NOT_PRESENT;
+	}
+
 	VkInstance create_instance(
 		const vulkan_context::config& cfg)
 	{
@@ -49,14 +74,13 @@ namespace
 		create_info.enabledLayerCount = (uint32_t)layers.size();
 		create_info.ppEnabledLayerNames = layers.data();
 
-		VkInstance instance = nullptr;
-		vkCreateInstance(&create_info, nullptr, &instance);
-
 		uint32_t layer_count;
 		vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
 
 		std::vector<VkLayerProperties> available_layers(layer_count);
 		vkEnumerateInstanceLayerProperties(&layer_count, available_layers.data());
+
+		VkInstance instance = nullptr;
 
 		for (uint32_t i = 0; i < create_info.enabledLayerCount; ++i)
 		{
@@ -77,9 +101,45 @@ namespace
 					CRITICAL,
 					"%s requested, but not available", layer_name);
 			}
+			else
+			{
+				vkCreateInstance(&create_info, nullptr, &instance);
+			}
 		}
 
-		return nullptr;
+		return instance;
+	}
+	
+	static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT /* message_severity */, VkDebugUtilsMessageTypeFlagsEXT /* message_type */, const VkDebugUtilsMessengerCallbackDataEXT* p_callback_data, void* /* p_user_data */)
+	{
+		LOG_CONTEXT(
+			CRITICAL,
+			"Vulkan layer debug callback: %s",
+			p_callback_data->pMessage);
+
+		return VK_FALSE;
+	}
+
+	VkDebugUtilsMessengerEXT create_debug_messenger(
+		const vulkan_context::config& cfg,
+		VkInstance instance)
+	{
+		VkDebugUtilsMessengerEXT debug_messenger = nullptr;
+		
+		if (cfg.enable_validation)
+		{
+			VkDebugUtilsMessengerCreateInfoEXT create_info = {};
+			create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+			create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+			create_info.pfnUserCallback = debug_callback;
+			
+			if (CreateDebugUtilsMessengerEXT(instance, &create_info, nullptr, &debug_messenger) != VK_SUCCESS)
+			{
+				throw std::runtime_error("failed to set up debug messenger!");
+			}
+		}
+		
+		return debug_messenger;
 	}
 
 	struct queue_families
@@ -114,7 +174,11 @@ namespace
 
 		std::vector<VkQueueFamilyProperties> properties(queue_family_count);
 		vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &queue_family_count, properties.data());
-		VkFlags mask = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT;
+		VkFlags all_flags = 0;
+		for (auto* family : { &families->present, &families->graphics, &families->compute, &families->transfer })
+		{
+			all_flags |= family->flags;
+		}
 
 		for (auto* family : { &families->present, &families->graphics, &families->compute, &families->transfer })
 		{
@@ -134,18 +198,18 @@ namespace
 					}
 				}
 
-				VkFlags flags = mask & properties[i].queueFlags;
+				VkFlags flags = all_flags & properties[i].queueFlags;
 				switch (family->fitness)
 				{
 				case queue_families::ALL:
-					if (flags == mask)
+					if (flags == all_flags)
 					{
 						family->fitness = queue_families::ALL;
-						family->family_index= i;
+						family->family_index = i;
 					}
 					[[fallthrough]];
 				case queue_families::SOME:
-					if (flags != mask && flags & family->flags)
+					if (flags != all_flags && flags != family->flags && flags & family->flags)
 					{
 						family->fitness = queue_families::SOME;
 						family->family_index = i;
@@ -160,7 +224,7 @@ namespace
 				}
 			}
 
-			if (false, family->family_index.has_value())
+			if (!family->family_index.has_value())
 			{
 				return false;
 			}
@@ -262,6 +326,8 @@ std::unique_ptr<vulkan_context> vulkan_context::make(
 	const config& cfg)
 {
 	VkInstance instance = create_instance(cfg);
+	VkDebugUtilsMessengerEXT debug_messenger = create_debug_messenger(cfg, instance);
+
 	VkSurfaceKHR surface_khr = cfg.window->make_surface(instance);
 	queue_families families;
 
@@ -271,7 +337,9 @@ std::unique_ptr<vulkan_context> vulkan_context::make(
 	VkSampleCountFlagBits max_usable_sample_count = get_max_usable_sample_count(physical_device);
 
 
-	vulkan_buffer_mediator::config buffer_mediator_cfg;
+	vulkan_buffer_mediator::config buffer_mediator_cfg = {};
+	buffer_mediator_cfg.physical_device = physical_device;
+	buffer_mediator_cfg.device = device;
 	buffer_mediator_cfg.present_queue = vulkan_queue::make({ device, families.present.family_index.value(), 0 });
 	buffer_mediator_cfg.graphics_queue = vulkan_queue::make({ device, families.graphics.family_index.value(), 0 });
 	buffer_mediator_cfg.compute_queue = vulkan_queue::make({ device, families.compute.family_index.value(), 0 });
@@ -283,13 +351,20 @@ std::unique_ptr<vulkan_context> vulkan_context::make(
 			new vulkan_context(
 				cfg,
 				instance,
+				surface_khr,
 				physical_device,
 				device,
+				debug_messenger,
 				max_usable_sample_count,
 				std::move(buffer_mediator)));
 	}
 
 	return nullptr;
+}
+
+const vulkan_context::config& vulkan_context::cfg() const
+{
+	return _cfg;
 }
 
 std::unique_ptr<program> vulkan_context::make_program(
@@ -355,14 +430,18 @@ const vulkan_window& vulkan_context::window() const
 vulkan_context::vulkan_context(
 	const config& cfg,
 	VkInstance instance,
+	VkSurfaceKHR surface_khr,
 	VkPhysicalDevice physical_device,
 	VkDevice device,
+	VkDebugUtilsMessengerEXT debug_messenger,
 	VkSampleCountFlagBits max_usable_sample_count,
 	const std::shared_ptr<vulkan_buffer_mediator>& buffer_mediator)
 	: _cfg(cfg)
 	, _instance(instance)
+	, _surface_khr(surface_khr)
 	, _physical_device(physical_device)
 	, _device (device)
+	, _debug_messenger(debug_messenger)
 	, _max_usable_sample_count(max_usable_sample_count)
 	, _batch_constraints(cfg.batch_constraints)
 	, _material_constraints(cfg.material_constraints)
@@ -382,4 +461,40 @@ vulkan_context::vulkan_context(
 
 vulkan_context::~vulkan_context()
 {
+	_buffer_mediator = nullptr;
+
+	vkDestroyDevice(_device, nullptr);
+
+	if (_cfg.enable_validation)
+	{
+		DestroyDebugUtilsMessengerEXT(_instance, _debug_messenger, nullptr);
+	}
+
+	vkDestroySurfaceKHR(_instance, _surface_khr, nullptr);
+	vkDestroyInstance(_instance, nullptr);
+}
+
+VkInstance vulkan_context::instance()
+{
+	return _instance;
+}
+
+VkSurfaceKHR vulkan_context::surface_khr()
+{
+	return _surface_khr;
+}
+
+VkPhysicalDevice vulkan_context::physical_device()
+{
+	return _physical_device;
+}
+
+VkDevice vulkan_context::device()
+{
+	return _device;
+}
+
+const std::shared_ptr<vulkan_buffer_mediator>& vulkan_context::buffer_mediator()
+{
+	return _buffer_mediator;
 }

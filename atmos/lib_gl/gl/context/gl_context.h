@@ -26,6 +26,8 @@ namespace igpu
     public:
 
 		static std::unique_ptr<gl_context> make(const config&);
+		
+		const config& cfg() const override;
 
 		std::unique_ptr<program> make_program(
 			const buffer_view<uint8_t>& vertex_code,

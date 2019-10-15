@@ -3,7 +3,7 @@
 
 namespace igpu
 {
-	class context;
+	class vulkan_context;
 	class window;
 }
 
@@ -11,8 +11,14 @@ class dcs_test
 {
 public:
 
+	struct config
+	{
+		std::shared_ptr<igpu::vulkan_context> context;
+	};
+
 	static std::unique_ptr<dcs_test> make(
-		std::unique_ptr<igpu::context>);
+		const config&);
+
 	~dcs_test();
 
 	bool advance();
@@ -20,11 +26,11 @@ public:
 private:
 
 	dcs_test(
-		std::unique_ptr<igpu::context>);
+		const config&);
 
 	void update();
 	void handle_input();
 	void render();
 
-	std::unique_ptr<igpu::context> _context;
+	const config _cfg;
 };

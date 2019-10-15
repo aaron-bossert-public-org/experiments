@@ -32,13 +32,13 @@
 
 namespace igpu
 {
-	namespace debug
+	struct debug
 	{
-		std::string stringify_result(VkResult);
+		static std::string stringify_result(VkResult);
 
-		void generate_exception(const char* file, int line, const char* func, const char* vk, const std::function<void()>& fun);
+		static void generate_exception(const char* file, int line, const char* func, const char* vk, const std::function<void()>& fun);
 
-		VkResult generate_exception(const char* file, int line, const char* func, const char* vk, const std::function<VkResult()>& fun);
+		static VkResult generate_exception(const char* file, int line, const char* func, const char* vk, const std::function<VkResult()>& fun);
 
 		class vulkan_result_exception: public std::exception
 		{
@@ -51,7 +51,7 @@ namespace igpu
 
 			VkResult _res;
 		};
-	}
+	};
 }
 
 #define vmaCreateAllocator(                 ...) VULKAN_CHECK_ERR(vmaCreateAllocator                 , __VA_ARGS__)

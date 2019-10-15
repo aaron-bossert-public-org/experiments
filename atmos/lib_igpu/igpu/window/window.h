@@ -22,7 +22,7 @@ namespace igpu
 			(CLOSED, 1)
 		);
 
-		virtual ~window() = 0;
+		virtual ~window() {}
 
 		virtual glm::ivec2 res() const = 0;
 		

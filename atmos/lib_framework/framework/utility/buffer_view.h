@@ -8,7 +8,7 @@ class buffer_view_base
 public:
 	buffer_view_base() = default;
         
-	buffer_view_base(size_t count, void* data, size_t stride);
+	buffer_view_base(size_t size, void* data, size_t stride);
         
     template <typename T>
 	buffer_view_base(const T&);
@@ -54,9 +54,9 @@ public:
 
 	buffer_view();
 
-	buffer_view(size_t count, T* data);
+	buffer_view(size_t size, T* data);
 
-	buffer_view(size_t count, T* data, size_t stride);
+	buffer_view(size_t size, T* data, size_t stride);
 
     virtual ~buffer_view() { reset(); }
     

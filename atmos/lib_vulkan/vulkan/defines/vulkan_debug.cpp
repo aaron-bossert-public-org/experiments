@@ -53,19 +53,19 @@ VK_RESULT_XMACRO(VK_RESULT_PAIR)
 #undef VK_RESULT_PAIR
 };
 
-using namespace igpu::debug;
+using namespace igpu;
 
-std::string stringify_result(VkResult res)
+std::string debug::stringify_result(VkResult res)
 {
 	return  kResultStr.at(res);
 }
 
-void generate_exception(const char*, int, const char*, const char*, const std::function<void()>& fun)
+void debug::generate_exception(const char*, int, const char*, const char*, const std::function<void()>& fun)
 {
 	fun();
 }
 
-VkResult generate_exception(const char* file, int line, const char* func, const char* vk, const std::function<VkResult()>& fun)
+VkResult debug::generate_exception(const char* file, int line, const char* func, const char* vk, const std::function<VkResult()>& fun)
 {
 	(void)file;
 	(void)line;
@@ -97,13 +97,13 @@ VkResult generate_exception(const char* file, int line, const char* func, const 
 
 #endif // ATMOS_DEBUG
 
-vulkan_result_exception::vulkan_result_exception(VkResult res, const char* desc)
+debug::vulkan_result_exception::vulkan_result_exception(VkResult res, const char* desc)
 	: std::exception(desc)
 	, _res (res)
 {
 }
 
-VkResult vulkan_result_exception::res() const
+VkResult debug::vulkan_result_exception::res() const
 {
 	return _res;
 }

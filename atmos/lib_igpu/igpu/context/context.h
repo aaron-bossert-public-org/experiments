@@ -38,6 +38,8 @@ namespace igpu
 #endif
 		};
 
+		virtual const config& cfg() const = 0;
+
 		virtual std::unique_ptr<program> make_program(
 			const buffer_view<uint8_t>& vertex_code,
 			const buffer_view<uint8_t>& pixel_code) = 0;
@@ -54,7 +56,7 @@ namespace igpu
 		virtual std::unique_ptr<compute_buffer> make_compute_buffer(
 			const compute_buffer::config&) = 0;
 		
-		virtual ~context() = 0;
+		virtual ~context() {}
 
 		virtual const batch_constraints& batch_constraints() const = 0;
 
