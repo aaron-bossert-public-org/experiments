@@ -14,7 +14,7 @@ std::unique_ptr<vulkan_window> vulkan_window::make(
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-	auto glfw_window = glfw_create_window(res.x, res.y, title.data(), nullptr, nullptr);
+	auto glfw_window = glfwCreateWindow(res.x, res.y, title.data(), nullptr, nullptr);
 
 	auto w = std::unique_ptr<vulkan_window>(
 		new vulkan_window(
@@ -51,16 +51,19 @@ glm::ivec2 vulkan_window::res() const
 std::vector<const char*> vulkan_window::required_extensions() const
 {
 	uint32_t count = 0;
-	const char** glfw_extensions = glfw_get_required_instance_extensions(&count);
+	const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&count);
 	return std::vector<const char*>(glfw_extensions, glfw_extensions + count);
 }
 
-void vulkan_window::make_surface(VkInstance instance, VkSurfaceKHR* surface)
+VkSurfaceKHR vulkan_window::make_surface(VkInstance instance)
 {
-	if (glfwCreateWindowSurface(instance, _glfw_window, nullptr, surface) != VK_SUCCESS)
+	VkSurfaceKHR surface_khr = nullptr;
+	if (glfwCreateWindowSurface(instance, _glfw_window, nullptr, &surface_khr) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to make window surface");
 	}
+
+	return surface_khr;
 }
 
 bool vulkan_window::poll_events()

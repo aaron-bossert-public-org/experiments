@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.1)
 
 BUILD_LIB(
 	vulkan 
-	"batch context defines material resource resource/internal system texture utility window")
+	"batch buffer context defines material system texture utility window")
 
 IF (CMAKE_CL_64)
 

@@ -3,8 +3,8 @@
 
 #include <framework/utility/buffer_view.h>
 
-#include <igpu/resource/topology.h>
-#include <igpu/resource/vertex_format.h>
+#include <igpu/buffer/topology.h>
+#include <igpu/buffer/vertex_format.h>
 
 #include <glm/fwd.hpp>
 
@@ -32,11 +32,11 @@ namespace gfx
         
         const igpu::vertex_format::msg& format_msg() const;
         
-        const buffer_view<char>& vertex_resource() const;
+        const buffer_view<char>& vertex_buffer() const;
         
-		buffer_view<char>& vertex_resource();
+		buffer_view<char>& vertex_buffer();
         
-        const buffer_view<uint16_t>& index_resource() const;
+        const buffer_view<uint16_t>& index_buffer() const;
         
         static std::shared_ptr<mesh_geometry> combine(const std::vector<std::shared_ptr<mesh_geometry>>&);
         
@@ -44,8 +44,8 @@ namespace gfx
 			const std::string&,
             igpu::topology,
             const igpu::vertex_format::msg&,
-            const buffer_view_base& vertex_resource,
-            const buffer_view_base& index_resource,
+            const buffer_view_base& vertex_buffer,
+            const buffer_view_base& index_buffer,
             const sphere&,
             const AABB&);
         
@@ -55,8 +55,8 @@ namespace gfx
 			const std::string&,
             igpu::topology,
             const igpu::vertex_format::msg&,
-            const buffer_view_base& vertex_resource,
-            const buffer_view_base& index_resource,
+            const buffer_view_base& vertex_buffer,
+            const buffer_view_base& index_buffer,
             const sphere&,
             const AABB&);
         
@@ -67,8 +67,8 @@ namespace gfx
         std::string _name;
         igpu::topology _topology;
         igpu::vertex_format::msg _format_msg;
-        allocated_safe_buffer<char> _vertex_resource;
-        allocated_safe_buffer<uint16_t> _index_resource;
+        allocated_safe_buffer<char> _vertex_buffer;
+        allocated_safe_buffer<uint16_t> _index_buffer;
         
         // auxiliary data
         sphere _sphere;

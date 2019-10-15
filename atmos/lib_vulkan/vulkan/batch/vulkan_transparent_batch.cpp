@@ -5,7 +5,7 @@
 // #include <vulkan/context/vulkan_context.h>
 // // Vulkan implementation includes - end
 
-// #include <igpu/resource/geometry.h>
+// #include <igpu/buffer/geometry.h>
 // #include <framework/logging/log.h>
 // #include <algorithm>
 

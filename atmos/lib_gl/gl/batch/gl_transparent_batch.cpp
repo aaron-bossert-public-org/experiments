@@ -5,7 +5,7 @@
 #include <gl/context/gl_context.h>
 // GL implementation includes - end
 
-#include <igpu/resource/geometry.h>
+#include <igpu/buffer/geometry.h>
 #include <framework/logging/log.h>
 #include <algorithm>
 
@@ -80,7 +80,7 @@ gl_transparent_batch::binding::~binding()
 		LOG_CONTEXT(
 			CRITICAL,
 			"%s was destroyed without being unbatched!",
-			cfg().geometry->name().c_str());
+			cfg().geometry->cfg().name.c_str());
 	}
 }
 

@@ -1,13 +1,14 @@
 
 #pragma once
 
+#include <igpu/buffer/compute_buffer.h>
+#include <igpu/buffer/geometry.h>
+#include <igpu/buffer/index_buffer.h>
+#include <igpu/buffer/topology.h>
+#include <igpu/buffer/vertex_buffer.h>
 #include <igpu/context/batch_constraints.h>
 #include <igpu/context/material_constraints.h>
 #include <igpu/context/vertex_constraints.h>
-#include <igpu/resource/compute_resource.h>
-#include <igpu/resource/index_resource.h>
-#include <igpu/resource/topology.h>
-#include <igpu/resource/vertex_resource.h>
 #include <functional>
 #include <memory>
 
@@ -24,9 +25,17 @@ namespace igpu
 
 		struct config
 		{
+			std::string name;
 			batch_constraints::config batch_constraints;
 			material_constraints::config material_constraints;
 			vertex_constraints::config vertex_constraints;
+
+			bool enable_validation 
+#if ATMOS_DEBUG
+				= true;
+#else 
+				= false;
+#endif
 		};
 
 		virtual std::unique_ptr<program> make_program(
@@ -34,21 +43,16 @@ namespace igpu
 			const buffer_view<uint8_t>& pixel_code) = 0;
 
 		virtual std::unique_ptr<geometry> make_geometry(
-			std::string name,
-			topology,
-			size_t element_start,
-			size_t element_count,
-			std::vector<std::shared_ptr<vertex_resource>>,
-			std::shared_ptr<index_resource>) = 0;
+			const geometry::config&) = 0;
 
-		virtual std::unique_ptr<vertex_resource> make_resource(
-			const vertex_resource::config&) = 0;
+		virtual std::unique_ptr<vertex_buffer> make_vertex_buffer(
+			const vertex_buffer::config&) = 0;
 
-		virtual std::unique_ptr<index_resource> make_resource(
-			const index_resource::config&) = 0;
+		virtual std::unique_ptr<index_buffer> make_index_buffer(
+			const index_buffer::config&) = 0;
 
-		virtual std::unique_ptr<compute_resource> make_resource(
-			const compute_resource::config&) = 0;
+		virtual std::unique_ptr<compute_buffer> make_compute_buffer(
+			const compute_buffer::config&) = 0;
 		
 		virtual ~context() = 0;
 

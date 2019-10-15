@@ -4,55 +4,94 @@
 #include <framework/logging/log.h>
 #include <framework/utility/string_utils.h>
 
+namespace {
 #if ATMOS_BUILD_WINDOWS
-	#include <windows.h>
-	namespace {
-		void do_logging(const std::string_view& o)
-		{
-			OutputDebugString(o.data());
-			OutputDebugString("\n");
-		}
+#include <windows.h>
+	void do_logging(const std::string_view& o)
+	{
+		OutputDebugString(o.data());
+		OutputDebugString("\n");
 	}
 #endif
 
-void logging::log_context(const char* file, int line, const char* context, severity s, const std::string_view& fmt, ...)
-{
-	std::string output = string_utils::format("%s(%d): LOG %s\n\t%s\n%s\n", file, line, to_string(s), context, fmt.data());
+	std::string format(
+		const char* file,
+		int line,
+		const char* func,
+		logging::severity s,
+		const char* type,
+		const std::string_view& msg)
 
-	std::va_list args;
-	const char* fmt_cstr = fmt.data();
-	va_start(args, fmt_cstr);
-	string_utils::format_with_va_args(&output, fmt, args);
-	va_end(args);
+	{
+		const char* fmt = msg.size()
+			? "%s(%d): %s %s\n\t%s\n%s\n"
+			: "%s(%d): %s %s\n\t%s\n";
 
-	do_logging(output.c_str());
+		return string_utils::format(
+			fmt,
+			file,
+			line,
+			type,
+			to_string(s),
+			func,
+			msg.data());
+	}
 }
 
-bool logging::assert_context(const char* file, int line, const char*, bool cond, const std::string_view& fmt, ...)
+void logging::log_context(const char* file, int line, const char* func, severity s, const std::string_view& fmt, ...)
+{
+	const char* fmt_cstr = fmt.data();
+
+	std::va_list args;
+	va_start(args, fmt_cstr);
+	std::string output = string_utils::format_with_va_args(fmt_cstr, args);
+	va_end(args);
+
+	output = format(file, line, func, s, "LOG", output);
+
+	do_logging(output);
+}
+
+bool logging::assert_context(const char* file, int line, const char* func, const char*, bool cond, const std::string_view& fmt, ...)
 {
 	if (false == cond)
 	{
-		std::va_list args;
 		const char* fmt_cstr = fmt.data();
+
+		std::va_list args;
 		va_start(args, fmt_cstr);
-		auto context = string_utils::format_with_va_args(fmt, args);
+		std::string output = string_utils::format_with_va_args(fmt_cstr, args);
 		va_end(args);
 
-		assert_context(file, line, context.c_str(), cond);
+		assert_context(file, line, func, output.c_str(), cond);
 	}
 
 	return cond;
 }
 
-bool logging::assert_context(const char* file, int line, const char* context, bool cond)
+bool logging::assert_context(const char* file, int line, const char* func, const char* expr, bool cond)
 {
 	if (false == cond)
 	{
-		std::string output = string_utils::format("%s(%d): ASSERT %s\n\t%s\n%s\n", file, line, context);
+		std::string output = format(file, line, func, severity::CRITICAL, "ASSERT", expr);
 		do_logging(output.c_str());
 	}
 
 	return cond;
+}
+
+std::string logging::exception_string(const char* file, int line, const char* func, const std::string_view& fmt, ...)
+{
+	const char* fmt_cstr = fmt.data();
+
+	std::va_list args;
+	va_start(args, fmt_cstr);
+	std::string output = string_utils::format_with_va_args(fmt_cstr, args);
+	va_end(args);
+
+	output = format(file, line, func, severity::CRITICAL, "EXCEPTION", output);
+
+	return output;
 }
 
 void logging::debug_break()

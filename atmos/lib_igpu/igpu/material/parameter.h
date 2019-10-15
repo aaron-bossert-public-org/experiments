@@ -12,9 +12,9 @@ namespace igpu
 
 		ENUM_SERIALIZABLE(
 
-			type, DEFAULT(COMPUTE_RESOURCE),
+			type, DEFAULT(COMPUTE_BUFFER),
 
-			(COMPUTE_RESOURCE, 0),
+			(COMPUTE_BUFFER, 0),
 			(TEXTURE2D, 1)
 		);
 

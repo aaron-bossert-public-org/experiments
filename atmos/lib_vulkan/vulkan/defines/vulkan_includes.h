@@ -14,6 +14,12 @@
 #	error No build platform defined ATMOS_BUILD_IOS/ ATMOS_BUILD_WINDOWS/ etc...
 #endif
 
+
+#if ATMOS_BUILD_WINDOWS
+#	define WIN32_LEAN_AND_MEAN
+#	define NOMINMAX
+#endif
+
 #if ATMOS_DEBUG
 #	include <vulkan/defines/vulkan_debug.h>
 #else

@@ -53,6 +53,13 @@ VK_RESULT_XMACRO(VK_RESULT_PAIR)
 #undef VK_RESULT_PAIR
 };
 
+using namespace igpu::debug;
+
+std::string stringify_result(VkResult res)
+{
+	return  kResultStr.at(res);
+}
+
 void generate_exception(const char*, int, const char*, const char*, const std::function<void()>& fun)
 {
 	fun();
@@ -65,7 +72,16 @@ VkResult generate_exception(const char* file, int line, const char* func, const 
 	(void)func;
 	(void)vk;
 	auto res = fun();
-	if (res != VK_SUCCESS)
+	if (res != VK_SUCCESS &&
+		res != VK_NOT_READY &&
+		res != VK_TIMEOUT &&
+		res != VK_EVENT_SET &&
+		res != VK_EVENT_RESET &&
+		res != VK_INCOMPLETE &&
+		res != VK_SUBOPTIMAL_KHR &&
+		res != VK_RESULT_BEGIN_RANGE &&
+		res != VK_RESULT_END_RANGE &&
+		res != VK_RESULT_RANGE_SIZE)
 	{
 		std::ostringstream oss;
 		oss

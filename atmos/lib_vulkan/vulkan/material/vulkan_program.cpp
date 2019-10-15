@@ -56,7 +56,7 @@ size_t vulkan_program::index_of_instance_parameter(const std::string_view& name)
 
 const primitive& vulkan_program::default_instance_primitive(size_t instance_parameter_index) const
 {
-	static primitive default_compute = (primitive::variant_t)std::shared_ptr<compute_resource>();
+	static primitive default_compute = (primitive::variant_t)std::shared_ptr<compute_buffer>();
 	static primitive default_texture = (primitive::variant_t)std::shared_ptr<texture2d>();
 
 	if (instance_parameter_index < _instance_parameters.size())
@@ -65,7 +65,7 @@ const primitive& vulkan_program::default_instance_primitive(size_t instance_para
 		parameter::type type = instance_parameter.cfg().type;
 		switch (type)
 		{
-		case parameter::type::COMPUTE_RESOURCE:
+		case parameter::type::COMPUTE_buffer:
 			return default_compute;
 		case parameter::type::TEXTURE2D:
 			return default_texture;

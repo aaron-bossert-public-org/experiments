@@ -95,8 +95,8 @@ gl_depth_texture2d::gl_depth_texture2d(const config& cfg, GLuint gl_handle)
 {
 	const depth_format format = cfg.format;
 	_gpu_mem_metric.add(cfg.res.x * cfg.res.y *
-		(format == depth_format::D24S8 ? 4.f
-			: format == depth_format::D32 ? 4.f
-			: format == depth_format::D16 ? 2.f
-			: 0.f)); // should not hit
+		( format == depth_format::D24S8 ? 4
+		: format == depth_format::D32 ? 4
+		: format == depth_format::D16 ? 2
+		: 0)); // should not hit
 }

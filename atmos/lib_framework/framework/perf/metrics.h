@@ -22,6 +22,7 @@ namespace perf
 		(DISPATCH_TIME, 10),
 		(CPU_MEM_USAGE, 11),
 		(GPU_MEM_USAGE, 12),
+		(CPU_GPU_SHARED_MEM_USAGE, 13),
 		
 		(UNDEFINED, 0)
 	);
@@ -31,7 +32,10 @@ namespace perf
 	public:
 		
 		metric(category, const std::string_view&);
+	    void add(double) {}
 	    void add(float) {}
+		void add(size_t) {}
+		void add(int) {}
 	    void reset() {}
 	};
 

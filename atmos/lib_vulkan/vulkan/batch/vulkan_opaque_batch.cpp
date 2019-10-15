@@ -4,11 +4,11 @@
 // // Vulkan implementation includes - begin
 // #include <vulkan/context/vulkan_context.h>
 // #include <vulkan/material/vulkan_program.h>
-// #include <vulkan/resource/vulkan_geometry.h>
+// #include <vulkan/buffer/vulkan_geometry.h>
 // // Vulkan implementation includes - end
 
 // #include <igpu/batch/opaque_batch_nodes.h>
-// #include <igpu/resource/geometry.h>
+// #include <igpu/buffer/geometry.h>
 
 // using namespace igpu;
 

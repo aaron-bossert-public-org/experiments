@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <igpu/resource/vertex_parameter.h>
+#include <igpu/buffer/vertex_parameter.h>
 #include <string>
 #include <unordered_map>
 #include <vector>

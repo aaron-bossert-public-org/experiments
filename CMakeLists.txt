@@ -23,8 +23,10 @@ function(set_sources target source_folders)
             "${CMAKE_CURRENT_SOURCE_DIR}/${target}/${folder}/*.cpp"
             )
         set(results ${results} ${files})
-    endforeach()
 
+        message("globbbing ${target}/${folder} :")
+        message("${files}")
+    endforeach()
     set(sources ${results} PARENT_SCOPE)
 endfunction()
 

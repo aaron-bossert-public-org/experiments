@@ -134,7 +134,7 @@ gl_texture2d::gl_texture2d(
 	, _gl_handle(gl_handle)
 	, _gpu_mem_metric(perf::category::GPU_MEM_USAGE, "GPU Texture 2D Mem")
 {
-	_gpu_mem_metric.add( (float)size );
+	_gpu_mem_metric.add( size );
 }
 
 gl_texture2d::~gl_texture2d()

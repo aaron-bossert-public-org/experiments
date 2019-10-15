@@ -300,7 +300,7 @@ void perf_tracking_manager::batch_system_profile(const profile_config& profile_c
     
     for(int step = 3; step --> 0;)
     {
-        config.batching_config.vertex_resource_count_scale = step / 3.f;
+        config.batching_config.vertex_buffer_count_scale = step / 3.f;
         
         _scheduler->queue([this, config]{
             
@@ -309,7 +309,7 @@ void perf_tracking_manager::batch_system_profile(const profile_config& profile_c
             return true;
         });
         
-        std::string geometry_desc = "vertex resource count reduction factor ~" + std::to_string(config.batching_config.vertex_resource_count_scale);
+        std::string geometry_desc = "vertex buffer count reduction factor ~" + std::to_string(config.batching_config.vertex_buffer_count_scale);
         _scheduler->queue_bench_mark(geometry_desc, profile_config.frames_per_test, profile_config.frames_to_filter, capture_result);
     }
     

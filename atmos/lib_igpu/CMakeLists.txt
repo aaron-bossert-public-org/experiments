@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.1)
 
 BUILD_LIB(
 	igpu
-	"batch context material resource texture utility window")
+	"batch buffer context material texture utility window")
 
 target_include_directories(igpu
 	PRIVATE

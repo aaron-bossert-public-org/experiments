@@ -13,7 +13,7 @@
 namespace igpu
 {
 	class primitive;
-    class compute_resource;
+    class compute_buffer;
     class depth_texture2d;
     class render_texture2d;
     class texture2d;
@@ -25,7 +25,7 @@ namespace igpu
     public:
 
 		using variant_t = std::variant<
-			std::shared_ptr<compute_resource>,
+			std::shared_ptr<compute_buffer>,
 			std::shared_ptr<texture2d>,
 			std::shared_ptr<depth_texture2d>,
 			std::shared_ptr<render_texture2d>>;
@@ -44,7 +44,7 @@ namespace igpu
 
 		const variant_t& variant() const;
 
-		void set(std::shared_ptr<compute_resource>);
+		void set(std::shared_ptr<compute_buffer>);
 
 		void set(std::shared_ptr<texture2d>);
 		

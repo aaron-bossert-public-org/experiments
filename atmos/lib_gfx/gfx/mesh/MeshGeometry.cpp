@@ -28,17 +28,17 @@ const AABB& mesh_geometry::bounding_AABB() const
 
 int32_t mesh_geometry::vertex_count() const
 {
-    return _vertex_resource.size();
+    return _vertex_buffer.size();
 }
 
 int32_t mesh_geometry::vertex_stride() const
 {
-    return _vertex_resource.stride();
+    return _vertex_buffer.stride();
 }
 
 int32_t mesh_geometry::index_count() const
 {
-    return _index_resource.size();
+    return _index_buffer.size();
 }
 
 const igpu::vertex_format::msg& mesh_geometry::format_msg() const
@@ -46,19 +46,19 @@ const igpu::vertex_format::msg& mesh_geometry::format_msg() const
     return _format_msg;
 }
 
-const buffer_view<char>& mesh_geometry::vertex_resource() const
+const buffer_view<char>& mesh_geometry::vertex_buffer() const
 {
-    return _vertex_resource;
+    return _vertex_buffer;
 }
 
-buffer_view<char>& mesh_geometry::vertex_resource()
+buffer_view<char>& mesh_geometry::vertex_buffer()
 {
-    return _vertex_resource;
+    return _vertex_buffer;
 }
 
-const buffer_view<uint16_t>& mesh_geometry::index_resource() const
+const buffer_view<uint16_t>& mesh_geometry::index_buffer() const
 {
-    return _index_resource;
+    return _index_buffer;
 }
 
 std::shared_ptr<mesh_geometry> mesh_geometry::combine(const std::vector<std::shared_ptr<mesh_geometry>>& mesh_geometries)
@@ -92,8 +92,8 @@ std::shared_ptr<mesh_geometry> mesh_geometry::combine(const std::vector<std::sha
 			format_msg = &mesh_geometry->format_msg();
             sphere = mesh_geometry->bounding_sphere();
             aabb = mesh_geometry->bounding_AABB();
-            vert_stride = mesh_geometry->vertex_resource().stride();
-            index_stride = mesh_geometry->index_resource().stride();
+            vert_stride = mesh_geometry->vertex_buffer().stride();
+            index_stride = mesh_geometry->index_buffer().stride();
         }
         else
         {
@@ -118,8 +118,8 @@ std::shared_ptr<mesh_geometry> mesh_geometry::combine(const std::vector<std::sha
             }
 #endif
             
-            ASSERT_CONTEXT(vert_stride == mesh_geometry->vertex_resource().stride());
-            ASSERT_CONTEXT(index_stride == mesh_geometry->index_resource().stride());
+            ASSERT_CONTEXT(vert_stride == mesh_geometry->vertex_buffer().stride());
+            ASSERT_CONTEXT(index_stride == mesh_geometry->index_buffer().stride());
             
             sphere = math::combine(sphere, mesh_geometry->bounding_sphere());
             aabb = combine_aabb(aabb, mesh_geometry->bounding_aabb());
@@ -137,8 +137,8 @@ std::shared_ptr<mesh_geometry> mesh_geometry::combine(const std::vector<std::sha
     
     for(const auto& mesh_geometry : mesh_geometries)
     {
-        // merge input index resource: new indices will be corrected to match indices of vertices in merged vertex resource
-        const auto& input_indices = mesh_geometry->index_resource();
+        // merge input index buffer: new indices will be corrected to match indices of vertices in merged vertex buffer
+        const auto& input_indices = mesh_geometry->index_buffer();
         
         const uint16_t written_verts = output_vertices - merged_vertices.begin();
         std::transform(input_indices.begin(), input_indices.end(), output_indices, [written_verts]( const uint16_t& index ) {
@@ -149,8 +149,8 @@ std::shared_ptr<mesh_geometry> mesh_geometry::combine(const std::vector<std::sha
         output_indices += input_indices.size();
         
         
-        // merge input vertex resource
-        const auto& input_vertices = mesh_geometry->vertex_resource();
+        // merge input vertex buffer
+        const auto& input_vertices = mesh_geometry->vertex_buffer();
         memcpy ( &*output_vertices, input_vertices.data(), merged_vertices.stride() * input_vertices.size() );
         
         output_vertices += input_vertices.size();
@@ -173,8 +173,8 @@ std::unique_ptr<mesh_geometry> mesh_geometry::make(
 	const std::string&            name,
     igpu::topology                 topology,
     const igpu::vertex_format::msg& format_msg,
-    const buffer_view_base&       vertex_resource,
-    const buffer_view_base&       index_resource,
+    const buffer_view_base&       vertex_buffer,
+    const buffer_view_base&       index_buffer,
     const sphere&                 sphere,
     const AABB&                   aabb)
 {
@@ -186,13 +186,13 @@ std::unique_ptr<mesh_geometry> mesh_geometry::make(
     {
         LOG_CONTEXT( CRITICAL, "vertex format is empty: %s", name.c_str() );
     }
-    else if (!vertex_resource.valid())
+    else if (!vertex_buffer.valid())
     {
-        LOG_CONTEXT( CRITICAL, "vertex resource is not valid: %s", name.c_str() );
+        LOG_CONTEXT( CRITICAL, "vertex buffer is not valid: %s", name.c_str() );
     }
-    else if (!index_resource.valid())
+    else if (!index_buffer.valid())
     {
-        LOG_CONTEXT( CRITICAL, "index resource is not valid: %s", name.c_str() );
+        LOG_CONTEXT( CRITICAL, "index buffer is not valid: %s", name.c_str() );
     }
     else
     {
@@ -200,8 +200,8 @@ std::unique_ptr<mesh_geometry> mesh_geometry::make(
 			name,
 			topology,
 			format_msg,
-			vertex_resource,
-			index_resource,
+			vertex_buffer,
+			index_buffer,
 			sphere,
 			aabb));
     }
@@ -213,8 +213,8 @@ mesh_geometry::mesh_geometry(
 	const std::string&            name,
 	igpu::topology                 topology,
 	const igpu::vertex_format::msg& format_msg,
-	const buffer_view_base&       vertex_resource,
-	const buffer_view_base&       index_resource,
+	const buffer_view_base&       vertex_buffer,
+	const buffer_view_base&       index_buffer,
 	const sphere&                 sphere,
 	const AABB&                   aabb)
 : _name(name)
@@ -222,20 +222,20 @@ mesh_geometry::mesh_geometry(
 , _format_msg(format_msg)
 , _sphere(sphere)
 , _aabb(aabb)
-, _vertex_resource(vertex_resource.size(), vertex_resource.stride() )
-, _index_resource(index_resource.size(), index_resource.stride() )
+, _vertex_buffer(vertex_buffer.size(), vertex_buffer.stride() )
+, _index_buffer(index_buffer.size(), index_buffer.stride() )
 {
-    ASSERT_CONTEXT(vertex_resource.size() < std::numeric_limits<uint16_t>::max());
+    ASSERT_CONTEXT(vertex_buffer.size() < std::numeric_limits<uint16_t>::max());
     
-    int32_t vertex_stride = vertex_resource.stride();
-    int32_t vertex_count = vertex_resource.size();
+    int32_t vertex_stride = vertex_buffer.stride();
+    int32_t vertex_count = vertex_buffer.size();
     
-    ::memcpy(_vertex_resource.data(), vertex_resource.data(), vertex_count * vertex_stride);
+    ::memcpy(_vertex_buffer.data(), vertex_buffer.data(), vertex_count * vertex_stride);
     
-    int32_t index_count = index_resource.size();
-    int32_t index_stride = index_resource.stride();
+    int32_t index_count = index_buffer.size();
+    int32_t index_stride = index_buffer.stride();
     
-    ::memcpy(_index_resource.data(), index_resource.data(), index_count * index_stride);
+    ::memcpy(_index_buffer.data(), index_buffer.data(), index_count * index_stride);
 }
 
 

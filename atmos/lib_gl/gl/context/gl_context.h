@@ -1,14 +1,13 @@
 
 #pragma once
-
-#include <igpu/utility/utility_types.h>
-#include <igpu/context/context.h>
+#include <gl/buffer/gl_vertex_attrib_array_tracker.h>
 #include <gl/material/gl_render_states.h>
-#include <gl/resource/gl_vertex_attrib_array_tracker.h>
 
+#include <igpu/context/context.h>
 #include <igpu/context/batch_constraints.h>
 #include <igpu/context/material_constraints.h>
 #include <igpu/context/vertex_constraints.h>
+#include <igpu/utility/utility_types.h>
 #include <framework/perf/metrics.h>
 
 namespace igpu
@@ -17,8 +16,8 @@ namespace igpu
 	class gl_back_buffer;
 	class gl_draw_target;
 	class gl_program;
-    class gl_vertex_resource;
-    class gl_index_resource;
+    class gl_vertex_buffer;
+    class gl_index_buffer;
     class gl_geometry;
     class gl_window;
     
@@ -33,21 +32,16 @@ namespace igpu
 			const buffer_view<uint8_t>& pixel_code) override;
 
 		std::unique_ptr<geometry> make_geometry(
-			std::string name,
-			topology topology,
-			size_t element_start,
-			size_t element_count,
-			std::vector<std::shared_ptr<vertex_resource>>,
-			std::shared_ptr<index_resource>) override;
+			const geometry::config& cfg) override;
 
-		std::unique_ptr<vertex_resource> make_resource(
-			const vertex_resource::config&) override;
+		std::unique_ptr<vertex_buffer> make_vertex_buffer(
+			const vertex_buffer::config&) override;
 
-		std::unique_ptr<index_resource> make_resource(
-			const index_resource::config&) override;
+		std::unique_ptr<index_buffer> make_index_buffer(
+			const index_buffer::config&) override;
 
-		std::unique_ptr<compute_resource> make_resource(
-			const compute_resource::config&) override;
+		std::unique_ptr<compute_buffer> make_compute_buffer(
+			const compute_buffer::config&) override;
 
 		const igpu::batch_constraints& batch_constraints() const override;
 
@@ -132,12 +126,16 @@ namespace igpu
 		size_t _batch_drawpass_id = 0;
         batch* _active_batch = nullptr;
         gl_program* _active_program = nullptr;
-        const gl_geometry* _active_geometry = nullptr;
-		unsigned _active_topology = 0;
-		unsigned _active_index_format = 0;
 		gl_vertex_attrib_array_tracker _vertex_attrib_array_tracker;
         gl_packed_states _packed_states;
         unsigned _active_texture_stage = 0;
+		struct
+		{
+			const gl_geometry* geometry = nullptr;
+			unsigned gl_topology = 0;
+			unsigned gl_index_format = 0;
+			int32_t bytes_per_index = 0;
+		} _active_geometry_info;
 
 #if ATMOS_PERFORMANCE_TRACKING
 		perf::metric _renderstate_switch_metric;

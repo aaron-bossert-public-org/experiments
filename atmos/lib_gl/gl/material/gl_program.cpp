@@ -2,12 +2,12 @@
 #include <gl/material/gl_program.h>
 
 // GL implementation includes - begin
+#include <gl/buffer/gl_compute_buffer.h>
+#include <gl/buffer/gl_vertex_parameter.h>
 #include <gl/context/gl_context.h>
 #include <gl/defines/gl_includes.h>
 #include <gl/material/gl_compiler.h>
 #include <gl/material/gl_parameter.h>
-#include <gl/resource/gl_compute_resource.h>
-#include <gl/resource/gl_vertex_parameter.h>
 #include <gl/texture/gl_render_texture2d.h>
 #include <gl/texture/gl_depth_texture2d.h>
 #include <gl/texture/gl_texture2d.h>
@@ -15,8 +15,8 @@
 
 #include <igpu/batch/batch.h>
 #include <igpu/batch/batch_parameters.h>
+#include <igpu/buffer/vertex_format.h>
 #include <igpu/material/material.h>
-#include <igpu/resource/vertex_format.h>
 
 #include <framework/logging/log.h>
 
@@ -47,7 +47,7 @@ namespace
 
 			parameter::config cfg;
 			cfg.name.assign(name.begin(), name.end() - 1);
-			cfg.type = parameter::type::COMPUTE_RESOURCE;
+			cfg.type = parameter::type::COMPUTE_BUFFER;
 			parameters.push_back(gl_parameter(
 				cfg,
 				(size_t)-1,
@@ -288,14 +288,14 @@ void gl_program::update(const gl_parameter& parameter, const primitive& primitiv
 
 	switch (primitive.type())
 	{
-	case parameter::type::COMPUTE_RESOURCE:
+	case parameter::type::COMPUTE_BUFFER:
 	{
-		const auto* compute_resource = (const gl_compute_resource*)
-			std::get<std::shared_ptr<igpu::compute_resource>>(
+		const auto* compute_buffer = (const gl_compute_buffer*)
+			std::get<std::shared_ptr<igpu::compute_buffer>>(
 				primitive.variant()).get();
 
-		GLuint gl_handle = compute_resource
-			? compute_resource->gl_handle()
+		GLuint gl_handle = compute_buffer
+			? compute_buffer->gl_handle()
 			: 0;
 			
 		glBindBufferBase(GL_UNIFORM_BUFFER, parameter.binding_index(), gl_handle);
@@ -388,7 +388,7 @@ size_t gl_program::index_of_instance_parameter(const std::string_view& name) con
 
 const primitive& gl_program::default_instance_primitive(size_t instance_parameter_index) const
 {
-	static primitive default_compute = (primitive::variant_t)std::shared_ptr<compute_resource>();
+	static primitive default_compute = (primitive::variant_t)std::shared_ptr<compute_buffer>();
 	static primitive default_texture = (primitive::variant_t)std::shared_ptr<texture2d>();
 
 	if (instance_parameter_index < _instance_parameters.size())
@@ -397,7 +397,7 @@ const primitive& gl_program::default_instance_primitive(size_t instance_paramete
 		parameter::type type = instance_parameter.cfg().type;
 		switch (type)
 		{
-		case parameter::type::COMPUTE_RESOURCE:
+		case parameter::type::COMPUTE_BUFFER:
 			return default_compute;
 		case parameter::type::TEXTURE2D:
 			return default_texture;

@@ -17,7 +17,7 @@ namespace gfx
         float program_count_scale = 1.0;
         float material_texture_scale = 1.0;
         float material_parameter_scale = 1.0;
-        float vertex_resource_count_scale = 1.0;
+        float vertex_buffer_count_scale = 1.0;
         float draw_count_scale = 1.0;
     };
     

@@ -207,9 +207,9 @@ public:
     
     binding_args_t modify(const perf_test_batching_config& config, binding_args_t msg)
     {
-        float vertex_resource_count_scale = config.vertex_resource_count_scale;
+        float vertex_buffer_count_scale = config.vertex_buffer_count_scale;
         
-        if(!perf_test_draw_pass_modifier::should_make_modifier_for_scale(vertex_resource_count_scale, "vertex resource count"))
+        if(!perf_test_draw_pass_modifier::should_make_modifier_for_scale(vertex_buffer_count_scale, "vertex buffer count"))
         {
             return msg;
         }
@@ -218,7 +218,7 @@ public:
         
         if(!reduced_geometry)
         {
-            reduced_geometry = _reducer.reduce(msg.geometry, vertex_resource_count_scale);
+            reduced_geometry = _reducer.reduce(msg.geometry, vertex_buffer_count_scale);
         }
         
 		msg.geometry = reduced_geometry;

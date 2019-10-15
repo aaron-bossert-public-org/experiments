@@ -92,9 +92,9 @@ gl_color_buffer::gl_color_buffer(const config& cfg, int gl_handle)
 {
 	const color_format format = cfg.format;
 	_gpu_mem_metric.add(cfg.res.x * cfg.res.y *
-		(format == color_format::INT_R8G8B8A8 ? 4.f
-			: format == color_format::INT_R5G6B5 ? 2.f
-			: format == color_format::INT_R16 ? 2.f
-			: format == color_format::FLOAT_R16 ? 2.f
-			: 0.f)); // should not hit
+		( format == color_format::INT_R8G8B8A8 ? 4
+		: format == color_format::INT_R5G6B5 ? 2
+		: format == color_format::INT_R16 ? 2
+		: format == color_format::FLOAT_R16 ? 2
+		: 0)); // should not hit
 }

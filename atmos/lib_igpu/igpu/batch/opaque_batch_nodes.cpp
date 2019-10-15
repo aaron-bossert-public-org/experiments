@@ -1,9 +1,9 @@
 
 #include <igpu/batch/opaque_batch_nodes.h>
 
+#include <igpu/buffer/geometry.h>
 #include <igpu/material/material.h>
 #include <igpu/material/render_states.h>
-#include <igpu/resource/geometry.h>
 
 using namespace igpu;
 
@@ -88,7 +88,7 @@ geometry_batch::binding::~binding()
         LOG_CONTEXT(
 			CRITICAL,
             "%s was destroyed without being unbatched!",
-			cfg().geometry->name().c_str());
+			cfg().geometry->cfg().name.c_str());
     }
 }
 

@@ -29,7 +29,7 @@ namespace igpu {
 
 		std::vector<const char*> required_extensions() const;
 		
-		void make_surface(VkInstance_T*, VkSurfaceKHR_T**);
+		VkSurfaceKHR_T* make_surface(VkInstance_T*);
 		
 		bool poll_events();
 

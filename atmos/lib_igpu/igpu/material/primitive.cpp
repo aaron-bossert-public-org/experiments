@@ -56,7 +56,7 @@ parameter::type primitive::type() const
 	constexpr parameter::type DEPTH_TEXTURE = parameter::type((size_t)parameter::type::TEXTURE2D + 1);
 	constexpr parameter::type RENDER_TEXTURE = parameter::type((size_t)parameter::type::TEXTURE2D + 2);
 
-	STATIC_ASSERT_TYPE(parameter::type::COMPUTE_RESOURCE, std::shared_ptr<compute_resource>);
+	STATIC_ASSERT_TYPE(parameter::type::COMPUTE_BUFFER, std::shared_ptr<compute_buffer>);
 	STATIC_ASSERT_TYPE(parameter::type::TEXTURE2D, std::shared_ptr<texture2d>);
 	STATIC_ASSERT_TYPE(DEPTH_TEXTURE, std::shared_ptr<depth_texture2d>);
 	STATIC_ASSERT_TYPE(RENDER_TEXTURE, std::shared_ptr<render_texture2d>);
@@ -74,9 +74,9 @@ const primitive::variant_t& primitive::variant() const
 	return _variant;
 }
 
-void primitive::set(std::shared_ptr<compute_resource> val)
+void primitive::set(std::shared_ptr<compute_buffer> val)
 {
-	if (std::holds_alternative<std::shared_ptr<compute_resource>>(_variant))
+	if (std::holds_alternative<std::shared_ptr<compute_buffer>>(_variant))
 	{
 		_variant = std::move(val);
 	}

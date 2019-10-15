@@ -3,7 +3,7 @@
 #include <exception>
 #include <functional>
 
-#define VULKAN_CHECK_ERR(F, ...) generate_exception(__FILE__, __LINE__ , __func__, #F"("#__VA_ARGS__")",  std::function<decltype(F(__VA_ARGS__))()>([&] { return F(__VA_ARGS__); } ) )
+#define VULKAN_CHECK_ERR(F, ...) igpu::debug::generate_exception(__FILE__, __LINE__ , __func__, #F"("#__VA_ARGS__")",  std::function<decltype(F(__VA_ARGS__))()>([&] { return F(__VA_ARGS__); } ) )
 
 #include <framework/logging/log.h>
 
@@ -30,21 +30,29 @@
 #	include <vulkan.h>
 #	include <VulkanMemoryAllocator\src\vk_mem_alloc.h>
 
-void generate_exception(const char* file, int line, const char* func, const char* vk, const std::function<void()>& fun);
-
-VkResult generate_exception(const char* file, int line, const char* func, const char* vk, const std::function<VkResult()>& fun);
-
-class vulkan_result_exception: public std::exception
+namespace igpu
 {
-public:
+	namespace debug
+	{
+		std::string stringify_result(VkResult);
 
-	vulkan_result_exception(VkResult, const char* desc);
-	VkResult res() const;
+		void generate_exception(const char* file, int line, const char* func, const char* vk, const std::function<void()>& fun);
 
-private:
+		VkResult generate_exception(const char* file, int line, const char* func, const char* vk, const std::function<VkResult()>& fun);
 
-	VkResult _res;
-};
+		class vulkan_result_exception: public std::exception
+		{
+		public:
+
+			vulkan_result_exception(VkResult, const char* desc);
+			VkResult res() const;
+
+		private:
+
+			VkResult _res;
+		};
+	}
+}
 
 #define vmaCreateAllocator(                 ...) VULKAN_CHECK_ERR(vmaCreateAllocator                 , __VA_ARGS__)
 #define vmaFindMemoryTypeIndex(             ...) VULKAN_CHECK_ERR(vmaFindMemoryTypeIndex             , __VA_ARGS__)
@@ -122,7 +130,7 @@ private:
 #define vkDestroyBufferView(                             ...) VULKAN_CHECK_ERR(vkDestroyBufferView                             , __VA_ARGS__)
 #define vkCreateImage(                                   ...) VULKAN_CHECK_ERR(vkCreateImage                                   , __VA_ARGS__)
 #define vkDestroyImage(                                  ...) VULKAN_CHECK_ERR(vkDestroyImage                                  , __VA_ARGS__)
-#define vkGetImageSubresourceLayout(                     ...) VULKAN_CHECK_ERR(vkGetImageSubresourceLayout                     , __VA_ARGS__)
+#define vkGetImageSubbufferLayout(                     ...) VULKAN_CHECK_ERR(vkGetImageSubbufferLayout                     , __VA_ARGS__)
 #define vkCreateImageView(                               ...) VULKAN_CHECK_ERR(vkCreateImageView                               , __VA_ARGS__)
 #define vkDestroyImageView(                              ...) VULKAN_CHECK_ERR(vkDestroyImageView                              , __VA_ARGS__)
 #define vkCreateShaderModule(                            ...) VULKAN_CHECK_ERR(vkCreateShaderModule                            , __VA_ARGS__)

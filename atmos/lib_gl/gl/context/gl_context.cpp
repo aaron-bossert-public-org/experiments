@@ -1,14 +1,14 @@
 #include <gl/context/gl_context.h>
 
 // GL implementation includes - begin
+#include <gl/buffer/gl_compute_buffer.h>
+#include <gl/buffer/gl_index_buffer.h>
+#include <gl/buffer/gl_vertex_buffer.h>
+#include <gl/buffer/gl_geometry.h>
 #include <gl/context/gl_back_buffer.h>
 #include <gl/defines/gl_includes.h>
 #include <gl/material/gl_program.h>
 #include <gl/material/gl_render_states.h>
-#include <gl/resource/gl_compute_resource.h>
-#include <gl/resource/gl_index_resource.h>
-#include <gl/resource/gl_vertex_resource.h>
-#include <gl/resource/gl_geometry.h>
 #include <gl/texture/gl_color_buffer.h>
 #include <gl/texture/gl_depth_buffer.h>
 #include <gl/texture/gl_draw_target.h>
@@ -17,7 +17,7 @@
 
 #include <igpu/batch/batch.h>
 #include <igpu/batch/batch_parameters.h>
-#include <igpu/resource/topology.h>
+#include <igpu/buffer/topology.h>
 
 using namespace igpu;
 
@@ -52,53 +52,29 @@ std::unique_ptr<program> gl_context::make_program(
 }
 
 std::unique_ptr<geometry> gl_context::make_geometry(
-	std::string name,
-	topology topology,
-	size_t element_start,
-	size_t element_count,
-	std::vector<std::shared_ptr<vertex_resource>> vertex_resources,
-	std::shared_ptr<index_resource> index_resource)
+	const geometry::config& cfg)
 {
-	if (vertex_resources.empty())
-	{
-		LOG_CONTEXT(CRITICAL, "vertex_resources is empty");
-	}
-	else if (!index_resource)
-	{
-		LOG_CONTEXT(CRITICAL, "index_resource is null");
-	}
-	else
-	{
-		return gl_geometry::make(
-			std::move(name),
-			topology,
-			element_start,
-			element_count,
-			std::move(index_resource),
-			std::move(vertex_resources));
-	}
-
-	return nullptr;
+	return gl_geometry::make(cfg);
 }
 
-std::unique_ptr<vertex_resource> gl_context::make_resource(
-	const vertex_resource::config& cfg)
+std::unique_ptr<vertex_buffer> gl_context::make_vertex_buffer(
+	const vertex_buffer::config& cfg)
 {
-	return gl_vertex_resource::make(
+	return gl_vertex_buffer::make(
 		cfg,
 		vertex_constraints());
 }
 
-std::unique_ptr<index_resource> gl_context::make_resource(
-	const index_resource::config& cfg)
+std::unique_ptr<index_buffer> gl_context::make_index_buffer(
+	const index_buffer::config& cfg)
 {
-	return gl_index_resource::make(cfg);
+	return gl_index_buffer::make(cfg);
 }
 
-std::unique_ptr<compute_resource> gl_context::make_resource(
-	const compute_resource::config& cfg)
+std::unique_ptr<compute_buffer> gl_context::make_compute_buffer(
+	const compute_buffer::config& cfg)
 {
-	return gl_compute_resource::make(cfg);
+	return gl_compute_buffer::make(cfg);
 }
 
 const batch_constraints& gl_context::batch_constraints() const
@@ -453,29 +429,29 @@ void gl_context::begin_geometry(const gl_geometry* geometry)
 
 	ASSERT_CONTEXT(geometry);
 	ASSERT_CONTEXT(_active_program);
-	ASSERT_CONTEXT(!_active_geometry);
-
-	_active_geometry = geometry;
-	_active_topology = _active_geometry->gl_topology();
-
-	index_resource* indices = _active_geometry->index_resource().get();
-	ASSERT_CONTEXT(dynamic_cast<gl_index_resource*>(indices));
-	gl_index_resource* gl_indices = (gl_index_resource*)indices;
-	_active_index_format = gl_indices->gl_format();
-
-	auto vao = _active_geometry->vao();
+	ASSERT_CONTEXT(!_active_geometry_info.geometry);
+	
+	index_buffer* indices = geometry->cfg().index_buffer.get();
+	ASSERT_CONTEXT(dynamic_cast<gl_index_buffer*>(indices));
+	gl_index_buffer* gl_indices = (gl_index_buffer*)indices;
+	
+	auto vao = geometry->vao();
 	glBindVertexArray(vao);
+
+	_active_geometry_info = {};
+	_active_geometry_info.geometry = geometry;
+	_active_geometry_info.gl_topology = geometry->gl_topology();
+	_active_geometry_info.gl_index_format = gl_indices->gl_format();
+	_active_geometry_info.bytes_per_index = (int32_t)bytes_per_index(indices->cfg().format);
 }
 
 void gl_context::end_geometry(const gl_geometry* geometry)
 {
 	ASSERT_CONTEXT(geometry);
-	ASSERT_CONTEXT(_active_geometry == geometry);
+	ASSERT_CONTEXT(_active_geometry_info.geometry == geometry);
 
 	glBindVertexArray(0);
-	_active_geometry = nullptr;
-	_active_topology = GL_FALSE;
-	_active_index_format = GL_FALSE;
+	_active_geometry_info = {};
 }
 
 void gl_context::draw(int32_t start, int32_t count)
@@ -483,25 +459,28 @@ void gl_context::draw(int32_t start, int32_t count)
 	ASSERT_CONTEXT(count);
 	ASSERT_CONTEXT(_active_batch);
 	ASSERT_CONTEXT(_active_program);
-	ASSERT_CONTEXT(_active_geometry);
+	ASSERT_CONTEXT(_active_geometry_info.geometry);
 
-	if (!count || !_active_batch || !_active_program || !_active_geometry)
+	if (!count || !_active_batch || !_active_program || !_active_geometry_info.geometry)
 	{
 		return;
 	}
 
 #if ATMOS_PERFORMANCE_TRACKING
-	_polycount_metric.add((float)polycount(_active_geometry->topology(), count));
+	_polycount_metric.add(polycount(_active_geometry->topology(), count));
 #endif
 
 #if ATMOS_DEBUG
-	size_t index_size = _active_index_format == GL_UNSIGNED_SHORT ? 2 : 4;
-	size_t index_count = _active_geometry->index_resource()->capacity() / index_size;
+	size_t index_count = _active_geometry_info.geometry->cfg().index_buffer->byte_size() / _active_geometry_info.bytes_per_index;
 	ASSERT_CONTEXT(start <= index_count);
 	ASSERT_CONTEXT(start + count <= index_count);
 #endif
 
-    glDrawElements(_active_topology, count, _active_index_format, start + (int16_t*)nullptr);
+	glDrawElements(
+		_active_geometry_info.gl_topology,
+		count,
+		_active_geometry_info.gl_index_format,
+		(start * _active_geometry_info.bytes_per_index) + (char*)nullptr);
 }
 
 void gl_context::flush()

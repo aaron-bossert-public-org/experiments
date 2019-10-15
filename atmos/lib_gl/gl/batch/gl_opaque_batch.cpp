@@ -2,13 +2,13 @@
 #include <gl/batch/gl_opaque_batch.h>
 
 // GL implementation includes - begin
+#include <gl/buffer/gl_geometry.h>
 #include <gl/context/gl_context.h>
 #include <gl/material/gl_program.h>
-#include <gl/resource/gl_geometry.h>
 // GL implementation includes - end
 
 #include <igpu/batch/opaque_batch_nodes.h>
-#include <igpu/resource/geometry.h>
+#include <igpu/buffer/geometry.h>
 
 using namespace igpu;
 
