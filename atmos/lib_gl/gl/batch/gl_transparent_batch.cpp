@@ -77,8 +77,7 @@ gl_transparent_batch::binding::~binding()
 {
 	if (_gl_transparent_batch)
 	{
-		LOG_CONTEXT(
-			CRITICAL,
+		LOG_CRITICAL(
 			"%s was destroyed without being unbatched!",
 			cfg().geometry->cfg().name.c_str());
 	}
@@ -129,7 +128,7 @@ void gl_transparent_batch::unbind(const binding* binding)
     auto find = _bindings.find(binding);
     if(find == _bindings.end())
     {
-        LOG_CONTEXT( CRITICAL, "cannot find binding to unbind" );
+		LOG_CRITICAL( "cannot find binding to unbind" );
     }
     else
     {

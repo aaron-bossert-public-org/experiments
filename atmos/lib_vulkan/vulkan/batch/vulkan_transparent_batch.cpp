@@ -122,7 +122,7 @@
 //     auto find = _bindings.find(binding);
 //     if(find == _bindings.end())
 //     {
-//         LOG_CONTEXT( CRITICAL, "cannot find binding to unbind" );
+//         LOG_CRITICAL( CRITICAL, "cannot find binding to unbind" );
 //     }
 //     else
 //     {

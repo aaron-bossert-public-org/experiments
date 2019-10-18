@@ -52,8 +52,7 @@ gl_vertex_format::gl_vertex_format(const vertex_constraints& constraints, const 
 			type = GL_FLOAT;
 			break;
 		default:
-			LOG_CONTEXT(
-				CRITICAL,
+			LOG_CRITICAL(
 				"unhandled format: %s",
 				to_string(attribute.parameter.components).data());
 		};

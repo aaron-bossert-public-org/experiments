@@ -16,20 +16,26 @@ namespace igpu {
 		using on_resize_t = std::function<void(gl_window*)>;
 
 		static std::unique_ptr<gl_window> make(
-			const std::string_view& title,
+			const config&,
 			glm::ivec2 res,
 			on_resize_t on_resize = nullptr);
 
 		~gl_window() override;
 
+		const config& cfg() const override;
+
 		glm::ivec2 res() const override;
 
 	protected:
 
-		gl_window(GLFWwindow* glfw_window, on_resize_t on_resize);
+		gl_window(
+			const config&,
+			GLFWwindow*, 
+			on_resize_t on_resize);
 
 	protected:
 
+		const config _cfg;
 		GLFWwindow* const _glfw_window;
 		const on_resize_t _on_resize;
 	};

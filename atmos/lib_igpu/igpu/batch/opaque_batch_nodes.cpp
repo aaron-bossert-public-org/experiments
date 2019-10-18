@@ -39,7 +39,7 @@ bool geometry_batch::add(const binding_t& binding)
     
     if (_bindings.find(raw_binding) != _bindings.end())
     {
-        LOG_CONTEXT( CRITICAL, "binding appears to have already been added");
+		LOG_CRITICAL( "binding appears to have already been added");
         return false;
     }
     
@@ -52,7 +52,7 @@ void geometry_batch::remove(const binding& binding)
     auto find = _bindings.find(&binding);
     if (find == _bindings.end())
     {
-        LOG_CONTEXT( CRITICAL, "binding does not appear to have been added");
+		LOG_CRITICAL( "binding does not appear to have been added");
         return;
     }
     
@@ -85,8 +85,7 @@ geometry_batch::binding::~binding()
 {
     if(_geometry_batch)
     {
-        LOG_CONTEXT(
-			CRITICAL,
+        LOG_CRITICAL(
             "%s was destroyed without being unbatched!",
 			cfg().geometry->cfg().name.c_str());
     }

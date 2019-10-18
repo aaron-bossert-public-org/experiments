@@ -27,7 +27,7 @@
 // {
 // 	if (0 >= cfg.res.x || 0 >= cfg.res.y)
 // 	{
-// 		LOG_CONTEXT(CRITICAL, "width(%d) and height(%d) must be greater than zero", cfg.res.x, cfg.res.y);
+// 		LOG_CRITICAL("width(%d) and height(%d) must be greater than zero", cfg.res.x, cfg.res.y);
 // 		return nullptr;
 // 	}
 
@@ -53,7 +53,7 @@
 // 		type = GL_UNSIGNED_SHORT;
 // 		break;
 // 	default:
-// 		LOG_CONTEXT(CRITICAL, "texture(%s): no handler for format(%s)",
+// 		LOG_CRITICAL("texture(%s): no handler for format(%s)",
 // 			cfg.name.c_str(), to_string(cfg.format).data());
 // 		return nullptr;
 // 	}

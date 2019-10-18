@@ -21,18 +21,18 @@ namespace igpu
 		struct config
 		{
 			VmaAllocator vma = nullptr;
-			VmaAllocationCreateFlags vma_flags;
 			VmaMemoryUsage vma_usage;
 			VkBufferUsageFlagBits usage;
-			VkSharingMode sharing_mode = VK_SHARING_MODE_EXCLUSIVE;
 			VkDeviceSize size = 0;
+			VmaAllocationCreateFlagBits vma_flags = (VmaAllocationCreateFlagBits)0;
+			VkSharingMode sharing_mode = VK_SHARING_MODE_EXCLUSIVE;
 		};
 
 		struct ownership
 		{
-			VkAccessFlags access = 0;
-			VkPipelineStageFlags stage = 0;
-			VkDependencyFlags dependency = 0;
+			VkAccessFlagBits access;
+			VkPipelineStageFlagBits stage;
+			VkDependencyFlagBits dependency;
 			std::shared_ptr < vulkan_queue > queue;
 		};
 

@@ -95,7 +95,7 @@ namespace
         std::string err_desc = make_error_desc(std::string(info_log, info_log_length), source_lines);
         std::string line_numbered_shader_code = make_line_numbered_source(source_lines);
         
-        LOG_CONTEXT( CRITICAL, "%s\n%s\n\n%s", err_desc.c_str(), line_numbered_shader_code.c_str(), err_desc.c_str() );
+		LOG_CRITICAL( "%s\n%s\n\n%s", err_desc.c_str(), line_numbered_shader_code.c_str(), err_desc.c_str() );
     }
 
 	GLuint compile_shader_code(GLenum type, const buffer_view<uint8_t>& shader_code)
@@ -151,8 +151,7 @@ namespace
             std::string line_numbered_vertex_code = make_line_numbered_source(split_shader_source_lines(vertex_code));
             std::string line_numbered_pixel_code = make_line_numbered_source(split_shader_source_lines(pixel_code));
             
-            LOG_CONTEXT( CRITICAL,
-                      "\n Linker error \n%s\n%s\n%s\n%s",
+            LOG_CRITICAL("\n Linker error \n%s\n%s\n%s\n%s",
                       info_log,
                       line_numbered_vertex_code.c_str(), line_numbered_pixel_code.c_str(), info_log);
             

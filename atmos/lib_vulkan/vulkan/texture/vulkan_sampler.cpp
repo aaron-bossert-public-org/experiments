@@ -34,7 +34,7 @@
 // 	case sampler::address::MIRROR:
 // 		return GL_MIRRORED_REPEAT;
 // 	default:
-// 		LOG_CONTEXT(CRITICAL, 
+// 		LOG_CRITICAL(
 // 			"unhandled type(%s)", 
 // 			sampler::to_string(address).data());
 // 		return GL_CLAMP_TO_EDGE;

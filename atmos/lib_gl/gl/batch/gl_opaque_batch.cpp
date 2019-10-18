@@ -49,7 +49,7 @@ namespace
             
             if(!child->item())
             {
-                LOG_CONTEXT( CRITICAL, "batches must have an item to batch on (program/geometry/etc...)");
+				LOG_CRITICAL( "batches must have an item to batch on (program/geometry/etc...)");
                 return nullptr;
             }
             

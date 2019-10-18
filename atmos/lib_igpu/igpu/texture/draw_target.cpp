@@ -18,22 +18,22 @@ const std::shared_ptr<depth_target>& draw_target::depth() const
     return _depth;
 }
 
-glm::ivec2 draw_target::resolution() const
+glm::ivec2 draw_target::res() const
 {
     if(_color)
     {
         if(_depth)
         {
-            return glm::min(_color->resolution(), _depth->resolution());
+            return glm::min(_color->cfg().res, _depth->cfg().res);
         }
         else
         {
-            return _color->resolution();
+            return _color->cfg().res;
         }
     }
     else if(_depth)
     {
-        return _depth->resolution();
+        return _depth->cfg().res;
     }
     
     return glm::ivec2(0);

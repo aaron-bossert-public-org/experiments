@@ -53,7 +53,7 @@ std::unique_ptr<gl_geometry> gl_geometry::make(
 {
 	if (nullptr == cfg.index_buffer)
 	{
-		LOG_CONTEXT(CRITICAL,
+		LOG_CRITICAL(
 			"index buffer is null");
 		return nullptr;
 	}
@@ -63,8 +63,7 @@ std::unique_ptr<gl_geometry> gl_geometry::make(
 		const auto& vertex_buffer = cfg.vertex_buffers[i];
 		if (nullptr == vertex_buffer)
 		{
-			LOG_CONTEXT(CRITICAL,
-				"vertex buffer is null vertex_buffers[%d]",
+			LOG_CRITICAL("vertex buffer is null vertex_buffers[%d]",
 				(int)i);
 
 			return nullptr;
@@ -93,7 +92,7 @@ std::unique_ptr<gl_geometry> gl_geometry::make(
 		gl_topology = GL_POINTS;
 		break;
 	default:
-		LOG_CONTEXT(CRITICAL, "unhandled topology: %s", to_string(cfg.topology).data());
+		LOG_CRITICAL("unhandled topology: %s", to_string(cfg.topology).data());
 		return nullptr;
 	}
 	

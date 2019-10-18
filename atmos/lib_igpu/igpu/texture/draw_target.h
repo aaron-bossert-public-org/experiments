@@ -16,7 +16,7 @@ namespace igpu
         
         const std::shared_ptr<depth_target>& depth() const;
         
-        glm::ivec2 resolution() const;
+        glm::ivec2 res() const;
         
         virtual ~draw_target() {}
         

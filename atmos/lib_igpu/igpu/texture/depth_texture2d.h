@@ -12,16 +12,6 @@ namespace igpu
     {
     public:
         
-		struct config
-		{
-			std::string name;
-			depth_format format;
-			glm::ivec2 res;
-			sampler sampler;
-		};
-
-		virtual const config& cfg() const = 0;
-        
         virtual ~depth_texture2d() {}
         
     protected:

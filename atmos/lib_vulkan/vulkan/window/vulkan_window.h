@@ -3,43 +3,57 @@
 
 #include <igpu/window/window.h>
 
+#include <vulkan/defines/vulkan_includes.h>
 #include <functional>
-#include  <string_view>
 
 struct GLFWwindow;
-struct VkInstance_T;
-struct VkSurfaceKHR_T;
 
-namespace igpu { 
+namespace igpu 
+{
+	class vulkan_back_buffer;
+	class vulkan_queue;
 
 	class vulkan_window : public window
 	{
 	public:
 
+		struct config : window::config
+		{
+			VkInstance instance;
+		};
+
 		using on_resize_t = std::function<void(vulkan_window*)>;
 
 		static std::unique_ptr<vulkan_window> make(
-			const std::string_view& title,
+			const config& cfg,
 			glm::ivec2 res,
-			on_resize_t on_resize = nullptr);
+			const on_resize_t& on_resize = nullptr);
+
+		const config& cfg() const override;
+		
+		glm::ivec2 res() const override;
 
 		~vulkan_window() override;
 
-		glm::ivec2 res() const override;
+		bool poll_events() const;
+		
+		VkSurfaceKHR surface();
 
-		std::vector<const char*> required_extensions() const;
-		
-		VkSurfaceKHR_T* make_surface(VkInstance_T*);
-		
-		bool poll_events();
+		static std::vector<const char*> required_extensions();
 
 	protected:
 
-		vulkan_window(GLFWwindow* glfw_window, on_resize_t on_resize);
+		vulkan_window(
+			const config&,
+			const on_resize_t&,
+			GLFWwindow*,
+			VkSurfaceKHR);
 
 	protected:
-
-		GLFWwindow* const _glfw_window;
+		
+		const config _cfg;
 		const on_resize_t _on_resize;
+		GLFWwindow* const _glfw_window;
+		VkSurfaceKHR _surface;
 	};
 }

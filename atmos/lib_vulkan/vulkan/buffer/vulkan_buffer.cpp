@@ -98,18 +98,15 @@ std::unique_ptr < vulkan_buffer > vulkan_buffer::make(const config& cfg)
 {
 	if (0 >= cfg.size)
 	{
-		LOG_CONTEXT(CRITICAL,
-			"size is zero");
+		LOG_CRITICAL("size is zero");
 	}
 	else if (VMA_MEMORY_USAGE_UNKNOWN == cfg.vma_usage)
 	{
-		LOG_CONTEXT(CRITICAL,
-			"vma usage is unknown");
+		LOG_CRITICAL("vma usage is unknown");
 	}
 	else if (0 == cfg.usage)
 	{
-		LOG_CONTEXT(CRITICAL,
-			"usage is not set");
+		LOG_CRITICAL("usage is not set");
 	}
 	else
 	{

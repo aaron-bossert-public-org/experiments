@@ -1,33 +1,39 @@
-//
-//#pragma once
-//
-//#include <igpu/texture/depth_buffer.h>
-//#include <framework/perf/metrics.h>
-//
-//struct VkImage_T;
-//struct VkDeviceMemory_T;
-//struct VkImageView_T
-//
-//namespace igpu
-//{
-//	class vulkan_depth_buffer : public depth_buffer
-//	{
-//	public:
-//
-//		static std::unique_ptr<vulkan_depth_buffer> make(const config&);
-//
-//		~vulkan_depth_buffer();
-//
-//	protected:
-//
-//		vulkan_depth_buffer(const config&);
-//
-//	private:
-//
-//				VkImage_T* _image = nullptr;
-//				VkDeviceMemory_T* _image_memory = nullptr;
-//				VkImageView_T _image_view = nullptr;
-//
-//		perf::metric _gpu_mem_metric;
-//	};
-//}
+
+#pragma once
+
+#include <igpu/texture/depth_target.h>
+#include <vulkan/texture/vulkan_image_buffer.h>
+
+namespace igpu
+{
+	VkFormat to_vulkan_format(depth_format format);
+
+	class vulkan_depth_buffer : public vulkan_image_buffer_t < depth_target >
+	{
+
+	public:
+
+		struct config : depth_target::config
+		{
+			VkPhysicalDevice physical_device = nullptr;
+			VkDevice device = nullptr;
+			VkSampleCountFlagBits sample_count;
+			VkSharingMode sharing_mode;
+		};
+
+		const config& cfg() const override;
+
+		static std::unique_ptr<vulkan_depth_buffer> make(const config&);
+
+	private:
+
+		vulkan_depth_buffer(
+			const config&,
+			const vulkan_image_buffer::config&);
+
+	private:
+
+		const config _cfg;
+	};
+}
+

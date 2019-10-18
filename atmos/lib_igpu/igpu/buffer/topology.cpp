@@ -9,8 +9,7 @@ size_t polycount(topology topology, const size_t index_count)
 {
 	if (!is_valid(topology))
 	{
-		LOG_CONTEXT(
-			CRITICAL,
+		LOG_CRITICAL(
 			"invalid topology:%d",
 			(int)topology);
 	}
@@ -24,8 +23,7 @@ size_t polycount(topology topology, const size_t index_count)
 			return index_count - 2;
 		}
 		
-		LOG_CONTEXT(
-			CRITICAL,
+		LOG_CRITICAL(
 			"unhandled topology(%s)",
 			to_string(topology).data());
 	}

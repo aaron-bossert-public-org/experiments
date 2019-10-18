@@ -70,7 +70,7 @@ const primitive& vulkan_program::default_instance_primitive(size_t instance_para
 		case parameter::type::TEXTURE2D:
 			return default_texture;
 		default:
-			LOG_CONTEXT(CRITICAL, "unhandled type %s, value will not be reset before the next draw call", parameter::to_string(type).data());
+			LOG_CRITICAL("unhandled type %s, value will not be reset before the next draw call", parameter::to_string(type).data());
 		}
 	}
 

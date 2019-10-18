@@ -21,15 +21,11 @@ vulkan_command_buffer::vulkan_command_buffer(const config& cfg)
 {
 	if (!_cfg.device)
 	{
-		LOG_CONTEXT(
-			CRITICAL,
-			"device is null");
+		LOG_CRITICAL("device is null");
 	}
 	else if (!_cfg.command_pool)
 	{
-		LOG_CONTEXT(
-			CRITICAL,
-			"command_pool is null");
+		LOG_CRITICAL("command_pool is null");
 	}
 	else
 	{
@@ -49,9 +45,7 @@ vulkan_command_buffer::vulkan_command_buffer(const config& cfg, const std::share
 	_fence = fence;
 	if (!fence)
 	{
-		LOG_CONTEXT(
-			CRITICAL,
-			"fence is null");
+		LOG_CRITICAL("fence is null");
 	}
 }
 

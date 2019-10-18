@@ -79,6 +79,7 @@ VkResult debug::generate_exception(const char* file, int line, const char* func,
 		res != VK_EVENT_RESET &&
 		res != VK_INCOMPLETE &&
 		res != VK_SUBOPTIMAL_KHR &&
+		res != VK_ERROR_OUT_OF_DATE_KHR &&
 		res != VK_RESULT_BEGIN_RANGE &&
 		res != VK_RESULT_END_RANGE &&
 		res != VK_RESULT_RANGE_SIZE)

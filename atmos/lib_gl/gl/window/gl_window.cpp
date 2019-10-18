@@ -6,7 +6,7 @@
 using namespace igpu;
 
 std::unique_ptr<gl_window> gl_window::make(
-	const std::string_view& title,
+	const config& cfg,
 	glm::ivec2 res,
 	on_resize_t on_resize)
 {
@@ -14,10 +14,11 @@ std::unique_ptr<gl_window> gl_window::make(
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-	auto glfw_window = glfwCreateWindow(res.x, res.y, title.data(), nullptr, nullptr);
+	auto glfw_window = glfwCreateWindow(res.x, res.y, cfg.name.c_str(), nullptr, nullptr);
 
 	auto w = std::unique_ptr<gl_window>(
 		new gl_window(
+			cfg,
 			glfw_window,
 			std::move(on_resize)));
 
@@ -41,6 +42,11 @@ gl_window::~gl_window()
 	glfwTerminate();
 }
 
+const gl_window::config& gl_window::cfg() const
+{
+	return _cfg;
+}
+
 glm::ivec2 gl_window::res() const
 {
 	glm::ivec2 res;
@@ -49,9 +55,11 @@ glm::ivec2 gl_window::res() const
 }
 
 gl_window::gl_window(
+	const config& cfg,
 	GLFWwindow* glfw_window,
 	on_resize_t on_resize)
-	: _glfw_window{ glfw_window }
+	: _cfg(cfg)
+	, _glfw_window{ glfw_window }
 	, _on_resize{ on_resize }
 {
 }

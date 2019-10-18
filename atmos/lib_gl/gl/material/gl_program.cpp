@@ -98,7 +98,7 @@ namespace
 			{
 #define CASE_NOT_IMPLEMENTED(GL_TYPE) \
 	case GL_TYPE: \
-		LOG_CONTEXT(CRITICAL, "unhandled gl_type(%d)", #GL_TYPE); continue;
+		LOG_CRITICAL("unhandled gl_type(%d)", #GL_TYPE); continue;
 				switch (gl_type)
 				{
 				case GL_SAMPLER_2D:
@@ -119,13 +119,13 @@ namespace
 				CASE_NOT_IMPLEMENTED(GL_FLOAT_MAT2);
 				CASE_NOT_IMPLEMENTED(GL_FLOAT_MAT3);
 				CASE_NOT_IMPLEMENTED(GL_FLOAT_MAT4);
-				default: LOG_CONTEXT(CRITICAL, "unrecognized gl_type(%d)", gl_type); continue;
+				default: LOG_CRITICAL("unrecognized gl_type(%d)", gl_type); continue;
 				}
 #undef CASE_NOT_IMPLEMENTED
 			}
 			else
 			{
-				LOG_CONTEXT(CRITICAL, "arrays not implemented, ignorning uniform:%s", name.c_str()); 
+				LOG_CRITICAL("arrays not implemented, ignorning uniform:%s", name.c_str());
 				continue;
 			}
 			parameters.emplace_back(parameter::config{ name, type }, (size_t)-1, location, binding_index);
@@ -170,7 +170,7 @@ namespace
 				components = igpu::components::FLOAT4;
 				break;
 			default:
-				LOG_CONTEXT(CRITICAL, "Unhandled vertex attrib gl type used in program: %d", type);
+				LOG_CRITICAL("Unhandled vertex attrib gl type used in program: %d", type);
 				components = igpu::components::FLOAT4;
 				break;
 			}
@@ -225,8 +225,7 @@ void gl_program::update(size_t batch_drawpass_id, const batch* batch)
 		} 
 		else
 		{
-			LOG_CONTEXT(
-				CRITICAL,
+			LOG_CRITICAL(
 				"constraint index: %d out of bounds: %d",
 				constraint_index,
 				cfg_constraints.parameters.size());
@@ -239,8 +238,7 @@ void gl_program::update(const material* material)
 	const auto& material_primitives = material->primitives();
 	if (material_primitives.size() != _material_parameters.size())
 	{
-		LOG_CONTEXT(
-			CRITICAL,
+		LOG_CRITICAL(
 			"material primitive count: %d does not match count expected by program: %d",
 			material_primitives.size(),
 			_material_parameters.size());
@@ -336,13 +334,13 @@ void gl_program::update(const gl_parameter& parameter, const primitive& primitiv
 		}
 		else
 		{
-			LOG_CONTEXT(CRITICAL, "unhandled variant index: %d", primitive.variant().index());
+			LOG_CRITICAL("unhandled variant index: %d", primitive.variant().index());
 		}
 
 		_gl_context->active_texture(parameter.binding_index(), gl_handle);
 	}
 	default:
-		LOG_CONTEXT(CRITICAL, "unhandled type %s", parameter::to_string(primitive.type()).data());
+		LOG_CRITICAL("unhandled type %s", parameter::to_string(primitive.type()).data());
 	}
 }
 
@@ -402,7 +400,7 @@ const primitive& gl_program::default_instance_primitive(size_t instance_paramete
 		case parameter::type::TEXTURE2D:
 			return default_texture;
 		default:
-			LOG_CONTEXT(CRITICAL, "unhandled type %s, value will not be reset before the next draw call", parameter::to_string(type).data());
+			LOG_CRITICAL( "unhandled type %s, value will not be reset before the next draw call", parameter::to_string(type).data());
 		}
 	}
 
@@ -418,7 +416,7 @@ std::unique_ptr<gl_program> gl_program::make(
 
     if(!gl_handle)
     {
-        LOG_CONTEXT( CRITICAL, "Error compiling shaders");
+		LOG_CRITICAL( "Error compiling shaders");
         return false;
     }
 

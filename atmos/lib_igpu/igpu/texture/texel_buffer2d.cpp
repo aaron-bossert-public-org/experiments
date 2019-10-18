@@ -36,7 +36,7 @@ std::unique_ptr<const texel_buffer2d> texel_buffer2d::make(
 
     if(!texel_buffer2d)
     {
-        LOG_CONTEXT( CRITICAL, "unable to load file data for '%s'", name.c_str() );
+		LOG_CRITICAL( "unable to load file data for '%s'", name.c_str() );
     }
    
     return texel_buffer2d;
@@ -130,7 +130,7 @@ std::unique_ptr<texel_buffer2d> load_as_stb(
 				cfg.format = texture_format::INT_R8G8B8A8;
 				break;
 			default:
-				LOG_CONTEXT(CRITICAL, "unexpected component count: %d", comp);
+				LOG_CRITICAL("unexpected component count: %d", comp);
 				return nullptr;
 			}
 		}
@@ -152,7 +152,7 @@ std::unique_ptr<texel_buffer2d> load_as_stb(
 				cfg.format = texture_format::INT_R16G16B16A16;
 				break;
 			default:
-				LOG_CONTEXT(CRITICAL, "unexpected component count: %d", comp);
+				LOG_CRITICAL("unexpected component count: %d", comp);
 				return nullptr;
 			}
 		}
@@ -214,7 +214,7 @@ std::unique_ptr<texel_buffer2d> load_as_ktx(
 	else if (ktxHeader->glFormat != 0)
 	{
 		// glFormat will be 0 if its a compressed format, ktx must contain a valid format for all raw formats.
-		LOG_CONTEXT(CRITICAL, "raw texture formats currently unsupported");
+		LOG_CRITICAL("raw texture formats currently unsupported");
 		return nullptr;
 	}
 	
@@ -321,7 +321,7 @@ std::unique_ptr<texel_buffer2d> load_as_dds(
 			cfg.format = texture_format::DXT_5_RGBA;
 			break;
 		default:
-			LOG_CONTEXT(CRITICAL, "unhandled format %4s", (char*)&ddsHeader->ddspf.fourCC);
+			LOG_CRITICAL("unhandled format %4s", (char*)&ddsHeader->ddspf.fourCC);
 			return nullptr;
 		}
 

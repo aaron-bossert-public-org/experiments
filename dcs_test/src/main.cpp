@@ -6,11 +6,10 @@
 
 int main() {
 
-	igpu::vulkan_context::config context_cfg;
-	context_cfg.name = "test vulkan context";
-	context_cfg.window = igpu::vulkan_window::make(context_cfg.name, glm::ivec2(800, 600));
-	std::shared_ptr < igpu::vulkan_context > context = igpu::vulkan_context::make(context_cfg);
-
+	std::shared_ptr < igpu::vulkan_context > context = igpu::vulkan_context::make(
+		{ "test vulkan context" },
+		glm::ivec2(800, 600));
+		
 	auto test = dcs_test::make({ context });
 
 	while (test->advance()) {

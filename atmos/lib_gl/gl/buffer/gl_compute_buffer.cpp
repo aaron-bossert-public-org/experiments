@@ -11,7 +11,7 @@ std::unique_ptr<gl_compute_buffer> gl_compute_buffer::make(const config& cfg)
 {
 	if (!is_valid(cfg.usage))
 	{
-		LOG_CONTEXT(CRITICAL, "invalid usage:%d", (int)cfg.usage);
+		LOG_CRITICAL("invalid usage:%d", (int)cfg.usage);
 	}
 	else
 	{

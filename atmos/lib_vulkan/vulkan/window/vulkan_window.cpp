@@ -3,23 +3,31 @@
 #include <vulkan/defines/vulkan_includes.h>
 #include <GLFW/glfw3.h>
 
+#include <algorithm>
+
 using namespace igpu;
 
 std::unique_ptr<vulkan_window> vulkan_window::make(
-	const std::string_view& title,
+	const config& cfg,
 	glm::ivec2 res,
-	on_resize_t on_resize)
+	const on_resize_t& on_resize)
 {
-	glfwInit();
-
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-	auto glfw_window = glfwCreateWindow(res.x, res.y, title.data(), nullptr, nullptr);
+	auto glfw_window = glfwCreateWindow(res.x, res.y, cfg.name.data(), nullptr, nullptr);
+	VkSurfaceKHR surface = nullptr;
+	VkResult result = glfwCreateWindowSurface(cfg.instance, glfw_window, nullptr, &surface);
+	if (result != VK_SUCCESS)
+	{
+		throw std::runtime_error(EXCEPTION_CONTEXT(debug::stringify_result(result).c_str()));
+	}
 
 	auto w = std::unique_ptr<vulkan_window>(
 		new vulkan_window(
-			glfw_window, 
-			std::move(on_resize)));
+			cfg,
+			on_resize,
+			glfw_window,
+			surface));
 
 	glfwSetWindowUserPointer(glfw_window, w.get());
 
@@ -35,10 +43,9 @@ std::unique_ptr<vulkan_window> vulkan_window::make(
 	return w;
 }
 
-vulkan_window::~vulkan_window()
+const vulkan_window::config& vulkan_window::cfg() const
 {
-	glfwDestroyWindow(_glfw_window);
-	glfwTerminate();
+	return _cfg;
 }
 
 glm::ivec2 vulkan_window::res() const
@@ -48,25 +55,23 @@ glm::ivec2 vulkan_window::res() const
 	return res;
 }
 
-std::vector<const char*> vulkan_window::required_extensions() const
+vulkan_window::~vulkan_window()
 {
+	vkDestroySurfaceKHR(_cfg.instance, _surface, nullptr);
+	glfwDestroyWindow(_glfw_window);
+	glfwTerminate();
+}
+
+std::vector<const char*> vulkan_window::required_extensions()
+{
+	glfwInit();
+
 	uint32_t count = 0;
 	const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&count);
 	return std::vector<const char*>(glfw_extensions, glfw_extensions + count);
 }
 
-VkSurfaceKHR vulkan_window::make_surface(VkInstance instance)
-{
-	VkSurfaceKHR surface_khr = nullptr;
-	if (glfwCreateWindowSurface(instance, _glfw_window, nullptr, &surface_khr) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to make window surface");
-	}
-
-	return surface_khr;
-}
-
-bool vulkan_window::poll_events()
+bool vulkan_window::poll_events() const
 {
 	if (!glfwWindowShouldClose(_glfw_window))
 	{
@@ -76,10 +81,19 @@ bool vulkan_window::poll_events()
 	return false;
 }
 
+VkSurfaceKHR vulkan_window::surface()
+{
+	return _surface;
+}
+
 vulkan_window::vulkan_window(
+	const config& cfg,
+	const on_resize_t& on_resize,
 	GLFWwindow* glfw_window,
-	on_resize_t on_resize)
-	: _glfw_window{ glfw_window }
-	, _on_resize{ on_resize }
+	VkSurfaceKHR surface)
+	: _cfg(cfg)
+	, _on_resize(on_resize)
+	, _glfw_window(glfw_window)
+	, _surface(surface)
 {
 }

@@ -93,7 +93,7 @@
 //		break;
 //	default:
 //
-//		LOG_CONTEXT(CRITICAL, "texture(%s): unhandled format(%s)",
+//		LOG_CRITICAL("texture(%s): unhandled format(%s)",
 //			cfg.name.c_str(), to_string(cfg.format).data());
 //		return nullptr;
 //	}

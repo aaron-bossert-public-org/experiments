@@ -13,26 +13,21 @@ const gl_render_texture2d::config& gl_render_texture2d::cfg() const
 	return _cfg;
 }
 
-const glm::ivec2& gl_render_texture2d::resolution() const
+unsigned gl_render_texture2d::gl_handle() const
 {
-	return _cfg.res;
+	return _gl_handle;
 }
 
-void gl_render_texture2d::attach()
+void gl_render_texture2d::attach() const
 {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _gl_handle, 0);
 }
     
-GLuint gl_render_texture2d::gl_handle() const
-{
-    return _gl_handle;
-}
-
 std::unique_ptr<gl_render_texture2d> gl_render_texture2d::make(const config& cfg)
 {
 	if (0 >= cfg.res.x || 0 >= cfg.res.y)
 	{
-		LOG_CONTEXT(CRITICAL, "width(%d) and height(%d) must be greater than zero", cfg.res.x, cfg.res.y);
+		LOG_CRITICAL("width(%d) and height(%d) must be greater than zero", cfg.res.x, cfg.res.y);
 		return nullptr;
 	}
 
@@ -58,7 +53,7 @@ std::unique_ptr<gl_render_texture2d> gl_render_texture2d::make(const config& cfg
 		type = GL_HALF_FLOAT_OES;
 		break;
 	default:
-		LOG_CONTEXT(CRITICAL, "texture(%s): no handler for format(%s)",
+		LOG_CRITICAL("texture(%s): no handler for format(%s)",
 			cfg.name.c_str(), to_string(cfg.format).data());
 		return nullptr;
 	}

@@ -1,18 +1,28 @@
 
 #pragma once
 
-#include <glm/fwd.hpp>
+#include <igpu/texture/depth_format.h>
+#include <igpu/texture/sampler.h>
+#include <glm/vec2.hpp>
+#include <string>
 
 namespace igpu
 {
     class depth_target
     {
     public:
-        virtual void attach() = 0;
+		
+		struct config
+		{
+			std::string name;
+			depth_format format;
+			sampler sampler;
+			glm::ivec2 res;
+		};
 
-		virtual ~depth_target();
-        
-        virtual const glm::ivec2& resolution() const = 0;
+		virtual const config& cfg() const = 0;
+
+		virtual ~depth_target() {}
         
     protected:
         depth_target() {}

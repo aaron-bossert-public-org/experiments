@@ -66,9 +66,7 @@ namespace
 						vulkan_format = VK_FORMAT_R32G32B32A32_SFLOAT;
 						break;
 					default:
-						LOG_CONTEXT(
-							CRITICAL,
-							"unhandled format: %s",
+						LOG_CRITICAL("unhandled format: %s",
 							to_string(attribute.parameter.components).data());
 					};
 
@@ -125,8 +123,7 @@ std::unique_ptr<vulkan_geometry> vulkan_geometry::make(
 {
 	if (nullptr == cfg.index_buffer)
 	{
-		LOG_CONTEXT(CRITICAL,
-			"index buffer is null");
+		LOG_CRITICAL("index buffer is null");
 		return nullptr;
 	}
 
@@ -135,7 +132,7 @@ std::unique_ptr<vulkan_geometry> vulkan_geometry::make(
 		const auto& vertex_buffer = cfg.vertex_buffers[i];
 		if (nullptr == vertex_buffer)
 		{
-			LOG_CONTEXT(CRITICAL,
+			LOG_CRITICAL(
 				"vertex buffer is null vertex_buffers[%d]",
 				(int)i);
 
@@ -165,9 +162,7 @@ std::unique_ptr<vulkan_geometry> vulkan_geometry::make(
 		vulkan_topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
 		break;
 	default:
-		LOG_CONTEXT(
-			CRITICAL,
-			"unhandled topology: %s",
+		LOG_CRITICAL("unhandled topology: %s",
 			to_string(cfg.topology).data());
 		return nullptr;
 	}

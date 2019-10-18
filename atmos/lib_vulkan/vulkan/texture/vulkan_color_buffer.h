@@ -1,33 +1,38 @@
-//
-//#pragma once
-//
-//#include <framework/perf/metrics.h>
-//#include <igpu/texture/color_buffer.h>
-//
-//struct VkImage_T;
-//struct VkDeviceMemory_T;
-//struct VkImageView_T;
-//
-//namespace igpu
-//{
-//	class vulkan_color_buffer : public color_buffer
-//	{
-//	public:
-//
-//		static std::unique_ptr<vulkan_color_buffer> make(const config&);
-//
-//		~vulkan_color_buffer();
-//
-//	protected:
-//
-//		vulkan_color_buffer(const config&);
-//
-//	private:
-//
-//		VkImage_T* _image = nullptr;
-//		VkDeviceMemory_T* _image_memory = nullptr;
-//		VkImageView_T _image_view = nullptr;
-//
-//		perf::metric _gpu_mem_metric;
-//	};
-//}
+
+#pragma once
+
+#include <igpu/texture/color_target.h>
+#include <vulkan/texture/vulkan_image_buffer.h>
+
+namespace igpu
+{
+	VkFormat to_vulkan_format(color_format);
+
+	class vulkan_color_buffer : public vulkan_image_buffer_t < color_target >
+	{
+
+	public:
+		
+		struct config : color_target::config
+		{
+			VkPhysicalDevice physical_device = nullptr;
+			VkDevice device = nullptr;
+			VkSampleCountFlagBits sample_count;
+			VkSharingMode sharing_mode;
+		};
+
+		const config& cfg() const override;
+
+		static std::unique_ptr<vulkan_color_buffer> make(const config&);
+
+	private:
+
+		vulkan_color_buffer(
+			const config&,
+			const vulkan_image_buffer::config&);
+
+	private:
+
+		const config _cfg;
+	};
+}

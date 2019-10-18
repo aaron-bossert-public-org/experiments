@@ -92,7 +92,7 @@ std::unique_ptr<gl_texture2d> gl_texture2d::make(const texel_buffer2d& raw)
 		break;
 	default:
 
-		LOG_CONTEXT(CRITICAL, "texture(%s): unhandled format(%s)",
+		LOG_CRITICAL("texture(%s): unhandled format(%s)",
 			cfg.name.c_str(), to_string(cfg.format).data());
 		return nullptr;
 	}

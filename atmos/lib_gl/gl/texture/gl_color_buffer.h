@@ -2,24 +2,21 @@
 #pragma once
 
 #include <framework/perf/metrics.h>
-#include <igpu/texture/color_buffer.h>
+#include <igpu/texture/color_target.h>
+#include <gl/texture/gl_color_target.h>
 
 namespace igpu
 {
-    class gl_color_buffer : public color_buffer
+    class gl_color_buffer : public color_target, gl_color_target
     {
     public:
         
 		const config& cfg() const override;
 
-		const glm::ivec2& resolution() const override;
-
-        void attach() override;
+        void attach() const override;
         
 		void gl_handle(int);
-        
-        int gl_handle() const;
-        
+		
         static std::unique_ptr<gl_color_buffer> make_empty();
         
         static std::unique_ptr<gl_color_buffer> make(const config&);

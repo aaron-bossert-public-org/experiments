@@ -11,7 +11,7 @@ size_t batch_parameters::index_of(const std::string_view& name) const
 	size_t index = _block.get_index_of(name);
 	if (-1 == index)
 	{
-		LOG_CONTEXT(CRITICAL, "invalid batch parameter name given: %s", name.data());
+		LOG_CRITICAL("invalid batch parameter name given: %s", name.data());
 	}
 	return index;
 }

@@ -3,6 +3,8 @@
 
 // GL implementation includes - begin
 #include <gl/defines/gl_includes.h>
+#include <gl/texture/gl_color_target.h>
+#include <gl/texture/gl_depth_target.h>
 // GL implementation includes - end
 
 #include <igpu/texture/color_target.h>
@@ -73,7 +75,7 @@ bool gl_draw_target::validate_framebuffer_status(int status)
 
 			"unknown error!";
 
-		LOG_CONTEXT( CRITICAL, "glCheckFramebufferStatus(GL_FRAMEBUFFER) returned %d\n%s",
+		LOG_CRITICAL( "glCheckFramebufferStatus(GL_FRAMEBUFFER) returned %d\n%s",
 			status, err.c_str());
 
         return false;
@@ -88,14 +90,21 @@ std::unique_ptr<gl_draw_target> gl_draw_target::make(
 {
     GLuint frame_buffer = 0;
     
-    if(!color_target)
-    {
-        LOG_CONTEXT( CRITICAL, "color_target null");
-    }
-    if(!depth_target)
-    {
-        LOG_CONTEXT( CRITICAL, "depth_target null");
-    }
+	auto gl_color_target = dynamic_cast<igpu::gl_color_target*>(color_target.get());
+	auto gl_depth_target = dynamic_cast<igpu::gl_depth_target*>(depth_target.get());
+	
+	if (!color_target && !depth_target)
+	{
+		LOG_CRITICAL("color_target and depth_target are both null");
+	}
+	if(color_target && !gl_color_target)
+	{
+		LOG_CRITICAL("color_target is not a gl_color_target");
+	}
+	else if (depth_target && !gl_depth_target)
+	{
+		LOG_CRITICAL("depth_target is not a gl_depth_target");
+	}
     else
     {
         GLint active_frame_buffer = 0;
@@ -106,8 +115,16 @@ std::unique_ptr<gl_draw_target> gl_draw_target::make(
         
         glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
         
-        depth_target->attach();
-        color_target->attach();
+
+		if (gl_color_target)
+		{
+			gl_color_target->attach();
+		}
+
+		if (gl_depth_target)
+		{
+			gl_depth_target->attach();
+		};
         
         GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         
@@ -129,9 +146,10 @@ gl_draw_target::~gl_draw_target()
     glDeleteFramebuffers(1, &_frame_buffer);
 }
 
-gl_draw_target::gl_draw_target(unsigned int frame_buffer,
-                           const std::shared_ptr<color_target>& color_target,
-                           const std::shared_ptr<depth_target>& depth_target)
+gl_draw_target::gl_draw_target(
+	unsigned int frame_buffer,
+    const std::shared_ptr<color_target>& color_target,
+    const std::shared_ptr<depth_target>& depth_target)
 : draw_target(color_target, depth_target)
 , _frame_buffer(frame_buffer)
 {

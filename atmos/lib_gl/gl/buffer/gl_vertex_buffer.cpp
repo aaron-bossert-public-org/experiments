@@ -16,7 +16,7 @@ std::unique_ptr<gl_vertex_buffer> gl_vertex_buffer::make(const config& cfg, cons
 {
 	if (!is_valid(cfg.usage))
 	{
-		LOG_CONTEXT(CRITICAL, "invalid usage:%d", (int)cfg.usage);
+		LOG_CRITICAL("invalid usage:%d", (int)cfg.usage);
 	}
 	else
 	{

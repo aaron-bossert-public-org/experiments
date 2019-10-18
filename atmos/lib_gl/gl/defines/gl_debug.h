@@ -9,14 +9,14 @@
 #define RedefineGLFuncVoidReturn(GLFunc, ...) [&](const char* func, const char* file, unsigned line){ \
 GLFunc ( __VA_ARGS__ );\
 gl_debug::instance.check_for_errors(#GLFunc, #__VA_ARGS__, func, file, line, logging::severity::CRITICAL);\
-}(__FUNCTION__, __FILE__ , __LINE__)
+}(__FUNCSIG__, __FILE__ , __LINE__)
 
 
 #define RedefineGLFunc(GLFunc, ...) [&](const char* func, const char* file, unsigned line){ \
 auto ret = GLFunc ( __VA_ARGS__ );\
 gl_debug::instance.check_for_errors(#GLFunc, #__VA_ARGS__, func, file, line, logging::severity::CRITICAL);\
 return ret;\
-}(__FUNCTION__, __FILE__ , __LINE__)
+}(__FUNCSIG__, __FILE__ , __LINE__)
 
 #undef glBegin
 #undef glEnd
@@ -24,17 +24,17 @@ return ret;\
 
 // Disable error checking between glBegin and glEnd
 #define glBegin(...) \
-gl_debug::instance.set_errors_enabled(false, "'glBegin' was called, cannot check for gl errors while in immediate mode", __FUNCTION__, __FILE__ , __LINE__);\
+gl_debug::instance.set_errors_enabled(false, "'glBegin' was called, cannot check for gl errors while in immediate mode", __FUNCSIG__, __FILE__ , __LINE__);\
 glBegin(__VA_ARGS__)
 
 #define glEnd(...) \
 glEnd(__VA_ARGS__);\
-gl_debug::instance.set_errors_enabled(true, "", __FUNCTION__, __FILE__ , __LINE__)
+gl_debug::instance.set_errors_enabled(true, "", __FUNCSIG__, __FILE__ , __LINE__)
 
 // Libraries that do not process their own glerrors will have to be guarded to prevent those errors from leaking into first party code
 #define CheckGlErrorLeaks() [&](const char* func, const char* file, unsigned line){ \
 gl_debug::instance.check_for_errors("glGetError", "checking third party gl errors", func, file, line, logging::severity::CRITICAL);\
-}(__FUNCTION__, __FILE__ , __LINE__)
+}(__FUNCSIG__, __FILE__ , __LINE__)
 
 // disable manual error checking, which would be redundant
 #define glGetError(...) 0

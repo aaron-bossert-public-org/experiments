@@ -9,11 +9,14 @@
 #include <igpu/context/batch_constraints.h>
 #include <igpu/context/material_constraints.h>
 #include <igpu/context/vertex_constraints.h>
+#include <igpu/texture/color_format.h>
+#include <igpu/texture/depth_format.h>
 #include <functional>
 #include <memory>
 
 namespace igpu
 {
+	class back_buffer;
 	class batch_parameters;
 	class geometry;
 	class program;
@@ -29,6 +32,8 @@ namespace igpu
 			batch_constraints::config batch_constraints;
 			material_constraints::config material_constraints;
 			vertex_constraints::config vertex_constraints;
+			color_format color_format;
+			depth_format depth_format;
 
 			bool enable_validation 
 #if ATMOS_DEBUG
@@ -65,6 +70,8 @@ namespace igpu
 		virtual const vertex_constraints& vertex_constraints() const = 0;
 
 		virtual const window& window() const = 0;
+
+		virtual const back_buffer& back_buffer() const = 0;
 
 	protected:
 

@@ -5,6 +5,7 @@
 #include <igpu/context/context.h>
 #include <vulkan/defines/vulkan_includes.h>
 #include <vulkan/material/vulkan_render_states.h>
+#include <vulkan/window/vulkan_back_buffer.h>
 #include <vulkan/window/vulkan_window.h>
 
 #include <framework/perf/metrics.h>
@@ -24,11 +25,11 @@ namespace igpu
 
 		struct config : context::config
 		{
-			std::shared_ptr<vulkan_window> window;
 		};
 
 		static std::unique_ptr<vulkan_context> make(
-			const config&);
+			const config&,
+			const glm::ivec2& screen_res);
 
 		const config& cfg() const override;
 
@@ -54,45 +55,48 @@ namespace igpu
 
 		const igpu::vertex_constraints& vertex_constraints() const override;
 
-		const igpu::vulkan_window& window() const override;
+		const vulkan_window& window() const override;
+
+		const vulkan_back_buffer& back_buffer() const override;
+
 
         ~vulkan_context();
 
-		// todo: delete these accessors
+		// todo: delete these methods and the need for their functionality
 		VkInstance instance();
-		VkSurfaceKHR surface_khr();
 		VkPhysicalDevice physical_device();
 		VkDevice device();
-		const std::shared_ptr<vulkan_buffer_mediator>& buffer_mediator();
+		vulkan_buffer_mediator& buffer_mediator();
+		void resize_back_buffer(const glm::ivec2& screen_res);
 
     protected:
         
 		vulkan_context(
 			const config&,
 			VkInstance,
-			VkSurfaceKHR,
+			VkDebugUtilsMessengerEXT,
 			VkPhysicalDevice,
 			VkDevice,
-			VkDebugUtilsMessengerEXT,
-			VkSampleCountFlagBits,
-			const std::shared_ptr<vulkan_buffer_mediator>&);
+			const std::shared_ptr<vulkan_buffer_mediator>&,
+			std::unique_ptr<vulkan_window>,
+			std::unique_ptr<vulkan_back_buffer>);
         
     private:
 		const config _cfg;
 
 		VkInstance _instance = nullptr;
-		VkSurfaceKHR _surface_khr = nullptr;
+		VkDebugUtilsMessengerEXT _debug_messenger = nullptr;
 		VkPhysicalDevice _physical_device = nullptr;
 		VkDevice _device = nullptr;
-		VkDebugUtilsMessengerEXT _debug_messenger = nullptr;
 
-		VkSampleCountFlagBits _max_usable_sample_count = VK_SAMPLE_COUNT_1_BIT;
-		
+		std::shared_ptr<vulkan_buffer_mediator> _buffer_mediator;
+		std::unique_ptr<vulkan_window> _window;
+		std::unique_ptr<vulkan_back_buffer> _back_buffer;
+
 		igpu::batch_constraints _batch_constraints;
 		igpu::material_constraints _material_constraints;
 		igpu::vertex_constraints _vertex_constraints;
 
-		std::shared_ptr<vulkan_buffer_mediator> _buffer_mediator;
 
 #if ATMOS_PERFORMANCE_TRACKING
 		perf::metric _renderstate_switch_metric;

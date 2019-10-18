@@ -12,14 +12,6 @@ namespace igpu
     {
     public:
 
-		struct config
-		{
-			std::string name;
-			sampler sampler;
-			glm::ivec2 res;
-			color_format format;
-		};
-
 		virtual const config& cfg() const;
 
 		virtual ~render_texture2d() {}

@@ -61,7 +61,7 @@ void* buffer_view_base::at(size_t i) const
     }
     else
     {
-        LOG_CONTEXT( CRITICAL, "index out of bounds" );
+		LOG_CRITICAL( "index out of bounds" );
     }
         
     // return null pointer so crash occurs on access

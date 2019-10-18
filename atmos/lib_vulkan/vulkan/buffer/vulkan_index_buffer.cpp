@@ -5,7 +5,7 @@ using namespace igpu;
 
 std::unique_ptr<vulkan_index_buffer> vulkan_index_buffer::make(
 	const config& cfg,
-	const std::shared_ptr < vulkan_buffer_mediator >& buffer_mediator)
+	const std::weak_ptr < vulkan_buffer_mediator >& buffer_mediator)
 {
 	vulkan_staged_buffer::config buffer_cfg({
 		cfg.usage,

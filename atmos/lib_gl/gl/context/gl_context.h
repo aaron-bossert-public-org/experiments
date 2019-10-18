@@ -2,6 +2,8 @@
 #pragma once
 #include <gl/buffer/gl_vertex_attrib_array_tracker.h>
 #include <gl/material/gl_render_states.h>
+#include <gl/window/gl_back_buffer.h>
+#include <gl/window/gl_window.h>
 
 #include <igpu/context/context.h>
 #include <igpu/context/batch_constraints.h>
@@ -25,7 +27,9 @@ namespace igpu
     {
     public:
 
-		static std::unique_ptr<gl_context> make(const config&);
+		static std::unique_ptr<gl_context> make(
+			const config&,
+			const glm::ivec2& screen_res);
 		
 		const config& cfg() const override;
 
@@ -51,7 +55,9 @@ namespace igpu
 
 		const igpu::vertex_constraints& vertex_constraints() const override;
 
-		const igpu::window& window() const override;
+		const gl_window& window() const override;
+
+		const gl_back_buffer& back_buffer() const override;
 
         void set_back_buffer(const gl_back_buffer*);
         

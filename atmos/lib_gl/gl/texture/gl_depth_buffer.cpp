@@ -12,12 +12,7 @@ const gl_depth_buffer::config& gl_depth_buffer::cfg() const
 	return _cfg;
 }
 
-const glm::ivec2& gl_depth_buffer::resolution() const
-{
-	return _cfg.res;
-}
-
-void gl_depth_buffer::attach()
+void gl_depth_buffer::attach() const
 {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _gl_handle);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, _gl_handle);
@@ -26,11 +21,6 @@ void gl_depth_buffer::attach()
 void gl_depth_buffer::gl_handle(int gl_handle)
 {
     _gl_handle = gl_handle;
-}
-
-int gl_depth_buffer::gl_handle() const
-{
-    return _gl_handle;
 }
 
 gl_depth_buffer::~gl_depth_buffer()
@@ -62,7 +52,7 @@ std::unique_ptr<gl_depth_buffer> gl_depth_buffer::make(const config& cfg)
 		format = GL_DEPTH_COMPONENT16;
 		break;
 	default:
-		LOG_CONTEXT(CRITICAL, "texture(%s): no handler for format(%s)",
+		LOG_CRITICAL("texture(%s): no handler for format(%s)",
 			cfg.name.c_str(), to_string(cfg.format).data());
 		return nullptr;
 	}

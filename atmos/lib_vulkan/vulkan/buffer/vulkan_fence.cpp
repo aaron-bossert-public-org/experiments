@@ -30,7 +30,7 @@ void vulkan_fence::wait(uint64_t err_msg_nanosecnods)
 	while (false == is_ready(err_msg_nanosecnods))
 	{
 		seconds_waited += double(err_msg_nanosecnods) / (1000 * 1000 * 1000);
-		LOG_CONTEXT(WARNING,
+		LOG_CRITICAL(
 			"waiting for fence %f seconds",
 			seconds_waited);
 	}

@@ -10,6 +10,7 @@
 #include <vulkan/buffer/vulkan_vertex_buffer.h>
 #include <vulkan/defines/vulkan_includes.h>
 #include <vulkan/material/vulkan_program.h>
+#include <vulkan/window/vulkan_back_buffer.h>
 #include <vulkan/window/vulkan_window.h>
 // Vulkan implementation includes - end
 
@@ -17,6 +18,7 @@
 #include <set>
 #include <vector>
 #include <iostream>
+#include <algorithm>
 
 using namespace igpu;
 
@@ -57,7 +59,7 @@ namespace
 		app_info.apiVersion = VK_API_VERSION_1_0;
 
 
-		std::vector<const char*> extensions = cfg.window->required_extensions();
+		std::vector<const char*> extensions = vulkan_window::required_extensions();
 		std::vector<const char*> layers;
 
 		if (cfg.enable_validation)
@@ -97,9 +99,7 @@ namespace
 
 			if (!found)
 			{
-				LOG_CONTEXT(
-					CRITICAL,
-					"%s requested, but not available", layer_name);
+				LOG_CRITICAL("%s requested, but not available", layer_name);
 			}
 			else
 			{
@@ -110,10 +110,29 @@ namespace
 		return instance;
 	}
 	
-	static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT /* message_severity */, VkDebugUtilsMessageTypeFlagsEXT /* message_type */, const VkDebugUtilsMessengerCallbackDataEXT* p_callback_data, void* /* p_user_data */)
+	static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT /* message_type */, const VkDebugUtilsMessengerCallbackDataEXT* p_callback_data, void* /* p_user_data */)
 	{
+		logging::severity severity = logging::severity::VERBOSE;
+
+		if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+		{
+			severity = logging::severity::CRITICAL;
+		}
+		else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+		{
+			severity = logging::severity::WARNING;
+		}
+		else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
+		{
+			severity = logging::severity::DEBUG;
+		}
+		else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
+		{
+			severity = logging::severity::VERBOSE;
+		}
+
 		LOG_CONTEXT(
-			CRITICAL,
+			severity,
 			"Vulkan layer debug callback: %s",
 			p_callback_data->pMessage);
 
@@ -132,6 +151,12 @@ namespace
 			create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 			create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 			create_info.pfnUserCallback = debug_callback;
+			create_info.messageSeverity = 0
+				//| VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
+				//| VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT
+				| VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
+				| VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT
+				;
 			
 			if (CreateDebugUtilsMessengerEXT(instance, &create_info, nullptr, &debug_messenger) != VK_SUCCESS)
 			{
@@ -154,7 +179,7 @@ namespace
 		struct
 		{
 			const char* const name;
-			const VkFlags flags = 0;
+			const VkQueueFlagBits flags = (VkQueueFlagBits)0;
 			const bool require_present = 0;
 			std::optional < uint32_t > family_index;
 			fitness_type fitness = ALL;
@@ -209,14 +234,14 @@ namespace
 					}
 					[[fallthrough]];
 				case queue_families::SOME:
-					if (flags != all_flags && flags != family->flags && flags & family->flags)
+					if (flags != all_flags && flags != (VkFlags)family->flags && flags & (VkFlags)family->flags)
 					{
 						family->fitness = queue_families::SOME;
 						family->family_index = i;
 					}
 					[[fallthrough]];
 				case queue_families::ONE:
-					if (flags == family->flags)
+					if (flags == (VkFlags)family->flags)
 					{
 						family->fitness = queue_families::ONE;
 						family->family_index = i;
@@ -306,10 +331,10 @@ namespace
 		VkPhysicalDeviceProperties physical_device_properties;
 		vkGetPhysicalDeviceProperties(physical_device, &physical_device_properties);
 
-		VkSampleCountFlags counts = physical_device_properties.limits.framebufferColorSampleCounts;
-		counts = counts > physical_device_properties.limits.framebufferDepthSampleCounts
-			? physical_device_properties.limits.framebufferDepthSampleCounts
-			: counts;
+		VkSampleCountFlags counts = 
+			physical_device_properties.limits.framebufferColorSampleCounts < physical_device_properties.limits.framebufferDepthSampleCounts
+			? physical_device_properties.limits.framebufferColorSampleCounts
+			: physical_device_properties.limits.framebufferDepthSampleCounts;
 
 		if (counts & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
 		if (counts & VK_SAMPLE_COUNT_32_BIT) { return VK_SAMPLE_COUNT_32_BIT; }
@@ -320,22 +345,81 @@ namespace
 
 		return VK_SAMPLE_COUNT_1_BIT;
 	}
+
+	glm::ivec2 choose_screen_res(const glm::ivec2 screen_res, const VkSurfaceCapabilitiesKHR& capabilities)
+	{
+		if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
+		{
+			return {
+				capabilities.currentExtent.width,
+				capabilities.currentExtent.height,
+			};
+		}
+		return {
+			std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, (uint32_t)screen_res.x)),
+			std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, (uint32_t)screen_res.y)),
+		};
+	}
+
+	std::unique_ptr<vulkan_back_buffer> create_back_buffer(
+		const vulkan_context::config& cfg,
+		VkPhysicalDevice physical_device,
+		VkSurfaceKHR surface,
+		VkDevice device,
+		const glm::ivec2& res,
+		const std::shared_ptr < vulkan_queue >& present_queue,
+		const std::shared_ptr < vulkan_queue >& graphics_queue)
+	{
+		VkSurfaceCapabilitiesKHR surface_caps = {};
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &surface_caps);
+		
+		sampler samp = {
+			sampler::filter::NEAREST,
+			sampler::filter::NEAREST,
+			sampler::address::MIRROR,
+			sampler::address::MIRROR,
+		};
+
+		return vulkan_back_buffer::make({
+			cfg.color_format,
+			cfg.depth_format,
+			samp,
+			choose_screen_res(res, surface_caps),
+			physical_device,
+			surface,
+			device,
+			VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+			present_queue,
+			graphics_queue,
+			get_max_usable_sample_count(physical_device),
+		});
+	}
 }
 
 std::unique_ptr<vulkan_context> vulkan_context::make(
-	const config& cfg)
+	const config& cfg,
+	const glm::ivec2& screen_res)
 {
 	VkInstance instance = create_instance(cfg);
 	VkDebugUtilsMessengerEXT debug_messenger = create_debug_messenger(cfg, instance);
 
-	VkSurfaceKHR surface_khr = cfg.window->make_surface(instance);
+
+	vulkan_window::config window_cfg = {};
+	window_cfg.name = cfg.name;
+	window_cfg.instance = instance;
+	auto window = vulkan_window::make(window_cfg, screen_res);
+	if (!window)
+	{
+		return nullptr;
+	}
+
 	queue_families families;
-
-	VkPhysicalDevice physical_device = pick_physical_device(&families, instance, surface_khr);
+	VkPhysicalDevice physical_device = pick_physical_device(&families, instance, window->surface());
 	VkDevice device = create_device(physical_device, families);
-
-	VkSampleCountFlagBits max_usable_sample_count = get_max_usable_sample_count(physical_device);
-
+	if (!device)
+	{
+		return nullptr;
+	}
 
 	vulkan_buffer_mediator::config buffer_mediator_cfg = {};
 	buffer_mediator_cfg.physical_device = physical_device;
@@ -344,22 +428,35 @@ std::unique_ptr<vulkan_context> vulkan_context::make(
 	buffer_mediator_cfg.graphics_queue = vulkan_queue::make({ device, families.graphics.family_index.value(), 0 });
 	buffer_mediator_cfg.compute_queue = vulkan_queue::make({ device, families.compute.family_index.value(), 0 });
 	buffer_mediator_cfg.transfer_queue = vulkan_queue::make({ device, families.transfer.family_index.value(), 0 });
-
-	if (auto buffer_mediator = vulkan_buffer_mediator::make(buffer_mediator_cfg))
+	auto buffer_mediator = vulkan_buffer_mediator::make(buffer_mediator_cfg);
+	if (!buffer_mediator)
 	{
-		return std::unique_ptr<vulkan_context>(
-			new vulkan_context(
-				cfg,
-				instance,
-				surface_khr,
-				physical_device,
-				device,
-				debug_messenger,
-				max_usable_sample_count,
-				std::move(buffer_mediator)));
+		return nullptr;
 	}
 
-	return nullptr;
+	auto back_buffer = create_back_buffer(
+		cfg,
+		physical_device,
+		window->surface(),
+		device,
+		screen_res,
+		buffer_mediator_cfg.present_queue,
+		buffer_mediator_cfg.graphics_queue);
+	if (!back_buffer)
+	{
+		return nullptr;
+	}
+
+	return std::unique_ptr<vulkan_context>(
+		new vulkan_context(
+			cfg,
+			instance,
+			debug_messenger,
+			physical_device,
+			device,
+			std::move(buffer_mediator),
+			std::move(window),
+			std::move(back_buffer)));
 }
 
 const vulkan_context::config& vulkan_context::cfg() const
@@ -424,29 +521,34 @@ const vertex_constraints& vulkan_context::vertex_constraints() const
 
 const vulkan_window& vulkan_context::window() const
 {
-	return *_cfg.window;
+	return *_window;
+}
+
+const vulkan_back_buffer& vulkan_context::back_buffer() const
+{
+	return *_back_buffer;
 }
 
 vulkan_context::vulkan_context(
 	const config& cfg,
 	VkInstance instance,
-	VkSurfaceKHR surface_khr,
+	VkDebugUtilsMessengerEXT debug_messenger,
 	VkPhysicalDevice physical_device,
 	VkDevice device,
-	VkDebugUtilsMessengerEXT debug_messenger,
-	VkSampleCountFlagBits max_usable_sample_count,
-	const std::shared_ptr<vulkan_buffer_mediator>& buffer_mediator)
+	const std::shared_ptr<vulkan_buffer_mediator>& buffer_mediator,
+	std::unique_ptr<vulkan_window> window,
+	std::unique_ptr<vulkan_back_buffer> back_buffer)
 	: _cfg(cfg)
 	, _instance(instance)
-	, _surface_khr(surface_khr)
+	, _debug_messenger(debug_messenger)
 	, _physical_device(physical_device)
 	, _device (device)
-	, _debug_messenger(debug_messenger)
-	, _max_usable_sample_count(max_usable_sample_count)
+	, _buffer_mediator(buffer_mediator)
+	, _window(std::move(window))
+	, _back_buffer(std::move(back_buffer))
 	, _batch_constraints(cfg.batch_constraints)
 	, _material_constraints(cfg.material_constraints)
 	, _vertex_constraints(cfg.vertex_constraints)
-	, _buffer_mediator(std::move(buffer_mediator))
 #if ATMOS_PERFORMANCE_TRACKING
 	, _renderstate_switch_metric(perf::category::SWITCH_RENDER_STATES, "Renderstates")
 	, _draw_target_clears_metric(perf::category::CLEAR_DRAW_TARGET, "Draw Target Clears")
@@ -461,27 +563,26 @@ vulkan_context::vulkan_context(
 
 vulkan_context::~vulkan_context()
 {
+	_back_buffer = nullptr;
+	std::weak_ptr<vulkan_buffer_mediator> weak_buffer_mediator = _buffer_mediator;
 	_buffer_mediator = nullptr;
+	ASSERT_CONTEXT(nullptr == weak_buffer_mediator.lock(), "not all dependencies on buffer mediator have been destroyed");
 
 	vkDestroyDevice(_device, nullptr);
+
+	_window = nullptr;
 
 	if (_cfg.enable_validation)
 	{
 		DestroyDebugUtilsMessengerEXT(_instance, _debug_messenger, nullptr);
 	}
-
-	vkDestroySurfaceKHR(_instance, _surface_khr, nullptr);
+		
 	vkDestroyInstance(_instance, nullptr);
 }
 
 VkInstance vulkan_context::instance()
 {
 	return _instance;
-}
-
-VkSurfaceKHR vulkan_context::surface_khr()
-{
-	return _surface_khr;
 }
 
 VkPhysicalDevice vulkan_context::physical_device()
@@ -494,7 +595,20 @@ VkDevice vulkan_context::device()
 	return _device;
 }
 
-const std::shared_ptr<vulkan_buffer_mediator>& vulkan_context::buffer_mediator()
+vulkan_buffer_mediator& vulkan_context::buffer_mediator()
 {
-	return _buffer_mediator;
+	return *_buffer_mediator;
+}
+
+void vulkan_context::resize_back_buffer(const glm::ivec2& screen_res)
+{
+	_back_buffer = nullptr;
+	_back_buffer = ::create_back_buffer(
+		_cfg,
+		_physical_device,
+		_window->surface(),
+		_device,
+		screen_res,
+		_buffer_mediator->cfg().present_queue,
+		_buffer_mediator->cfg().graphics_queue);
 }

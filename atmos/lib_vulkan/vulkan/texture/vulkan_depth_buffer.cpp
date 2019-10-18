@@ -1,82 +1,101 @@
-//#include <vulkan/texture/vulkan_depth_buffer.h>
-//
-//// Vulkan implementation includes - begin
-//#include <vulkan/defines/vulkan_includes.h>
-//// Vulkan implementation includes - end
-//
-//
-//using namespace igpu;
-//
-//void vulkan_depth_buffer::attach()
-//{
-//	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _gl_handle);
-//	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, _gl_handle);
-//}
-//
-//void vulkan_depth_buffer::gl_handle(int gl_handle)
-//{
-//	_gl_handle = gl_handle;
-//}
-//
-//int vulkan_depth_buffer::gl_handle() const
-//{
-//	return _gl_handle;
-//}
-//
-//vulkan_depth_buffer::~vulkan_depth_buffer()
-//{
-//	if (_gl_handle)
-//	{
-//		glDeleteRenderbuffers(1, (unsigned int*)&_gl_handle);
-//	}
-//}
-//
-//std::unique_ptr<vulkan_depth_buffer> vulkan_depth_buffer::make_empty()
-//{
-//	return std::unique_ptr<vulkan_depth_buffer>(new vulkan_depth_buffer({}, 0));
-//}
-//
-//std::unique_ptr<vulkan_depth_buffer> vulkan_depth_buffer::make(const config& cfg)
-//{
-//	GLenum format;
-//
-//	switch (cfg.format)
-//	{
-//	case depth_format::D24S8:
-//		format = GL_DEPTH24_STENCIL8;
-//		break;
-//	case depth_format::D32:
-//		format = GL_DEPTH_COMPONENT32F;
-//		break;
-//	case depth_format::D16:
-//		format = GL_DEPTH_COMPONENT16;
-//		break;
-//	default:
-//		LOG_CONTEXT(CRITICAL, "texture(%s): no handler for format(%s)",
-//			cfg.name.c_str(), to_string(cfg.format).data());
-//		return nullptr;
-//	}
-//
-//	GLuint gl_handle = 0;
-//	GLint active_handle = 0;
-//	glGetIntegerv(GL_RENDERBUFFER_BINDING, &active_handle);
-//	glGenRenderbuffers(1, &gl_handle);
-//	glBindRenderbuffer(GL_RENDERBUFFER, gl_handle);
-//	glRenderbufferStorage(GL_RENDERBUFFER, format, cfg.res.x, cfg.res.y);
-//	glBindRenderbuffer(GL_RENDERBUFFER, active_handle);
-//
-//	return std::unique_ptr<vulkan_depth_buffer>(new vulkan_depth_buffer(cfg, gl_handle));
-//}
-//
-//vulkan_depth_buffer::vulkan_depth_buffer(const config& cfg, int gl_handle)
-//	: depth_buffer(cfg)
-//	, _gl_handle(gl_handle)
-//	, _gpu_mem_metric(perf::category::MEM_USAGE, "GPU Depth Buffer Mem")
-//{
-//	const depth_format format = cfg.format;
-//	_gpu_mem_metric.add(cfg.res.x * cfg.res.y *
-//		( format == depth_format::D24S8 ? 4
-//		: format == depth_format::D32 ? 4
-//		: format == depth_format::D16 ? 2
-//		: 0)); // should not hit
-//}
+#include <vulkan/texture/vulkan_depth_buffer.h>
+
+using namespace igpu;
+
+VkFormat igpu::to_vulkan_format(depth_format format)
+{
+	switch (format)
+	{
+	case depth_format::D24S8:
+		return VK_FORMAT_D24_UNORM_S8_UINT;
+	case depth_format::D32:
+		return VK_FORMAT_D32_SFLOAT;
+	case depth_format::D16:
+		return VK_FORMAT_D16_UNORM;
+	};
+
+	if (is_valid(format))
+	{
+		LOG_CRITICAL("unhandled format: %s", to_string(format).data());
+	}
+	else
+	{
+		LOG_CRITICAL("invalid format: %d", format);
+	}
+
+	return VK_FORMAT_UNDEFINED;
+}
+
+const vulkan_depth_buffer::config& vulkan_depth_buffer::cfg() const
+{
+	return _cfg;
+}
+
+std::unique_ptr<vulkan_depth_buffer> vulkan_depth_buffer::make(const config& cfg)
+{
+	VkFormat vulkan_format = to_vulkan_format(cfg.format);
+	
+	if (VK_FORMAT_UNDEFINED == vulkan_format)
+	{
+		return nullptr;
+	}
+
+	VkFormatProperties props;
+	vkGetPhysicalDeviceFormatProperties(cfg.physical_device, vulkan_format, &props);
+
+	if (0 == (props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT))
+	{
+		LOG_CRITICAL("%s not supported as a depth attachment format", to_string(cfg.format).data());
+		return false;
+	}
+
+	VkImageCreateInfo image_info = {};
+	image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	image_info.imageType = VK_IMAGE_TYPE_2D;
+	image_info.extent = { (uint32_t)cfg.res.x, (uint32_t)cfg.res.y , 1 };
+	image_info.mipLevels = 1;
+	image_info.arrayLayers = 1;
+	image_info.format = vulkan_format;
+	image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+	image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	image_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	image_info.samples = cfg.sample_count;
+	image_info.sharingMode = cfg.sharing_mode;
+
+
+	VkImageViewCreateInfo view_info = {};
+	view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	view_info.format = vulkan_format;
+	view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+	view_info.subresourceRange.baseMipLevel = 0;
+	view_info.subresourceRange.levelCount = 1;
+	view_info.subresourceRange.baseArrayLayer = 0;
+	view_info.subresourceRange.layerCount = 1;
+
+
+	vulkan_image_buffer::config image_cfg = {};
+	image_cfg.physical_device = cfg.physical_device;
+	image_cfg.device = cfg.device;
+	image_cfg.memory_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+	image_cfg.info = image_info;
+	image_cfg.view_info = view_info;
+
+	if (vulkan_image_buffer::validate(image_cfg))
+	{
+		return std::unique_ptr < vulkan_depth_buffer >(
+			new vulkan_depth_buffer(
+				cfg,
+				image_cfg));
+	}
+
+	return nullptr;
+}
+
+vulkan_depth_buffer::vulkan_depth_buffer(
+	const config& cfg,
+	const vulkan_image_buffer::config& image_cfg)
+	: vulkan_image_buffer_t(image_cfg)
+	, _cfg(cfg)
+{
+}

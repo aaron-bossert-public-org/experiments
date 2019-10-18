@@ -73,7 +73,7 @@
 
 // 			"unknown error!";
 
-// 		LOG_CONTEXT( CRITICAL, "glCheckFramebufferStatus(GL_FRAMEBUFFER) returned %d\n%s",
+// 		LOG_CRITICAL( CRITICAL, "glCheckFramebufferStatus(GL_FRAMEBUFFER) returned %d\n%s",
 // 			status, err.c_str());
 
 //         return false;
@@ -90,11 +90,11 @@
     
 //     if(!color_target)
 //     {
-//         LOG_CONTEXT( CRITICAL, "color_target null");
+//         LOG_CRITICAL( CRITICAL, "color_target null");
 //     }
 //     if(!depth_target)
 //     {
-//         LOG_CONTEXT( CRITICAL, "depth_target null");
+//         LOG_CRITICAL( CRITICAL, "depth_target null");
 //     }
 //     else
 //     {

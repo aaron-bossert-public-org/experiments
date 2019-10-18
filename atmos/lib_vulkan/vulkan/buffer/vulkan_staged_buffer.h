@@ -23,7 +23,7 @@ namespace igpu
 		{
 			buffer_usage usage;
 			VkBufferUsageFlagBits vk_usage_flags = (VkBufferUsageFlagBits)0;
-			std::shared_ptr < vulkan_buffer_mediator > buffer_mediator;
+			std::weak_ptr < vulkan_buffer_mediator > buffer_mediator;
 		};
 		
 		vulkan_staged_buffer(

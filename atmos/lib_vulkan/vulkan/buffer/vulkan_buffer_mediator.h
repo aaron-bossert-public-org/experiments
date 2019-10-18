@@ -28,7 +28,6 @@ namespace igpu
 			std::shared_ptr<vulkan_queue> graphics_queue;
 			std::shared_ptr<vulkan_queue> compute_queue;
 			std::shared_ptr<vulkan_queue> transfer_queue;
-			size_t max_inflight_frames = 3;
 		};
 
 		const config& cfg() const;

@@ -7,14 +7,14 @@
 
  namespace igpu
  {
- 	class batch;
-     class batch_binding;
-     class material;
-     class vulkan_context;
-     class vulkan_parameter;
- 	class vulkan_vertex_parameter;
-    
-     class vulkan_program : public program
+	 class batch;
+	 class batch_binding;
+	 class material;
+	 class vulkan_context;
+	 class vulkan_parameter;
+	 class vulkan_vertex_parameter;
+
+	 class vulkan_program : public program
      {
      public:
 

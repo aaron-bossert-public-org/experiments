@@ -13,12 +13,7 @@ const gl_depth_texture2d::config& gl_depth_texture2d::cfg() const
 	return _cfg;
 }
 
-const glm::ivec2& gl_depth_texture2d::resolution() const
-{
-	return _cfg.res;
-}
-
-void gl_depth_texture2d::attach()
+void gl_depth_texture2d::attach() const
 {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _gl_handle, 0);
 }
@@ -37,7 +32,7 @@ std::unique_ptr<gl_depth_texture2d> gl_depth_texture2d::make(const config& cfg)
 {
 	if (0 >= cfg.res.x || 0 >= cfg.res.y)
 	{
-		LOG_CONTEXT(CRITICAL, "width(%d) and height(%d) must be greater than zero", cfg.res.x, cfg.res.y);
+		LOG_CRITICAL("width(%d) and height(%d) must be greater than zero", cfg.res.x, cfg.res.y);
 		return nullptr;
 	}
 
@@ -63,7 +58,7 @@ std::unique_ptr<gl_depth_texture2d> gl_depth_texture2d::make(const config& cfg)
 		type = GL_UNSIGNED_SHORT;
 		break;
 	default:
-		LOG_CONTEXT(CRITICAL, "texture(%s): no handler for format(%s)",
+		LOG_CRITICAL("texture(%s): no handler for format(%s)",
 			cfg.name.c_str(), to_string(cfg.format).data());
 		return nullptr;
 	}

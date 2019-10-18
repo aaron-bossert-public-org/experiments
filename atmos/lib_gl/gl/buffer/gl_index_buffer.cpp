@@ -20,7 +20,7 @@ namespace
 			return GL_UNSIGNED_INT;
 		};
 
-		LOG_CONTEXT(CRITICAL, "unhandled index_format value: %s", to_string(format).data());
+		LOG_CRITICAL("unhandled index_format value: %s", to_string(format).data());
 
 		return GL_FALSE;
 	}
@@ -37,15 +37,15 @@ std::unique_ptr<gl_index_buffer> gl_index_buffer::make(const config& cfg)
 
 	if (!is_valid(cfg.format))
 	{
-		LOG_CONTEXT(CRITICAL, "invalid format:%d", (int)cfg.format);
+		LOG_CRITICAL("invalid format:%d", (int)cfg.format);
 	}
 	else if (!is_valid(cfg.usage))
 	{
-		LOG_CONTEXT(CRITICAL, "invalid usage:%d", (int)cfg.usage);
+		LOG_CRITICAL("invalid usage:%d", (int)cfg.usage);
 	}
 	else if (GL_FALSE == gl_format)
 	{
-		LOG_CONTEXT(CRITICAL, "unhandled format:%s", to_string(cfg.format).data());
+		LOG_CRITICAL("unhandled format:%s", to_string(cfg.format).data());
 	}
 	else
 	{

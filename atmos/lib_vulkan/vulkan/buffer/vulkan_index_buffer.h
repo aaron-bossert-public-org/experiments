@@ -14,7 +14,7 @@ namespace igpu
 
 		static std::unique_ptr<vulkan_index_buffer> make(
 			const config&,
-			const std::shared_ptr < vulkan_buffer_mediator >&);
+			const std::weak_ptr < vulkan_buffer_mediator >&);
 
 	private:
 

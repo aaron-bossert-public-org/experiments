@@ -19,8 +19,7 @@ primitive& primitive::operator=(primitive&& other)
 	}
 	else
 	{
-		LOG_CONTEXT(
-			CRITICAL,
+		LOG_CRITICAL(
 			"expected type: %s but instead recieved primitive of type: %s",
 			parameter::to_string(type()).data(),
 			parameter::to_string(other.type()).data());
@@ -37,8 +36,7 @@ primitive& primitive::operator=(const primitive& other)
 	}
 	else
 	{
-		LOG_CONTEXT(
-			CRITICAL,
+		LOG_CRITICAL(
 			"expected type: %s but instead recieved primitive of type: %s",
 			parameter::to_string(type()).data(),
 			parameter::to_string(other.type()).data());
@@ -82,7 +80,7 @@ void primitive::set(std::shared_ptr<compute_buffer> val)
 	}
 	else
 	{
-		LOG_CONTEXT(CRITICAL, "primitive type is unexpected: %s", parameter::to_string(type()).data());
+		LOG_CRITICAL("primitive type is unexpected: %s", parameter::to_string(type()).data());
 	}
 }
 
@@ -97,7 +95,7 @@ void primitive::set(std::shared_ptr<texture2d> val)
 	}
 	else
 	{
-		LOG_CONTEXT(CRITICAL, "primitive type is unexpected: %s", parameter::to_string(type()).data());
+		LOG_CRITICAL("primitive type is unexpected: %s", parameter::to_string(type()).data());
 	}
 }
 
@@ -111,7 +109,7 @@ void primitive::set(std::shared_ptr<depth_texture2d> val)
 	}
 	else
 	{
-		LOG_CONTEXT(CRITICAL, "primitive type is unexpected: %s", parameter::to_string(type()).data());
+		LOG_CRITICAL("primitive type is unexpected: %s", parameter::to_string(type()).data());
 	}
 }
 
@@ -125,6 +123,6 @@ void primitive::set(std::shared_ptr<render_texture2d> val)
 	}
 	else
 	{
-		LOG_CONTEXT(CRITICAL, "primitive type is unexpected: %s", parameter::to_string(type()).data());
+		LOG_CRITICAL("primitive type is unexpected: %s", parameter::to_string(type()).data());
 	}
 }

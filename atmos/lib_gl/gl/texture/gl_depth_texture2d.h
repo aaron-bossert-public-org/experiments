@@ -3,18 +3,17 @@
 
 #include <igpu/texture/depth_texture2d.h>
 #include <framework/perf/metrics.h>
-        
+#include <gl/texture/gl_depth_target.h>
+
 namespace igpu
 {
-    class gl_depth_texture2d : public depth_texture2d
+    class gl_depth_texture2d : public depth_texture2d, gl_depth_target
     {
     public:
 
 		const config& cfg() const override;
 
-		const glm::ivec2& resolution() const override;
-
-        void attach() override;
+        void attach() const override;
         
         unsigned gl_handle() const;
         

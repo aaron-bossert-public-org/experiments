@@ -1,24 +1,22 @@
 
 #pragma once
 
-#include <igpu/texture/depth_buffer.h>
+#include <igpu/texture/depth_target.h>
+#include <gl/texture/gl_depth_target.h>
+
 #include <framework/perf/metrics.h>
 
 namespace igpu
 {
-    class gl_depth_buffer : public depth_buffer
+    class gl_depth_buffer : public depth_target, gl_depth_target
     {
     public:
 
 		const config& cfg() const override;
 
-		const glm::ivec2& resolution() const override;
-
-        void attach() override;
+        void attach() const override;
         
         void gl_handle(int gl_handle);
-        
-        int gl_handle() const;
         
         static std::unique_ptr<gl_depth_buffer> make_empty();
         

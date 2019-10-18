@@ -146,7 +146,7 @@ public:
             suffix += " min:" + std::to_string(minimum);
         }
         
-		LOG_CONTEXT(INFORM, "%s%.2f : %s %s\n", get_indent(_stack_depth), total, callsite_name.c_str(), suffix.c_str() );
+		LOG_DEBUG("%s%.2f : %s %s\n", get_indent(_stack_depth), total, callsite_name.c_str(), suffix.c_str() );
     }
 };
 
@@ -242,14 +242,14 @@ public:
             
             // prevent output collisions between separate thread_callstack_trackers
                 
-			LOG_CONTEXT(INFORM, "\n");
+			LOG_DEBUG("\n");
                 
             if(trap_sprung)
             {
-				LOG_CONTEXT(INFORM, "||||||||||||||||||||| long frame trap sprung!!! - \n");
+				LOG_DEBUG("||||||||||||||||||||| long frame trap sprung!!! - \n");
             }
                 
-			LOG_CONTEXT( INFORM, " %.2f - frame time (milliseconds)\n\n", float(frame_time_milliseconds) );
+			LOG_DEBUG(" %.2f - frame time (milliseconds)\n\n", float(frame_time_milliseconds) );
                 
             output_results(frame_time_milliseconds);
         }
@@ -268,7 +268,7 @@ public:
             thread_name = _thread_name.c_str();
         }
         
-		LOG_CONTEXT(INFORM, "%s@%s\n", get_indent(0), thread_name );
+		LOG_DEBUG("%s@%s\n", get_indent(0), thread_name );
         
         // this is to colapse redundant function calls
         size_t last_stack_depth = 0;
@@ -289,7 +289,7 @@ public:
             {
                 if(last_stack_depth > stack_depth)
                 {
-					LOG_CONTEXT(INFORM, "%s\n", get_indent(stack_depth) );
+					LOG_DEBUG("%s\n", get_indent(stack_depth) );
                 }
                 
                 last_stack_depth = stack_depth;
@@ -298,8 +298,8 @@ public:
             }
         }
         
-		LOG_CONTEXT(INFORM, "%s\n", get_indent(0) );
-		LOG_CONTEXT(INFORM, "%s%.2f / %.2f : %s untracked time \n\n\n", get_indent(0), untracked_frame_time_milliseconds, frame_time_milliseconds, thread_name );
+		LOG_DEBUG("%s\n", get_indent(0) );
+		LOG_DEBUG("%s%.2f / %.2f : %s untracked time \n\n\n", get_indent(0), untracked_frame_time_milliseconds, frame_time_milliseconds, thread_name );
     }
     
     size_t begin_callsite(size_t callsite_index, const std::string& instance_desc)
@@ -362,7 +362,7 @@ public:
             }
         }
         
-        LOG_CONTEXT( CRITICAL, "ran out of thread callstack trackers, consider increasing the limit, or using another call timing mechanism.");
+		LOG_CRITICAL( "ran out of thread callstack trackers, consider increasing the limit, or using another call timing mechanism.");
         
         return nullptr;
     }

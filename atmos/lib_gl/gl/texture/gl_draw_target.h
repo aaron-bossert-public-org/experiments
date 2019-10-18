@@ -2,7 +2,6 @@
 #pragma once
 
 #include <igpu/texture/draw_target.h>
-
 #include <memory>
 
 namespace igpu
@@ -22,9 +21,10 @@ namespace igpu
         ~gl_draw_target() override;
         
     private:
-        gl_draw_target(unsigned int frame_buffer,
-                     const std::shared_ptr<color_target>&,
-                     const std::shared_ptr<depth_target>&);
+        gl_draw_target(
+			unsigned int frame_buffer,
+			const std::shared_ptr<color_target>&,
+			const std::shared_ptr<depth_target>&);
         
         unsigned int _frame_buffer;
     };

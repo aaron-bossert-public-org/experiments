@@ -5,8 +5,6 @@
 
 #include <glm/glm.hpp>
 #include <memory>
-#include <string_view>
-#include <functional>
 
 namespace igpu
 {
@@ -14,18 +12,17 @@ namespace igpu
 	{
 	public:
 
-		ENUM_SERIALIZABLE(
+		struct config
+		{
+			std::string name;
+		};
 
-			status, DEFAULT(NORMAL),
+		virtual const config& cfg() const = 0;
 
-			(NORMAL, 0),
-			(CLOSED, 1)
-		);
+		virtual glm::ivec2 res() const = 0;
 
 		virtual ~window() {}
 
-		virtual glm::ivec2 res() const = 0;
-		
 	protected:
 
 		window() = default;

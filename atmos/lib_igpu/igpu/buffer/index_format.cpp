@@ -13,8 +13,7 @@ namespace igpu
 	{
 		if (!is_valid(format))
 		{
-			LOG_CONTEXT(
-				CRITICAL,
+			LOG_CRITICAL(
 				"invalid format:%d",
 				(int)format);
 		}
@@ -28,8 +27,7 @@ namespace igpu
 				return 2;
 			}
 
-			LOG_CONTEXT(
-				CRITICAL,
+			LOG_CRITICAL(
 				"unhandled format(%s)",
 				to_string(format).data());
 		}

@@ -5,13 +5,13 @@
 #include <gl/buffer/gl_index_buffer.h>
 #include <gl/buffer/gl_vertex_buffer.h>
 #include <gl/buffer/gl_geometry.h>
-#include <gl/context/gl_back_buffer.h>
 #include <gl/defines/gl_includes.h>
 #include <gl/material/gl_program.h>
 #include <gl/material/gl_render_states.h>
 #include <gl/texture/gl_color_buffer.h>
 #include <gl/texture/gl_depth_buffer.h>
 #include <gl/texture/gl_draw_target.h>
+#include <gl/window/gl_back_buffer.h>
 #include <gl/window/gl_window.h>
 // GL implementation includes - end
 
@@ -21,14 +21,16 @@
 
 using namespace igpu;
 
-std::unique_ptr<gl_context> gl_context::make(const config& cfg)
+std::unique_ptr<gl_context> gl_context::make(
+	const config& cfg,
+	const glm::ivec2& screen_res)
 {
 	glm::ivec2 res = { 800, 600 };
-	auto window = gl_window::make("gl", res);
+	auto window = gl_window::make({ cfg.name }, screen_res);
 
 	if (!window)
 	{
-		LOG_CONTEXT(CRITICAL, "failed to make window");
+		LOG_CRITICAL("failed to make window");
 	}
 	else
 	{
@@ -97,9 +99,14 @@ const vertex_constraints& gl_context::vertex_constraints() const
 	return _vertex_constraints;
 }
 
-const window& gl_context::window() const
+const gl_window& gl_context::window() const
 {
 	return *_gl_window;
+}
+
+const gl_back_buffer& gl_context::back_buffer() const
+{
+	return *gl_back_buffer::instance().get();
 }
 
 gl_context::gl_context(
@@ -133,17 +140,9 @@ void gl_context::set_back_buffer(const gl_back_buffer* back_buffer)
     
     if (back_buffer)
     {
-		const auto& cfg = back_buffer->cfg();
-		ASSERT_CONTEXT(dynamic_cast<gl_color_buffer*>(cfg.color.get()));
-		ASSERT_CONTEXT(dynamic_cast<gl_depth_buffer*>(cfg.depth.get()));
-
-        auto color_handle = ((gl_color_buffer*)cfg.color.get())->gl_handle();
-        auto depth_handle = ((gl_depth_buffer*)cfg.depth.get())->gl_handle();
-        auto frame_handle = back_buffer->gl_handle();
-        
-        glBindFramebuffer(GL_FRAMEBUFFER, frame_handle);
-        glBindRenderbuffer(GL_RENDERBUFFER, color_handle);
-        glBindRenderbuffer(GL_RENDERBUFFER, depth_handle);
+        glBindFramebuffer(GL_FRAMEBUFFER, back_buffer->gl_handle());
+		back_buffer->color().attach();
+		back_buffer->depth().attach();
     }
 }
 
@@ -172,11 +171,11 @@ void gl_context::active_texture(GLenum stage, GLuint handle, bool force)
 {
 	if (0 == stage)
 	{
-		LOG_CONTEXT(CRITICAL, "Attempt to set a non-sampler parameter with texture - it's likely a shader didn't compile properly.");
+		LOG_CRITICAL("Attempt to set a non-sampler parameter with texture - it's likely a shader didn't compile properly.");
 	}
 	else if (!handle)
 	{
-		LOG_CONTEXT(CRITICAL, "Attempt to set null texture.");
+		LOG_CRITICAL("Attempt to set null texture.");
 	}
 	else if( force || _active_texture_stage != stage )
 	{

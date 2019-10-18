@@ -24,7 +24,7 @@ std::unique_ptr<dcs_test> dcs_test::make(const config& cfg)
 
 	if (!cfg.context)
 	{
-		LOG_CONTEXT(CRITICAL, "context is null");
+		LOG_CRITICAL("context is null");
 	}
 	else
 	{
@@ -38,6 +38,7 @@ std::unique_ptr<dcs_test> dcs_test::make(const config& cfg)
 
 void test_init_vulkan_context(const std::shared_ptr < igpu::vulkan_context >& context);
 bool test_loop_vulkan_context();
+void test_cleanup_vulkan_context();
 
 dcs_test::dcs_test(
 	const config& cfg)
@@ -48,6 +49,7 @@ dcs_test::dcs_test(
 
 dcs_test::~dcs_test()
 {
+	test_cleanup_vulkan_context();
 }
 
 bool dcs_test::advance()

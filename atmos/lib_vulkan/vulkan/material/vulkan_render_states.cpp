@@ -23,7 +23,7 @@
 // 			return GL_FRONT_AND_BACK;
 // 		};
 
-// 		LOG_CONTEXT(CRITICAL, "unhandled cull value: %s", to_string(cull).data());
+// 		LOG_CRITICAL("unhandled cull value: %s", to_string(cull).data());
 
 // 		return GL_BACK;
 //     };
@@ -54,7 +54,7 @@
 // 			return GL_ONE_MINUS_DST_ALPHA;
 // 		};
 
-// 		LOG_CONTEXT(CRITICAL, "unhandled blend value: %s", to_string(blend).data());
+// 		LOG_CRITICAL("unhandled blend value: %s", to_string(blend).data());
 
 // 		return GL_ONE;
 // 	};
@@ -81,7 +81,7 @@
 // 			return GL_ALWAYS;
 // 		};
 
-// 		LOG_CONTEXT(CRITICAL, "unhandled compare value: %s", to_string(compare).data());
+// 		LOG_CRITICAL("unhandled compare value: %s", to_string(compare).data());
 		
 // 		return GL_LESS;
 // 	};
@@ -108,7 +108,7 @@
 // 			return GL_INVERT;
 // 		};
 
-// 		LOG_CONTEXT(CRITICAL, "unhandled stencil value: %s", to_string(stencil).data());
+// 		LOG_CRITICAL("unhandled stencil value: %s", to_string(stencil).data());
 
 // 		return GL_KEEP;
 // 	};

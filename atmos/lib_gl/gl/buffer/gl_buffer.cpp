@@ -21,7 +21,7 @@ namespace
 			return GL_DYNAMIC_DRAW;
 		}
 
-		LOG_CONTEXT(CRITICAL, "unhandled usage:%s", to_string(usage).data());
+		LOG_CRITICAL("unhandled usage:%s", to_string(usage).data());
 		return GL_FALSE;
 	}
 
@@ -73,7 +73,7 @@ void gl_buffer::map(buffer_view_base& buffer_view, size_t byte_size)
 {
 	if (_mapped)
 	{
-		LOG_CONTEXT(CRITICAL, "map/unmap mismatch");
+		LOG_CRITICAL("map/unmap mismatch");
 		unmap();
 	}
 
@@ -122,7 +122,7 @@ void gl_buffer::unmap()
 {
 	if (!_mapped)
 	{
-		LOG_CONTEXT(CRITICAL, "map/unmap mismatch");
+		LOG_CRITICAL("map/unmap mismatch");
 	}
 	else
 	{
@@ -145,7 +145,7 @@ void gl_buffer::release()
 {
 	if (_mapped)
 	{
-		LOG_CONTEXT(CRITICAL, "cannot release while memory is mapped");
+		LOG_CRITICAL("cannot release while memory is mapped");
 	}
 	else
 	{
