@@ -15,10 +15,16 @@ namespace igpu
 			const config&,
 			const scoped_ptr < vulkan_buffer_mediator >&);
 
+		const config& cfg() const override;
+
 	private:
 
 		vulkan_compute_buffer(
 			const config&,
 			const vulkan_staged_buffer::config&);
+
+	private:
+
+		const config _cfg;
 	};
 }

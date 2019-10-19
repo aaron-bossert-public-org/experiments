@@ -18,7 +18,7 @@
 #if ATMOS_DEBUG
 
 #	ifndef VMA_DEBUG_LOG
-#		define VMA_DEBUG_LOG(...) LOG_DEBUG("VulkanMemoryAllocator: " __VA_ARGS__)
+#		define VMA_DEBUG_LOG(...) LOG_VERBOSE("VulkanMemoryAllocator: " __VA_ARGS__)
 #	endif
 
 #	ifndef VMA_RECORDING_ENABLED

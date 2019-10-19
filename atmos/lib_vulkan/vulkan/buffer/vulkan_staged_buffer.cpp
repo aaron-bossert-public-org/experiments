@@ -132,3 +132,7 @@ bool vulkan_staged_buffer::validate(const config& cfg)
 	return false;
 }
 
+VkBuffer vulkan_staged_buffer::get()
+{
+	return _gpu_buffer->get();
+}

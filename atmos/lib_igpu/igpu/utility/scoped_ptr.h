@@ -7,8 +7,7 @@
 
 namespace igpu
 {
-	// Use this class to disambiguate ownership of shared pointers, by prevenging leakage of strong references and asserting weak references are destroyed before the owned objects.
-	// ~scoped_ptr and operator-> assert that referenced shared pointer is still alive
+	// scoped_ptr alerts when references live longer than their shared pointer targets.
 	template<class T>
 	class scoped_ptr : private std::weak_ptr<T>
 	{	

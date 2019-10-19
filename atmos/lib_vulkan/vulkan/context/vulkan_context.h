@@ -4,7 +4,6 @@
 #include <igpu/utility/utility_types.h>
 #include <igpu/context/context.h>
 #include <vulkan/defines/vulkan_includes.h>
-#include <vulkan/material/vulkan_render_states.h>
 #include <vulkan/window/vulkan_back_buffer.h>
 #include <vulkan/window/vulkan_window.h>
 
@@ -13,12 +12,7 @@
 namespace igpu
 {
     class vulkan_buffer_mediator;
-	class vulkan_program;
-    class vulkan_vertex_buffer;
-    class vulkan_index_buffer;
-	class vulkan_render_states;
-    class vulkan_geometry;
-    
+	
     class vulkan_context : public context
     {
     public:

@@ -47,6 +47,11 @@ namespace {
 
 void logging::log_context(const char* file, int line, const char* func, severity s, const char* fmt, ...)
 {
+	if (s > severity::DEBUG)
+	{
+		return;
+	}
+
 	std::va_list args;
 	va_start(args, fmt);
 	std::string output = string_utils::format_with_va_args(fmt, args);

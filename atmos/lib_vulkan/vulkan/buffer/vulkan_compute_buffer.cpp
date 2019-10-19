@@ -20,11 +20,15 @@ std::unique_ptr<vulkan_compute_buffer> vulkan_compute_buffer::make(
 	return nullptr;
 }
 
+const vulkan_compute_buffer::config& vulkan_compute_buffer::cfg() const
+{
+	return _cfg;
+}
+
 vulkan_compute_buffer::vulkan_compute_buffer(
 	const config& cfg,
 	const vulkan_staged_buffer::config& buffer_cfg)
-	: vulkan_staged_buffer_t (
-		cfg,
-		buffer_cfg)
+	: vulkan_staged_buffer_t (buffer_cfg)
+	, _cfg(cfg)
 {
 }

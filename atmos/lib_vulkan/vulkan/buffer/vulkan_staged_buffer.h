@@ -46,6 +46,9 @@ namespace igpu
 
 		static bool validate(const config&);
 
+		// todo: delete access to this
+		VkBuffer get();
+
 	private:
 		
 		const config _cfg;
@@ -62,11 +65,6 @@ namespace igpu
 		using config = typename T::config;
 
 		~vulkan_staged_buffer_t() override {};
-
-		const config& cfg() const override
-		{
-			return _cfg;
-		}
 
 		void map(
 			buffer_view_base& buffer_view,
@@ -86,19 +84,21 @@ namespace igpu
 			return _vulkan_staged_buffer.byte_size();
 		}
 
+		VkBuffer get()
+		{
+			return _vulkan_staged_buffer.get();
+		}
+
 	protected:
 
 		vulkan_staged_buffer_t(
-			const config& cfg,
 			const vulkan_staged_buffer::config& res_config)
-			: _cfg(cfg)
-			, _vulkan_staged_buffer(res_config)
+			: _vulkan_staged_buffer(res_config)
 		{
 		}
 
 	private:
 
-		const config _cfg;
 		vulkan_staged_buffer _vulkan_staged_buffer;
 	};
 }

@@ -288,7 +288,7 @@ vulkan_buffer_mediator::vulkan_buffer_mediator(
 
 #include <vulkan/defines/vulkan_includes.h>
 #include <vulkan/context/vulkan_context.h>
-#include <vulkan/window/vulkan_window.h>
+#include <igpu/window/window.h>
 
 #define GLM_ENABLE_EXPERIMENTAL 1
 #include <glm/glm.hpp>
@@ -320,6 +320,8 @@ vulkan_buffer_mediator::vulkan_buffer_mediator(
 #include <thread>
 #include <unordered_map>
 #include <vulkan/window/vulkan_back_buffer.h>
+#include <vulkan/buffer/vulkan_index_buffer.h>
+#include <vulkan/buffer/vulkan_vertex_buffer.h>
 
 
 const std::string MODEL_PATH = "cooked_assets/models/chalet.obj";
@@ -329,44 +331,12 @@ const std::string TEXTURE_PATH = "cooked_assets/textures/chalet.jpg";
 struct Vertex
 {
 	glm::vec3 pos;
-	glm::vec3 color;
-	glm::vec2 tex_coord;
-
-	static VkVertexInputBindingDescription get_binding_description()
-	{
-		VkVertexInputBindingDescription binding_description = {};
-		binding_description.binding = 0;
-		binding_description.stride = sizeof(Vertex);
-		binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-		return binding_description;
-	}
-
-	static std::array<VkVertexInputAttributeDescription, 3> get_attribute_descriptions()
-	{
-		std::array<VkVertexInputAttributeDescription, 3> attribute_descriptions = {};
-
-		attribute_descriptions[0].binding = 0;
-		attribute_descriptions[0].location = 0;
-		attribute_descriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attribute_descriptions[0].offset = offsetof(Vertex, pos);
-
-		attribute_descriptions[1].binding = 0;
-		attribute_descriptions[1].location = 1;
-		attribute_descriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attribute_descriptions[1].offset = offsetof(Vertex, color);
-
-		attribute_descriptions[2].binding = 0;
-		attribute_descriptions[2].location = 2;
-		attribute_descriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-		attribute_descriptions[2].offset = offsetof(Vertex, tex_coord);
-
-		return attribute_descriptions;
-	}
+	glm::vec3 col;
+	glm::vec2 uv0;
 
 	bool operator==(const Vertex& other) const
 	{
-		return pos == other.pos && color == other.color && tex_coord == other.tex_coord;
+		return pos == other.pos && col == other.col && uv0 == other.uv0;
 	}
 };
 
@@ -376,7 +346,7 @@ namespace std
 	{
 		size_t operator()(Vertex const& vertex) const
 		{
-			return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.tex_coord) << 1);
+			return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.col) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.uv0) << 1);
 		}
 	};
 }
@@ -387,8 +357,6 @@ struct UniformBufferObject
 	alignas(16) glm::mat4 view;
 	alignas(16) glm::mat4 proj;
 };
-
-#include <vulkan/window/vulkan_window.h>
 
 using namespace igpu;
 
@@ -417,10 +385,213 @@ private:
 
 	std::vector<Vertex> _vertices;
 	std::vector<uint32_t> _indices;
-	VkBuffer _vertex_buffer;
-	VkDeviceMemory _vertex_buffer_memory;
-	VkBuffer _index_buffer;
-	VkDeviceMemory _index_buffer_memory;
+	
+	struct old_vertex_impl
+	{
+		HelloTriangleApplication* app;
+		VkBuffer raw = nullptr;
+		VkDeviceMemory raw_memory = nullptr;
+
+		VkVertexInputBindingDescription get_binding_description()
+		{
+			VkVertexInputBindingDescription binding_description = {};
+			binding_description.binding = 0;
+			binding_description.stride = sizeof(Vertex);
+			binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+			return binding_description;
+		}
+
+		std::array<VkVertexInputAttributeDescription, 3> get_attribute_descriptions()
+		{
+			std::array<VkVertexInputAttributeDescription, 3> attribute_descriptions = {};
+
+attribute_descriptions[0].binding = 0;
+attribute_descriptions[0].location = 0;
+attribute_descriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+attribute_descriptions[0].offset = offsetof(Vertex, pos);
+
+attribute_descriptions[1].binding = 0;
+attribute_descriptions[1].location = 1;
+attribute_descriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+attribute_descriptions[1].offset = offsetof(Vertex, col);
+
+attribute_descriptions[2].binding = 0;
+attribute_descriptions[2].location = 2;
+attribute_descriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+attribute_descriptions[2].offset = offsetof(Vertex, uv0);
+
+return attribute_descriptions;
+		}
+
+		void create()
+		{
+			VkDeviceSize buffer_size = sizeof(app->_vertices[0]) * app->_vertices.size();
+
+			VkBuffer staging_buffer;
+			VkDeviceMemory staging_buffer_memory;
+
+			app->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_buffer_memory);
+
+
+			void* data;
+			vkMapMemory(app->_device, staging_buffer_memory, 0, buffer_size, 0, &data);
+			memcpy(data, app->_vertices.data(), buffer_size);
+			vkUnmapMemory(app->_device, staging_buffer_memory);
+
+			app->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, raw, raw_memory);
+
+			app->copy_buffer(staging_buffer, raw, buffer_size);
+
+			vkDestroyBuffer(app->_device, staging_buffer, nullptr);
+			vkFreeMemory(app->_device, staging_buffer_memory, nullptr);
+		}
+
+		void bind(VkCommandBuffer command_buffer)
+		{
+			VkBuffer vertex_buffers[] = { raw };
+			VkDeviceSize offsets[] = { 0 };
+			vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
+		}
+
+		void destroy()
+		{
+			vkDestroyBuffer(app->_device, raw, nullptr);
+			vkFreeMemory(app->_device, raw_memory, nullptr);
+		}
+	};
+
+	struct new_vertex_impl
+	{
+		HelloTriangleApplication* app;
+
+		std::unique_ptr<vertex_buffer> vertex_buffer;
+
+		void create()
+		{
+			vertex_buffer::config cfg = {};
+			cfg.usage = buffer_usage::STATIC;
+			cfg.format = IGPU_VERT_FORMAT_OF(Vertex, pos, col, uv0);
+			
+			vertex_buffer = app->_context->make_vertex_buffer(cfg);
+
+			VkDeviceSize buffer_size = sizeof(app->_vertices[0]) * app->_vertices.size();
+
+			buffer_view<uint32_t> view;
+
+			vertex_buffer->map(view, buffer_size);
+			memcpy((char*)view.data(), app->_vertices.data(), buffer_size);
+			vertex_buffer->unmap();
+		}
+
+		VkVertexInputBindingDescription get_binding_description()
+		{
+			VkVertexInputBindingDescription binding_description = {};
+			binding_description.binding = 0;
+			binding_description.stride = vertex_buffer->cfg().format.stride;
+			binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+			return binding_description;
+		}
+
+		std::vector<VkVertexInputAttributeDescription> get_attribute_descriptions()
+		{
+			auto vulkan = (vulkan_vertex_buffer*)vertex_buffer.get();
+			return vulkan->attribute_descriptions();
+		}
+
+		void bind(VkCommandBuffer command_buffer)
+		{
+			auto vulkan = (vulkan_vertex_buffer*)vertex_buffer.get();
+			
+			VkBuffer vertex_buffers[] = { vulkan->get() };
+			VkDeviceSize offsets[] = { 0 };
+			vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
+		}
+
+		void destroy()
+		{
+			vertex_buffer = nullptr;
+		}
+	};
+
+	new_vertex_impl vertex_impl = { this };
+
+	struct old_index_impl
+	{
+		HelloTriangleApplication* app;
+		VkBuffer raw = nullptr;
+		VkDeviceMemory raw_memory = nullptr;
+
+		void create()
+		{
+
+			VkDeviceSize buffer_size = sizeof(app->_indices[0]) * app->_indices.size();
+
+			VkBuffer staging_buffer = nullptr;
+			VkDeviceMemory staging_buffer_memory = nullptr;
+			app->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_buffer_memory);
+
+			void* data;
+			vkMapMemory(app->_device, staging_buffer_memory, 0, buffer_size, 0, &data);
+			memcpy(data, app->_indices.data(), buffer_size);
+			vkUnmapMemory(app->_device, staging_buffer_memory);
+
+			app->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, raw, raw_memory);
+
+			app->copy_buffer(staging_buffer, raw, buffer_size);
+
+			vkDestroyBuffer(app->_device, staging_buffer, nullptr);
+			vkFreeMemory(app->_device, staging_buffer_memory, nullptr);
+		}
+		
+		void bind(VkCommandBuffer command_buffer)
+		{
+			vkCmdBindIndexBuffer(command_buffer, raw, 0, VK_INDEX_TYPE_UINT32);
+		}
+
+		void destroy()
+		{
+			vkDestroyBuffer(app->_device, raw, nullptr);
+			vkFreeMemory(app->_device, raw_memory, nullptr);
+		}
+	};
+
+	struct new_index_impl
+	{
+		HelloTriangleApplication* app;
+
+		std::unique_ptr<index_buffer> index_buffer;
+
+		void create()
+		{
+			index_buffer = app->_context->make_index_buffer({
+				index_format::UNSIGNED_INT,
+				buffer_usage::STATIC});
+
+			VkDeviceSize buffer_size = sizeof(app->_indices[0]) * app->_indices.size();
+
+			buffer_view<uint32_t> view;
+
+			index_buffer->map(view, buffer_size);
+			memcpy((char*)view.data(), app->_indices.data(), buffer_size);
+			index_buffer->unmap();
+		}
+
+		void bind(VkCommandBuffer command_buffer)
+		{
+			auto vulkan = (vulkan_index_buffer*)index_buffer.get();
+			vkCmdBindIndexBuffer(command_buffer, vulkan->get(), 0, vulkan->format());
+		}
+
+		void destroy()
+		{
+			index_buffer = nullptr;
+		}
+	};
+
+	new_index_impl index_impl = { this };
+
 
 	std::vector<VkBuffer> _uniform_buffers;
 	std::vector<VkDeviceMemory> _uniform_buffers_memory;
@@ -469,13 +640,13 @@ public:
 		_msaa_samples = _context->back_buffer().cfg().sample_count;
 		create_command_pool();
 		create_descriptor_set_layout();
+		load_model();
+		vertex_impl.create();
+		index_impl.create();
 		create_graphics_pipeline();
 		create_texture_image();
 		create_texture_image_view();
 		create_texture_sampler();
-		load_model();
-		create_vertex_buffer();
-		create_index_buffer();
 		create_uniform_buffers();
 		create_descriptor_pool();
 		create_descriptor_sets();
@@ -517,11 +688,9 @@ public:
 			vkFreeMemory(_device, memory, nullptr);
 		}
 
-		vkDestroyBuffer(_device, _index_buffer, nullptr);
-		vkFreeMemory(_device, _index_buffer_memory, nullptr);
+		index_impl.destroy();
 
-		vkDestroyBuffer(_device, _vertex_buffer, nullptr);
-		vkFreeMemory(_device, _vertex_buffer_memory, nullptr);
+		vertex_impl.destroy();
 
 		for (auto* semaphores : {
 			&_render_finished_semaphores,
@@ -622,8 +791,8 @@ private:
 		VkPipelineVertexInputStateCreateInfo vertex_input_info = {};
 		vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-		auto binding_description = Vertex::get_binding_description();
-		auto attribute_descriptions = Vertex::get_attribute_descriptions();
+		auto binding_description = vertex_impl.get_binding_description();
+		auto attribute_descriptions = vertex_impl.get_attribute_descriptions();
 
 		vertex_input_info.vertexBindingDescriptionCount = 1;
 		vertex_input_info.vertexAttributeDescriptionCount = static_cast<uint32_t>(attribute_descriptions.size());
@@ -1119,48 +1288,6 @@ private:
 		}
 	}
 
-	void create_vertex_buffer()
-	{
-		VkDeviceSize buffer_size = sizeof(_vertices[0]) * _vertices.size();
-
-		VkBuffer staging_buffer;
-		VkDeviceMemory staging_buffer_memory;
-		create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_buffer_memory);
-
-		void* data;
-		vkMapMemory(_device, staging_buffer_memory, 0, buffer_size, 0, &data);
-		memcpy(data, _vertices.data(), (size_t)buffer_size);
-		vkUnmapMemory(_device, staging_buffer_memory);
-
-		create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, _vertex_buffer, _vertex_buffer_memory);
-
-		copy_buffer(staging_buffer, _vertex_buffer, buffer_size);
-
-		vkDestroyBuffer(_device, staging_buffer, nullptr);
-		vkFreeMemory(_device, staging_buffer_memory, nullptr);
-	}
-
-	void create_index_buffer()
-	{
-		VkDeviceSize buffer_size = sizeof(_indices[0]) * _indices.size();
-
-		VkBuffer staging_buffer;
-		VkDeviceMemory staging_buffer_memory;
-		create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_buffer_memory);
-
-		void* data;
-		vkMapMemory(_device, staging_buffer_memory, 0, buffer_size, 0, &data);
-		memcpy(data, _indices.data(), (size_t)buffer_size);
-		vkUnmapMemory(_device, staging_buffer_memory);
-
-		create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, _index_buffer, _index_buffer_memory);
-
-		copy_buffer(staging_buffer, _index_buffer, buffer_size);
-
-		vkDestroyBuffer(_device, staging_buffer, nullptr);
-		vkFreeMemory(_device, staging_buffer_memory, nullptr);
-	}
-
 	void create_uniform_buffers()
 	{
 		VkDeviceSize buffer_size = sizeof(UniformBufferObject);
@@ -1381,11 +1508,8 @@ private:
 
 			vkCmdBindPipeline(_command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, _graphics_pipeline);
 
-			VkBuffer vertex_buffers[] = { _vertex_buffer };
-			VkDeviceSize offsets[] = { 0 };
-			vkCmdBindVertexBuffers(_command_buffers[i], 0, 1, vertex_buffers, offsets);
-
-			vkCmdBindIndexBuffer(_command_buffers[i], _index_buffer, 0, VK_INDEX_TYPE_UINT32);
+			vertex_impl.bind(_command_buffers[i]);
+			index_impl.bind(_command_buffers[i]);
 
 			vkCmdBindDescriptorSets(_command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline_layout, 0, 1, &_descriptor_sets[i], 0, nullptr);
 

@@ -496,7 +496,8 @@ std::unique_ptr<vertex_buffer> vulkan_context::make_vertex_buffer(
 {
 	return vulkan_vertex_buffer::make (
 		cfg, 
-		_buffer_mediator);
+		_buffer_mediator,
+		_vertex_constraints);
 }
 
 std::unique_ptr<index_buffer> vulkan_context::make_index_buffer(
