@@ -15,12 +15,12 @@ namespace
 	// allocate/build/execute/free a temporary command buffer before function exits
 	template<typename CommandBuilder, typename... Args>
 	void submit_sync(
-		const std::shared_ptr < vulkan_queue >& queue,
+		vulkan_queue & queue,
 		CommandBuilder&& builder)
 	{
 		vulkan_command_buffer command_buffer({
-			queue->cfg().device,
-			queue->command_pool(),
+			queue.cfg().device,
+			queue.command_pool(),
 			VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 			});
 
@@ -41,31 +41,31 @@ namespace
 		submit_info.commandBufferCount = 1;
 		submit_info.pCommandBuffers = &raw_command_buffer;
 
-		vkQueueSubmit(queue->get(), 1, &submit_info, VK_NULL_HANDLE);
-		vkQueueWaitIdle(queue->get());
+		vkQueueSubmit(queue.get(), 1, &submit_info, VK_NULL_HANDLE);
+		vkQueueWaitIdle(queue.get());
 	}
 
 	// allocate/build/submit command buffer to be executed asynnchronously
 	template<typename CommandBuilder>
-	const std::shared_ptr < vulkan_fence >&
+	const scoped_ptr < vulkan_fence >&
 		submit(
-			const std::shared_ptr < vulkan_queue >& queue,
+			vulkan_queue& queue,
 			CommandBuilder&& command_builder)
 	{
-		queue->free_completed_commands();
+		queue.free_completed_commands();
 
 		vulkan_command_buffer::config cfg = {
-			queue->cfg().device,
-			queue->command_pool(),
+			queue.cfg().device,
+			queue.command_pool(),
 			VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 		};
 
-		queue->pending_commands().emplace_back(
+		queue.pending_commands().emplace_back(
 			cfg,
-			vulkan_fence::make({ queue->cfg().device })
+			vulkan_fence::make({ queue.cfg().device })
 		);
 
-		vulkan_command_buffer& command_buffer = queue->pending_commands().back();
+		vulkan_command_buffer& command_buffer = queue.pending_commands().back();
 		VkCommandBuffer raw_command_buffer = command_buffer.get();
 		VkCommandBufferBeginInfo begin_info = {};
 
@@ -82,7 +82,7 @@ namespace
 		submit_info.commandBufferCount = 1;
 		submit_info.pCommandBuffers = &raw_command_buffer;
 
-		vkQueueSubmit(queue->cfg().queue, 1, &submit_info, command_buffer.fence()->get());
+		vkQueueSubmit(queue.cfg().queue, 1, &submit_info, command_buffer.fence()->get());
 
 		return command_buffer.fence();
 	}
@@ -91,12 +91,12 @@ namespace
 	// ensure memory/execution dependencies are added for args
 	template<typename CommandBuilder, typename... Args>
 	void submit_sync(
-		const std::shared_ptr < vulkan_queue >& queue,
+		const scoped_ptr < vulkan_queue >& queue,
 		CommandBuilder&& command_builder,
 		Args... args)
 	{
 		submit_sync(
-			queue,
+			*queue,
 			[&](VkCommandBuffer command_buffer) {
 
 				command_builder(command_buffer,
@@ -108,14 +108,14 @@ namespace
 	// allocate/build/submit command buffer to be executed asynnchronously
 	// ensure memory/execution dependencies are added for args
 	template<typename CommandBuilder, typename... Args>
-	const std::shared_ptr < vulkan_fence >&
+	const scoped_ptr < vulkan_fence >&
 		submit(
-			const std::shared_ptr < vulkan_queue >& queue,
+			const scoped_ptr < vulkan_queue >& queue,
 			CommandBuilder&& command_builder,
 			Args... args)
 	{
 		return submit(
-			queue,
+			*queue,
 			[&](VkCommandBuffer command_buffer) {
 
 				command_builder(command_buffer,
@@ -126,14 +126,14 @@ namespace
 
 	struct buffer_dependency
 	{
-		const std::shared_ptr < vulkan_buffer >& buffer;
+		vulkan_buffer& buffer;
 		VkAccessFlagBits access;
 		VkPipelineStageFlagBits stage;
 		VkDependencyFlagBits dependency;
 	};
 	
 	buffer_dependency dependency(
-		const std::shared_ptr < vulkan_buffer >& buffer,
+		vulkan_buffer& buffer,
 		VkAccessFlagBits access,
 		VkPipelineStageFlagBits stage,
 		VkDependencyFlagBits dependency = (VkDependencyFlagBits)0)
@@ -143,10 +143,10 @@ namespace
 
 	VkBuffer add_dependency(
 		VkCommandBuffer command_buffer,
-		const std::shared_ptr < vulkan_buffer >& buffer,
+		vulkan_buffer& buffer,
 		const vulkan_buffer::ownership& target_owner)
 	{
-		const vulkan_buffer::ownership& current_owner = buffer->owner();
+		const vulkan_buffer::ownership& current_owner = buffer.owner();
 
 		// cannot add dependency with null queue
 		if (!target_owner.queue)
@@ -164,7 +164,7 @@ namespace
 					VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER, nullptr,
 					(VkFlags)current_owner.access, (VkFlags)target_owner.access,
 					VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED,
-					buffer->get(), 0, buffer->cfg().size };
+					buffer.get(), 0, buffer.cfg().size };
 
 				vkCmdPipelineBarrier(
 					command_buffer,
@@ -186,7 +186,7 @@ namespace
 						VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER, nullptr,
 						(VkFlags)current_owner.access, 0,
 						current_owner.queue->cfg().family_index, target_owner.queue->cfg().family_index,
-						buffer->get(), 0, buffer->cfg().size };
+						buffer.get(), 0, buffer.cfg().size };
 
 					vkCmdPipelineBarrier(
 						current_owner_command_buffer,
@@ -198,7 +198,7 @@ namespace
 
 
 
-			if (buffer->fence() && buffer->fence()->is_ready())
+			if (buffer.fence() && buffer.fence()->is_ready())
 			{
 				LOG_CRITICAL("fence is not ready immediately after submit_sync. Is fence (and buffer) still in use?");
 			}
@@ -209,7 +209,7 @@ namespace
 				VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER, nullptr,
 				0, (VkFlags)target_owner.access,
 				current_owner.queue->cfg().family_index, target_owner.queue->cfg().family_index,
-				buffer->get(), 0, buffer->cfg().size };
+				buffer.get(), 0, buffer.cfg().size };
 
 			vkCmdPipelineBarrier(
 				command_buffer,
@@ -219,9 +219,9 @@ namespace
 				0, nullptr);
 		}
 
-		buffer->owner(target_owner);
+		buffer.owner(target_owner);
 
-		return buffer->get();
+		return buffer.get();
 	}
 }
 
@@ -236,8 +236,8 @@ VmaAllocator vulkan_buffer_mediator::vma()
 }
 
 void vulkan_buffer_mediator::copy(
-	const std::shared_ptr < vulkan_buffer >& src,
-	const std::shared_ptr < vulkan_buffer >& dst)
+	vulkan_buffer& src,
+	vulkan_buffer& dst)
 {
 	submit_sync(
 		_cfg.transfer_queue,
@@ -248,7 +248,7 @@ void vulkan_buffer_mediator::copy(
 				VkBufferCopy region = {};
 				region.srcOffset = 0;
 				region.dstOffset = 0;
-				region.size = src->cfg().size;
+				region.size = src.cfg().size;
 
 				vkCmdCopyBuffer(
 					command_buffer,
@@ -395,16 +395,15 @@ using namespace igpu;
 class HelloTriangleApplication
 {
 private:
-	
-	std::weak_ptr < vulkan_context > _context;
+	scoped_ptr < vulkan_context > _context;
 	const vulkan_window* _window = nullptr;
 	
 	VkInstance _instance = nullptr;
 	VkPhysicalDevice _physical_device = nullptr;
 	VkDevice _device = nullptr;
 
-	std::weak_ptr < vulkan_queue > _graphics_queue;
-	std::weak_ptr < vulkan_queue > _present_queue;
+	scoped_ptr< vulkan_queue > _graphics_queue;
+	scoped_ptr< vulkan_queue > _present_queue;
 
 	VkDescriptorSetLayout _descriptor_set_layout;
 	VkPipelineLayout _pipeline_layout;
@@ -444,23 +443,30 @@ private:
 	bool _framebuffer_resized = false;
 public:
 
+	~HelloTriangleApplication()
+	{
+		_present_queue = nullptr;
+		_graphics_queue = nullptr;
+		_context = nullptr;
+	}
+
 	void framebuffer_resized()
 	{
 		_framebuffer_resized = true;
 	}
 
-	void init_vulkan(const std::shared_ptr < vulkan_context >& context)
+	void init_vulkan(const scoped_ptr < vulkan_context >& context)
 	{
 		_context = context;
 		
-		_window = &_context.lock()->window();
-		_instance = _context.lock()->instance();
-		_physical_device = _context.lock()->physical_device();
-		_device = _context.lock()->device();
-		_present_queue = _context.lock()->buffer_mediator().cfg().present_queue;
-		_graphics_queue = _context.lock()->buffer_mediator().cfg().graphics_queue;
-		_swap_image_count = _context.lock()->back_buffer().framebuffers().size();
-		_msaa_samples = _context.lock()->back_buffer().cfg().sample_count;
+		_window = &_context->window();
+		_instance = _context->instance();
+		_physical_device = _context->physical_device();
+		_device = _context->device();
+		_present_queue = _context->buffer_mediator().cfg().present_queue;
+		_graphics_queue = _context->buffer_mediator().cfg().graphics_queue;
+		_swap_image_count = _context->back_buffer().framebuffers().size();
+		_msaa_samples = _context->back_buffer().cfg().sample_count;
 		create_command_pool();
 		create_descriptor_set_layout();
 		create_graphics_pipeline();
@@ -558,7 +564,7 @@ private:
 		}
 
 		on_cleanup_swap_chain();
-		_context.lock()->resize_back_buffer(window_res);
+		_context->resize_back_buffer(window_res);
 		create_graphics_pipeline();
 		create_command_buffers();
 	}
@@ -632,16 +638,16 @@ private:
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
-		viewport.width = (float)_context.lock()->back_buffer().cfg().res.x;
-		viewport.height = (float)_context.lock()->back_buffer().cfg().res.y;
+		viewport.width = (float)_context->back_buffer().cfg().res.x;
+		viewport.height = (float)_context->back_buffer().cfg().res.y;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 
 		VkRect2D scissor = {};
 		scissor.offset = { 0, 0 };
 		scissor.extent = {
-			(uint32_t)_context.lock()->back_buffer().cfg().res.x,
-			(uint32_t)_context.lock()->back_buffer().cfg().res.y,
+			(uint32_t)_context->back_buffer().cfg().res.x,
+			(uint32_t)_context->back_buffer().cfg().res.y,
 		};
 
 		VkPipelineViewportStateCreateInfo viewport_state = {};
@@ -711,7 +717,7 @@ private:
 		pipeline_info.pDepthStencilState = &depth_stencil;
 		pipeline_info.pColorBlendState = &color_blending;
 		pipeline_info.layout = _pipeline_layout;
-		pipeline_info.renderPass = _context.lock()->back_buffer().render_pass();;
+		pipeline_info.renderPass = _context->back_buffer().render_pass();;
 		pipeline_info.subpass = 0;
 		pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
 
@@ -728,7 +734,7 @@ private:
 		
 		VkCommandPoolCreateInfo pool_info = {};
 		pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		pool_info.queueFamilyIndex = _graphics_queue.lock()->cfg().family_index;
+		pool_info.queueFamilyIndex = _graphics_queue->cfg().family_index;
 
 		if (vkCreateCommandPool(_device, &pool_info, nullptr, &_command_pool) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create graphics command pool!");
@@ -1266,8 +1272,8 @@ private:
 		submit_info.commandBufferCount = 1;
 		submit_info.pCommandBuffers = &command_buffer;
 
-		vkQueueSubmit(_graphics_queue.lock()->get(), 1, &submit_info, VK_NULL_HANDLE);
-		vkQueueWaitIdle(_graphics_queue.lock()->get());
+		vkQueueSubmit(_graphics_queue->get(), 1, &submit_info, VK_NULL_HANDLE);
+		vkQueueWaitIdle(_graphics_queue->get());
 
 		vkFreeCommandBuffers(_device, _command_pool, 1, &command_buffer);
 	}
@@ -1356,12 +1362,12 @@ private:
 
 			VkRenderPassBeginInfo render_pass_info = {};
 			render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			render_pass_info.renderPass = _context.lock()->back_buffer().render_pass();
-			render_pass_info.framebuffer = _context.lock()->back_buffer().framebuffers()[i];
+			render_pass_info.renderPass = _context->back_buffer().render_pass();
+			render_pass_info.framebuffer = _context->back_buffer().framebuffers()[i];
 			render_pass_info.renderArea.offset = { 0, 0 };
 			render_pass_info.renderArea.extent = {
-				(uint32_t)_context.lock()->back_buffer().cfg().res.x,
-				(uint32_t)_context.lock()->back_buffer().cfg().res.y,
+				(uint32_t)_context->back_buffer().cfg().res.x,
+				(uint32_t)_context->back_buffer().cfg().res.y,
 			}; 
 
 			std::array<VkClearValue, 2> clear_values = {};
@@ -1428,7 +1434,7 @@ private:
 
 		UniformBufferObject ubo = {};
 
-		auto res = _context.lock()->back_buffer().cfg().res;
+		auto res = _context->back_buffer().cfg().res;
 #pragma warning(push)
 #pragma warning(disable:4127) // constant if condition
 		ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -1452,7 +1458,7 @@ private:
 
 		switch (vkAcquireNextImageKHR(
 			_device, 
-			_context.lock()->back_buffer().swap_chain(),
+			_context->back_buffer().swap_chain(),
 			std::numeric_limits<uint64_t>::max(),
 			_image_available_semaphores[_current_frame], 
 			VK_NULL_HANDLE, 
@@ -1467,7 +1473,7 @@ private:
 			break;
 		}
 
-		vkQueueWaitIdle(_present_queue.lock()->get());
+		vkQueueWaitIdle(_present_queue->get());
 
 		update_uniform_buffer(image_index);
 
@@ -1489,7 +1495,7 @@ private:
 
 		vkResetFences(_device, 1, &_in_flight_fences[_current_frame]);
 
-		if (vkQueueSubmit(_graphics_queue.lock()->get(), 1, &submit_info, _in_flight_fences[_current_frame]) != VK_SUCCESS)
+		if (vkQueueSubmit(_graphics_queue->get(), 1, &submit_info, _in_flight_fences[_current_frame]) != VK_SUCCESS)
 		{
 			throw std::runtime_error(EXCEPTION_CONTEXT("failed to submit draw command buffer!"));
 		}
@@ -1500,13 +1506,13 @@ private:
 		present_info.waitSemaphoreCount = 1;
 		present_info.pWaitSemaphores = signal_semaphores;
 
-		VkSwapchainKHR swap_chains[] = { _context.lock()->back_buffer().swap_chain() };
+		VkSwapchainKHR swap_chains[] = { _context->back_buffer().swap_chain() };
 		present_info.swapchainCount = 1;
 		present_info.pSwapchains = swap_chains;
 
 		present_info.pImageIndices = &image_index;
 
-		switch (vkQueuePresentKHR(_present_queue.lock()->get(), &present_info))
+		switch (vkQueuePresentKHR(_present_queue->get(), &present_info))
 		{
 		case VK_SUBOPTIMAL_KHR:
 			LOG_WARNING("vkAcquireNextImageKHR: VK_SUBOPTIMAL_KHR");
@@ -1561,53 +1567,13 @@ private:
 		return buffer;
 	}
 };
-//
-//HelloTriangleApplication hello_triangle_application;
-//
-//void port_example();
-//
-//std::unique_ptr<application> application::make(vulkan_window* window)
-//{
-//	port_example();
-//
-//	try
-//	{
-//		helloTriangleApplication.init_vulkan(window);
-//	}
-//	catch (const std::exception& e)
-//	{
-//		std::cerr << e.what() << std::endl;
-//	}
-//
-//	return std::unique_ptr<application>(new application());
-//}
-//
-//application::~application()
-//{
-//	helloTriangleApplication.cleanup();
-//}
-//
-//bool application::present()
-//{
-//	try
-//	{
-//		return hello_triangle_application.mainLoop();
-//	}
-//	catch (const std::exception& e)
-//	{
-//		std::cerr << e.what() << std::endl;
-//	}
-//
-//	return false;
-//}
-//
 
 
 HelloTriangleApplication hello_triangle_application;
 
 void port_example();
 
-void test_init_vulkan_context(const std::shared_ptr < vulkan_context >& context)
+void test_init_vulkan_context(const scoped_ptr < vulkan_context >& context)
 {
 	hello_triangle_application.init_vulkan(context);
 }

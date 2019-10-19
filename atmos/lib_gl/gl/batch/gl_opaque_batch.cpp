@@ -10,6 +10,8 @@
 #include <igpu/batch/opaque_batch_nodes.h>
 #include <igpu/buffer/geometry.h>
 
+#include <igpu/utility/scoped_ptr.h>
+
 using namespace igpu;
 
 namespace
@@ -30,11 +32,11 @@ namespace
             return binding;
         }
         
-        return std::shared_ptr<batch_binding>();
+		return nullptr;
     }
 
     template <typename batch_t>
-    std::shared_ptr<batch_binding> gl_make_batches(
+	std::shared_ptr<batch_binding> gl_make_batches(
 		batch_t* b,
 		const batch_binding::config& cfg,
 		const utility::sphere& visibility_sphere)

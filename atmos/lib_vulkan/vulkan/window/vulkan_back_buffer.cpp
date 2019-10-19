@@ -135,8 +135,8 @@ namespace
 		create_info.clipped = VK_TRUE;
 
 		uint32_t queue_family_indices[2] = {
-			cfg.graphics_queue->cfg().family_index,
-			cfg.present_queue->cfg().family_index
+			cfg.present_queue_family,
+			cfg.graphics_queue_family
 		};
 
 		if (queue_family_indices[0] != queue_family_indices[1])
@@ -421,15 +421,15 @@ vulkan_back_buffer::vulkan_back_buffer(
 	const std::vector<VkImage>& images,
 	const std::vector<VkImageView>& image_views,
 	const std::vector<VkFramebuffer>& framebuffers,
-	const std::shared_ptr<vulkan_color_buffer>& color,
-	const std::shared_ptr<vulkan_depth_buffer>& depth)
+	std::unique_ptr<vulkan_color_buffer> color,
+	std::unique_ptr<vulkan_depth_buffer> depth)
 : _cfg(cfg)
 , _swap_chain(swap_chain)
 , _render_pass(render_pass)
 , _images(images)
 , _image_views(image_views)
 , _framebuffers(framebuffers)
-, _color (color)
-, _depth (depth)
+, _color (std::move(color))
+, _depth(std::move(depth))
 {
 }

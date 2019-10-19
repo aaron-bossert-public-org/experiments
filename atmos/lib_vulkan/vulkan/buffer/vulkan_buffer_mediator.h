@@ -6,6 +6,7 @@
 #include <igpu/buffer/compute_buffer.h>
 #include <igpu/buffer/index_buffer.h>
 #include <igpu/buffer/vertex_buffer.h>
+#include <igpu/utility/scoped_ptr.h>
 
 struct VkPhysicalDevice_T;
 struct VkDevice_T;
@@ -24,10 +25,10 @@ namespace igpu
 		{
 			VkPhysicalDevice_T* physical_device;
 			VkDevice_T* device;
-			std::shared_ptr<vulkan_queue> present_queue;
-			std::shared_ptr<vulkan_queue> graphics_queue;
-			std::shared_ptr<vulkan_queue> compute_queue;
-			std::shared_ptr<vulkan_queue> transfer_queue;
+			scoped_ptr<vulkan_queue> present_queue;
+			scoped_ptr<vulkan_queue> graphics_queue;
+			scoped_ptr<vulkan_queue> compute_queue;
+			scoped_ptr<vulkan_queue> transfer_queue;
 		};
 
 		const config& cfg() const;
@@ -35,8 +36,8 @@ namespace igpu
 		VmaAllocator_T* vma();
 
 		void copy(
-			const std::shared_ptr < vulkan_buffer >& src,
-			const std::shared_ptr < vulkan_buffer >& dst);
+			vulkan_buffer& src,
+			vulkan_buffer& dst);
 
 		~vulkan_buffer_mediator();
 

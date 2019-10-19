@@ -2,6 +2,7 @@
 #pragma once
 
 #include <igpu/buffer/buffer_usage.h>
+#include <igpu/utility/scoped_ptr.h>
 
 // Vulkan implementation includes - begin
 #include <vulkan/defines/vulkan_includes.h>
@@ -23,7 +24,7 @@ namespace igpu
 		{
 			buffer_usage usage;
 			VkBufferUsageFlagBits vk_usage_flags = (VkBufferUsageFlagBits)0;
-			std::weak_ptr < vulkan_buffer_mediator > buffer_mediator;
+			scoped_ptr < vulkan_buffer_mediator > buffer_mediator;
 		};
 		
 		vulkan_staged_buffer(
@@ -49,8 +50,8 @@ namespace igpu
 		
 		const config _cfg;
 		
-		std::shared_ptr<vulkan_buffer> _staging_buffer;
-		std::shared_ptr<vulkan_buffer> _gpu_buffer;
+		std::unique_ptr<vulkan_buffer> _staging_buffer;
+		std::unique_ptr<vulkan_buffer> _gpu_buffer;
 	};
 
 	template <typename T>

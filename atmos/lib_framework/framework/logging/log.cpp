@@ -102,9 +102,3 @@ std::string logging::exception_string(const char* file, int line, const char* fu
 
 	return output;
 }
-
-void logging::debug_break()
-{
-	DebugBreak();
-}
-

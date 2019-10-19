@@ -367,8 +367,8 @@ namespace
 		VkSurfaceKHR surface,
 		VkDevice device,
 		const glm::ivec2& res,
-		const std::shared_ptr < vulkan_queue >& present_queue,
-		const std::shared_ptr < vulkan_queue >& graphics_queue)
+		uint32_t present_queue_family,
+		uint32_t graphics_queue_family)
 	{
 		VkSurfaceCapabilitiesKHR surface_caps = {};
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &surface_caps);
@@ -389,8 +389,8 @@ namespace
 			surface,
 			device,
 			VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-			present_queue,
-			graphics_queue,
+			present_queue_family,
+			graphics_queue_family,
 			get_max_usable_sample_count(physical_device),
 		});
 	}
@@ -421,13 +421,20 @@ std::unique_ptr<vulkan_context> vulkan_context::make(
 		return nullptr;
 	}
 
+
+	std::shared_ptr<vulkan_queue> 
+		present_queue = vulkan_queue::make({ device, families.present.family_index.value(), 0 }),
+		graphics_queue = vulkan_queue::make({ device, families.graphics.family_index.value(), 0 }),
+		compute_queue = vulkan_queue::make({ device, families.compute.family_index.value(), 0 }),
+		transfer_queue = vulkan_queue::make({ device, families.transfer.family_index.value(), 0 });
+	
 	vulkan_buffer_mediator::config buffer_mediator_cfg = {};
 	buffer_mediator_cfg.physical_device = physical_device;
 	buffer_mediator_cfg.device = device;
-	buffer_mediator_cfg.present_queue = vulkan_queue::make({ device, families.present.family_index.value(), 0 });
-	buffer_mediator_cfg.graphics_queue = vulkan_queue::make({ device, families.graphics.family_index.value(), 0 });
-	buffer_mediator_cfg.compute_queue = vulkan_queue::make({ device, families.compute.family_index.value(), 0 });
-	buffer_mediator_cfg.transfer_queue = vulkan_queue::make({ device, families.transfer.family_index.value(), 0 });
+	buffer_mediator_cfg.present_queue = present_queue;
+	buffer_mediator_cfg.graphics_queue = graphics_queue;
+	buffer_mediator_cfg.compute_queue = compute_queue;
+	buffer_mediator_cfg.transfer_queue = transfer_queue;
 	auto buffer_mediator = vulkan_buffer_mediator::make(buffer_mediator_cfg);
 	if (!buffer_mediator)
 	{
@@ -440,8 +447,8 @@ std::unique_ptr<vulkan_context> vulkan_context::make(
 		window->surface(),
 		device,
 		screen_res,
-		buffer_mediator_cfg.present_queue,
-		buffer_mediator_cfg.graphics_queue);
+		present_queue->cfg().family_index,
+		graphics_queue->cfg().family_index);
 	if (!back_buffer)
 	{
 		return nullptr;
@@ -454,6 +461,10 @@ std::unique_ptr<vulkan_context> vulkan_context::make(
 			debug_messenger,
 			physical_device,
 			device,
+			present_queue,
+			graphics_queue,
+			compute_queue,
+			transfer_queue,
 			std::move(buffer_mediator),
 			std::move(window),
 			std::move(back_buffer)));
@@ -535,14 +546,19 @@ vulkan_context::vulkan_context(
 	VkDebugUtilsMessengerEXT debug_messenger,
 	VkPhysicalDevice physical_device,
 	VkDevice device,
+	const std::shared_ptr<vulkan_queue>& present_queue,
+	const std::shared_ptr<vulkan_queue>& graphics_queue,
+	const std::shared_ptr<vulkan_queue>& compute_queue,
+	const std::shared_ptr<vulkan_queue>& transfer_queue,
 	const std::shared_ptr<vulkan_buffer_mediator>& buffer_mediator,
 	std::unique_ptr<vulkan_window> window,
 	std::unique_ptr<vulkan_back_buffer> back_buffer)
 	: _cfg(cfg)
-	, _instance(instance)
-	, _debug_messenger(debug_messenger)
-	, _physical_device(physical_device)
-	, _device (device)
+	, _state{ instance, debug_messenger, physical_device, device }
+	, _present_queue(present_queue)
+	, _graphics_queue(graphics_queue)
+	, _compute_queue(compute_queue)
+	, _transfer_queue(transfer_queue)
 	, _buffer_mediator(buffer_mediator)
 	, _window(std::move(window))
 	, _back_buffer(std::move(back_buffer))
@@ -561,38 +577,35 @@ vulkan_context::vulkan_context(
 {
 }
 
+vulkan_context::auto_destroy::~auto_destroy()
+{
+	vkDestroyDevice(device, nullptr);
+
+	if (debug_messenger)
+	{
+		DestroyDebugUtilsMessengerEXT(instance, debug_messenger, nullptr);
+	}
+
+	vkDestroyInstance(instance, nullptr);
+}
+
 vulkan_context::~vulkan_context()
 {
-	_back_buffer = nullptr;
-	std::weak_ptr<vulkan_buffer_mediator> weak_buffer_mediator = _buffer_mediator;
-	_buffer_mediator = nullptr;
-	ASSERT_CONTEXT(nullptr == weak_buffer_mediator.lock(), "not all dependencies on buffer mediator have been destroyed");
-
-	vkDestroyDevice(_device, nullptr);
-
-	_window = nullptr;
-
-	if (_cfg.enable_validation)
-	{
-		DestroyDebugUtilsMessengerEXT(_instance, _debug_messenger, nullptr);
-	}
-		
-	vkDestroyInstance(_instance, nullptr);
 }
 
 VkInstance vulkan_context::instance()
 {
-	return _instance;
+	return _state.instance;
 }
 
 VkPhysicalDevice vulkan_context::physical_device()
 {
-	return _physical_device;
+	return _state.physical_device;
 }
 
 VkDevice vulkan_context::device()
 {
-	return _device;
+	return _state.device;
 }
 
 vulkan_buffer_mediator& vulkan_context::buffer_mediator()
@@ -605,10 +618,10 @@ void vulkan_context::resize_back_buffer(const glm::ivec2& screen_res)
 	_back_buffer = nullptr;
 	_back_buffer = ::create_back_buffer(
 		_cfg,
-		_physical_device,
+		_state.physical_device,
 		_window->surface(),
-		_device,
+		_state.device,
 		screen_res,
-		_buffer_mediator->cfg().present_queue,
-		_buffer_mediator->cfg().graphics_queue);
+		_present_queue->cfg().family_index,
+		_graphics_queue->cfg().family_index);
 }

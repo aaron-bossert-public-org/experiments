@@ -34,7 +34,7 @@ void vulkan_staged_buffer::map(buffer_view_base& buffer_view, size_t byte_size)
 	}
 
 	_staging_buffer = vulkan_buffer::make({
-			_cfg.buffer_mediator.lock()->vma(),
+			_cfg.buffer_mediator->vma(),
 			VMA_MEMORY_USAGE_CPU_ONLY,
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 			byte_size,
@@ -60,23 +60,20 @@ void vulkan_staged_buffer::map(buffer_view_base& buffer_view, size_t byte_size)
 
 void vulkan_staged_buffer::unmap()
 {
-	auto buffer_mediator = _cfg.buffer_mediator.lock();
-	if (!buffer_mediator)
-	{
-		LOG_CRITICAL("buffer mediator has expired");
-	}
-	else if (!_staging_buffer)
+	if (!_staging_buffer)
 	{
 		LOG_CRITICAL("staging buffer is null");
 	}
 	else 
 	{
+		auto& buffer_mediator = *_cfg.buffer_mediator;
+
 		_staging_buffer->unmap();
 
 		if (!_gpu_buffer || _gpu_buffer->cfg().size < _staging_buffer->cfg().size)
 		{
 			_gpu_buffer = vulkan_buffer::make({
-				buffer_mediator->vma(),
+				buffer_mediator.vma(),
 				VMA_MEMORY_USAGE_GPU_ONLY,
 				VkBufferUsageFlagBits(VK_BUFFER_USAGE_TRANSFER_DST_BIT | _cfg.vk_usage_flags),
 				_staging_buffer->cfg().size,
@@ -89,7 +86,7 @@ void vulkan_staged_buffer::unmap()
 		}
 		else
 		{
-			buffer_mediator->copy(_staging_buffer, _gpu_buffer);
+			buffer_mediator.copy(*_staging_buffer, *_gpu_buffer);
 			
 			_staging_buffer = nullptr;
 		}
@@ -123,7 +120,7 @@ bool vulkan_staged_buffer::validate(const config& cfg)
 	{
 		LOG_CRITICAL("vk_usage_flags is 0");
 	}
-	else if (nullptr == cfg.buffer_mediator.lock())
+	else if (!cfg.buffer_mediator)
 	{
 		LOG_CRITICAL("buffer mediator has expired");
 	}

@@ -18,7 +18,7 @@ namespace
 {
 	std::vector<VkVertexInputAttributeDescription> to_vulkan_attributes(
 		const vertex_constraints& constraints,
-		std::vector<std::shared_ptr<vertex_buffer>> vertex_buffers)
+		const std::vector<std::shared_ptr<vertex_buffer>>& vertex_buffers)
 	{
 		size_t total_count = 0;
 		for (const auto& vertex_buffer : vertex_buffers)

@@ -3,6 +3,7 @@
 
 
 #include <framework/perf/metrics.h>
+#include <igpu/utility/scoped_ptr.h>
 
 // Vulkan implementation includes - begin
 #include <vulkan/defines/vulkan_includes.h>
@@ -33,7 +34,7 @@ namespace igpu
 			VkAccessFlagBits access;
 			VkPipelineStageFlagBits stage;
 			VkDependencyFlagBits dependency;
-			std::shared_ptr < vulkan_queue > queue;
+			scoped_ptr < vulkan_queue > queue;
 		};
 
 		const config& cfg() const;
@@ -42,11 +43,11 @@ namespace igpu
 
 		VkBuffer get() const;
 
-		const std::shared_ptr < vulkan_fence >& fence() const;
+		const scoped_ptr < vulkan_fence >& fence() const;
 
 		void owner(const ownership&);
 		
-		void fence(const std::shared_ptr < vulkan_fence >&);
+		void fence(const scoped_ptr < vulkan_fence >&);
 
 		void* map();
 
@@ -66,7 +67,7 @@ namespace igpu
 
 		VkBuffer _buffer = nullptr;
 		VmaAllocation _vma_allocation = nullptr;
-		std::shared_ptr < vulkan_fence > _fence;
+		scoped_ptr < vulkan_fence > _fence;
 		
 		ownership _owner;
 		

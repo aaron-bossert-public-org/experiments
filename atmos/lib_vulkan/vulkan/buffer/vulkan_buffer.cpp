@@ -62,7 +62,7 @@ VkBuffer vulkan_buffer::get() const
 	return _buffer;
 }
 
-const std::shared_ptr < vulkan_fence >& vulkan_buffer::fence() const
+const scoped_ptr < vulkan_fence >& vulkan_buffer::fence() const
 {
 	return _fence;
 }
@@ -72,7 +72,7 @@ void vulkan_buffer::owner(const ownership& owner)
 	_owner = owner;
 }
 
-void vulkan_buffer::fence(const std::shared_ptr < vulkan_fence >& fence)
+void vulkan_buffer::fence(const scoped_ptr < vulkan_fence >& fence)
 {
 	_fence = fence;
 }

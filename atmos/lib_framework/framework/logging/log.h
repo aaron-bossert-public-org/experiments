@@ -9,7 +9,7 @@
 #define LOG_DEBUG(...) logging::log_context(__FILE__, __LINE__, __FUNCSIG__, logging::severity::DEBUG, __VA_ARGS__)
 #define LOG_VERBOSE(...) logging::log_context(__FILE__, __LINE__, __FUNCSIG__, logging::severity::VERBOSE, __VA_ARGS__)
 #define LOG_CONTEXT(SEVERITY, ...) logging::log_context(__FILE__, __LINE__, __FUNCSIG__, SEVERITY, __VA_ARGS__)
-#define ASSERT_CONTEXT(...) if(false == logging::assert_context(__FILE__, __LINE__, __FUNCSIG__, #__VA_ARGS__, __VA_ARGS__)) logging::debug_break();
+#define ASSERT_CONTEXT(...) if(false == logging::assert_context(__FILE__, __LINE__, __FUNCSIG__, #__VA_ARGS__, __VA_ARGS__)) __debugbreak();
 #define EXCEPTION_CONTEXT(...) logging::exception_string(__FILE__, __LINE__, __FUNCSIG__, __VA_ARGS__)
 
 namespace logging {
@@ -31,6 +31,4 @@ namespace logging {
 	bool assert_context(const char* file, int line, const char* func, const char* expr, bool cond);
 	
 	std::string exception_string(const char* file, int line, const char* func, const char* fmt, ...);
-
-	void debug_break();
 }

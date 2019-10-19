@@ -77,6 +77,10 @@ namespace igpu
 			VkDebugUtilsMessengerEXT,
 			VkPhysicalDevice,
 			VkDevice,
+			const std::shared_ptr<vulkan_queue>& present_queue,
+			const std::shared_ptr<vulkan_queue>& graphics_queue,
+			const std::shared_ptr<vulkan_queue>& compute_queue,
+			const std::shared_ptr<vulkan_queue>& transfer_queue, 
 			const std::shared_ptr<vulkan_buffer_mediator>&,
 			std::unique_ptr<vulkan_window>,
 			std::unique_ptr<vulkan_back_buffer>);
@@ -84,10 +88,20 @@ namespace igpu
     private:
 		const config _cfg;
 
-		VkInstance _instance = nullptr;
-		VkDebugUtilsMessengerEXT _debug_messenger = nullptr;
-		VkPhysicalDevice _physical_device = nullptr;
-		VkDevice _device = nullptr;
+		struct auto_destroy
+		{
+			~auto_destroy();
+
+			VkInstance instance = nullptr;
+			VkDebugUtilsMessengerEXT debug_messenger = nullptr;
+			VkPhysicalDevice physical_device = nullptr;
+			VkDevice device = nullptr;
+		} _state;
+
+		std::shared_ptr<vulkan_queue> _present_queue;
+		std::shared_ptr<vulkan_queue> _graphics_queue;
+		std::shared_ptr<vulkan_queue> _compute_queue;
+		std::shared_ptr<vulkan_queue> _transfer_queue;
 
 		std::shared_ptr<vulkan_buffer_mediator> _buffer_mediator;
 		std::unique_ptr<vulkan_window> _window;

@@ -92,8 +92,6 @@ namespace igpu
 	{
 	public:
 		
-		virtual int compare(const render_states* other) = 0;
-		
 		struct config
 		{
 			uint8_t color_write_mask;
@@ -103,17 +101,15 @@ namespace igpu
 			depth_mode depth;
 		};
 
-		const config& cfg() const;
+		virtual const config& cfg() const = 0;
+		
+		virtual int compare(const render_states* other) = 0;
 
 	protected:
 		
-		render_states(const config&);
-		render_states(const render_states&) = default;
-		render_states& operator= (const render_states&) = default;
-
-	private:
-
-		config _cfg;
+		render_states() = default;
+		render_states(const render_states&) = delete;
+		render_states& operator= (const render_states&) = delete;
 	};
 }
 

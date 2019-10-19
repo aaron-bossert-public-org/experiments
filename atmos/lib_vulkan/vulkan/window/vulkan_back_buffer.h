@@ -23,8 +23,8 @@ namespace igpu
 			VkSurfaceKHR surface = nullptr;
 			VkDevice device = nullptr;
 			VkColorSpaceKHR color_space;
-			std::shared_ptr < vulkan_queue > present_queue;
-			std::shared_ptr < vulkan_queue > graphics_queue;
+			uint32_t present_queue_family = 0;
+			uint32_t graphics_queue_family = 0;
 			VkSampleCountFlagBits sample_count;
 		};
 
@@ -53,8 +53,8 @@ namespace igpu
 			const std::vector<VkImage>&,
 			const std::vector<VkImageView>&,
 			const std::vector<VkFramebuffer>&,
-			const std::shared_ptr<vulkan_color_buffer>&,
-			const std::shared_ptr<vulkan_depth_buffer>&);
+			std::unique_ptr<vulkan_color_buffer>,
+			std::unique_ptr<vulkan_depth_buffer>);
 
 	private:
 
@@ -67,7 +67,7 @@ namespace igpu
 		std::vector<VkImageView> _image_views;
 		std::vector<VkFramebuffer> _framebuffers;
 
-		std::shared_ptr < vulkan_color_buffer > _color;
-		std::shared_ptr < vulkan_depth_buffer > _depth;
+		std::unique_ptr < vulkan_color_buffer > _color;
+		std::unique_ptr < vulkan_depth_buffer > _depth;
 	};
 }
