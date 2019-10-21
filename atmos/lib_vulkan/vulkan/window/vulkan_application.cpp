@@ -624,8 +624,8 @@
 //	}
 //
 //	void create_graphics_pipeline() {
-//		auto vert_shader_code = read_file("cooked_assets/shaders/vert.spv");
-//		auto frag_shader_code = read_file("cooked_assets/shaders/frag.spv");
+//		auto vert_shader_code = read_file("cooked_assets/shaders/shader.vert.spv");
+//		auto frag_shader_code = read_file("cooked_assets/shaders/shader.frag.spv");
 //
 //		VkShaderModule vert_shader_module = create_shader_module(vert_shader_code);
 //		VkShaderModule frag_shader_module = create_shader_module(frag_shader_code);

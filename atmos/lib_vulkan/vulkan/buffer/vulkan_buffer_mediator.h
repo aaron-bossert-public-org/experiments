@@ -37,7 +37,8 @@ namespace igpu
 
 		void copy(
 			vulkan_buffer& src,
-			vulkan_buffer& dst);
+			vulkan_buffer& dst,
+			uint32_t size);
 
 		~vulkan_buffer_mediator();
 

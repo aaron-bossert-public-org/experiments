@@ -237,7 +237,8 @@ VmaAllocator vulkan_buffer_mediator::vma()
 
 void vulkan_buffer_mediator::copy(
 	vulkan_buffer& src,
-	vulkan_buffer& dst)
+	vulkan_buffer& dst,
+	uint32_t size)
 {
 	submit_sync(
 		_cfg.transfer_queue,
@@ -248,7 +249,7 @@ void vulkan_buffer_mediator::copy(
 				VkBufferCopy region = {};
 				region.srcOffset = 0;
 				region.dstOffset = 0;
-				region.size = src.cfg().size;
+				region.size = size;
 
 				vkCmdCopyBuffer(
 					command_buffer,
@@ -320,6 +321,7 @@ vulkan_buffer_mediator::vulkan_buffer_mediator(
 #include <thread>
 #include <unordered_map>
 #include <vulkan/window/vulkan_back_buffer.h>
+#include <vulkan/buffer/vulkan_compute_buffer.h>
 #include <vulkan/buffer/vulkan_index_buffer.h>
 #include <vulkan/buffer/vulkan_vertex_buffer.h>
 
@@ -382,92 +384,14 @@ private:
 	VkDeviceMemory _texture_image_memory;
 	VkImageView _texture_image_view;
 	VkSampler _texture_sampler;
-
-	std::vector<Vertex> _vertices;
-	std::vector<uint32_t> _indices;
 	
-	struct old_vertex_impl
-	{
-		HelloTriangleApplication* app;
-		VkBuffer raw = nullptr;
-		VkDeviceMemory raw_memory = nullptr;
-
-		VkVertexInputBindingDescription get_binding_description()
-		{
-			VkVertexInputBindingDescription binding_description = {};
-			binding_description.binding = 0;
-			binding_description.stride = sizeof(Vertex);
-			binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-			return binding_description;
-		}
-
-		std::array<VkVertexInputAttributeDescription, 3> get_attribute_descriptions()
-		{
-			std::array<VkVertexInputAttributeDescription, 3> attribute_descriptions = {};
-
-attribute_descriptions[0].binding = 0;
-attribute_descriptions[0].location = 0;
-attribute_descriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-attribute_descriptions[0].offset = offsetof(Vertex, pos);
-
-attribute_descriptions[1].binding = 0;
-attribute_descriptions[1].location = 1;
-attribute_descriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-attribute_descriptions[1].offset = offsetof(Vertex, col);
-
-attribute_descriptions[2].binding = 0;
-attribute_descriptions[2].location = 2;
-attribute_descriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-attribute_descriptions[2].offset = offsetof(Vertex, uv0);
-
-return attribute_descriptions;
-		}
-
-		void create()
-		{
-			VkDeviceSize buffer_size = sizeof(app->_vertices[0]) * app->_vertices.size();
-
-			VkBuffer staging_buffer;
-			VkDeviceMemory staging_buffer_memory;
-
-			app->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_buffer_memory);
-
-
-			void* data;
-			vkMapMemory(app->_device, staging_buffer_memory, 0, buffer_size, 0, &data);
-			memcpy(data, app->_vertices.data(), buffer_size);
-			vkUnmapMemory(app->_device, staging_buffer_memory);
-
-			app->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, raw, raw_memory);
-
-			app->copy_buffer(staging_buffer, raw, buffer_size);
-
-			vkDestroyBuffer(app->_device, staging_buffer, nullptr);
-			vkFreeMemory(app->_device, staging_buffer_memory, nullptr);
-		}
-
-		void bind(VkCommandBuffer command_buffer)
-		{
-			VkBuffer vertex_buffers[] = { raw };
-			VkDeviceSize offsets[] = { 0 };
-			vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
-		}
-
-		void destroy()
-		{
-			vkDestroyBuffer(app->_device, raw, nullptr);
-			vkFreeMemory(app->_device, raw_memory, nullptr);
-		}
-	};
-
 	struct new_vertex_impl
 	{
 		HelloTriangleApplication* app;
 
 		std::unique_ptr<vertex_buffer> vertex_buffer;
-
-		void create()
+		
+		void create(const std::vector<Vertex>& vertices)
 		{
 			vertex_buffer::config cfg = {};
 			cfg.usage = buffer_usage::STATIC;
@@ -475,12 +399,12 @@ return attribute_descriptions;
 			
 			vertex_buffer = app->_context->make_vertex_buffer(cfg);
 
-			VkDeviceSize buffer_size = sizeof(app->_vertices[0]) * app->_vertices.size();
+			VkDeviceSize buffer_size = sizeof(vertices[0]) * vertices.size();
 
 			buffer_view<uint32_t> view;
 
 			vertex_buffer->map(view, buffer_size);
-			memcpy((char*)view.data(), app->_vertices.data(), buffer_size);
+			memcpy((char*)view.data(), vertices.data(), buffer_size);
 			vertex_buffer->unmap();
 		}
 
@@ -513,49 +437,7 @@ return attribute_descriptions;
 		{
 			vertex_buffer = nullptr;
 		}
-	};
-
-	new_vertex_impl vertex_impl = { this };
-
-	struct old_index_impl
-	{
-		HelloTriangleApplication* app;
-		VkBuffer raw = nullptr;
-		VkDeviceMemory raw_memory = nullptr;
-
-		void create()
-		{
-
-			VkDeviceSize buffer_size = sizeof(app->_indices[0]) * app->_indices.size();
-
-			VkBuffer staging_buffer = nullptr;
-			VkDeviceMemory staging_buffer_memory = nullptr;
-			app->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_buffer_memory);
-
-			void* data;
-			vkMapMemory(app->_device, staging_buffer_memory, 0, buffer_size, 0, &data);
-			memcpy(data, app->_indices.data(), buffer_size);
-			vkUnmapMemory(app->_device, staging_buffer_memory);
-
-			app->create_buffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, raw, raw_memory);
-
-			app->copy_buffer(staging_buffer, raw, buffer_size);
-
-			vkDestroyBuffer(app->_device, staging_buffer, nullptr);
-			vkFreeMemory(app->_device, staging_buffer_memory, nullptr);
-		}
-		
-		void bind(VkCommandBuffer command_buffer)
-		{
-			vkCmdBindIndexBuffer(command_buffer, raw, 0, VK_INDEX_TYPE_UINT32);
-		}
-
-		void destroy()
-		{
-			vkDestroyBuffer(app->_device, raw, nullptr);
-			vkFreeMemory(app->_device, raw_memory, nullptr);
-		}
-	};
+	} vertex_impl = { this };
 
 	struct new_index_impl
 	{
@@ -563,18 +445,18 @@ return attribute_descriptions;
 
 		std::unique_ptr<index_buffer> index_buffer;
 
-		void create()
+		void create(const std::vector<uint32_t>& indices)
 		{
 			index_buffer = app->_context->make_index_buffer({
 				index_format::UNSIGNED_INT,
 				buffer_usage::STATIC});
 
-			VkDeviceSize buffer_size = sizeof(app->_indices[0]) * app->_indices.size();
+			VkDeviceSize buffer_size = sizeof(indices[0]) * indices.size();
 
 			buffer_view<uint32_t> view;
 
 			index_buffer->map(view, buffer_size);
-			memcpy((char*)view.data(), app->_indices.data(), buffer_size);
+			memcpy((char*)view.data(), indices.data(), buffer_size);
 			index_buffer->unmap();
 		}
 
@@ -584,17 +466,89 @@ return attribute_descriptions;
 			vkCmdBindIndexBuffer(command_buffer, vulkan->get(), 0, vulkan->format());
 		}
 
+		void draw(VkCommandBuffer command_buffer)
+		{
+			uint32_t index_count = (uint32_t)index_buffer->count();
+			vkCmdDrawIndexed(command_buffer, index_count, 1, 0, 0, 0);
+		}
+
 		void destroy()
 		{
 			index_buffer = nullptr;
 		}
+
+	} index_impl = { this };
+
+	struct new_uniform_impl
+	{
+		HelloTriangleApplication* app;
+
+		void create()
+		{
+			_compute_buffers.resize(app->_swap_image_count);
+
+			for (uint32_t i = 0; i < app->_swap_image_count; i++)
+			{
+				_compute_buffers[i] = app->_context->make_compute_buffer({ buffer_usage::DYNAMIC });
+				update(i);
+			}
+		}
+
+		VkDescriptorSetLayoutBinding layout_binding()
+		{
+			VkDescriptorSetLayoutBinding ubo_layout_binding = {};
+			ubo_layout_binding.binding = 0;
+			ubo_layout_binding.descriptorCount = 1;
+			ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			ubo_layout_binding.pImmutableSamplers = nullptr;
+			ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+			return ubo_layout_binding;
+		}
+
+		VkDescriptorBufferInfo descriptor_info(size_t swap_index)
+		{
+			auto vulkan = (vulkan_compute_buffer*)_compute_buffers[swap_index].get();
+			VkBuffer buffer = vulkan->get();
+			VkDescriptorBufferInfo buffer_info = {};
+			buffer_info.buffer = buffer;
+			buffer_info.offset = 0;
+			buffer_info.range = sizeof(UniformBufferObject);
+			return buffer_info;
+		}
+
+		void update(uint32_t current_image)
+		{
+			static auto start_time = std::chrono::high_resolution_clock::now();
+
+			auto current_time = std::chrono::high_resolution_clock::now();
+			float time = std::chrono::duration<float, std::chrono::seconds::period>(current_time - start_time).count();
+			buffer_view<UniformBufferObject> view;
+			_compute_buffers[current_image]->map(view, sizeof(UniformBufferObject));
+			UniformBufferObject& ubo = view[0] = {};
+
+			auto res = app->_context->back_buffer().cfg().res;
+#pragma warning(push)
+#pragma warning(disable:4127) // constant if condition
+			ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+			ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+			ubo.proj = glm::perspective(glm::radians(45.0f), res.x / (float)res.y, 0.1f, 10.0f);
+#pragma warning(pop)
+
+			ubo.proj[1][1] *= -1;
+
+			_compute_buffers[current_image]->unmap();
+		}
+
+		void destroy()
+		{
+			_compute_buffers.clear();
+		}
+
+		std::vector<std::unique_ptr<compute_buffer>> _compute_buffers;
+
 	};
+	new_uniform_impl uniform_impl = { this };
 
-	new_index_impl index_impl = { this };
-
-
-	std::vector<VkBuffer> _uniform_buffers;
-	std::vector<VkDeviceMemory> _uniform_buffers_memory;
 
 	VkDescriptorPool _descriptor_pool;
 	std::vector<VkDescriptorSet> _descriptor_sets;
@@ -641,13 +595,12 @@ public:
 		create_command_pool();
 		create_descriptor_set_layout();
 		load_model();
-		vertex_impl.create();
-		index_impl.create();
+
+		uniform_impl.create();
 		create_graphics_pipeline();
 		create_texture_image();
 		create_texture_image_view();
 		create_texture_sampler();
-		create_uniform_buffers();
 		create_descriptor_pool();
 		create_descriptor_sets();
 		create_command_buffers();
@@ -678,15 +631,7 @@ public:
 
 		vkDestroyDescriptorSetLayout(_device, _descriptor_set_layout, nullptr);
 
-		for (VkBuffer buffer : _uniform_buffers)
-		{
-			vkDestroyBuffer(_device, buffer, nullptr);
-		}
-
-		for (VkDeviceMemory memory : _uniform_buffers_memory)
-		{
-			vkFreeMemory(_device, memory, nullptr);
-		}
+		uniform_impl.destroy();
 
 		index_impl.destroy();
 
@@ -738,14 +683,23 @@ private:
 		create_command_buffers();
 	}
 
+	void create_command_pool()
+	{
+
+		VkCommandPoolCreateInfo pool_info = {};
+		pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		pool_info.queueFamilyIndex = _graphics_queue->cfg().family_index;
+
+		if (vkCreateCommandPool(_device, &pool_info, nullptr, &_command_pool) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create graphics command pool!");
+		}
+	}
+
 	void create_descriptor_set_layout()
 	{
-		VkDescriptorSetLayoutBinding ubo_layout_binding = {};
-		ubo_layout_binding.binding = 0;
-		ubo_layout_binding.descriptorCount = 1;
-		ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		ubo_layout_binding.pImmutableSamplers = nullptr;
-		ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		VkDescriptorSetLayoutBinding ubo_layout_binding = uniform_impl.layout_binding();
+
 
 		VkDescriptorSetLayoutBinding sampler_layout_binding = {};
 		sampler_layout_binding.binding = 1;
@@ -768,8 +722,8 @@ private:
 
 	void create_graphics_pipeline()
 	{
-		auto vert_shader_code = read_file("cooked_assets/shaders/vert.spv");
-		auto frag_shader_code = read_file("cooked_assets/shaders/frag.spv");
+		auto vert_shader_code = read_file("cooked_assets/shaders/shader.vert.spv");
+		auto frag_shader_code = read_file("cooked_assets/shaders/shader.frag.spv");
 
 		VkShaderModule vert_shader_module = create_shader_module(vert_shader_code);
 		VkShaderModule frag_shader_module = create_shader_module(frag_shader_code);
@@ -898,18 +852,6 @@ private:
 		vkDestroyShaderModule(_device, frag_shader_module, nullptr);
 		vkDestroyShaderModule(_device, vert_shader_module, nullptr);
 	}
-	
-	void create_command_pool() {
-		
-		VkCommandPoolCreateInfo pool_info = {};
-		pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		pool_info.queueFamilyIndex = _graphics_queue->cfg().family_index;
-
-		if (vkCreateCommandPool(_device, &pool_info, nullptr, &_command_pool) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create graphics command pool!");
-		}
-	}
-
 	bool has_stencil_component(VkFormat format)
 	{
 		return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
@@ -1249,6 +1191,9 @@ private:
 
 	void load_model()
 	{
+		std::vector<Vertex> vertices;
+		std::vector<uint32_t> indices;
+
 		tinyobj::attrib_t attrib;
 		std::vector<tinyobj::shape_t> shapes;
 		std::vector<tinyobj::material_t> materials;
@@ -1280,25 +1225,15 @@ private:
 
 				if (emplace.second)
 				{
-					_vertices.push_back(emplace.first->first);
+					vertices.push_back(emplace.first->first);
 				}
 
-				_indices.push_back((uint32_t)emplace.first->second);
+				indices.push_back((uint32_t)emplace.first->second);
 			}
 		}
-	}
 
-	void create_uniform_buffers()
-	{
-		VkDeviceSize buffer_size = sizeof(UniformBufferObject);
-
-		_uniform_buffers.resize(_swap_image_count);
-		_uniform_buffers_memory.resize(_swap_image_count);
-
-		for (size_t i = 0; i < _swap_image_count; i++)
-		{
-			create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, _uniform_buffers[i], _uniform_buffers_memory[i]);
-		}
+		vertex_impl.create(vertices);
+		index_impl.create(indices);
 	}
 
 	void create_descriptor_pool()
@@ -1338,11 +1273,8 @@ private:
 
 		for (size_t i = 0; i < _swap_image_count; i++)
 		{
-			VkDescriptorBufferInfo buffer_info = {};
-			buffer_info.buffer = _uniform_buffers[i];
-			buffer_info.offset = 0;
-			buffer_info.range = sizeof(UniformBufferObject);
-
+			VkDescriptorBufferInfo buffer_info = uniform_impl.descriptor_info(i);
+			
 			VkDescriptorImageInfo image_info = {};
 			image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			image_info.imageView = _texture_image_view;
@@ -1513,7 +1445,7 @@ private:
 
 			vkCmdBindDescriptorSets(_command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline_layout, 0, 1, &_descriptor_sets[i], 0, nullptr);
 
-			vkCmdDrawIndexed(_command_buffers[i], static_cast<uint32_t>(_indices.size()), 1, 0, 0, 0);
+			index_impl.draw(_command_buffers[i]);
 
 			vkCmdEndRenderPass(_command_buffers[i]);
 
@@ -1551,27 +1483,7 @@ private:
 
 	void update_uniform_buffer(uint32_t current_image)
 	{
-		static auto start_time = std::chrono::high_resolution_clock::now();
-
-		auto current_time = std::chrono::high_resolution_clock::now();
-		float time = std::chrono::duration<float, std::chrono::seconds::period>(current_time - start_time).count();
-
-		UniformBufferObject ubo = {};
-
-		auto res = _context->back_buffer().cfg().res;
-#pragma warning(push)
-#pragma warning(disable:4127) // constant if condition
-		ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo.proj = glm::perspective(glm::radians(45.0f), res.x / (float)res.y, 0.1f, 10.0f);
-#pragma warning(pop)
-
-		ubo.proj[1][1] *= -1;
-
-		void* data;
-		vkMapMemory(_device, _uniform_buffers_memory[current_image], 0, sizeof(ubo), 0, &data);
-		memcpy(data, &ubo, sizeof(ubo));
-		vkUnmapMemory(_device, _uniform_buffers_memory[current_image]);
+		uniform_impl.update(current_image);
 	}
 	
 	void draw_frame()

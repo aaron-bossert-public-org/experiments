@@ -27,18 +27,16 @@ const vulkan_staged_buffer::config& vulkan_staged_buffer::cfg() const
 
 void vulkan_staged_buffer::map(buffer_view_base& buffer_view, size_t byte_size)
 {
-	if (_staging_buffer)
+	_byte_size = (uint32_t)byte_size;
+	if (!_staging_buffer || _staging_buffer->cfg().size < byte_size)
 	{
-		LOG_WARNING("map/unmap mismatch");
-		unmap();
+		_staging_buffer = vulkan_buffer::make({
+				_cfg.buffer_mediator->vma(),
+				VMA_MEMORY_USAGE_CPU_ONLY,
+				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+				byte_size,
+			});
 	}
-
-	_staging_buffer = vulkan_buffer::make({
-			_cfg.buffer_mediator->vma(),
-			VMA_MEMORY_USAGE_CPU_ONLY,
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			byte_size,
-		});
 
 	if (_staging_buffer)
 	{
@@ -86,9 +84,11 @@ void vulkan_staged_buffer::unmap()
 		}
 		else
 		{
-			buffer_mediator.copy(*_staging_buffer, *_gpu_buffer);
-			
-			_staging_buffer = nullptr;
+			buffer_mediator.copy(*_staging_buffer, *_gpu_buffer, _byte_size);
+			if (_cfg.usage == buffer_usage::STATIC)
+			{
+				_staging_buffer = nullptr;
+			}
 		}
 	} 
 }
@@ -107,7 +107,7 @@ void vulkan_staged_buffer::release()
 
 size_t vulkan_staged_buffer::byte_size() const
 {
-	return _gpu_buffer->cfg().size;
+	return _byte_size;
 }
 
 bool vulkan_staged_buffer::validate(const config& cfg)

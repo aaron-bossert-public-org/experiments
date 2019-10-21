@@ -52,7 +52,7 @@ namespace igpu
 	private:
 		
 		const config _cfg;
-		
+		uint32_t _byte_size = 0;
 		std::unique_ptr<vulkan_buffer> _staging_buffer;
 		std::unique_ptr<vulkan_buffer> _gpu_buffer;
 	};
