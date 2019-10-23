@@ -80,16 +80,34 @@ std::unique_ptr<vulkan_color_buffer> vulkan_color_buffer::make(const config& cfg
 	view_info.subresourceRange.levelCount = 1;
 	view_info.subresourceRange.baseArrayLayer = 0;
 	view_info.subresourceRange.layerCount = 1;
-	
 
-	vulkan_image_buffer::config image_cfg = {};
+	VkSamplerCreateInfo sampler_info = {};
+	sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+	sampler_info.magFilter = VK_FILTER_LINEAR;
+	sampler_info.minFilter = VK_FILTER_LINEAR;
+	sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	sampler_info.anisotropyEnable = VK_TRUE;
+	sampler_info.maxAnisotropy = 16;
+	sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+	sampler_info.unnormalizedCoordinates = VK_FALSE;
+	sampler_info.compareEnable = VK_FALSE;
+	sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
+	sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	sampler_info.minLod = 0;
+	sampler_info.maxLod = (float)image_info.mipLevels;
+	sampler_info.mipLodBias = 0;
+
+	vulkan_image::config image_cfg = {};
 	image_cfg.physical_device = cfg.physical_device;
 	image_cfg.device = cfg.device;
 	image_cfg.memory_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-	image_cfg.info = image_info;
+	image_cfg.image_info = image_info;
 	image_cfg.view_info = view_info;
+	image_cfg.sampler_info = sampler_info;
 
-	if (vulkan_image_buffer::validate(image_cfg))
+	if (vulkan_image::validate(image_cfg))
 	{
 		return std::unique_ptr < vulkan_color_buffer >(
 			new vulkan_color_buffer(
@@ -102,8 +120,8 @@ std::unique_ptr<vulkan_color_buffer> vulkan_color_buffer::make(const config& cfg
 
 vulkan_color_buffer::vulkan_color_buffer(
 	const config& cfg,
-	const vulkan_image_buffer::config& image_cfg)
-	: vulkan_image_buffer_t(image_cfg)
+	const vulkan_image::config& image_cfg)
+	: vulkan_image_target_t(image_cfg)
 	, _cfg(cfg)
 {
 }

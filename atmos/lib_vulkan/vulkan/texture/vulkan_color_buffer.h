@@ -2,13 +2,13 @@
 #pragma once
 
 #include <igpu/texture/color_target.h>
-#include <vulkan/texture/vulkan_image_buffer.h>
+#include <vulkan/texture/vulkan_image_target_t.h>
 
 namespace igpu
 {
 	VkFormat to_vulkan_format(color_format);
 
-	class vulkan_color_buffer : public vulkan_image_buffer_t < color_target >
+	class vulkan_color_buffer : public vulkan_image_target_t < color_target >
 	{
 
 	public:
@@ -29,7 +29,7 @@ namespace igpu
 
 		vulkan_color_buffer(
 			const config&,
-			const vulkan_image_buffer::config&);
+			const vulkan_image::config&);
 
 	private:
 

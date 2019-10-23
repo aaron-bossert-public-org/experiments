@@ -13,7 +13,6 @@ namespace igpu
 {
 	class vulkan_fence;
 	class vulkan_queue;
-	class vulkan_semaphore;
 
 	class vulkan_buffer
 	{
@@ -31,9 +30,9 @@ namespace igpu
 
 		struct ownership
 		{
-			VkAccessFlagBits access;
-			VkPipelineStageFlagBits stage;
-			VkDependencyFlagBits dependency;
+			VkAccessFlags access;
+			VkPipelineStageFlags stage;
+			VkDependencyFlags dependency;
 			scoped_ptr < vulkan_queue > queue;
 		};
 
@@ -69,7 +68,7 @@ namespace igpu
 		VmaAllocation _vma_allocation = nullptr;
 		scoped_ptr < vulkan_fence > _fence;
 		
-		ownership _owner;
+		ownership _owner = {};
 		
 		perf::metric _mem_metric;
 	};

@@ -10,6 +10,7 @@
 #include <vulkan/buffer/vulkan_vertex_buffer.h>
 #include <vulkan/defines/vulkan_includes.h>
 #include <vulkan/material/vulkan_program.h>
+#include <vulkan/texture/vulkan_texture2d.h>
 #include <vulkan/window/vulkan_back_buffer.h>
 #include <vulkan/window/vulkan_window.h>
 // Vulkan implementation includes - end
@@ -514,6 +515,14 @@ std::unique_ptr<compute_buffer> vulkan_context::make_compute_buffer(
 	return vulkan_compute_buffer::make(
 		cfg,
 		_buffer_mediator);
+}
+std::unique_ptr<texture2d> vulkan_context::make_texture(
+	const texture2d::config& cfg)
+{
+	return vulkan_texture2d::make(
+		cfg,
+		_buffer_mediator);
+
 }
 
 const batch_constraints& vulkan_context::batch_constraints() const

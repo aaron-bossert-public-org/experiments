@@ -2,12 +2,15 @@
 #pragma once
 
 #include <igpu/buffer/compute_buffer.h>
+#include <igpu/utility/scoped_ptr.h>
 
-#include <vulkan/buffer/vulkan_staged_buffer.h>
+#include <vulkan/defines/vulkan_includes.h>
 
 namespace igpu
 {
-	class vulkan_compute_buffer : public vulkan_staged_buffer_t < compute_buffer >
+	class vulkan_buffer_mediator;
+
+	class vulkan_compute_buffer : public compute_buffer
 	{
 	public:
 
@@ -17,11 +20,12 @@ namespace igpu
 
 		const config& cfg() const override;
 
-	private:
+		virtual VkBuffer get() = 0;
+
+	protected:
 
 		vulkan_compute_buffer(
-			const config&,
-			const vulkan_staged_buffer::config&);
+			const config&);
 
 	private:
 

@@ -3,14 +3,17 @@
 
 #include <igpu/buffer/index_buffer.h>
 #include <igpu/buffer/index_format.h>
+#include <igpu/utility/scoped_ptr.h>
 
-#include <vulkan/buffer/vulkan_staged_buffer.h>
+#include <vulkan/defines/vulkan_includes.h>
 
 namespace igpu
 {
 	VkIndexType to_vulkan_format(index_format format);
 
-	class vulkan_index_buffer : public vulkan_staged_buffer_t < index_buffer >
+	class vulkan_buffer_mediator;
+
+	class vulkan_index_buffer : public index_buffer
 	{
 	public:
 
@@ -20,13 +23,14 @@ namespace igpu
 
 		const config& cfg() const override;
 
+		virtual VkBuffer get() = 0;
+
 		VkIndexType vulkan_index_buffer::format();
 
-	private:
+	protected:
 
 		vulkan_index_buffer(
-			const config&,
-			const vulkan_staged_buffer::config&);
+			const config&);
 
 	private:
 

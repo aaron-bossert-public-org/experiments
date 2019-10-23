@@ -18,8 +18,8 @@ namespace igpu
         ~gl_buffer();
         
 		void map(
-			buffer_view_base&,
-			size_t byte_size);
+			size_t byte_size,
+			buffer_view_base*);
 
 		void unmap();
 		
@@ -58,9 +58,9 @@ namespace igpu
 			return _cfg;
 		}
 
-		void map(buffer_view_base& buffer_view, size_t byte_size) override
+		void map(size_t byte_size, buffer_view_base* out_buffer_view) override
 		{
-			_gl_buffer.map(buffer_view, byte_size);
+			_gl_buffer.map(byte_size, out_buffer_view);
 		}
 
 		void unmap() override

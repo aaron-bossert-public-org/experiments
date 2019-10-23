@@ -335,7 +335,7 @@ std::unique_ptr<vulkan_back_buffer> vulkan_back_buffer::make(const config& cfg)
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(cfg.physical_device, cfg.surface, &surface_caps);
 
 	VkSurfaceFormatKHR surface_format = {
-		color->image_cfg().info.format,
+		color->image_cfg().image_info.format,
 		cfg.color_space,
 	};
 
@@ -356,8 +356,8 @@ std::unique_ptr<vulkan_back_buffer> vulkan_back_buffer::make(const config& cfg)
 	auto image_views = create_image_views(cfg, images, surface_format.format);
 	VkRenderPass render_pass = create_render_pass(
 		cfg,
-		color->image_cfg().info.format,
-		depth->image_cfg().info.format);
+		color->image_cfg().image_info.format,
+		depth->image_cfg().image_info.format);
 	
 	image_count = (uint32_t)images.size();
 

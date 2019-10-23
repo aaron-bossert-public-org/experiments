@@ -13,7 +13,7 @@ namespace igpu
 
 		virtual ~buffer() {}
 
-		virtual void map(buffer_view_base&, size_t byte_size) = 0;
+		virtual void map(size_t byte_size, buffer_view_base*) = 0;
 
 		virtual void unmap() = 0;
 

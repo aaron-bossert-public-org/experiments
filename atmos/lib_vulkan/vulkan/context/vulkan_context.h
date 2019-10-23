@@ -42,6 +42,9 @@ namespace igpu
 
 		std::unique_ptr<compute_buffer> make_compute_buffer(
 			const compute_buffer::config&) override;
+
+		std::unique_ptr<texture2d> make_texture(
+			const texture2d::config&) override;
 		
 		const igpu::batch_constraints& batch_constraints() const override;
 

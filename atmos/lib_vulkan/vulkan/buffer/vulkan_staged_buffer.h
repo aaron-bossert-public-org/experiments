@@ -35,14 +35,14 @@ namespace igpu
 		const config& cfg() const;
 
 		void map(
-			buffer_view_base&,
-			size_t byte_size);
+			size_t byte_size,
+			buffer_view_base*);
 
 		void unmap();
 
-		void release();
-
 		size_t byte_size() const;
+		
+		void release();
 
 		static bool validate(const config&);
 
@@ -62,16 +62,14 @@ namespace igpu
 	{
 	public:
 
-		using config = typename T::config;
-
 		~vulkan_staged_buffer_t() override {};
 
 		void map(
-			buffer_view_base& buffer_view,
-			size_t byte_size)
+			size_t byte_size,
+			buffer_view_base* out_buffer_view)
 			override
 		{
-			_vulkan_staged_buffer.map(buffer_view, byte_size);
+			_vulkan_staged_buffer.map(byte_size, out_buffer_view);
 		}
 
 		void unmap() override
@@ -84,16 +82,17 @@ namespace igpu
 			return _vulkan_staged_buffer.byte_size();
 		}
 
-		VkBuffer get()
+		VkBuffer get() override
 		{
 			return _vulkan_staged_buffer.get();
 		}
 
-	protected:
-
+		template<typename... Args>
 		vulkan_staged_buffer_t(
-			const vulkan_staged_buffer::config& res_config)
-			: _vulkan_staged_buffer(res_config)
+			const vulkan_staged_buffer::config& res_config,
+			Args... args)
+			: T(args...)
+			, _vulkan_staged_buffer(res_config)
 		{
 		}
 

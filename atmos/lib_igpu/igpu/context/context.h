@@ -11,6 +11,7 @@
 #include <igpu/context/vertex_constraints.h>
 #include <igpu/texture/color_format.h>
 #include <igpu/texture/depth_format.h>
+#include <igpu/texture/texture2d.h>
 #include <functional>
 #include <memory>
 
@@ -60,7 +61,10 @@ namespace igpu
 
 		virtual std::unique_ptr<compute_buffer> make_compute_buffer(
 			const compute_buffer::config&) = 0;
-		
+
+		virtual std::unique_ptr<texture2d> make_texture(
+			const texture2d::config&) = 0;
+
 		virtual ~context() {}
 
 		virtual const batch_constraints& batch_constraints() const = 0;

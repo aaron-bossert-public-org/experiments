@@ -1,7 +1,8 @@
 
 #include <vulkan/buffer/vulkan_vertex_buffer.h>
-#include <igpu/context/vertex_constraints.h>
+#include <vulkan/buffer/vulkan_staged_buffer.h>
 
+#include <igpu/context/vertex_constraints.h>
 using namespace igpu;
 
 namespace
@@ -105,9 +106,9 @@ std::unique_ptr<vulkan_vertex_buffer> vulkan_vertex_buffer::make(
 		if (vulkan_staged_buffer::validate(buffer_cfg))
 		{
 			return std::unique_ptr<vulkan_vertex_buffer>(
-				new vulkan_vertex_buffer(
-					cfg, 
+				new vulkan_staged_buffer_t<vulkan_vertex_buffer>(
 					buffer_cfg,
+					cfg, 
 					attribute_descriptions));
 		}
 	}
@@ -127,10 +128,8 @@ const std::vector<VkVertexInputAttributeDescription>& vulkan_vertex_buffer::attr
 
 vulkan_vertex_buffer::vulkan_vertex_buffer(
 	const config& cfg,
-	const vulkan_staged_buffer::config& buffer_cfg,
 	const std::vector<VkVertexInputAttributeDescription>& attribute_descriptions)
-	: vulkan_staged_buffer_t (buffer_cfg)
-	, _cfg(cfg)
+	: _cfg(cfg)
 	, _attribute_descriptions(attribute_descriptions)
 {
 }

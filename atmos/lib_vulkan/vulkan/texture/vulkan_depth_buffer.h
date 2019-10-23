@@ -2,13 +2,13 @@
 #pragma once
 
 #include <igpu/texture/depth_target.h>
-#include <vulkan/texture/vulkan_image_buffer.h>
+#include <vulkan/texture/vulkan_image_target_t.h>
 
 namespace igpu
 {
 	VkFormat to_vulkan_format(depth_format format);
 
-	class vulkan_depth_buffer : public vulkan_image_buffer_t < depth_target >
+	class vulkan_depth_buffer : public vulkan_image_target_t < depth_target >
 	{
 
 	public:
@@ -29,7 +29,7 @@ namespace igpu
 
 		vulkan_depth_buffer(
 			const config&,
-			const vulkan_image_buffer::config&);
+			const vulkan_image::config&);
 
 	private:
 

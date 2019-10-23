@@ -69,7 +69,7 @@ gl_buffer::~gl_buffer()
 	glDeleteBuffers(1, &_gl_handle);
 }
 
-void gl_buffer::map(buffer_view_base& buffer_view, size_t byte_size)
+void gl_buffer::map(size_t byte_size, buffer_view_base* out_buffer_view)
 {
 	if (_mapped)
 	{
@@ -112,10 +112,10 @@ void gl_buffer::map(buffer_view_base& buffer_view, size_t byte_size)
 
 	glBindBuffer(_gl_target, active_handle);
 
-	buffer_view = buffer_view_base(
-		byte_size / buffer_view.stride(),
+	*out_buffer_view = buffer_view_base(
+		byte_size / out_buffer_view->stride(),
 		_mapped,
-		buffer_view.stride());
+		out_buffer_view->stride());
 }
 
 void gl_buffer::unmap()

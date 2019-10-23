@@ -11,6 +11,7 @@
 #include <gl/texture/gl_color_buffer.h>
 #include <gl/texture/gl_depth_buffer.h>
 #include <gl/texture/gl_draw_target.h>
+#include <gl/texture/gl_texture2d.h>
 #include <gl/window/gl_back_buffer.h>
 #include <gl/window/gl_window.h>
 // GL implementation includes - end
@@ -82,6 +83,12 @@ std::unique_ptr<compute_buffer> gl_context::make_compute_buffer(
 	const compute_buffer::config& cfg)
 {
 	return gl_compute_buffer::make(cfg);
+}
+
+std::unique_ptr<texture2d> gl_context::make_texture(
+	const texture2d::config& cfg)
+{
+	return gl_texture2d::make(cfg);
 }
 
 const batch_constraints& gl_context::batch_constraints() const

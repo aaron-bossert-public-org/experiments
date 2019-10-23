@@ -1,5 +1,6 @@
 
 #include <vulkan/buffer/vulkan_compute_buffer.h>
+#include <vulkan/buffer/vulkan_staged_buffer.h>
 
 using namespace igpu;
 
@@ -14,7 +15,8 @@ std::unique_ptr<vulkan_compute_buffer> vulkan_compute_buffer::make(
 
 	if (vulkan_staged_buffer::validate(buffer_cfg))
 	{
-		return std::unique_ptr<vulkan_compute_buffer>(new vulkan_compute_buffer(cfg, buffer_cfg));
+		return std::unique_ptr<vulkan_compute_buffer>(
+			new vulkan_staged_buffer_t < vulkan_compute_buffer > (buffer_cfg, cfg));
 	}
 
 	return nullptr;
@@ -26,9 +28,7 @@ const vulkan_compute_buffer::config& vulkan_compute_buffer::cfg() const
 }
 
 vulkan_compute_buffer::vulkan_compute_buffer(
-	const config& cfg,
-	const vulkan_staged_buffer::config& buffer_cfg)
-	: vulkan_staged_buffer_t (buffer_cfg)
-	, _cfg(cfg)
+	const config& cfg)
+	: _cfg(cfg)
 {
 }

@@ -1,20 +1,21 @@
 
-#include <vulkan/texture/vulkan_image_buffer.h>
+#include <vulkan/texture/vulkan_image.h>
+#include <vulkan/buffer/vulkan_fence.h>
 
 using namespace igpu;
 
 namespace
 {
 	VkImage create_image(
-		const vulkan_image_buffer::config& cfg)
+		const vulkan_image::config& cfg)
 	{
 		VkImage image = nullptr;
-		vkCreateImage(cfg.device, &cfg.info, nullptr, &image);
+		vkCreateImage(cfg.device, &cfg.image_info, nullptr, &image);
 		return image;
 	}
 	
 	VkImageView create_image_view(
-		const vulkan_image_buffer::config& cfg,
+		const vulkan_image::config& cfg,
 		VkImage image)
 	{
 		VkImageViewCreateInfo view_info = cfg.view_info;
@@ -26,7 +27,7 @@ namespace
 	}
 
 	uint32_t find_memory_type(
-		const vulkan_image_buffer::config& cfg,
+		const vulkan_image::config& cfg,
 		uint32_t type_filter)
 	{
 		VkFlags property_flags = (VkFlags)cfg.memory_properties;
@@ -45,7 +46,7 @@ namespace
 	}
 
 	VkMemoryAllocateInfo create_alloc_info(
-		const vulkan_image_buffer::config& cfg,
+		const vulkan_image::config& cfg,
 		VkImage image)
 	{
 		VkMemoryRequirements mem_requirements;
@@ -60,7 +61,7 @@ namespace
 	}
 
 	VkDeviceMemory create_device_memory(
-		const vulkan_image_buffer::config& cfg,
+		const vulkan_image::config& cfg,
 		const VkMemoryAllocateInfo& alloc_info,
 		VkImage image)
 	{
@@ -69,11 +70,18 @@ namespace
 		vkBindImageMemory(cfg.device, image, device_memory, 0);
 		return device_memory;
 	}
+	VkSampler create_sampler(
+		const vulkan_image::config& cfg)
+	{
+		VkSampler sampler = nullptr;
+		vkCreateSampler(cfg.device, &cfg.sampler_info, nullptr, &sampler);
+		return sampler;
+	}
 
-	std::string perf_name(const vulkan_image_buffer::config& cfg)
+	std::string perf_name(const vulkan_image::config& cfg)
 	{
 		std::string result;
-		auto usage = cfg.info.usage;
+		auto usage = cfg.image_info.usage;
 		if (VK_IMAGE_USAGE_TRANSFER_SRC_BIT & usage)
 		{
 			result += "transfer src/";
@@ -120,7 +128,7 @@ namespace
 	}
 }
 
-bool vulkan_image_buffer::validate(const config& cfg)
+bool vulkan_image::validate(const config& cfg)
 {
 	if (!cfg.physical_device)
 	{
@@ -134,37 +142,37 @@ bool vulkan_image_buffer::validate(const config& cfg)
 	{
 		LOG_CRITICAL("no memory properties specified is null");
 	}
-	else if (cfg.info.sType == 0)
+	else if (cfg.image_info.sType == 0)
 	{
 		LOG_CRITICAL("info.sType is zero");
 	}
 	else if (
-		cfg.info.extent.width == 0 ||
-		cfg.info.extent.height == 0 ||
-		cfg.info.extent.depth == 0)
+		cfg.image_info.extent.width == 0 ||
+		cfg.image_info.extent.height == 0 ||
+		cfg.image_info.extent.depth == 0)
 	{
 		LOG_CRITICAL("info.extent(%d, %d, %d) has a zero coordinate",
-			cfg.info.extent.width,
-			cfg.info.extent.height,
-			cfg.info.extent.depth);
+			cfg.image_info.extent.width,
+			cfg.image_info.extent.height,
+			cfg.image_info.extent.depth);
 	}
-	else if (cfg.info.mipLevels == 0)
+	else if (cfg.image_info.mipLevels == 0)
 	{
 		LOG_CRITICAL("info.mipLevels is zero");
 	}
-	else if (cfg.info.arrayLayers == 0)
+	else if (cfg.image_info.arrayLayers == 0)
 	{
 		LOG_CRITICAL("info.arrayLayers is zero");
 	}
-	else if (cfg.info.format == VK_FORMAT_UNDEFINED)
+	else if (cfg.image_info.format == VK_FORMAT_UNDEFINED)
 	{
 		LOG_CRITICAL("info.format is VK_FORMAT_UNDEFINED");
 	}
-	else if (cfg.info.usage == 0)
+	else if (cfg.image_info.usage == 0)
 	{
 		LOG_CRITICAL("info.usage is zero");
 	}
-	else if (cfg.info.samples == 0)
+	else if (cfg.image_info.samples == 0)
 	{
 		LOG_CRITICAL("info.samples is zero");
 	}
@@ -196,7 +204,7 @@ bool vulkan_image_buffer::validate(const config& cfg)
 	return false;
 }
 
-vulkan_image_buffer::vulkan_image_buffer(
+vulkan_image::vulkan_image(
 	const config& cfg)
 	: _cfg(cfg)
 	, _device(cfg.device)
@@ -204,35 +212,94 @@ vulkan_image_buffer::vulkan_image_buffer(
 	, _alloc_info(create_alloc_info(cfg, _image))
 	, _device_memory(create_device_memory(cfg, _alloc_info, _image))
 	, _image_view(create_image_view(cfg, _image))
+	, _sampler (create_sampler(cfg))
 	, _gpu_mem_metric(perf::category::GPU_MEM_USAGE, perf_name(cfg))
 {	
 	_gpu_mem_metric.add(_alloc_info.allocationSize); // should not hit
 }
 
-const vulkan_image_buffer::config& vulkan_image_buffer::cfg() const
+const vulkan_image::config& vulkan_image::cfg() const
 {
 	return _cfg;
 }
 
-VkImage vulkan_image_buffer::image() const
+const vulkan_image::ownership& vulkan_image::owner() const
+{
+	return _owner;
+}
+
+const scoped_ptr < vulkan_fence >& vulkan_image::fence() const
+{
+	return _fence;
+}
+
+void vulkan_image::owner(const ownership& owner)
+{
+	_owner = owner;
+}
+
+VkImage vulkan_image::get() const
 {
 	return _image;
 }
 
-VkDeviceMemory vulkan_image_buffer::device_memory() const
+VkDeviceMemory vulkan_image::device_memory() const
 {
 	return _device_memory;
 }
 
-VkImageView vulkan_image_buffer::image_view() const
+VkImageView vulkan_image::image_view() const
 {
 	return _image_view;
 }
 
-vulkan_image_buffer::~vulkan_image_buffer()
+void vulkan_image::fence(const scoped_ptr < vulkan_fence >& fence)
 {
-	vkDestroyImageView(_device, _image_view, nullptr);
-	vkFreeMemory(_device, _device_memory, nullptr);
-	vkDestroyImage(_device, _image, nullptr);
+	_fence = fence;
+}
+
+VkDescriptorImageInfo vulkan_image::create_descriptor_info() const
+{
+	VkDescriptorImageInfo image_info = {};
+	image_info.imageLayout = _owner.layout;
+	image_info.imageView = _image_view;
+	image_info.sampler = _sampler;
+	return image_info;
+}
+
+vulkan_image::~vulkan_image()
+{
+	if (_fence)
+	{
+		_fence->wait();
+	}
+
+	if (_sampler)
+	{
+		vkDestroySampler(_device, _sampler, nullptr);
+	}
+
+	if (_image_view)
+	{
+		vkDestroyImageView(_device, _image_view, nullptr);
+	}
+
+	if (_device_memory)
+	{
+		vkFreeMemory(_device, _device_memory, nullptr);
+	}
+
+	if (_image)
+	{
+		vkDestroyImage(_device, _image, nullptr);
+	}
+}
+
+std::unique_ptr<vulkan_image> vulkan_image::make(const config& cfg)
+{
+	return std::unique_ptr<vulkan_image>(
+		new vulkan_image(
+			cfg));
+
 }
 

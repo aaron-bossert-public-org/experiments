@@ -6,6 +6,7 @@
 #include <vulkan/buffer/vulkan_fence.h>
 #include <vulkan/buffer/vulkan_queue.h>
 #include <vulkan/buffer/vulkan_command_buffer.h>
+#include <vulkan/texture/vulkan_image.h>
 
 
 using namespace igpu;
@@ -100,7 +101,7 @@ namespace
 			[&](VkCommandBuffer command_buffer) {
 
 				command_builder(command_buffer,
-					add_dependency(command_buffer, args.buffer, { args.access, args.stage, args.dependency, queue })...);
+					add_dependency(command_buffer, queue, args)...);
 
 			});
 	}
@@ -124,29 +125,172 @@ namespace
 			});
 	}
 
+	struct image_dependency
+	{
+		vulkan_image& image;
+		VkImageLayout layout;
+		VkAccessFlags access;
+		VkPipelineStageFlags stage;
+		VkDependencyFlags dependency;
+	};
+
+	image_dependency dependency(
+		vulkan_image& image,
+		VkImageLayout layout,
+		VkAccessFlags access,
+		VkPipelineStageFlags stage,
+		VkDependencyFlags dependency = (VkDependencyFlags)0)
+	{
+		return { image, layout, access, stage, dependency };
+	}
+
+	VkImage add_dependency(
+		VkCommandBuffer command_buffer,
+		const scoped_ptr < vulkan_queue >& queue,
+		const image_dependency& image_dependency)
+	{
+		vulkan_image& image = image_dependency.image;
+		const vulkan_image::ownership& current_owner = image.owner();
+		vulkan_image::ownership target_owner = {
+			image_dependency.layout,
+			image_dependency.access,
+			image_dependency.stage,
+			image_dependency.dependency,
+			queue
+		};
+
+		// apparently this is slower than VkMemoryBarrier, need an api to handle these in bulk with VkMemoryBarrier.
+		VkImageMemoryBarrier barrier = {};
+		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		barrier.srcAccessMask = (VkFlags)current_owner.access;
+		barrier.dstAccessMask = (VkFlags)target_owner.access;
+		barrier.oldLayout = current_owner.layout;
+		barrier.newLayout = target_owner.layout;
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.image = image.get();
+		barrier.subresourceRange = image.cfg().view_info.subresourceRange;
+
+		// cannot add dependency with null queue
+		if (!target_owner.queue)
+		{
+			LOG_CRITICAL("target owner queue is null");
+		}
+		// add dependency to some operation within the queue that has already aquired this buffer
+		else if (!current_owner.queue)
+		{
+			vkCmdPipelineBarrier(
+				command_buffer,
+				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, target_owner.stage, target_owner.dependency,
+				0, nullptr,
+				0, nullptr,
+				1, &barrier);
+		}
+		else if (current_owner.queue == target_owner.queue)
+		{
+			if (target_owner.access != current_owner.access ||
+				target_owner.stage != current_owner.stage)
+			{
+				vkCmdPipelineBarrier(
+					command_buffer,
+					current_owner.stage, target_owner.stage, target_owner.dependency,
+					0, nullptr,
+					0, nullptr,
+					1, &barrier);
+			}
+		}
+
+		// release current queue's ownership of this buffer and aquire ownership on target_queue
+		else if (current_owner.queue)
+		{
+			VkImageMemoryBarrier source_barrier = barrier;
+			source_barrier.dstAccessMask = 0;
+			source_barrier.srcQueueFamilyIndex = current_owner.queue->cfg().family_index;
+			source_barrier.dstQueueFamilyIndex = target_owner.queue->cfg().family_index;
+
+			VkImageMemoryBarrier dest_barrier = barrier;
+			dest_barrier.srcAccessMask = 0;
+			dest_barrier.srcQueueFamilyIndex = current_owner.queue->cfg().family_index;
+			dest_barrier.dstQueueFamilyIndex = target_owner.queue->cfg().family_index;
+
+			// Relese exclusive ownersip on _queue
+			submit_sync(
+				current_owner.queue,
+				[&](VkCommandBuffer current_owner_command_buffer) {
+
+					vkCmdPipelineBarrier(
+						current_owner_command_buffer,
+						current_owner.stage, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0,
+						0, nullptr,
+						0, nullptr,
+						1, &source_barrier);
+				});
+
+			if (image.fence() && image.fence()->is_ready())
+			{
+				LOG_CRITICAL(
+					"fence is not ready immediately after submit_sync. "
+					"How is fence (and buffer) still in use? "
+					"Was the last owner queue tracked inside the vulkan_buffer?");
+			}
+
+			// Aquire exclusive ownership on target_queue
+
+			vkCmdPipelineBarrier(
+				command_buffer,
+				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, target_owner.stage, target_owner.dependency,
+				0, nullptr,
+				0, nullptr,
+				1, &dest_barrier);
+		}
+
+		image.owner(target_owner);
+
+		return image.get();
+	}
+
 	struct buffer_dependency
 	{
 		vulkan_buffer& buffer;
-		VkAccessFlagBits access;
-		VkPipelineStageFlagBits stage;
-		VkDependencyFlagBits dependency;
+		VkAccessFlags access;
+		VkPipelineStageFlags stage;
+		VkDependencyFlags dependency;
 	};
 	
 	buffer_dependency dependency(
 		vulkan_buffer& buffer,
-		VkAccessFlagBits access,
-		VkPipelineStageFlagBits stage,
-		VkDependencyFlagBits dependency = (VkDependencyFlagBits)0)
+		VkAccessFlags access,
+		VkPipelineStageFlags stage,
+		VkDependencyFlags dependency = (VkDependencyFlagBits)0)
 	{
 		return { buffer, access, stage, dependency };
 	};
 
 	VkBuffer add_dependency(
 		VkCommandBuffer command_buffer,
-		vulkan_buffer& buffer,
-		const vulkan_buffer::ownership& target_owner)
+		const scoped_ptr < vulkan_queue >& queue,
+		const buffer_dependency& buffer_dependency)
 	{
+		vulkan_buffer& buffer = buffer_dependency.buffer;
 		const vulkan_buffer::ownership& current_owner = buffer.owner();
+		vulkan_buffer::ownership target_owner = {
+			buffer_dependency.access,
+			buffer_dependency.stage,
+			buffer_dependency.dependency,
+			queue
+		};
+		
+		// apparently this is slower than VkMemoryBarrier, need an api to handle these in bulk with VkMemoryBarrier.
+		VkBufferMemoryBarrier barrier = {};
+		barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+		barrier.pNext = nullptr;
+		barrier.srcAccessMask = (VkFlags)current_owner.access;
+		barrier.dstAccessMask = (VkFlags)target_owner.access;
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.buffer = buffer.get();
+		barrier.offset = 0;
+		barrier.size = buffer.cfg().size;
 
 		// cannot add dependency with null queue
 		if (!target_owner.queue)
@@ -159,18 +303,11 @@ namespace
 			if (target_owner.access != current_owner.access ||
 				target_owner.stage != current_owner.stage)
 			{
-				// apparently this is slower than VkMemoryBarrier, need an api to handle these in bulk with VkMemoryBarrier.
-				VkBufferMemoryBarrier buffer_memory_barrier = {
-					VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER, nullptr,
-					(VkFlags)current_owner.access, (VkFlags)target_owner.access,
-					VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED,
-					buffer.get(), 0, buffer.cfg().size };
-
 				vkCmdPipelineBarrier(
 					command_buffer,
 					current_owner.stage, target_owner.stage, target_owner.dependency,
 					0, nullptr,
-					1, &buffer_memory_barrier,
+					1, &barrier,
 					0, nullptr);
 			}
 		}
@@ -178,44 +315,44 @@ namespace
 		// release current queue's ownership of this buffer and aquire ownership on target_queue
 		else if (current_owner.queue)
 		{
+			VkBufferMemoryBarrier source_barrier = barrier;
+			source_barrier.dstAccessMask = 0;
+			source_barrier.srcQueueFamilyIndex = current_owner.queue->cfg().family_index;
+			source_barrier.dstQueueFamilyIndex = target_owner.queue->cfg().family_index;
+
+			VkBufferMemoryBarrier dest_barrier = barrier;
+			dest_barrier.srcAccessMask = 0;
+			dest_barrier.srcQueueFamilyIndex = current_owner.queue->cfg().family_index;
+			dest_barrier.dstQueueFamilyIndex = target_owner.queue->cfg().family_index;
+
 			// Relese exclusive ownersip on _queue
 			submit_sync(
 				current_owner.queue,
 				[&](VkCommandBuffer current_owner_command_buffer) {
-					VkBufferMemoryBarrier buffer_memory_barrier = {
-						VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER, nullptr,
-						(VkFlags)current_owner.access, 0,
-						current_owner.queue->cfg().family_index, target_owner.queue->cfg().family_index,
-						buffer.get(), 0, buffer.cfg().size };
-
+					
 					vkCmdPipelineBarrier(
 						current_owner_command_buffer,
-						current_owner.stage, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, target_owner.dependency,
+						current_owner.stage, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0,
 						0, nullptr,
-						1, &buffer_memory_barrier,
+						1, &source_barrier,
 						0, nullptr);
 				});
 
-
-
 			if (buffer.fence() && buffer.fence()->is_ready())
 			{
-				LOG_CRITICAL("fence is not ready immediately after submit_sync. Is fence (and buffer) still in use?");
+				LOG_CRITICAL(
+					"fence is not ready immediately after submit_sync. "
+					"How is fence (and buffer) still in use? "
+					"Was the last owner queue tracked inside the vulkan_buffer?");
 			}
 
 			// Aquire exclusive ownership on target_queue
-
-			VkBufferMemoryBarrier buffer_memory_barrier = {
-				VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER, nullptr,
-				0, (VkFlags)target_owner.access,
-				current_owner.queue->cfg().family_index, target_owner.queue->cfg().family_index,
-				buffer.get(), 0, buffer.cfg().size };
 
 			vkCmdPipelineBarrier(
 				command_buffer,
 				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, target_owner.stage, target_owner.dependency,
 				0, nullptr,
-				1, &buffer_memory_barrier,
+				1, &dest_barrier,
 				0, nullptr);
 		}
 
@@ -238,7 +375,9 @@ VmaAllocator vulkan_buffer_mediator::vma()
 void vulkan_buffer_mediator::copy(
 	vulkan_buffer& src,
 	vulkan_buffer& dst,
-	uint32_t size)
+	uint32_t size,
+	uint32_t src_offset,
+	uint32_t dst_offset)
 {
 	submit_sync(
 		_cfg.transfer_queue,
@@ -247,8 +386,8 @@ void vulkan_buffer_mediator::copy(
 			VkBuffer dst_buffer) {
 
 				VkBufferCopy region = {};
-				region.srcOffset = 0;
-				region.dstOffset = 0;
+				region.srcOffset = src_offset;
+				region.dstOffset = dst_offset;
 				region.size = size;
 
 				vkCmdCopyBuffer(
@@ -257,6 +396,149 @@ void vulkan_buffer_mediator::copy(
 		},
 		dependency(src, VK_ACCESS_TRANSFER_READ_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT),
 		dependency(dst, VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT));
+}
+
+void vulkan_buffer_mediator::copy(
+	vulkan_buffer& src,
+	vulkan_image& dst,
+	uint32_t src_offset)
+{	
+	submit_sync(
+		_cfg.transfer_queue,
+		[&](VkCommandBuffer command_buffer,
+			VkBuffer src_buffer,
+			VkImage dst_image) {
+
+			VkBufferImageCopy region = {};
+			region.bufferOffset = src_offset;
+			region.bufferRowLength = 0;
+			region.bufferImageHeight = 0;
+			region.imageSubresource.aspectMask = dst.cfg().view_info.subresourceRange.aspectMask;
+			region.imageSubresource.mipLevel = 0;
+			region.imageSubresource.baseArrayLayer = 0;
+			region.imageSubresource.layerCount = 1;
+			region.imageOffset = { 0, 0, 0 };
+			region.imageExtent = dst.cfg().image_info.extent;
+
+			vkCmdCopyBufferToImage(command_buffer, src_buffer, dst_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+		},
+		dependency(src, VK_ACCESS_TRANSFER_READ_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT),
+		dependency(dst, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT));
+}
+
+
+bool vulkan_buffer_mediator::can_generate_mipmaps(
+	VkFormat format,
+	VkImageTiling tiling)
+{
+	VkFlags required
+		= VK_FORMAT_FEATURE_BLIT_SRC_BIT
+		| VK_FORMAT_FEATURE_BLIT_DST_BIT
+		| VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT;
+	
+	
+	VkFlags actual = 0;
+	VkFormatProperties format_properties;
+	vkGetPhysicalDeviceFormatProperties(_cfg.physical_device, format, &format_properties);	
+	switch (tiling)
+	{
+	case VK_IMAGE_TILING_OPTIMAL:
+		actual = format_properties.optimalTilingFeatures;
+		break;
+	case VK_IMAGE_TILING_LINEAR:
+		actual = format_properties.linearTilingFeatures;
+		break;
+	}
+
+
+	return (actual & required) == required;
+}
+void vulkan_buffer_mediator::generate_mipmaps(vulkan_image& image)
+{
+	if (false == can_generate_mipmaps(
+		image.cfg().image_info.format,
+		image.cfg().image_info.tiling))
+	{
+		LOG_CRITICAL("vk format %d does not support linear blitting!", image.cfg().image_info.format);
+	}
+
+	submit_sync(
+		_cfg.graphics_queue,
+		[&](VkCommandBuffer command_buffer,
+			VkImage vk_image) {
+
+				VkImageMemoryBarrier barrier = {};
+				barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+				barrier.image = vk_image;
+				barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+				barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+				barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				barrier.subresourceRange.baseArrayLayer = 0;
+				barrier.subresourceRange.layerCount = 1;
+				barrier.subresourceRange.levelCount = 1;
+
+				int32_t mip_width = image.cfg().image_info.extent.width;
+				int32_t mip_height = image.cfg().image_info.extent.height;
+
+				// setting by hand, currently there isn't a way to represent per-mip ownership so we do the barriers by hand and
+				// track ownership manually.
+				// In the future support should be added to track ownership on the mip level
+				image.owner({
+					VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+					VK_ACCESS_TRANSFER_READ_BIT,
+					VK_PIPELINE_STAGE_TRANSFER_BIT,
+					0,
+					_cfg.graphics_queue });
+
+				for (uint32_t i = 1; i < image.cfg().view_info.subresourceRange.levelCount; i++)
+				{
+					barrier.subresourceRange.baseMipLevel = i;
+					barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+					barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+					barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+					barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+					
+					vkCmdPipelineBarrier(command_buffer,
+						VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
+						0, nullptr,
+						0, nullptr,
+						1, &barrier);
+
+					VkImageBlit blit = {};
+					blit.srcOffsets[0] = { 0, 0, 0 };
+					blit.srcOffsets[1] = { mip_width, mip_height, 1 };
+					blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+					blit.srcSubresource.mipLevel = i - 1;
+					blit.srcSubresource.baseArrayLayer = 0;
+					blit.srcSubresource.layerCount = 1;
+					blit.dstOffsets[0] = { 0, 0, 0 };
+					blit.dstOffsets[1] = { mip_width > 1 ? mip_width / 2 : 1, mip_height > 1 ? mip_height / 2 : 1, 1 };
+					blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+					blit.dstSubresource.mipLevel = i;
+					blit.dstSubresource.baseArrayLayer = 0;
+					blit.dstSubresource.layerCount = 1;
+
+					vkCmdBlitImage(command_buffer,
+						vk_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+						vk_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+						1, &blit,
+						VK_FILTER_LINEAR);
+
+					barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+					barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+					barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+					barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+					vkCmdPipelineBarrier(command_buffer,
+						VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
+						0, nullptr,
+						0, nullptr,
+						1, &barrier);
+
+					if (mip_width > 1) mip_width /= 2;
+					if (mip_height > 1) mip_height /= 2;
+				}
+		}, dependency(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_ACCESS_TRANSFER_READ_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT));
 }
 
 vulkan_buffer_mediator::~vulkan_buffer_mediator()
@@ -324,6 +606,7 @@ vulkan_buffer_mediator::vulkan_buffer_mediator(
 #include <vulkan/buffer/vulkan_compute_buffer.h>
 #include <vulkan/buffer/vulkan_index_buffer.h>
 #include <vulkan/buffer/vulkan_vertex_buffer.h>
+#include <vulkan/texture/vulkan_texture2d.h>
 
 
 const std::string MODEL_PATH = "cooked_assets/models/chalet.obj";
@@ -379,11 +662,69 @@ private:
 	VkPipelineLayout _pipeline_layout;
 	VkPipeline _graphics_pipeline;
 
-	uint32_t _mip_levels;
-	VkImage _texture_image;
-	VkDeviceMemory _texture_image_memory;
-	VkImageView _texture_image_view;
-	VkSampler _texture_sampler;
+	struct new_texture_impl
+	{
+		HelloTriangleApplication* app;
+		std::unique_ptr<texture2d> texture;
+		VkSampler _texture_sampler;
+
+		void create()
+		{
+			std::ifstream ifs(TEXTURE_PATH, std::ios::binary | std::ios::ate);
+			if (!ifs)
+			{
+				throw std::runtime_error(EXCEPTION_CONTEXT("failed to load texture %s", TEXTURE_PATH.c_str()));
+			}
+
+			
+			texture2d::config texture_cfg = {};
+			texture_cfg.name = TEXTURE_PATH;
+			texture_cfg.usage = buffer_usage::STATIC;
+			texture_cfg.can_auto_generate_mips = true;
+			texture_cfg.sampler = { sampler::filter::LINEAR, sampler::filter::LINEAR, sampler::address::WRAP,sampler::address::WRAP,};
+			texture = app->_context->make_texture(texture_cfg);
+
+
+			{
+				size_t byte_size = ifs.tellg();
+				ifs.seekg(0, std::ios::beg);
+				byte_size -= ifs.tellg();
+
+
+				buffer_view<char> view;
+				texture->map(byte_size, &view);
+				ifs.read((char*)view.data(), byte_size);
+				ifs.close();
+				texture->unmap_raw_file();
+			}
+
+			// transition layout for use by graphics pipeline
+			auto* vulkan = (vulkan_texture2d*)texture.get();
+			submit_sync(
+				app->_context->buffer_mediator().cfg().graphics_queue,
+				[&](VkCommandBuffer, VkImage) {},
+				dependency(
+					vulkan->image(), 
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 
+					VK_ACCESS_SHADER_READ_BIT, 
+					VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT));
+		}
+
+		VkDescriptorImageInfo descriptor_info()
+		{
+			auto* vulkan = (vulkan_texture2d*)texture.get();
+			vulkan_image& image = vulkan->image();
+			return image.create_descriptor_info();
+		}
+
+		void destroy()
+		{
+			texture = nullptr;
+		}
+	};
+	
+	new_texture_impl texture_impl = { this };
+
 	
 	struct new_vertex_impl
 	{
@@ -403,7 +744,7 @@ private:
 
 			buffer_view<uint32_t> view;
 
-			vertex_buffer->map(view, buffer_size);
+			vertex_buffer->map(buffer_size, &view);
 			memcpy((char*)view.data(), vertices.data(), buffer_size);
 			vertex_buffer->unmap();
 		}
@@ -455,7 +796,7 @@ private:
 
 			buffer_view<uint32_t> view;
 
-			index_buffer->map(view, buffer_size);
+			index_buffer->map(buffer_size, &view);
 			memcpy((char*)view.data(), indices.data(), buffer_size);
 			index_buffer->unmap();
 		}
@@ -523,7 +864,7 @@ private:
 			auto current_time = std::chrono::high_resolution_clock::now();
 			float time = std::chrono::duration<float, std::chrono::seconds::period>(current_time - start_time).count();
 			buffer_view<UniformBufferObject> view;
-			_compute_buffers[current_image]->map(view, sizeof(UniformBufferObject));
+			_compute_buffers[current_image]->map(sizeof(UniformBufferObject), &view);
 			UniformBufferObject& ubo = view[0] = {};
 
 			auto res = app->_context->back_buffer().cfg().res;
@@ -598,9 +939,7 @@ public:
 
 		uniform_impl.create();
 		create_graphics_pipeline();
-		create_texture_image();
-		create_texture_image_view();
-		create_texture_sampler();
+		texture_impl.create();
 		create_descriptor_pool();
 		create_descriptor_sets();
 		create_command_buffers();
@@ -621,11 +960,7 @@ public:
 	{
 		on_cleanup_swap_chain();
 
-		vkDestroySampler(_device, _texture_sampler, nullptr);
-		vkDestroyImageView(_device, _texture_image_view, nullptr);
-
-		vkDestroyImage(_device, _texture_image, nullptr);
-		vkFreeMemory(_device, _texture_image_memory, nullptr);
+		texture_impl.destroy();
 
 		vkDestroyDescriptorPool(_device, _descriptor_pool, nullptr);
 
@@ -852,342 +1187,6 @@ private:
 		vkDestroyShaderModule(_device, frag_shader_module, nullptr);
 		vkDestroyShaderModule(_device, vert_shader_module, nullptr);
 	}
-	bool has_stencil_component(VkFormat format)
-	{
-		return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
-	}
-
-	void create_texture_image()
-	{
-		int tex_width, tex_height, tex_channels;
-		stbi_uc * pixels = stbi_load(TEXTURE_PATH.c_str(), &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
-		VkDeviceSize image_size = tex_width * tex_height * 4;
-		_mip_levels = static_cast<uint32_t>(std::floor(std::log2(std::max(tex_width, tex_height)))) + 1;
-
-		if (!pixels)
-		{
-			throw std::runtime_error("failed to load texture image!");
-		}
-
-		VkBuffer staging_buffer;
-		VkDeviceMemory staging_buffer_memory;
-		create_buffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_buffer_memory);
-
-		void* data;
-		vkMapMemory(_device, staging_buffer_memory, 0, image_size, 0, &data);
-		memcpy(data, pixels, static_cast<size_t>(image_size));
-		vkUnmapMemory(_device, staging_buffer_memory);
-
-		stbi_image_free(pixels);
-
-		create_image(tex_width, tex_height, _mip_levels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, _texture_image, _texture_image_memory);
-
-		transition_image_layout(_texture_image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, _mip_levels);
-		copy_buffer_to_image(staging_buffer, _texture_image, static_cast<uint32_t>(tex_width), static_cast<uint32_t>(tex_height));
-		//transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
-
-		vkDestroyBuffer(_device, staging_buffer, nullptr);
-		vkFreeMemory(_device, staging_buffer_memory, nullptr);
-
-		generate_mipmaps(_texture_image, VK_FORMAT_R8G8B8A8_UNORM, tex_width, tex_height, _mip_levels);
-	}
-
-	void generate_mipmaps(VkImage image, VkFormat image_format, int32_t tex_width, int32_t tex_height, uint32_t mip_levels)
-	{
-		// Check if image format supports linear blitting
-		VkFormatProperties format_properties;
-		vkGetPhysicalDeviceFormatProperties(_physical_device, image_format, &format_properties);
-
-		if (!(format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
-		{
-			throw std::runtime_error("texture image format does not support linear blitting!");
-		}
-
-		VkCommandBuffer command_buffer = begin_single_time_commands();
-
-		VkImageMemoryBarrier barrier = {};
-		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-		barrier.image = image;
-		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		barrier.subresourceRange.baseArrayLayer = 0;
-		barrier.subresourceRange.layerCount = 1;
-		barrier.subresourceRange.levelCount = 1;
-
-		int32_t mip_width = tex_width;
-		int32_t mip_height = tex_height;
-
-		for (uint32_t i = 1; i < mip_levels; i++)
-		{
-			barrier.subresourceRange.baseMipLevel = i - 1;
-			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-			barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-
-			vkCmdPipelineBarrier(command_buffer,
-				VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
-				0, nullptr,
-				0, nullptr,
-				1, &barrier);
-
-			VkImageBlit blit = {};
-			blit.srcOffsets[0] = { 0, 0, 0 };
-			blit.srcOffsets[1] = { mip_width, mip_height, 1 };
-			blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			blit.srcSubresource.mipLevel = i - 1;
-			blit.srcSubresource.baseArrayLayer = 0;
-			blit.srcSubresource.layerCount = 1;
-			blit.dstOffsets[0] = { 0, 0, 0 };
-			blit.dstOffsets[1] = { mip_width > 1 ? mip_width / 2 : 1, mip_height > 1 ? mip_height / 2 : 1, 1 };
-			blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			blit.dstSubresource.mipLevel = i;
-			blit.dstSubresource.baseArrayLayer = 0;
-			blit.dstSubresource.layerCount = 1;
-
-			vkCmdBlitImage(command_buffer,
-				image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-				image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-				1, &blit,
-				VK_FILTER_LINEAR);
-
-			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-			barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-			vkCmdPipelineBarrier(command_buffer,
-				VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
-				0, nullptr,
-				0, nullptr,
-				1, &barrier);
-
-			if (mip_width > 1) mip_width /= 2;
-			if (mip_height > 1) mip_height /= 2;
-		}
-
-		barrier.subresourceRange.baseMipLevel = mip_levels - 1;
-		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-		barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-		vkCmdPipelineBarrier(command_buffer,
-			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
-			0, nullptr,
-			0, nullptr,
-			1, &barrier);
-
-		end_single_time_commands(command_buffer);
-	}
-
-	void create_texture_image_view()
-	{
-		_texture_image_view = create_image_view(_texture_image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, _mip_levels);
-	}
-
-	void create_texture_sampler()
-	{
-		VkSamplerCreateInfo sampler_info = {};
-		sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		sampler_info.magFilter = VK_FILTER_LINEAR;
-		sampler_info.minFilter = VK_FILTER_LINEAR;
-		sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		sampler_info.anisotropyEnable = VK_TRUE;
-		sampler_info.maxAnisotropy = 16;
-		sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-		sampler_info.unnormalizedCoordinates = VK_FALSE;
-		sampler_info.compareEnable = VK_FALSE;
-		sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
-		sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-		sampler_info.minLod = 0;
-		sampler_info.maxLod = static_cast<float>(_mip_levels);
-		sampler_info.mipLodBias = 0;
-
-		if (vkCreateSampler(_device, &sampler_info, nullptr, &_texture_sampler) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create texture sampler!");
-		}
-	}
-
-	VkImageView create_image_view(VkImage image, VkFormat format, VkImageAspectFlagBits aspect_flags, uint32_t mip_levels)
-	{
-		VkImageViewCreateInfo view_info = {};
-		view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		view_info.image = image;
-		view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		view_info.format = format;
-		view_info.subresourceRange.aspectMask = aspect_flags;
-		view_info.subresourceRange.baseMipLevel = 0;
-		view_info.subresourceRange.levelCount = mip_levels;
-		view_info.subresourceRange.baseArrayLayer = 0;
-		view_info.subresourceRange.layerCount = 1;
-
-		VkImageView image_view;
-		if (vkCreateImageView(_device, &view_info, nullptr, &image_view) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create texture image view!");
-		}
-
-		return image_view;
-	}
-
-	void create_image(
-		uint32_t width, 
-		uint32_t height, 
-		uint32_t mip_levels, 
-		VkSampleCountFlagBits num_samples,
-		VkFormat format, 
-		VkImageTiling tiling,
-		VkImageUsageFlags usage, 
-		VkMemoryPropertyFlags properties, 
-		VkImage& image, 
-		VkDeviceMemory& image_memory)
-	{
-		VkImageCreateInfo image_info = {};
-		image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		image_info.imageType = VK_IMAGE_TYPE_2D;
-		image_info.extent.width = width;
-		image_info.extent.height = height;
-		image_info.extent.depth = 1;
-		image_info.mipLevels = mip_levels;
-		image_info.arrayLayers = 1;
-		image_info.format = format;
-		image_info.tiling = tiling;
-		image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		image_info.usage = usage;
-		image_info.samples = num_samples;
-		image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-		if (vkCreateImage(_device, &image_info, nullptr, &image) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create image!");
-		}
-
-		VkMemoryRequirements mem_requirements;
-		vkGetImageMemoryRequirements(_device, image, &mem_requirements);
-
-		VkMemoryAllocateInfo alloc_info = {};
-		alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		alloc_info.allocationSize = mem_requirements.size;
-		alloc_info.memoryTypeIndex = find_memory_type(mem_requirements.memoryTypeBits, properties);
-
-		if (vkAllocateMemory(_device, &alloc_info, nullptr, &image_memory) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to allocate image memory!");
-		}
-
-		vkBindImageMemory(_device, image, image_memory, 0);
-	}
-
-	void transition_image_layout(VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout, uint32_t mip_levels)
-	{
-		VkCommandBuffer command_buffer = begin_single_time_commands();
-
-		VkImageMemoryBarrier barrier = {};
-		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-		barrier.oldLayout = old_layout;
-		barrier.newLayout = new_layout;
-		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.image = image;
-
-		if (new_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-		{
-			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-
-			if (has_stencil_component(format))
-			{
-				barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
-			}
-		}
-		else
-		{
-			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		}
-
-		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.levelCount = mip_levels;
-		barrier.subresourceRange.baseArrayLayer = 0;
-		barrier.subresourceRange.layerCount = 1;
-
-		VkPipelineStageFlagBits source_stage;
-		VkPipelineStageFlagBits destination_stage;
-
-		if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-		{
-			barrier.srcAccessMask = 0;
-			barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-			source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-			destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-		}
-		else if (old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-		{
-			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-			source_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-			destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-		}
-		else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-		{
-			barrier.srcAccessMask = 0;
-			barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-			source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-			destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		}
-		else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-		{
-			barrier.srcAccessMask = 0;
-			barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-			source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-			destination_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		}
-		else
-		{
-			throw std::invalid_argument("unsupported layout transition!");
-		}
-
-		vkCmdPipelineBarrier(
-			command_buffer,
-			source_stage, destination_stage,
-			0,
-			0, nullptr,
-			0, nullptr,
-			1, &barrier
-		);
-
-		end_single_time_commands(command_buffer);
-	}
-
-	void copy_buffer_to_image(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
-	{
-		VkCommandBuffer command_buffer = begin_single_time_commands();
-
-		VkBufferImageCopy region = {};
-		region.bufferOffset = 0;
-		region.bufferRowLength = 0;
-		region.bufferImageHeight = 0;
-		region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		region.imageSubresource.mipLevel = 0;
-		region.imageSubresource.baseArrayLayer = 0;
-		region.imageSubresource.layerCount = 1;
-		region.imageOffset = { 0, 0, 0 };
-		region.imageExtent = {
-			width,
-			height,
-			1
-		};
-
-		vkCmdCopyBufferToImage(command_buffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-
-		end_single_time_commands(command_buffer);
-	}
 
 	void load_model()
 	{
@@ -1275,10 +1274,8 @@ private:
 		{
 			VkDescriptorBufferInfo buffer_info = uniform_impl.descriptor_info(i);
 			
-			VkDescriptorImageInfo image_info = {};
-			image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			image_info.imageView = _texture_image_view;
-			image_info.sampler = _texture_sampler;
+			VkDescriptorImageInfo image_info = texture_impl.descriptor_info();
+
 
 			std::array<VkWriteDescriptorSet, 2> descriptor_writes = {};
 
@@ -1300,97 +1297,6 @@ private:
 
 			vkUpdateDescriptorSets(_device, static_cast<uint32_t>(descriptor_writes.size()), descriptor_writes.data(), 0, nullptr);
 		}
-	}
-
-	VkCommandBuffer begin_single_time_commands()
-	{
-		VkCommandBufferAllocateInfo alloc_info = {};
-		alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		alloc_info.commandPool = _command_pool;
-		alloc_info.commandBufferCount = 1;
-
-		VkCommandBuffer command_buffer;
-		vkAllocateCommandBuffers(_device, &alloc_info, &command_buffer);
-
-		VkCommandBufferBeginInfo begin_info = {};
-		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-		vkBeginCommandBuffer(command_buffer, &begin_info);
-
-		return command_buffer;
-	}
-
-	void end_single_time_commands(VkCommandBuffer command_buffer)
-	{
-		vkEndCommandBuffer(command_buffer);
-
-		VkSubmitInfo submit_info = {};
-		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submit_info.commandBufferCount = 1;
-		submit_info.pCommandBuffers = &command_buffer;
-
-		vkQueueSubmit(_graphics_queue->get(), 1, &submit_info, VK_NULL_HANDLE);
-		vkQueueWaitIdle(_graphics_queue->get());
-
-		vkFreeCommandBuffers(_device, _command_pool, 1, &command_buffer);
-	}
-
-	void create_buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& buffer_memory)
-	{
-		VkBufferCreateInfo buffer_info = {};
-		buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		buffer_info.size = size;
-		buffer_info.usage = usage;
-		buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-		if (vkCreateBuffer(_device, &buffer_info, nullptr, &buffer) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create buffer!");
-		}
-
-		VkMemoryRequirements mem_requirements;
-		vkGetBufferMemoryRequirements(_device, buffer, &mem_requirements);
-
-		VkMemoryAllocateInfo alloc_info = {};
-		alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		alloc_info.allocationSize = mem_requirements.size;
-		alloc_info.memoryTypeIndex = find_memory_type(mem_requirements.memoryTypeBits, properties);
-
-		if (vkAllocateMemory(_device, &alloc_info, nullptr, &buffer_memory) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to allocate buffer memory!");
-		}
-
-		vkBindBufferMemory(_device, buffer, buffer_memory, 0);
-	}
-
-	void copy_buffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size)
-	{
-		VkCommandBuffer command_buffer = begin_single_time_commands();
-
-		VkBufferCopy copy_region = {};
-		copy_region.size = size;
-		vkCmdCopyBuffer(command_buffer, src_buffer, dst_buffer, 1, &copy_region);
-
-		end_single_time_commands(command_buffer);
-	}
-
-	uint32_t find_memory_type(uint32_t type_filter, VkMemoryPropertyFlags properties)
-	{
-		VkPhysicalDeviceMemoryProperties mem_properties;
-		vkGetPhysicalDeviceMemoryProperties(_physical_device, &mem_properties);
-
-		for (uint32_t i = 0; i < mem_properties.memoryTypeCount; i++)
-		{
-			if ((type_filter & (1 << i)) && (mem_properties.memoryTypes[i].propertyFlags & properties) == properties)
-			{
-				return i;
-			}
-		}
-
-		throw std::runtime_error("failed to find suitable memory type!");
 	}
 
 	void create_command_buffers()
@@ -1480,12 +1386,6 @@ private:
 		}
 	}
 
-
-	void update_uniform_buffer(uint32_t current_image)
-	{
-		uniform_impl.update(current_image);
-	}
-	
 	void draw_frame()
 	{
 		vkWaitForFences(_device, 1, &_in_flight_fences[_current_frame], VK_TRUE, std::numeric_limits<uint64_t>::max());
@@ -1511,7 +1411,7 @@ private:
 
 		vkQueueWaitIdle(_present_queue->get());
 
-		update_uniform_buffer(image_index);
+		uniform_impl.update(image_index);
 
 		VkSubmitInfo submit_info = {};
 		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

@@ -4,11 +4,10 @@ cmake_minimum_required(VERSION 3.1)
 
 BUILD_LIB(
 	igpu
-	"batch buffer context material texture utility window")
+	"batch buffer context material texture third_party_builtins/pvr/tools utility window")
 
 target_include_directories(igpu
 	PRIVATE
-		${CMAKE_CURRENT_SOURCE_DIR}/../third_party/pvr
 		${CMAKE_CURRENT_SOURCE_DIR}/../third_party/stb-master
 
 	PUBLIC

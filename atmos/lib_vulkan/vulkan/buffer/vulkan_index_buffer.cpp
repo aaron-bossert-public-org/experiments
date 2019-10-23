@@ -1,5 +1,6 @@
 
 #include <vulkan/buffer/vulkan_index_buffer.h>
+#include <vulkan/buffer/vulkan_staged_buffer.h>
 
 using namespace igpu;
 
@@ -36,7 +37,8 @@ std::unique_ptr<vulkan_index_buffer> vulkan_index_buffer::make(
 
 	if (vulkan_staged_buffer::validate(buffer_cfg))
 	{
-		return std::unique_ptr<vulkan_index_buffer>(new vulkan_index_buffer(cfg, buffer_cfg));
+		return std::unique_ptr<vulkan_index_buffer>(
+			new vulkan_staged_buffer_t < vulkan_index_buffer > (buffer_cfg, cfg));
 	}
 
 	return nullptr;
@@ -53,9 +55,7 @@ VkIndexType vulkan_index_buffer::format()
 }
 
 vulkan_index_buffer::vulkan_index_buffer(
-	const config& cfg,
-	const vulkan_staged_buffer::config& buffer_cfg)
-	: vulkan_staged_buffer_t (buffer_cfg)
-	, _cfg(cfg)
+	const config& cfg)
+	: _cfg(cfg)
 {
 }
