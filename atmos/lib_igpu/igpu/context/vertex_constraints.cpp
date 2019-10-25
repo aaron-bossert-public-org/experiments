@@ -22,7 +22,7 @@ const vertex_constraints::config& vertex_constraints::cfg() const
 const vertex_parameter& vertex_constraints::find_parameter(const std::string& name, size_t fallback) const
 {
 	auto location = find_location(name, fallback);
-	if (-1 < location)
+	if (-1 < (int)location)
 	{
 		return _cfg.vertex_parameters[location];
 	}

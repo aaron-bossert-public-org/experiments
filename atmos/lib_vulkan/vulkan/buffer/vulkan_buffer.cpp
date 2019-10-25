@@ -7,7 +7,7 @@ using namespace igpu;
 
 namespace
 {
-	std::string stringify(VkBufferUsageFlagBits bits)
+	std::string to_string(VkBufferUsageFlagBits bits)
 	{
 		std::string str;
 
@@ -151,7 +151,7 @@ vulkan_buffer::vulkan_buffer(const config& cfg, VkBuffer buffer, VmaAllocation v
 	: _cfg(cfg)
 	, _buffer(buffer)
 	, _vma_allocation(vma_allocation)
-	, _mem_metric(to_category(cfg.vma_usage), stringify(cfg.usage))
+	, _mem_metric(to_category(cfg.vma_usage), to_string(cfg.usage))
 {
 	_mem_metric.add(cfg.size);
 }

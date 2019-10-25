@@ -11,7 +11,6 @@ namespace igpu
     public:
 
 		gl_buffer(
-			const std::string_view& metric,
 			buffer_usage usage,
 			unsigned gl_target);
 
@@ -51,8 +50,6 @@ namespace igpu
 
 		using config = typename T::config;
 
-		~gl_buffer_t() override {};
-
 		const config& cfg() const override
 		{
 			return _cfg;
@@ -73,22 +70,41 @@ namespace igpu
 			return _gl_buffer.byte_size();
 		}
 
-		unsigned gl_handle() const
+		unsigned gl_handle() const override;
+
+		template <typename... ARGS>
+		static std::unique_ptr < gl_buffer_t > make(
+			const config& cfg,
+			unsigned gl_target,
+			const ARGS& ... args)
 		{
-			return _gl_buffer.gl_handle();
+			if (!is_valid(cfg.usage))
+			{
+				LOG_CRITICAL("invalid usage:%d", (int)cfg.usage);
+			}
+			else
+			{
+				return std::unique_ptr<gl_buffer_t>(
+					new gl_buffer_t(
+						cfg,
+						gl_target,
+						args...));
+			}
+
+			return nullptr;
 		}
 
 	protected:
 
+		template <typename... ARGS>
 		gl_buffer_t(
 			const config& cfg,
-			const std::string_view& metric,
-			buffer_usage usage,
-			unsigned gl_target)
-			: _cfg(cfg)
+			unsigned gl_target,
+			const ARGS& ... args)
+			: T(args...)
+			, _cfg(cfg)
 			, _gl_buffer(
-				metric,
-				usage,
+				cfg.usage,
 				gl_target)
 		{
 		}

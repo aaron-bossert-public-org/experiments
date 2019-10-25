@@ -13,22 +13,9 @@ std::unique_ptr<vulkan_compute_buffer> vulkan_compute_buffer::make(
 		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		buffer_mediator });
 
-	if (vulkan_staged_buffer::validate(buffer_cfg))
-	{
-		return std::unique_ptr<vulkan_compute_buffer>(
-			new vulkan_staged_buffer_t < vulkan_compute_buffer > (buffer_cfg, cfg));
-	}
+	return vulkan_staged_buffer_t < vulkan_compute_buffer >::make (
+		cfg, 
+		buffer_cfg);
 
 	return nullptr;
-}
-
-const vulkan_compute_buffer::config& vulkan_compute_buffer::cfg() const
-{
-	return _cfg;
-}
-
-vulkan_compute_buffer::vulkan_compute_buffer(
-	const config& cfg)
-	: _cfg(cfg)
-{
 }

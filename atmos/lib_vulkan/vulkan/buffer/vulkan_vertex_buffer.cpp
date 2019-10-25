@@ -7,7 +7,7 @@ using namespace igpu;
 
 namespace
 {
-	std::vector<VkVertexInputAttributeDescription> to_vulkan_descriptions(
+	std::vector<VkVertexInputAttributeDescription> to_vulkan_attribute_descriptions(
 		const vertex_format::config& cfg,
 		const vertex_constraints& vertex_constraints)
 	{
@@ -56,6 +56,16 @@ namespace
 
 		return attribute_descriptions;
 	}
+
+	VkVertexInputBindingDescription to_vulkan_binding_description(
+		const vertex_format::config& cfg)
+	{
+		VkVertexInputBindingDescription binding_description = {};
+		binding_description.binding = 0;
+		binding_description.stride = cfg.stride;
+		binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+		return binding_description;
+	}
 }
 
 
@@ -95,7 +105,7 @@ std::unique_ptr<vulkan_vertex_buffer> vulkan_vertex_buffer::make(
 		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 		buffer_mediator });
 
-	auto attribute_descriptions = to_vulkan_descriptions(cfg.format, vertex_constraints);
+	auto attribute_descriptions = to_vulkan_attribute_descriptions(cfg.format, vertex_constraints);
 
 	if (cfg.format.attributes.size() == 0)
 	{
@@ -103,22 +113,14 @@ std::unique_ptr<vulkan_vertex_buffer> vulkan_vertex_buffer::make(
 	}
 	else if (cfg.format.attributes.size() == attribute_descriptions.size())
 	{
-		if (vulkan_staged_buffer::validate(buffer_cfg))
-		{
-			return std::unique_ptr<vulkan_vertex_buffer>(
-				new vulkan_staged_buffer_t<vulkan_vertex_buffer>(
-					buffer_cfg,
-					cfg, 
-					attribute_descriptions));
-		}
+		return vulkan_staged_buffer_t<vulkan_vertex_buffer>::make(
+			cfg, 
+			buffer_cfg,
+			cfg,
+			attribute_descriptions);
 	}
 
 	return nullptr;
-}
-
-const vulkan_vertex_buffer::config& vulkan_vertex_buffer::cfg() const
-{
-	return _cfg;
 }
 
 const std::vector<VkVertexInputAttributeDescription>& vulkan_vertex_buffer::attribute_descriptions() const
@@ -126,10 +128,15 @@ const std::vector<VkVertexInputAttributeDescription>& vulkan_vertex_buffer::attr
 	return _attribute_descriptions;
 }
 
+const VkVertexInputBindingDescription& vulkan_vertex_buffer::binding_description() const
+{
+	return _binding_description;
+}
+
 vulkan_vertex_buffer::vulkan_vertex_buffer(
 	const config& cfg,
 	const std::vector<VkVertexInputAttributeDescription>& attribute_descriptions)
-	: _cfg(cfg)
-	, _attribute_descriptions(attribute_descriptions)
+	: _attribute_descriptions(attribute_descriptions)
+	, _binding_description(to_vulkan_binding_description(cfg.format))
 {
 }

@@ -47,6 +47,12 @@ size_t buffer_view_base::size() const
 }
     
 inline
+size_t buffer_view_base::byte_size() const
+{
+    return _size * _stride;
+}
+    
+inline
 size_t buffer_view_base::stride() const
 {
     return _stride;

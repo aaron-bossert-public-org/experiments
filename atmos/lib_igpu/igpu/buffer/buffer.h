@@ -11,7 +11,14 @@ namespace igpu
 	{
 	public:
 
-		virtual ~buffer() {}
+		struct config
+		{
+			buffer_usage usage;
+		};
+
+		virtual const config& cfg() const = 0;
+
+		virtual ~buffer() = default;
 
 		virtual void map(size_t byte_size, buffer_view_base*) = 0;
 

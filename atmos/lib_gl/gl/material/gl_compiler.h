@@ -1,17 +1,19 @@
 
 #pragma once
 
-#include <string_view>
-
-template <typename T>
-class buffer_view;
+class buffer_view_base;
 
 namespace igpu
 {
+	class gl_context;
 	class vertex_constraints;
+	class shaders;
+
+	unsigned gl_compile_shader_code(
+		unsigned type, 
+		const buffer_view_base& source_code);
 
     unsigned gl_compile(
-		const vertex_constraints&,
-		const buffer_view<uint8_t>& vertex_code,
-		const buffer_view<uint8_t>& pixel_code);
+		const gl_context*,
+		const shaders& shaders);
 }

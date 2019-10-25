@@ -1,30 +1,14 @@
 
 #include <gl/buffer/gl_compute_buffer.h>
 
-// GL implementation includes - begin
+#include <gl/buffer/gl_buffer.h>
 #include <gl/defines/gl_includes.h>
-// GL implementation includes - end
 
 using namespace igpu;
 
 std::unique_ptr<gl_compute_buffer> gl_compute_buffer::make(const config& cfg)
 {
-	if (!is_valid(cfg.usage))
-	{
-		LOG_CRITICAL("invalid usage:%d", (int)cfg.usage);
-	}
-	else
-	{
-		return std::unique_ptr<gl_compute_buffer>(new gl_compute_buffer(cfg));
-	}
-
-	return nullptr;
-}
-
-gl_compute_buffer::gl_compute_buffer(const config& cfg)
-	: gl_buffer_t (
+	return gl_buffer_t< gl_compute_buffer > ::make(
 		cfg,
-		"GPU Compute Mem",
-		cfg.usage,
-		GL_UNIFORM_BUFFER)
-{}
+		GL_UNIFORM_BUFFER);
+}

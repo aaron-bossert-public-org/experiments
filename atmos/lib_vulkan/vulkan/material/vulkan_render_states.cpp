@@ -119,8 +119,8 @@
 // //
 // int vulkan_render_states::compare(const render_states* other)
 // {
-// 	ASSERT_CONTEXT(dynamic_cast<const vulkan_render_states*>(other));
-//     return memcmp(_packed, ((vulkan_render_states*)other)->_packed);
+// 	auto* gl_other = ASSERT_CAST(const vulkan_render_states*, other);
+//     return memcmp(_packed, gl_other->_packed);
 // }
 
 // gl_cull_mode gl_cull_mode::make(const cull_mode& mode)

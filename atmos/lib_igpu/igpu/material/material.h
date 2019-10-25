@@ -22,7 +22,7 @@ namespace igpu
 
 		ptrdiff_t compare_parameters(const material* other) const;
 
-		virtual ~material() {}
+		virtual ~material() = default;
 
 		const config& cfg() const;
 

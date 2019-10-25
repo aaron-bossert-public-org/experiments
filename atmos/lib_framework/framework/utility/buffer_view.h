@@ -7,13 +7,15 @@ class buffer_view_base
 {
 public:
 	buffer_view_base() = default;
+
+	buffer_view_base(const buffer_view_base&) = default;
         
 	buffer_view_base(size_t size, void* data, size_t stride);
         
     template <typename T>
 	buffer_view_base(const T&);
         
-    virtual ~buffer_view_base() {}
+	virtual ~buffer_view_base() = default;
         
     void* data() const;
         
@@ -22,6 +24,8 @@ public:
     void set(size_t size, void* data, size_t stride = -1);
         
     size_t size() const;
+
+    size_t byte_size() const;
         
     size_t stride() const;
         

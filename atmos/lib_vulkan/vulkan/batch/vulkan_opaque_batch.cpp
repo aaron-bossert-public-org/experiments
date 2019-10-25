@@ -117,11 +117,8 @@
         
 //         void visit(geometry_batch* geometry_batch)
 //         {
-// 			ASSERT_CONTEXT(dynamic_cast<vulkan_program*>(_program_batch->item().get()));
-// 			ASSERT_CONTEXT(dynamic_cast<vulkan_geometry*>(geometry_batch->item().get()));
-			
-// 			auto* program = (vulkan_program*)_program_batch->item().get();
-// 			auto* geometry = (vulkan_geometry*)geometry_batch->item().get();
+// 			auto* program = ASSERT_CAST(vulkan_program*,  _program_batch->item().get());
+// 			auto* geometry = ASSERT_CAST(vulkan_geometry*, geometry_batch->item().get());
 // 			int32_t start = (int32_t)geometry->element_start();
 // 			int32_t count = (int32_t)geometry->element_count();
 			
@@ -140,8 +137,7 @@
 //                     if(!_render_state_batch->active())
 //                     {
 // 						_render_state_batch->active(true);
-// 						ASSERT_CONTEXT(dynamic_cast<vulkan_render_states*>(_render_state_batch->item().get()));
-// 						const auto* render_states = (vulkan_render_states*)_render_state_batch->item().get();
+// 						const auto* render_states = ASSERT_CAST(vulkan_render_states*, _render_state_batch->item().get());
 						
 // 						_vulkan_context->set_render_states(render_states);
 //                     }

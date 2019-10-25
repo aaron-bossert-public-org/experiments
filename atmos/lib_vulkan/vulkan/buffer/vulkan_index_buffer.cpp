@@ -35,27 +35,28 @@ std::unique_ptr<vulkan_index_buffer> vulkan_index_buffer::make(
 		VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 		buffer_mediator });
 
-	if (vulkan_staged_buffer::validate(buffer_cfg))
+	if (!is_valid(cfg.format))
 	{
-		return std::unique_ptr<vulkan_index_buffer>(
-			new vulkan_staged_buffer_t < vulkan_index_buffer > (buffer_cfg, cfg));
+		LOG_CRITICAL("invalid format: %d", cfg.format);
 	}
+	else
+	{
+		VkIndexType vulkan_format = to_vulkan_format(cfg.format);
 
+		return vulkan_staged_buffer_t < vulkan_index_buffer > ::make(
+			cfg, 
+			buffer_cfg, 
+			vulkan_format);
+	}
 	return nullptr;
-}
-
-const vulkan_index_buffer::config& vulkan_index_buffer::cfg() const
-{
-	return _cfg;
 }
 
 VkIndexType vulkan_index_buffer::format()
 {
-	return to_vulkan_format(_cfg.format);
+	return _format;
 }
 
-vulkan_index_buffer::vulkan_index_buffer(
-	const config& cfg)
-	: _cfg(cfg)
+vulkan_index_buffer::vulkan_index_buffer(VkIndexType format)
+	: _format(format)
 {
 }

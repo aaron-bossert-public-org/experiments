@@ -3,14 +3,15 @@
 
 #include <framework/perf/metrics.h>
 #include <igpu/buffer/vertex_buffer.h>
-#include <gl/buffer/gl_buffer.h>
 #include <gl/buffer/gl_vertex_format.h>
 
 namespace igpu
 {
-	class gl_vertex_buffer : public gl_buffer_t < vertex_buffer >
+	class gl_vertex_buffer : public vertex_buffer
 	{
 	public:
+
+		virtual unsigned gl_handle() const = 0;
 
 		const gl_vertex_format& gl_format() const;
 

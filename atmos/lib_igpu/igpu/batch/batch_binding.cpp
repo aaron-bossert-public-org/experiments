@@ -22,7 +22,7 @@ namespace
 			return program->default_instance_primitive(instance_parameter_index);
 		};
 
-		return primitive_block(get_index_of, get_default, program->instance_parameters().size());
+		return primitive_block(get_index_of, get_default, program->instance_parameter_count());
 	}
 }
 

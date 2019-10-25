@@ -29,7 +29,7 @@ namespace igpu
 			bool can_auto_generate_mips = false;
 		};
 
-        virtual ~texture2d() {}
+        virtual ~texture2d() = default;
 
 		virtual void map(size_t, buffer_view_base*) = 0;
 

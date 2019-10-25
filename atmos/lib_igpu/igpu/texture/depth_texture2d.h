@@ -12,7 +12,7 @@ namespace igpu
     {
     public:
         
-        virtual ~depth_texture2d() {}
+        virtual ~depth_texture2d() = default;
         
     protected:
         

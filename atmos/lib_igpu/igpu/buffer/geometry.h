@@ -24,13 +24,18 @@ namespace igpu
 			std::vector<std::shared_ptr<vertex_buffer>> vertex_buffers;
 		};
 
-		virtual ~geometry() {}
+		virtual ~geometry() = default;
 
 		virtual const config& cfg() const = 0;
         
 		virtual size_t element_start() const = 0;
 
 		virtual size_t element_count() const = 0;
+
+		virtual igpu::index_buffer& index_buffer() = 0;
+
+		virtual igpu::vertex_buffer& vertex_buffer(size_t) = 0;
+
 
 		virtual void element_start(size_t) = 0;
 

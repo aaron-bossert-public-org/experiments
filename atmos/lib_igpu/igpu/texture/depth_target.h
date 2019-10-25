@@ -22,7 +22,7 @@ namespace igpu
 
 		virtual const config& cfg() const = 0;
 
-		virtual ~depth_target() {}
+		virtual ~depth_target() = default;
         
     protected:
         depth_target() {}

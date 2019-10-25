@@ -120,10 +120,7 @@ namespace
         
         void visit(geometry_batch* geometry_batch)
         {
-			ASSERT_CONTEXT(dynamic_cast<gl_program*>(_program_batch->item().get()));
-			ASSERT_CONTEXT(dynamic_cast<gl_geometry*>(geometry_batch->item().get()));
-			
-			auto* program = (gl_program*)_program_batch->item().get();
+			auto* program = ASSERT_CAST(gl_program*, _program_batch->item().get());
 			auto* geometry = (gl_geometry*)geometry_batch->item().get();
 			int32_t start = (int32_t)geometry->element_start();
 			int32_t count = (int32_t)geometry->element_count();
@@ -143,8 +140,7 @@ namespace
                     if(!_render_state_batch->active())
                     {
 						_render_state_batch->active(true);
-						ASSERT_CONTEXT(dynamic_cast<gl_render_states*>(_render_state_batch->item().get()));
-						const auto* render_states = (gl_render_states*)_render_state_batch->item().get();
+						const auto* render_states = ASSERT_CAST(gl_render_states*, _render_state_batch->item().get());
 						
 						_gl_context->set_render_states(render_states);
                     }

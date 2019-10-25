@@ -21,7 +21,7 @@ namespace igpu
 
 		virtual const config& cfg() const = 0;
 
-		virtual ~color_target() {}
+		virtual ~color_target() = default;
         
     protected:
 		color_target() = default;

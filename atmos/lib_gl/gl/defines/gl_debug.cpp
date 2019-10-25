@@ -1,7 +1,8 @@
 
 
 #include <gl/defines/gl_includes.h>
-#include <framework/logging/log.h>
+
+#if ATMOS_DEBUG 
 
 gl_debug gl_debug::instance;
 
@@ -66,3 +67,5 @@ case code: \
     
     return is_good;
 }
+
+#endif // ATMOS_DEBUG 

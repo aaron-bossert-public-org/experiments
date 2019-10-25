@@ -111,28 +111,6 @@ void vulkan_staged_buffer::release()
 	_gpu_buffer = nullptr;
 }
 
-bool vulkan_staged_buffer::validate(const config& cfg)
-{
-	if (!is_valid(cfg.usage))
-	{
-		LOG_CRITICAL("unhandled usage:%s", to_string(cfg.usage).data());
-	}
-	else if (0 == cfg.vk_usage_flags)
-	{
-		LOG_CRITICAL("vk_usage_flags is 0");
-	}
-	else if (!cfg.buffer_mediator)
-	{
-		LOG_CRITICAL("buffer mediator has expired");
-	}
-	else
-	{
-		return true;
-	}
-
-	return false;
-}
-
 VkBuffer vulkan_staged_buffer::get()
 {
 	return _gpu_buffer->get();

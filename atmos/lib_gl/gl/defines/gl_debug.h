@@ -39,8 +39,6 @@ gl_debug::instance.check_for_errors("glGetError", "checking third party gl error
 // disable manual error checking, which would be redundant
 #define glGetError(...) 0
 
-#include <framework/logging/log.h>
-
 class gl_debug
 {
 public:

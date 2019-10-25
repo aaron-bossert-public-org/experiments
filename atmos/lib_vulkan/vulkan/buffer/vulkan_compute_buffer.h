@@ -18,17 +18,10 @@ namespace igpu
 			const config&,
 			const scoped_ptr < vulkan_buffer_mediator >&);
 
-		const config& cfg() const override;
-
 		virtual VkBuffer get() = 0;
 
 	protected:
 
-		vulkan_compute_buffer(
-			const config&);
-
-	private:
-
-		const config _cfg;
+		vulkan_compute_buffer() = default;
 	};
 }

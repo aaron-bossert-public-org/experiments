@@ -4,6 +4,70 @@
 #include <framework/utility/string_utils.h>
 #include <string_view>
 
+#define ENUM_SERIALIZABLE(ENUM, DEF, VAL, ...)\
+ENUM_SERIALIZABLE_(ENUM, DEF, VAL, __VA_ARGS__)
+
+#define ENUM_SERIALIZABLE_(ENUM, DEF, ...) \
+ENUM_DECL		(ENUM, DEF, __VA_ARGS__) \
+ENUM_IS_VALID 	(ENUM, __VA_ARGS__) \
+ENUM_TO_STR		(ENUM, __VA_ARGS__) \
+ENUM_FROM_STR	(ENUM, DEF, __VA_ARGS__)
+
+
+#define ENUM_DECL_DEFAULT(DEF) DEF
+
+#define ENUM_DECL(NAME, DEF, ...)\
+	enum class NAME : uint32_t {\
+		ENUM_LIST(__VA_ARGS__)\
+		DEFAULT = NAME::ENUM_DECL_##DEF\
+	};
+
+#define ENUM_LIST(...) VA_DISTRIBUTE_PRE(ENUM_LIST_, __VA_ARGS__)
+#define ENUM_LIST_(x, y) x = y,
+
+#define ENUM_IS_VALID(ENUM, ...)\
+	constexpr static const bool is_valid(ENUM s)\
+	{\
+		using enum_t = ENUM;\
+		switch (s)\
+		{\
+			ENUM_IS_VALID_CASE(__VA_ARGS__)\
+		default: return false;\
+		}\
+	}
+
+#define ENUM_IS_VALID_CASE(...) VA_DISTRIBUTE_PRE(case enum_t::ENUM_IS_VALID_CASE_UNPACK, __VA_ARGS__)
+#define ENUM_IS_VALID_CASE_UNPACK(NAME,INIT) NAME: return true;
+
+#define ENUM_TO_STR(ENUM, ...)\
+	constexpr static std::string_view to_string(ENUM s)\
+	{\
+		using enum_t = ENUM;\
+		switch (s)\
+		{\
+			ENUM_TO_STR_CASE(__VA_ARGS__)\
+		default: return #ENUM"::<UNRECOGNIZED_VALUE>";\
+		}\
+	}
+
+#define ENUM_TO_STR_CASE(...) VA_DISTRIBUTE_PRE(case enum_t::ENUM_TO_STR_CASE_UNPACK, __VA_ARGS__)
+#define ENUM_TO_STR_CASE_UNPACK(NAME,INIT) NAME: return #NAME;
+
+#define ENUM_FROM_STR(ENUM, DEF, ...)\
+	constexpr static ENUM ENUM_from_string(const std::string_view s, ENUM fallback = ENUM::ENUM_DECL_##DEF)\
+	{\
+		using enum_t = ENUM;\
+		switch (string_utils::c_hash_32(s.data()))\
+		{\
+			ENUM_FROM_STR_CASE(__VA_ARGS__)\
+		default: return fallback;\
+		}\
+	}
+
+#define ENUM_FROM_STR_CASE(...) VA_DISTRIBUTE_PRE(case string_utils::c_hash_32 ENUM_FROM_STR_CASE_UNPACK, __VA_ARGS__)
+#define ENUM_FROM_STR_CASE_UNPACK(NAME,INIT) (#NAME): return enum_t::NAME;
+
+
 #define VA_MACRO(base, ...) VA_MACRO_IMPL(base, GET_ARG_COUNT(__VA_ARGS__), (__VA_ARGS__))
 #define VA_MACRO_IMPL(base, count, args) VA_MACRO_IMPL_(base, count, args)
 #define VA_MACRO_IMPL_(base, count, args) base##count##args
@@ -285,67 +349,3 @@
 #define VA_DISTRIBUTE_OP_ARGS_62( OP, ARGS, X, ... ) OP(INTERNAL_EXPAND ARGS, X) INTERNAL_EXPAND(VA_DISTRIBUTE_OP_ARGS_61( OP, ARGS, __VA_ARGS__ ))
 #define VA_DISTRIBUTE_OP_ARGS_63( OP, ARGS, X, ... ) OP(INTERNAL_EXPAND ARGS, X) INTERNAL_EXPAND(VA_DISTRIBUTE_OP_ARGS_62( OP, ARGS, __VA_ARGS__ ))
 #define VA_DISTRIBUTE_OP_ARGS_64( OP, ARGS, X, ... ) OP(INTERNAL_EXPAND ARGS, X) INTERNAL_EXPAND(VA_DISTRIBUTE_OP_ARGS_63( OP, ARGS, __VA_ARGS__ ))
-
-
-#define ENUM_SERIALIZABLE(ENUM, DEF, VAL, ...)\
-ENUM_SERIALIZABLE_(ENUM, DEF, VAL, __VA_ARGS__)
-
-#define ENUM_SERIALIZABLE_(ENUM, DEF, ...) \
-ENUM_DECL		(ENUM, DEF, __VA_ARGS__) \
-ENUM_IS_VALID 	(ENUM, __VA_ARGS__) \
-ENUM_TO_STR		(ENUM, __VA_ARGS__) \
-ENUM_FROM_STR	(ENUM, DEF, __VA_ARGS__)
-
-
-#define ENUM_DECL_DEFAULT(DEF) DEF
-
-#define ENUM_DECL(NAME, DEF, ...)\
-	enum class NAME : uint32_t {\
-		ENUM_LIST(__VA_ARGS__)\
-		DEFAULT = NAME::ENUM_DECL_##DEF\
-	};
-
-	#define ENUM_LIST(...) VA_DISTRIBUTE_PRE(ENUM_LIST_, __VA_ARGS__)
-	#define ENUM_LIST_(x, y) x = y,
-
-#define ENUM_IS_VALID(ENUM, ...)\
-	constexpr static const bool is_valid(ENUM s)\
-	{\
-		using enum_t = ENUM;\
-		switch (s)\
-		{\
-			ENUM_IS_VALID_CASE(__VA_ARGS__)\
-		default: return false;\
-		}\
-	}
-
-	#define ENUM_IS_VALID_CASE(...) VA_DISTRIBUTE_PRE(case enum_t::ENUM_IS_VALID_CASE_UNPACK, __VA_ARGS__)
-	#define ENUM_IS_VALID_CASE_UNPACK(NAME,INIT) NAME: return true;
-
-#define ENUM_TO_STR(ENUM, ...)\
-	constexpr static std::string_view to_string(ENUM s)\
-	{\
-		using enum_t = ENUM;\
-		switch (s)\
-		{\
-			ENUM_TO_STR_CASE(__VA_ARGS__)\
-		default: return #ENUM"::<UNRECOGNIZED_VALUE>";\
-		}\
-	}
-
-	#define ENUM_TO_STR_CASE(...) VA_DISTRIBUTE_PRE(case enum_t::ENUM_TO_STR_CASE_UNPACK, __VA_ARGS__)
-	#define ENUM_TO_STR_CASE_UNPACK(NAME,INIT) NAME: return #NAME;
-
-#define ENUM_FROM_STR(ENUM, DEF, ...)\
-	constexpr static ENUM ENUM_from_string(const std::string_view s, ENUM fallback = ENUM::ENUM_DECL_##DEF)\
-	{\
-		using enum_t = ENUM;\
-		switch (string_utils::c_hash_32(s.data()))\
-		{\
-			ENUM_FROM_STR_CASE(__VA_ARGS__)\
-		default: return fallback;\
-		}\
-	}
-
-	#define ENUM_FROM_STR_CASE(...) VA_DISTRIBUTE_PRE(case string_utils::c_hash_32 ENUM_FROM_STR_CASE_UNPACK, __VA_ARGS__)
-	#define ENUM_FROM_STR_CASE_UNPACK(NAME,INIT) (#NAME): return enum_t::NAME;

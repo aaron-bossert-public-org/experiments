@@ -196,8 +196,8 @@ const gl_render_states::config& gl_render_states::cfg() const
 
 int gl_render_states::compare(const render_states* other)
 {
-	ASSERT_CONTEXT(dynamic_cast<const gl_render_states*>(other));
-	return memcmp(_packed, ((gl_render_states*)other)->_packed);
+	auto* gl_other = ASSERT_CAST(const gl_render_states*, other);
+	return memcmp(_packed, gl_other->_packed);
 }
 
 const gl_packed_states& gl_render_states::packed() const

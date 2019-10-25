@@ -9,7 +9,7 @@ namespace igpu
 
 		virtual void attach () const = 0;
         
-		virtual ~gl_color_target() {}
+		virtual ~gl_color_target() = default;
         
     protected:
        

@@ -1,13 +1,18 @@
 
 #pragma once
 
-#include <igpu/buffer/geometry.h>
-#include <igpu/buffer/vertex_format.h>
+#include <vulkan/buffer/vulkan_index_buffer.h>
+#include <vulkan/buffer/vulkan_vertex_buffer.h>
+#include <vulkan/defines/vulkan_includes.h>
 
-struct VkVertexInputAttributeDescription;
+#include <igpu/buffer/geometry.h>
+
+#include <optional>
 
 namespace igpu
 {
+	VkPrimitiveTopology to_vulkan_topology(topology topology);
+	
 	class vertex_constraints;
 
 	class vulkan_geometry : public geometry
@@ -24,13 +29,16 @@ namespace igpu
 
 		void element_count(size_t) override;
 
-		uint32_t vulkan_topology() const;
+		vulkan_index_buffer& index_buffer() override;
+		
+		vulkan_vertex_buffer& vertex_buffer(size_t index) override;
 
-		const std::vector<VkVertexInputAttributeDescription>& vulkan_attribute_descriptions() const;
+		const VkPipelineVertexInputStateCreateInfo& vertex_input_info() const;
+		
+		const VkPipelineInputAssemblyStateCreateInfo& vertex_input_assembly_info() const;
 
 		static std::unique_ptr<vulkan_geometry> make(
-			const config& cfg,
-			const vertex_constraints&);
+			const config&);
 
 		~vulkan_geometry() override;
 
@@ -38,16 +46,22 @@ namespace igpu
 
 		vulkan_geometry(
 			const config&,
-			unsigned vulkan_topology,
-			std::vector<VkVertexInputAttributeDescription>);
+			igpu::vulkan_index_buffer* const,
+			std::vector < vulkan_vertex_buffer* >,
+			std::vector<VkVertexInputBindingDescription> vertex_binding_descriptions,
+			std::vector<VkVertexInputAttributeDescription> vertex_attribute_description);
 
 	private:
 
 		const config _cfg;
-		size_t _element_start;
-		size_t _element_count;
+		igpu::vulkan_index_buffer* const _index_buffer = nullptr;
+		const std::vector < vulkan_vertex_buffer* > _vertex_buffers;
+		const std::vector<VkVertexInputBindingDescription> _vertex_binding_descriptions;
+		const std::vector<VkVertexInputAttributeDescription> _vertex_attribute_descriptions;
+		const VkPipelineVertexInputStateCreateInfo _vertex_input_info = {};
+		const VkPipelineInputAssemblyStateCreateInfo _vertex_input_assembly_info = {};
 
-		const uint32_t _vulkan_topology;
-		const std::vector<VkVertexInputAttributeDescription> _vulkan_attribute_descriptions;
+		std::optional<size_t> _element_start;
+		std::optional<size_t> _element_count;
 	};
 }

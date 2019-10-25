@@ -2,15 +2,14 @@
 #pragma once
 
 #include <igpu/buffer/index_buffer.h>
-#include <gl/buffer/gl_buffer.h>
 
 namespace igpu
 {
-    class gl_index_buffer : public gl_buffer_t < index_buffer >
+    class gl_index_buffer : public index_buffer
     {
     public:
 
-		const config& cfg() const override;
+		virtual unsigned gl_handle() const = 0;
 
 		unsigned gl_format() const;
 
@@ -18,9 +17,9 @@ namespace igpu
         
     protected:
 
-        gl_index_buffer(const config&, unsigned gl_format);
-        
-    private:
+		gl_index_buffer(unsigned gl_format);
+		
+	private:
 
 		const unsigned _gl_format;
     };

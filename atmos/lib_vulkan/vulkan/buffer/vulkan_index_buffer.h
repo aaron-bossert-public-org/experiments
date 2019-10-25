@@ -21,19 +21,16 @@ namespace igpu
 			const config&,
 			const scoped_ptr < vulkan_buffer_mediator >&);
 
-		const config& cfg() const override;
-
 		virtual VkBuffer get() = 0;
 
-		VkIndexType vulkan_index_buffer::format();
+		VkIndexType format();
 
 	protected:
 
-		vulkan_index_buffer(
-			const config&);
+		vulkan_index_buffer(VkIndexType);
 
 	private:
 
-		const config _cfg;
+		const VkIndexType _format;
 	};
 }

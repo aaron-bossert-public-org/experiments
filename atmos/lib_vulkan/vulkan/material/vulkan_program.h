@@ -20,11 +20,14 @@
 
          ~vulkan_program() override;
 
- 		buffer_view<const parameter> batch_parameters() const override;
+		 size_t batch_parameter_count() const override;
+		 const parameter& batch_parameter(size_t) const override;
 
- 		buffer_view<const parameter> material_parameters() const override;
- 		
-		buffer_view<const parameter> instance_parameters() const override;
+		 size_t material_parameter_count() const override;
+		 const parameter& material_parameter(size_t) const override;
+
+		 size_t instance_parameter_count() const override;
+		 const parameter& instance_parameter(size_t) const override;
  		
 		size_t index_of_instance_parameter(const std::string_view&) const override;
  		
@@ -32,8 +35,7 @@
 
          static std::unique_ptr<vulkan_program> make(
  			vulkan_context*,
- 			const buffer_view<uint8_t>&,
- 			const buffer_view<uint8_t>&);
+			const shaders& shaders);
                 
      protected:
 

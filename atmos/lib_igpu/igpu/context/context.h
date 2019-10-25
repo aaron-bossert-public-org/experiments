@@ -21,6 +21,7 @@ namespace igpu
 	class batch_parameters;
 	class geometry;
 	class program;
+	class shaders;
 	class window;
 
 	class context
@@ -47,8 +48,7 @@ namespace igpu
 		virtual const config& cfg() const = 0;
 
 		virtual std::unique_ptr<program> make_program(
-			const buffer_view<uint8_t>& vertex_code,
-			const buffer_view<uint8_t>& pixel_code) = 0;
+			const shaders& shaders) = 0;
 
 		virtual std::unique_ptr<geometry> make_geometry(
 			const geometry::config&) = 0;
@@ -65,8 +65,6 @@ namespace igpu
 		virtual std::unique_ptr<texture2d> make_texture(
 			const texture2d::config&) = 0;
 
-		virtual ~context() {}
-
 		virtual const batch_constraints& batch_constraints() const = 0;
 
 		virtual const material_constraints& material_constraints() const = 0;
@@ -76,6 +74,8 @@ namespace igpu
 		virtual const window& window() const = 0;
 
 		virtual const back_buffer& back_buffer() const = 0;
+
+		virtual ~context() = default;
 
 	protected:
 

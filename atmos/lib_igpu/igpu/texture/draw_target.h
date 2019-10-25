@@ -18,7 +18,7 @@ namespace igpu
         
         glm::ivec2 res() const;
         
-        virtual ~draw_target() {}
+        virtual ~draw_target() = default;
         
     protected:
         

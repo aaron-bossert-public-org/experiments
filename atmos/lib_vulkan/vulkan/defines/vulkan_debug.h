@@ -5,8 +5,6 @@
 
 #define VULKAN_CHECK_ERR(F, ...) igpu::debug::generate_exception(__FILE__, __LINE__ , __func__, #F"("#__VA_ARGS__")",  std::function<decltype(F(__VA_ARGS__))()>([&] { return F(__VA_ARGS__); } ) )
 
-#include <framework/logging/log.h>
-
 #ifndef VMA_ASSERT
 #	define VMA_ASSERT(...) ASSERT_CONTEXT(__VA_ARGS__)
 #endif

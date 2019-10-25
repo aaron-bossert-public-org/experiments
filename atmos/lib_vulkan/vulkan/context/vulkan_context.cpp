@@ -477,19 +477,17 @@ const vulkan_context::config& vulkan_context::cfg() const
 }
 
 std::unique_ptr<program> vulkan_context::make_program(
-	const buffer_view<uint8_t>& vertex_code,
-	const buffer_view<uint8_t>& pixel_code)
+	const shaders& shaders)
 {
 	return vulkan_program::make(
 		this,
-		vertex_code,
-		pixel_code);
+		shaders);
 }
 
 std::unique_ptr<geometry> vulkan_context::make_geometry(
 	const geometry::config& cfg)
 {
-	return vulkan_geometry::make(cfg, vertex_constraints());
+	return vulkan_geometry::make(cfg);
 }
 
 std::unique_ptr<vertex_buffer> vulkan_context::make_vertex_buffer(

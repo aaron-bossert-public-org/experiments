@@ -96,8 +96,6 @@ VkResult debug::generate_exception(const char* file, int line, const char* func,
 	return res;
 }
 
-#endif // ATMOS_DEBUG
-
 debug::vulkan_result_exception::vulkan_result_exception(VkResult res, const char* desc)
 	: std::exception(desc)
 	, _res (res)
@@ -108,3 +106,5 @@ VkResult debug::vulkan_result_exception::res() const
 {
 	return _res;
 }
+
+#endif // ATMOS_DEBUG

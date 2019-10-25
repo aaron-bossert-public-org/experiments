@@ -44,8 +44,6 @@ namespace igpu
 		
 		void release();
 
-		static bool validate(const config&);
-
 		// todo: delete access to this
 		VkBuffer get();
 
@@ -62,7 +60,14 @@ namespace igpu
 	{
 	public:
 
+		using config = typename T::config;
+
 		~vulkan_staged_buffer_t() override {};
+
+		const config& cfg() const override
+		{
+			return _cfg;
+		}
 
 		void map(
 			size_t byte_size,
@@ -87,17 +92,56 @@ namespace igpu
 			return _vulkan_staged_buffer.get();
 		}
 
-		template<typename... Args>
+		template<typename... ARGS>
+		static std::unique_ptr<vulkan_staged_buffer_t> make(
+			const config& cfg,
+			const vulkan_staged_buffer::config& res_cfg,
+			const ARGS& ... args)
+		{
+			if (!is_valid(cfg.usage))
+			{
+				LOG_CRITICAL("invalid usage:%d", (int)cfg.usage);
+			}
+			else if (!is_valid(res_cfg.usage))
+			{
+				LOG_CRITICAL("invalid res_cfg usage:%d", (int)cfg.usage);
+			}
+			else if (0 == res_cfg.vk_usage_flags)
+			{
+				LOG_CRITICAL("vk_usage_flags is 0");
+			}
+			else if (!res_cfg.buffer_mediator)
+			{
+				LOG_CRITICAL("buffer mediator has expired");
+			}
+			else
+			{
+				return std::unique_ptr<vulkan_staged_buffer_t>(
+					new vulkan_staged_buffer_t(
+						cfg,
+						res_cfg,
+						args...));
+			}
+
+			return nullptr;
+		}
+
+	private:
+
+		template<typename... ARGS>
 		vulkan_staged_buffer_t(
+			const config& cfg,
 			const vulkan_staged_buffer::config& res_config,
-			Args... args)
+			const ARGS& ... args)
 			: T(args...)
+			, _cfg(cfg)
 			, _vulkan_staged_buffer(res_config)
 		{
 		}
 
 	private:
 
+		const config _cfg;
 		vulkan_staged_buffer _vulkan_staged_buffer;
 	};
 }

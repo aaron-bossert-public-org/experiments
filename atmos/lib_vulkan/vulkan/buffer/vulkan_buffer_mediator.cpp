@@ -176,7 +176,7 @@ namespace
 		{
 			LOG_CRITICAL("target owner queue is null");
 		}
-		// add dependency to some operation within the queue that has already aquired this buffer
+		// just a layout transition to initialize image to the specified state, no dependency actually added via vkbarriers this branch
 		else if (!current_owner.queue)
 		{
 			vkCmdPipelineBarrier(
@@ -186,6 +186,7 @@ namespace
 				0, nullptr,
 				1, &barrier);
 		}
+		// add dependency to some operation within the queue that has already aquired this buffer
 		else if (current_owner.queue == target_owner.queue)
 		{
 			if (target_owner.access != current_owner.access ||
@@ -604,6 +605,7 @@ vulkan_buffer_mediator::vulkan_buffer_mediator(
 #include <unordered_map>
 #include <vulkan/window/vulkan_back_buffer.h>
 #include <vulkan/buffer/vulkan_compute_buffer.h>
+#include <vulkan/buffer/Vulkan_geometry.h>
 #include <vulkan/buffer/vulkan_index_buffer.h>
 #include <vulkan/buffer/vulkan_vertex_buffer.h>
 #include <vulkan/texture/vulkan_texture2d.h>
@@ -658,7 +660,6 @@ private:
 	scoped_ptr< vulkan_queue > _graphics_queue;
 	scoped_ptr< vulkan_queue > _present_queue;
 
-	VkDescriptorSetLayout _descriptor_set_layout;
 	VkPipelineLayout _pipeline_layout;
 	VkPipeline _graphics_pipeline;
 
@@ -725,100 +726,91 @@ private:
 	
 	new_texture_impl texture_impl = { this };
 
-	
-	struct new_vertex_impl
+	struct new_geo_impl
 	{
-		HelloTriangleApplication* app;
-
-		std::unique_ptr<vertex_buffer> vertex_buffer;
-		
-		void create(const std::vector<Vertex>& vertices)
+		void create(
+			const std::vector<Vertex>& vertices,
+			const std::vector<uint32_t>& indices)
 		{
-			vertex_buffer::config cfg = {};
-			cfg.usage = buffer_usage::STATIC;
-			cfg.format = IGPU_VERT_FORMAT_OF(Vertex, pos, col, uv0);
+			auto index_buffer = std::shared_ptr< igpu::index_buffer > (
+				app->_context->make_index_buffer({
+					buffer_usage::STATIC,
+					index_format::UNSIGNED_INT }));
+
+			auto vertex_buffer = std::shared_ptr< igpu::vertex_buffer >(
+				app->_context->make_vertex_buffer({
+					buffer_usage::STATIC,
+					IGPU_VERT_FORMAT_OF(Vertex, pos, col, uv0)}));
+
+			{
+				VkDeviceSize buffer_size = sizeof(indices[0]) * indices.size();
+				buffer_view<uint32_t> view;
+
+				index_buffer->map(buffer_size, &view);
+				memcpy((char*)view.data(), indices.data(), buffer_size);
+				index_buffer->unmap();
+			}
+
+			{
+				VkDeviceSize buffer_size = sizeof(vertices[0]) * vertices.size();
+				buffer_view<uint32_t> view;
+
+				vertex_buffer->map(buffer_size, &view);
+				memcpy((char*)view.data(), vertices.data(), buffer_size);
+				vertex_buffer->unmap();
+			}
 			
-			vertex_buffer = app->_context->make_vertex_buffer(cfg);
-
-			VkDeviceSize buffer_size = sizeof(vertices[0]) * vertices.size();
-
-			buffer_view<uint32_t> view;
-
-			vertex_buffer->map(buffer_size, &view);
-			memcpy((char*)view.data(), vertices.data(), buffer_size);
-			vertex_buffer->unmap();
+			geometry = app->_context->make_geometry({
+				MODEL_PATH,
+				topology::TRIANGLE_LIST,
+				index_buffer,
+				{ vertex_buffer },
+				});
 		}
 
-		VkVertexInputBindingDescription get_binding_description()
+		const VkPipelineVertexInputStateCreateInfo& get_vertex_input_info()
 		{
-			VkVertexInputBindingDescription binding_description = {};
-			binding_description.binding = 0;
-			binding_description.stride = vertex_buffer->cfg().format.stride;
-			binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-			return binding_description;
+			auto* vulkan = ASSERT_CAST(vulkan_geometry*, geometry.get());
+			return vulkan->vertex_input_info();
 		}
 
-		std::vector<VkVertexInputAttributeDescription> get_attribute_descriptions()
+		const VkPipelineInputAssemblyStateCreateInfo& get_vertex_input_assembly_info()
 		{
-			auto vulkan = (vulkan_vertex_buffer*)vertex_buffer.get();
-			return vulkan->attribute_descriptions();
-		}
-
-		void bind(VkCommandBuffer command_buffer)
-		{
-			auto vulkan = (vulkan_vertex_buffer*)vertex_buffer.get();
-			
-			VkBuffer vertex_buffers[] = { vulkan->get() };
-			VkDeviceSize offsets[] = { 0 };
-			vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
-		}
-
-		void destroy()
-		{
-			vertex_buffer = nullptr;
-		}
-	} vertex_impl = { this };
-
-	struct new_index_impl
-	{
-		HelloTriangleApplication* app;
-
-		std::unique_ptr<index_buffer> index_buffer;
-
-		void create(const std::vector<uint32_t>& indices)
-		{
-			index_buffer = app->_context->make_index_buffer({
-				index_format::UNSIGNED_INT,
-				buffer_usage::STATIC});
-
-			VkDeviceSize buffer_size = sizeof(indices[0]) * indices.size();
-
-			buffer_view<uint32_t> view;
-
-			index_buffer->map(buffer_size, &view);
-			memcpy((char*)view.data(), indices.data(), buffer_size);
-			index_buffer->unmap();
-		}
-
-		void bind(VkCommandBuffer command_buffer)
-		{
-			auto vulkan = (vulkan_index_buffer*)index_buffer.get();
-			vkCmdBindIndexBuffer(command_buffer, vulkan->get(), 0, vulkan->format());
+			auto* vulkan = ASSERT_CAST(vulkan_geometry*, geometry.get());
+			return vulkan->vertex_input_assembly_info();
 		}
 
 		void draw(VkCommandBuffer command_buffer)
 		{
-			uint32_t index_count = (uint32_t)index_buffer->count();
-			vkCmdDrawIndexed(command_buffer, index_count, 1, 0, 0, 0);
+			auto* vulkan = ASSERT_CAST(vulkan_geometry*, geometry.get());
+			auto& index_buffer = vulkan->index_buffer();
+
+			const int MAX_BUFFERS = 16;
+			ASSERT_CONTEXT(vulkan->cfg().vertex_buffers.size() < MAX_BUFFERS)
+			VkBuffer vertex_buffers[MAX_BUFFERS];
+			VkDeviceSize offsets[MAX_BUFFERS];
+			
+			for (size_t i = 0; i < vulkan->cfg().vertex_buffers.size(); ++i)
+			{
+				offsets[i] = 0;
+				vertex_buffers[i] = vulkan->vertex_buffer(i).get();
+			}
+
+			vkCmdBindIndexBuffer(command_buffer, index_buffer.get(), 0, index_buffer.format());
+			vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
+			vkCmdDrawIndexed(command_buffer, (uint32_t)vulkan->element_count(), 1, (uint32_t)vulkan->element_start(), 0, 0);
 		}
 
 		void destroy()
 		{
-			index_buffer = nullptr;
+			geometry = nullptr;
 		}
 
-	} index_impl = { this };
+		HelloTriangleApplication* app;
+		std::unique_ptr<geometry> geometry;
+	};
+	
+	new_geo_impl geo_impl = { this };
 
 	struct new_uniform_impl
 	{
@@ -833,17 +825,6 @@ private:
 				_compute_buffers[i] = app->_context->make_compute_buffer({ buffer_usage::DYNAMIC });
 				update(i);
 			}
-		}
-
-		VkDescriptorSetLayoutBinding layout_binding()
-		{
-			VkDescriptorSetLayoutBinding ubo_layout_binding = {};
-			ubo_layout_binding.binding = 0;
-			ubo_layout_binding.descriptorCount = 1;
-			ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			ubo_layout_binding.pImmutableSamplers = nullptr;
-			ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-			return ubo_layout_binding;
 		}
 
 		VkDescriptorBufferInfo descriptor_info(size_t swap_index)
@@ -888,8 +869,119 @@ private:
 		std::vector<std::unique_ptr<compute_buffer>> _compute_buffers;
 
 	};
+
 	new_uniform_impl uniform_impl = { this };
 
+
+	struct old_program_impl
+	{
+		void create()
+		{
+			auto vert_shader_code = read_file("cooked_assets/shaders/shader.vert.spv");
+			auto frag_shader_code = read_file("cooked_assets/shaders/shader.frag.spv");
+
+			vert_shader_module = create_shader_module(vert_shader_code);
+			frag_shader_module = create_shader_module(frag_shader_code);
+
+			VkPipelineShaderStageCreateInfo vert_shader_stage_info = {};
+			vert_shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			vert_shader_stage_info.stage = VK_SHADER_STAGE_VERTEX_BIT;
+			vert_shader_stage_info.module = vert_shader_module;
+			vert_shader_stage_info.pName = "main";
+
+			VkPipelineShaderStageCreateInfo frag_shader_stage_info = {};
+			frag_shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			frag_shader_stage_info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+			frag_shader_stage_info.module = frag_shader_module;
+			frag_shader_stage_info.pName = "main";
+
+			shader_stages = { vert_shader_stage_info, frag_shader_stage_info };
+
+			VkDescriptorSetLayoutBinding ubo_layout_binding = {};
+			ubo_layout_binding.binding = 0;
+			ubo_layout_binding.descriptorCount = 1;
+			ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			ubo_layout_binding.pImmutableSamplers = nullptr;
+			ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+			VkDescriptorSetLayoutBinding sampler_layout_binding = {};
+			sampler_layout_binding.binding = 1;
+			sampler_layout_binding.descriptorCount = 1;
+			sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			sampler_layout_binding.pImmutableSamplers = nullptr;
+			sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+			std::array<VkDescriptorSetLayoutBinding, 2> bindings = { ubo_layout_binding, sampler_layout_binding };
+			VkDescriptorSetLayoutCreateInfo layout_info = {};
+			layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+			layout_info.bindingCount = static_cast<uint32_t>(bindings.size());
+			layout_info.pBindings = bindings.data();
+
+			vkCreateDescriptorSetLayout(app->_device, &layout_info, nullptr, &descriptor_set_layout);
+		}
+
+		const std::vector<VkPipelineShaderStageCreateInfo>& get_shader_stages()
+		{
+			return shader_stages;
+		}
+
+		static std::vector<char> read_file(const std::string& filename)
+		{
+			std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+			if (!file.is_open())
+			{
+				throw std::runtime_error("failed to open file!");
+			}
+
+			size_t file_size = (size_t)file.tellg();
+			std::vector<char> buffer(file_size);
+
+			file.seekg(0);
+			file.read(buffer.data(), file_size);
+
+			file.close();
+
+			return buffer;
+		}
+
+		VkShaderModule create_shader_module(const std::vector<char>& code)
+		{
+			VkShaderModuleCreateInfo create_info = {};
+			create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+			create_info.codeSize = code.size();
+			create_info.pCode = reinterpret_cast<const uint32_t*>(code.data());
+
+			VkShaderModule shader_module;
+			if (vkCreateShaderModule(app->_device, &create_info, nullptr, &shader_module) != VK_SUCCESS)
+			{
+				throw std::runtime_error("failed to create shader module!");
+			}
+
+			return shader_module;
+		}
+
+		const VkDescriptorSetLayout& get_descriptor_set_layout()
+		{
+			return descriptor_set_layout;
+		}
+
+		void destroy()
+		{
+			vkDestroyShaderModule(app->_device, frag_shader_module, nullptr);
+			vkDestroyShaderModule(app->_device, vert_shader_module, nullptr);
+			vkDestroyDescriptorSetLayout(app->_device, descriptor_set_layout, nullptr);
+		}
+
+		HelloTriangleApplication* app;
+
+		VkShaderModule vert_shader_module = nullptr;
+		VkShaderModule frag_shader_module = nullptr;
+		VkDescriptorSetLayout descriptor_set_layout;
+		
+		std::vector<VkPipelineShaderStageCreateInfo> shader_stages;
+
+	} program_impl = {this};
 
 	VkDescriptorPool _descriptor_pool;
 	std::vector<VkDescriptorSet> _descriptor_sets;
@@ -916,11 +1008,6 @@ public:
 		_context = nullptr;
 	}
 
-	void framebuffer_resized()
-	{
-		_framebuffer_resized = true;
-	}
-
 	void init_vulkan(const scoped_ptr < vulkan_context >& context)
 	{
 		_context = context;
@@ -934,12 +1021,13 @@ public:
 		_swap_image_count = _context->back_buffer().framebuffers().size();
 		_msaa_samples = _context->back_buffer().cfg().sample_count;
 		create_command_pool();
-		create_descriptor_set_layout();
 		load_model();
 
 		uniform_impl.create();
-		create_graphics_pipeline();
 		texture_impl.create();
+		program_impl.create();
+
+		create_graphics_pipeline();
 		create_descriptor_pool();
 		create_descriptor_sets();
 		create_command_buffers();
@@ -961,16 +1049,13 @@ public:
 		on_cleanup_swap_chain();
 
 		texture_impl.destroy();
+		program_impl.destroy();
 
 		vkDestroyDescriptorPool(_device, _descriptor_pool, nullptr);
 
-		vkDestroyDescriptorSetLayout(_device, _descriptor_set_layout, nullptr);
-
 		uniform_impl.destroy();
 
-		index_impl.destroy();
-
-		vertex_impl.destroy();
+		geo_impl.destroy();
 
 		for (auto* semaphores : {
 			&_render_finished_semaphores,
@@ -1031,67 +1116,8 @@ private:
 		}
 	}
 
-	void create_descriptor_set_layout()
-	{
-		VkDescriptorSetLayoutBinding ubo_layout_binding = uniform_impl.layout_binding();
-
-
-		VkDescriptorSetLayoutBinding sampler_layout_binding = {};
-		sampler_layout_binding.binding = 1;
-		sampler_layout_binding.descriptorCount = 1;
-		sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		sampler_layout_binding.pImmutableSamplers = nullptr;
-		sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-		std::array<VkDescriptorSetLayoutBinding, 2> bindings = { ubo_layout_binding, sampler_layout_binding };
-		VkDescriptorSetLayoutCreateInfo layout_info = {};
-		layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		layout_info.bindingCount = static_cast<uint32_t>(bindings.size());
-		layout_info.pBindings = bindings.data();
-
-		if (vkCreateDescriptorSetLayout(_device, &layout_info, nullptr, &_descriptor_set_layout) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create descriptor set layout!");
-		}
-	}
-
 	void create_graphics_pipeline()
 	{
-		auto vert_shader_code = read_file("cooked_assets/shaders/shader.vert.spv");
-		auto frag_shader_code = read_file("cooked_assets/shaders/shader.frag.spv");
-
-		VkShaderModule vert_shader_module = create_shader_module(vert_shader_code);
-		VkShaderModule frag_shader_module = create_shader_module(frag_shader_code);
-
-		VkPipelineShaderStageCreateInfo vert_shader_stage_info = {};
-		vert_shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		vert_shader_stage_info.stage = VK_SHADER_STAGE_VERTEX_BIT;
-		vert_shader_stage_info.module = vert_shader_module;
-		vert_shader_stage_info.pName = "main";
-
-		VkPipelineShaderStageCreateInfo frag_shader_stage_info = {};
-		frag_shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		frag_shader_stage_info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		frag_shader_stage_info.module = frag_shader_module;
-		frag_shader_stage_info.pName = "main";
-
-		VkPipelineShaderStageCreateInfo shader_stages[] = { vert_shader_stage_info, frag_shader_stage_info };
-
-		VkPipelineVertexInputStateCreateInfo vertex_input_info = {};
-		vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-
-		auto binding_description = vertex_impl.get_binding_description();
-		auto attribute_descriptions = vertex_impl.get_attribute_descriptions();
-
-		vertex_input_info.vertexBindingDescriptionCount = 1;
-		vertex_input_info.vertexAttributeDescriptionCount = static_cast<uint32_t>(attribute_descriptions.size());
-		vertex_input_info.pVertexBindingDescriptions = &binding_description;
-		vertex_input_info.pVertexAttributeDescriptions = attribute_descriptions.data();
-
-		VkPipelineInputAssemblyStateCreateInfo input_assembly = {};
-		input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-		input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		input_assembly.primitiveRestartEnable = VK_FALSE;
 
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
@@ -1156,19 +1182,21 @@ private:
 		VkPipelineLayoutCreateInfo pipeline_layout_info = {};
 		pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipeline_layout_info.setLayoutCount = 1;
-		pipeline_layout_info.pSetLayouts = &_descriptor_set_layout;
+		pipeline_layout_info.pSetLayouts = &program_impl.get_descriptor_set_layout();
 
 		if (vkCreatePipelineLayout(_device, &pipeline_layout_info, nullptr, &_pipeline_layout) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create pipeline layout!");
 		}
 
+		const auto& shader_stages = program_impl.get_shader_stages();
+
 		VkGraphicsPipelineCreateInfo pipeline_info = {};
 		pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-		pipeline_info.stageCount = 2;
-		pipeline_info.pStages = shader_stages;
-		pipeline_info.pVertexInputState = &vertex_input_info;
-		pipeline_info.pInputAssemblyState = &input_assembly;
+		pipeline_info.stageCount = (uint32_t)shader_stages.size();
+		pipeline_info.pStages = shader_stages.data();
+		pipeline_info.pVertexInputState = &geo_impl.get_vertex_input_info();
+		pipeline_info.pInputAssemblyState = &geo_impl.get_vertex_input_assembly_info();
 		pipeline_info.pViewportState = &viewport_state;
 		pipeline_info.pRasterizationState = &rasterizer;
 		pipeline_info.pMultisampleState = &multisampling;
@@ -1183,9 +1211,6 @@ private:
 		{
 			throw std::runtime_error("failed to create graphics pipeline!");
 		}
-
-		vkDestroyShaderModule(_device, frag_shader_module, nullptr);
-		vkDestroyShaderModule(_device, vert_shader_module, nullptr);
 	}
 
 	void load_model()
@@ -1230,9 +1255,8 @@ private:
 				indices.push_back((uint32_t)emplace.first->second);
 			}
 		}
-
-		vertex_impl.create(vertices);
-		index_impl.create(indices);
+		
+		geo_impl.create(vertices, indices);
 	}
 
 	void create_descriptor_pool()
@@ -1257,7 +1281,7 @@ private:
 
 	void create_descriptor_sets()
 	{
-		std::vector<VkDescriptorSetLayout> layouts(_swap_image_count, _descriptor_set_layout);
+		std::vector<VkDescriptorSetLayout> layouts(_swap_image_count, program_impl.get_descriptor_set_layout());
 		VkDescriptorSetAllocateInfo alloc_info = {};
 		alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		alloc_info.descriptorPool = _descriptor_pool;
@@ -1346,12 +1370,10 @@ private:
 
 			vkCmdBindPipeline(_command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, _graphics_pipeline);
 
-			vertex_impl.bind(_command_buffers[i]);
-			index_impl.bind(_command_buffers[i]);
 
 			vkCmdBindDescriptorSets(_command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline_layout, 0, 1, &_descriptor_sets[i], 0, nullptr);
 
-			index_impl.draw(_command_buffers[i]);
+			geo_impl.draw(_command_buffers[i]);
 
 			vkCmdEndRenderPass(_command_buffers[i]);
 
@@ -1464,43 +1486,6 @@ private:
 		}
 
 		_current_frame = (_current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
-	}
-
-	VkShaderModule create_shader_module(const std::vector<char>& code)
-	{
-		VkShaderModuleCreateInfo create_info = {};
-		create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		create_info.codeSize = code.size();
-		create_info.pCode = reinterpret_cast<const uint32_t*>(code.data());
-
-		VkShaderModule shader_module;
-		if (vkCreateShaderModule(_device, &create_info, nullptr, &shader_module) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create shader module!");
-		}
-
-		return shader_module;
-	}
-
-
-	static std::vector<char> read_file(const std::string& filename)
-	{
-		std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-		if (!file.is_open())
-		{
-			throw std::runtime_error("failed to open file!");
-		}
-
-		size_t file_size = (size_t)file.tellg();
-		std::vector<char> buffer(file_size);
-
-		file.seekg(0);
-		file.read(buffer.data(), file_size);
-
-		file.close();
-
-		return buffer;
 	}
 };
 

@@ -349,28 +349,34 @@ GLuint gl_program::gl_handle() const
     return _gl_handle;
 }
 
-buffer_view<const parameter> gl_program::batch_parameters() const
+size_t gl_program::batch_parameter_count() const
 {
-	return buffer_view<const parameter>(
-		_batch_parameters.size(),
-		_batch_parameters.data(),
-		sizeof(gl_parameter));
+	return _batch_parameters.size();
 }
 
-buffer_view<const parameter> gl_program::material_parameters() const
+const parameter& gl_program::batch_parameter(size_t i) const
 {
-	return buffer_view<const parameter>(
-		_material_parameters.size(),
-		_material_parameters.data(),
-		sizeof(gl_parameter));
+	return _batch_parameters[i];
 }
 
-buffer_view<const parameter> gl_program::instance_parameters() const
+size_t gl_program::material_parameter_count() const
 {
-	return buffer_view<const parameter>(
-		_instance_parameters.size(),
-		_instance_parameters.data(),
-		sizeof(gl_parameter));
+	return _material_parameters.size();
+}
+
+const parameter& gl_program::material_parameter(size_t i) const
+{
+	return _material_parameters[i];
+}
+
+size_t gl_program::instance_parameter_count() const
+{
+	return _instance_parameters.size();
+}
+
+const parameter& gl_program::instance_parameter(size_t i) const
+{
+	return _instance_parameters[i];
 }
 
 size_t gl_program::index_of_instance_parameter(const std::string_view& name) const
@@ -409,10 +415,9 @@ const primitive& gl_program::default_instance_primitive(size_t instance_paramete
 
 std::unique_ptr<gl_program> gl_program::make(
 	gl_context* gl_context,
-	const buffer_view<uint8_t>& vertex_code,
-	const buffer_view<uint8_t>& pixel_code)
+	const shaders& shaders)
 {
-    GLuint gl_handle = gl_compile(gl_context->vertex_constraints(), vertex_code, pixel_code);
+    GLuint gl_handle = gl_compile(gl_context, shaders);
 
     if(!gl_handle)
     {

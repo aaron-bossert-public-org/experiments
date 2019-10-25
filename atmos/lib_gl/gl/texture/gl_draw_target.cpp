@@ -90,8 +90,8 @@ std::unique_ptr<gl_draw_target> gl_draw_target::make(
 {
     GLuint frame_buffer = 0;
     
-	auto gl_color_target = dynamic_cast<igpu::gl_color_target*>(color_target.get());
-	auto gl_depth_target = dynamic_cast<igpu::gl_depth_target*>(depth_target.get());
+	auto gl_color_target = ASSERT_CAST(igpu::gl_color_target*, color_target.get());
+	auto gl_depth_target = ASSERT_CAST(igpu::gl_depth_target*, depth_target.get());
 	
 	if (!color_target && !depth_target)
 	{

@@ -2,9 +2,8 @@
 
 #include <gl/buffer/gl_index_buffer.h>
 
-// GL implementation includes - begin
+#include <gl/buffer/gl_buffer.h>
 #include <gl/defines/gl_includes.h>
-// GL implementation includes - end
 
 using namespace igpu;
 
@@ -33,37 +32,32 @@ unsigned gl_index_buffer::gl_format() const
 
 std::unique_ptr<gl_index_buffer> gl_index_buffer::make(const config& cfg)
 {
-	unsigned gl_format = to_gl_format(cfg.format);
 
 	if (!is_valid(cfg.format))
 	{
 		LOG_CRITICAL("invalid format:%d", (int)cfg.format);
 	}
-	else if (!is_valid(cfg.usage))
-	{
-		LOG_CRITICAL("invalid usage:%d", (int)cfg.usage);
-	}
-	else if (GL_FALSE == gl_format)
-	{
-		LOG_CRITICAL("unhandled format:%s", to_string(cfg.format).data());
-	}
 	else
 	{
-		return std::unique_ptr<gl_index_buffer>(
-			new gl_index_buffer(
+		unsigned gl_format = to_gl_format(cfg.format);
+
+		if (GL_FALSE == gl_format)
+		{
+			LOG_CRITICAL("unhandled format:%s", to_string(cfg.format).data());
+		}
+		else
+		{
+			return gl_buffer_t<gl_index_buffer>::make(
 				cfg,
-				gl_format));
+				GL_ELEMENT_ARRAY_BUFFER,
+				gl_format);
+		}
 	}
 
 	return nullptr;
 }
 
-gl_index_buffer::gl_index_buffer(const config& cfg, unsigned gl_format)
-: gl_buffer_t (
-	cfg,
-	"GPU Index Mem",
-	cfg.usage,
-	GL_ELEMENT_ARRAY_BUFFER) 
-, _gl_format(gl_format)
+gl_index_buffer::gl_index_buffer(unsigned gl_format)
+	: _gl_format(gl_format)
 {
 }

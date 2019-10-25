@@ -9,7 +9,7 @@ namespace igpu
 
 		virtual void attach() const = 0;
 
-		virtual ~gl_depth_target() {}
+		virtual ~gl_depth_target() = default;
 
 	protected:
 

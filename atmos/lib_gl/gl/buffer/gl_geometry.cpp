@@ -3,11 +3,7 @@
 
 #include <framework/logging/log.h>
 
-// GL implementation includes - begin
-#include <gl/buffer/gl_index_buffer.h>
-#include <gl/buffer/gl_vertex_buffer.h>
 #include <gl/defines/gl_includes.h>
-// GL implementation includes - end
 
 #include <igpu/buffer/vertex_format.h>
 
@@ -18,9 +14,19 @@ const gl_geometry::config& gl_geometry::cfg() const
 	return _cfg;
 }
 
+index_buffer& gl_geometry::index_buffer()
+{
+	return *_index_buffer;
+}
+
+vertex_buffer& gl_geometry::vertex_buffer(size_t i)
+{
+	return *_vertex_buffers[i];
+}
+
 size_t gl_geometry::element_start() const
 {
-	return _element_start;
+	return _element_start.value_or(0);
 }
 
 void gl_geometry::element_start(size_t element_start)
@@ -30,7 +36,7 @@ void gl_geometry::element_start(size_t element_start)
 
 size_t gl_geometry::element_count() const
 {
-	return _element_count;
+	return _element_count.has_value() ? _element_count.value() : _cfg.index_buffer->count();
 }
 
 void gl_geometry::element_count(size_t element_count)
@@ -58,6 +64,9 @@ std::unique_ptr<gl_geometry> gl_geometry::make(
 		return nullptr;
 	}
 
+	auto* index_buffer = ASSERT_CAST(gl_index_buffer*, cfg.index_buffer.get());
+	std::vector<gl_vertex_buffer*> vertex_buffers;
+
 	for (size_t i = 0; i < cfg.vertex_buffers.size(); ++i)
 	{
 		const auto& vertex_buffer = cfg.vertex_buffers[i];
@@ -68,6 +77,8 @@ std::unique_ptr<gl_geometry> gl_geometry::make(
 
 			return nullptr;
 		}
+		
+		vertex_buffers.push_back(ASSERT_CAST(gl_vertex_buffer*, vertex_buffer.get()));
 	}
 
 	GLenum gl_topology = GL_FALSE;
@@ -103,12 +114,11 @@ std::unique_ptr<gl_geometry> gl_geometry::make(
 	{
 		glBindVertexArray(vao);
 
-		for (const auto& vertex_buffer : cfg.vertex_buffers)
+		for (const auto& vertex_buffer : vertex_buffers)
 		{
-			const gl_vertex_buffer* gl_v_buffer = (gl_vertex_buffer*)vertex_buffer.get();
-			glBindBuffer(GL_ARRAY_BUFFER, gl_v_buffer->gl_handle());
+			glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer->gl_handle());
 
-			for (const gl_vertex_attribute& attribute : gl_v_buffer->gl_format().attributes())
+			for (const gl_vertex_attribute& attribute : vertex_buffer->gl_format().attributes())
 			{
 				glEnableVertexAttribArray(attribute.location);
 				glVertexAttribPointer(
@@ -116,23 +126,21 @@ std::unique_ptr<gl_geometry> gl_geometry::make(
 					attribute.size,
 					attribute.type, 
 					GL_FALSE/*normalized*/, 
-					gl_v_buffer->cfg().format.stride,
+					vertex_buffer->cfg().format.stride,
 					attribute.offset + (char*)nullptr);
 			}
 		}
 
-		gl_index_buffer* gl_i_buffer = (gl_index_buffer*)cfg.index_buffer.get();
-		if (gl_i_buffer)
-		{
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_i_buffer->gl_handle());
-		}
-
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer->gl_handle());
+		
 		glBindVertexArray(0);
 	}
 
     return std::unique_ptr<gl_geometry>(
 		new gl_geometry(
 			cfg,
+			index_buffer,
+			std::move(vertex_buffers),
 			gl_topology,
 			vao));
 }
@@ -144,11 +152,13 @@ gl_geometry::~gl_geometry()
 
 gl_geometry::gl_geometry(
 	const config& cfg,
+	gl_index_buffer* index_buffer,
+	std::vector<gl_vertex_buffer*> vertex_buffers,
 	unsigned gl_topology,
 	unsigned vao)
 : _cfg(cfg)
-, _element_start(0)
-, _element_count(cfg.index_buffer->count())
+, _index_buffer(index_buffer)
+, _vertex_buffers(std::move(vertex_buffers))
 , _gl_topology(gl_topology)
 , _vao(vao)
 {

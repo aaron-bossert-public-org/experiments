@@ -154,9 +154,7 @@ namespace igpu
     >
     child_t* cast_to_child(opaque_batch_node* child)
     {
-        ASSERT_CONTEXT(!child || dynamic_cast<child_t*>(child));
-        
-        return (child_t*) child;
+        return ASSERT_CAST(child_t*, child);
     }
 
     //-------------------------------------------------------------------------

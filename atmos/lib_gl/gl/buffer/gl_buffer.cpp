@@ -49,13 +49,39 @@ namespace
 		glGenBuffers(1, &gl_handle);
 		return gl_handle;
 	}
+
+	std::string to_string(unsigned gl_target)
+	{
+		std::string str;
+		switch (gl_target)
+		{
+		case GL_ARRAY_BUFFER:
+			return "vertex buffer";
+		case GL_COPY_READ_BUFFER:
+			return "copy read buffer";
+		case GL_COPY_WRITE_BUFFER:
+			return "copy write buffer";
+		case GL_ELEMENT_ARRAY_BUFFER:
+			return "index buffer";
+		case GL_PIXEL_PACK_BUFFER:
+			return "pixel pack buffer";
+		case GL_PIXEL_UNPACK_BUFFER:
+			return "pixel unpack buffer";
+		case GL_TRANSFORM_FEEDBACK_BUFFER:
+			return "transform feedback buffer";
+		case GL_UNIFORM_BUFFER:
+			return "compute buffer";
+		}
+
+		LOG_CRITICAL("unhandled gl target %d", gl_target);
+		return "<unknown>";
+	}
 }
 
 gl_buffer::gl_buffer(
-	const std::string_view& metric,
 	buffer_usage usage,
 	unsigned gl_target)
-	: _gpu_mem_metric(perf::category::GPU_MEM_USAGE, metric)
+	: _gpu_mem_metric(perf::category::GPU_MEM_USAGE, ::to_string(gl_target))
 	, _usage(usage)
 	, _gl_target(gl_target)
 	, _gl_handle(gl_gen_buffer())

@@ -1,13 +1,15 @@
 
 #include <gl/material/gl_compiler.h>
 
-// GL implementation includes - begin
+#include <gl/context/gl_context.h>
 #include <gl/defines/gl_includes.h>
-// GL implementation includes - end
+#include <gl/material/gl_fragment_shader.h>
+#include <gl/material/gl_vertex_shader.h>
 
 #include <framework/utility/buffer_view.h>
 
 #include <igpu/context/vertex_constraints.h>
+#include <igpu/material/program.h>
 
 #include <vector>
 #include <sstream>
@@ -18,10 +20,10 @@ namespace
 {
 	const int k_info_log_max_length = 2048;
 
-    std::vector<std::string> split_shader_source_lines(const buffer_view<uint8_t>& shader_source)
+    std::vector<std::string> split_shader_source_lines(const buffer_view_base& source_code)
     {
-		char* data = (char*)shader_source.data();
-		std::string str = std::string(data, data + shader_source.size());
+		char* data = (char*)source_code.data();
+		std::string str = std::string(data, data + source_code.byte_size());
         std::stringstream ss(str);
         std::string line_str;
         std::vector<std::string> shader_lines;
@@ -84,43 +86,18 @@ namespace
         return error_desc;
     }
     
-    void output_errors(GLuint program, const buffer_view<uint8_t>& shader_code)
+    void output_errors(GLuint program, const buffer_view_base& source_code)
     {
         char info_log[k_info_log_max_length] = {0};
         GLsizei info_log_length = 0;
         glGetShaderInfoLog(program, k_info_log_max_length, &info_log_length, info_log);
         
-        std::vector<std::string> source_lines = split_shader_source_lines(shader_code);
+        std::vector<std::string> source_lines = split_shader_source_lines(source_code);
         
         std::string err_desc = make_error_desc(std::string(info_log, info_log_length), source_lines);
         std::string line_numbered_shader_code = make_line_numbered_source(source_lines);
         
 		LOG_CRITICAL( "%s\n%s\n\n%s", err_desc.c_str(), line_numbered_shader_code.c_str(), err_desc.c_str() );
-    }
-
-	GLuint compile_shader_code(GLenum type, const buffer_view<uint8_t>& shader_code)
-    {
-        // make c-array of char* with shader chunks
-        // make shader with c-array of char*
-        GLuint program = glCreateShader(type);
-        const char* code[] = { (char*)shader_code.data() };
-        
-        glShaderSource(program, (GLsizei)1, code, NULL);
-        glCompileShader(program);
-        
-        // peek compile status
-        GLint result = 0;
-        glGetShaderiv(program, GL_COMPILE_STATUS, &result);
-        
-        // on fail cleanup and output compile errors
-        if (GL_FALSE == result)
-        {
-            output_errors(program, shader_code);
-            glDeleteShader(program);
-            program = 0;
-        }
-        
-        return program;
     }
 
 	void bind_vertex_attribute_indices(const vertex_constraints& vertex_constraints, GLuint program)
@@ -133,7 +110,7 @@ namespace
 		}
 	}
 
-    bool gl_link_program(GLuint program, GLuint vertex_program, const buffer_view<uint8_t>& vertex_code, GLuint pixel_program, const buffer_view<uint8_t>& pixel_code)
+    bool gl_link_program(GLuint program, GLuint vertex_program, GLuint pixel_program)
     {
         bool success = true;
         
@@ -148,12 +125,8 @@ namespace
             char info_log[k_info_log_max_length];
             glGetProgramInfoLog(program, k_info_log_max_length, 0, info_log);
             
-            std::string line_numbered_vertex_code = make_line_numbered_source(split_shader_source_lines(vertex_code));
-            std::string line_numbered_pixel_code = make_line_numbered_source(split_shader_source_lines(pixel_code));
-            
-            LOG_CRITICAL("\n Linker error \n%s\n%s\n%s\n%s",
-                      info_log,
-                      line_numbered_vertex_code.c_str(), line_numbered_pixel_code.c_str(), info_log);
+            LOG_CRITICAL("\n Linker error \n%s",
+                      info_log);
             
             success = false;
         }
@@ -162,32 +135,88 @@ namespace
     }
 }
 
-unsigned gl_compile(
-	const vertex_constraints& vertex_constraints,
-	const buffer_view<uint8_t>& vertex_code,
-	const buffer_view<uint8_t>& pixel_code)
+GLuint gl_compile_shader_code(GLenum type, const buffer_view_base& source_code)
 {
-    GLuint vertex_program = compile_shader_code(GL_VERTEX_SHADER, vertex_code);
-    GLuint pixel_program = compile_shader_code(GL_FRAGMENT_SHADER, pixel_code);
-    GLuint program = glCreateProgram();
-    bool success = false;
+	// make c-array of char* with shader chunks
+	// make shader with c-array of char*
+	GLuint program = glCreateShader(type);
+	const char* code[] = { (char*)source_code.data() };
+
+	glShaderSource(program, (GLsizei)1, code, NULL);
+	glCompileShader(program);
+
+	// peek compile status
+	GLint result = 0;
+	glGetShaderiv(program, GL_COMPILE_STATUS, &result);
+
+	// on fail cleanup and output compile errors
+	if (GL_FALSE == result)
+	{
+		output_errors(program, source_code);
+		glDeleteShader(program);
+		program = 0;
+	}
+
+	return program;
+}
+
+unsigned gl_compile(
+	gl_context* gl_context,
+	const shaders& shaders)
+{
+	if (!shaders.vertex)
+	{
+		LOG_CRITICAL("vertex shader is null");
+	}
+	else if (!shaders.fragment)
+	{
+		LOG_CRITICAL("fragment shader is null");
+	}
+	else
+	{
+		auto gl_vertex = ASSERT_CAST(gl_vertex_shader*, shaders.vertex.get());
+		auto gl_Fragment = ASSERT_CAST(gl_vertex_shader*, shaders.fragment.get());
+
+		GLuint vertex_handle = gl_vertex->gl_handle();
+		GLuint fragment_handle = gl_Fragment->gl_handle();
+
+		if (!vertex_handle)
+		{
+			LOG_CRITICAL("vertex handle is 0");
+		}
+		else if (!fragment_handle)
+		{
+			LOG_CRITICAL("fragment handle is 0");
+		}
+		else
+		{
+			GLuint program_handle = glCreateProgram();
+			if (!program_handle)
+			{
+				LOG_CRITICAL("program handle is 0");
+			}
+			else
+			{
+				bool success = false;
     
-	bind_vertex_attribute_indices(vertex_constraints, program);
+				bind_vertex_attribute_indices(gl_context->vertex_constraints(), program_handle);
 	
-    if(vertex_program && pixel_program && program && gl_link_program(program, vertex_program, vertex_code, pixel_program, pixel_code))
-    {
-        success = true;
-    }
+				if(gl_link_program(program_handle, vertex_handle, fragment_handle))
+				{
+					success = true;
+				}
     
-    glDeleteShader(vertex_program);
-    glDeleteShader(pixel_program);
-    vertex_program = pixel_program = 0;
-    
-    if(!success)
-    {
-        glDeleteProgram(program);
-        program = 0;
-    }
-    
-    return program;
+				if (!success)
+				{
+					glDeleteProgram(program_handle);
+				}
+				else 
+				{
+					return program_handle;
+				}
+			}
+		}
+	}
+
+	return 0;
 }

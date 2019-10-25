@@ -2,6 +2,8 @@
 
 #define ATMOS_USE_VULKAN 1
 
+#include <framework/logging/log.h>
+
 #if ATMOS_BUILD_IOS
 #	define VK_USE_PLATFORM_IOS_MVK 1
 #elif ATMOS_BUILD_ANDROID
@@ -20,6 +22,8 @@
 #	define NOMINMAX
 #endif
 
+#pragma warning(push)
+#pragma warning(disable:4189)// local variable not initialized, vk_mem_alloc.h
 #if ATMOS_DEBUG
 #	include <vulkan/defines/vulkan_debug.h>
 #else
@@ -27,6 +31,7 @@
 #	include <vulkan.h>
 #	include <VulkanMemoryAllocator\src\vk_mem_alloc.h>
 #endif
+#pragma warning(pop)
 
 #if ATMOS_BUILD_WINDOWS
 #	undef far

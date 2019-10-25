@@ -10,10 +10,9 @@ namespace igpu
 	{
 	public:
 
-		struct config
+		struct config : buffer::config
 		{
 			vertex_format::config format;
-			buffer_usage usage;
 		};
 
 		virtual const config& cfg() const = 0;

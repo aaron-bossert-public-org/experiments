@@ -23,9 +23,9 @@ namespace igpu
 			const scoped_ptr< vulkan_buffer_mediator >&,
 			const vertex_constraints&);
 
-		const config& cfg() const override;
-
 		virtual VkBuffer get() = 0;
+
+		const VkVertexInputBindingDescription& binding_description() const;
 
 		const std::vector<VkVertexInputAttributeDescription>& attribute_descriptions() const;
 
@@ -37,7 +37,7 @@ namespace igpu
 
 	private:
 
-		const config _cfg;
+		const VkVertexInputBindingDescription _binding_description = {};
 		const std::vector<VkVertexInputAttributeDescription> _attribute_descriptions;
 	};
 }

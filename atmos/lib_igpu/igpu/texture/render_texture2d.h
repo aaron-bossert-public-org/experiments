@@ -14,7 +14,7 @@ namespace igpu
 
 		virtual const config& cfg() const;
 
-		virtual ~render_texture2d() {}
+		virtual ~render_texture2d() = default;
         
     protected:
         

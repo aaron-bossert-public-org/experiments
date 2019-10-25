@@ -50,13 +50,13 @@ const gl_context::config& gl_context::cfg() const
 }
 
 std::unique_ptr<program> gl_context::make_program(
-	const buffer_view<uint8_t>& vertex_code,
-	const buffer_view<uint8_t>& pixel_code)
+	const shaders& shaders)
 {
+	ASSERT_CONTEXT(nullptr == active_program());
+
 	return gl_program::make(
 		this,
-		vertex_code,
-		pixel_code);
+		shaders);
 }
 
 std::unique_ptr<geometry> gl_context::make_geometry(
@@ -437,9 +437,7 @@ void gl_context::begin_geometry(const gl_geometry* geometry)
 	ASSERT_CONTEXT(_active_program);
 	ASSERT_CONTEXT(!_active_geometry_info.geometry);
 	
-	index_buffer* indices = geometry->cfg().index_buffer.get();
-	ASSERT_CONTEXT(dynamic_cast<gl_index_buffer*>(indices));
-	gl_index_buffer* gl_indices = (gl_index_buffer*)indices;
+	auto* gl_indices = ASSERT_CAST(gl_index_buffer*, geometry->cfg().index_buffer.get());
 	
 	auto vao = geometry->vao();
 	glBindVertexArray(vao);
@@ -448,7 +446,7 @@ void gl_context::begin_geometry(const gl_geometry* geometry)
 	_active_geometry_info.geometry = geometry;
 	_active_geometry_info.gl_topology = geometry->gl_topology();
 	_active_geometry_info.gl_index_format = gl_indices->gl_format();
-	_active_geometry_info.bytes_per_index = (int32_t)bytes_per_index(indices->cfg().format);
+	_active_geometry_info.bytes_per_index = (int32_t)bytes_per_index(gl_indices->cfg().format);
 }
 
 void gl_context::end_geometry(const gl_geometry* geometry)

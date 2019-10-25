@@ -9,11 +9,5 @@ namespace igpu
 	{
 	public:
 
-		struct config
-		{
-			buffer_usage usage;
-		};
-
-		virtual const config& cfg() const = 0;
 	};
 }

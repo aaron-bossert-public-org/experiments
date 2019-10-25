@@ -34,8 +34,7 @@ namespace igpu
 		const config& cfg() const override;
 
 		std::unique_ptr<program> make_program(
-			const buffer_view<uint8_t>& vertex_code,
-			const buffer_view<uint8_t>& pixel_code) override;
+			const shaders&) override;
 
 		std::unique_ptr<geometry> make_geometry(
 			const geometry::config& cfg) override;
