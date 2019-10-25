@@ -9,6 +9,9 @@
 #include <igpu/context/batch_constraints.h>
 #include <igpu/context/material_constraints.h>
 #include <igpu/context/vertex_constraints.h>
+#include <igpu/material/fragment_shader.h>
+#include <igpu/material/program.h>
+#include <igpu/material/vertex_shader.h>
 #include <igpu/texture/color_format.h>
 #include <igpu/texture/depth_format.h>
 #include <igpu/texture/texture2d.h>
@@ -18,9 +21,8 @@
 namespace igpu
 {
 	class back_buffer;
+
 	class batch_parameters;
-	class geometry;
-	class program;
 	class shaders;
 	class window;
 
@@ -49,6 +51,10 @@ namespace igpu
 
 		virtual std::unique_ptr<program> make_program(
 			const shaders& shaders) = 0;
+
+		virtual std::unique_ptr<vertex_shader> make_vertex_shader() = 0;
+		
+		virtual std::unique_ptr<fragment_shader> make_fragment_shader() = 0;
 
 		virtual std::unique_ptr<geometry> make_geometry(
 			const geometry::config&) = 0;

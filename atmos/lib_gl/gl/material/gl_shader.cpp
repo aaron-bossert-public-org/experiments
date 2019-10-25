@@ -5,16 +5,6 @@
 
 using namespace igpu;
 
-namespace
-{
-	struct
-	{
-		std::unique_ptr<char[]> raw;
-		buffer_view_base view;
-	} _mapped;
-}
-
-
 gl_shader::gl_shader(GLenum type)
 : _type(type)
 {

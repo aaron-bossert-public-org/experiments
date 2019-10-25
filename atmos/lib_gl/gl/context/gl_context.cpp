@@ -6,7 +6,9 @@
 #include <gl/buffer/gl_vertex_buffer.h>
 #include <gl/buffer/gl_geometry.h>
 #include <gl/defines/gl_includes.h>
+#include <gl/material/gl_fragment_shader.h>
 #include <gl/material/gl_program.h>
+#include <gl/material/gl_vertex_shader.h>
 #include <gl/material/gl_render_states.h>
 #include <gl/texture/gl_color_buffer.h>
 #include <gl/texture/gl_depth_buffer.h>
@@ -57,6 +59,16 @@ std::unique_ptr<program> gl_context::make_program(
 	return gl_program::make(
 		this,
 		shaders);
+}
+
+std::unique_ptr<vertex_shader> gl_context::make_vertex_shader()
+{
+	return gl_vertex_shader::make();
+}
+
+std::unique_ptr<fragment_shader> gl_context::make_fragment_shader()
+{
+	return gl_fragment_shader::make();
 }
 
 std::unique_ptr<geometry> gl_context::make_geometry(

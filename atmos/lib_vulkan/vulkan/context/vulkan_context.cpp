@@ -9,7 +9,9 @@
 #include <vulkan/buffer/vulkan_queue.h>
 #include <vulkan/buffer/vulkan_vertex_buffer.h>
 #include <vulkan/defines/vulkan_includes.h>
+#include <vulkan/material/vulkan_fragment_shader.h>
 #include <vulkan/material/vulkan_program.h>
+#include <vulkan/material/vulkan_vertex_shader.h>
 #include <vulkan/texture/vulkan_texture2d.h>
 #include <vulkan/window/vulkan_back_buffer.h>
 #include <vulkan/window/vulkan_window.h>
@@ -482,6 +484,16 @@ std::unique_ptr<program> vulkan_context::make_program(
 	return vulkan_program::make(
 		this,
 		shaders);
+}
+
+std::unique_ptr<vertex_shader> vulkan_context::make_vertex_shader()
+{
+	return vulkan_vertex_shader::make(_state.device);
+}
+
+std::unique_ptr<fragment_shader> vulkan_context::make_fragment_shader()
+{
+	return vulkan_fragment_shader::make(_state.device);
 }
 
 std::unique_ptr<geometry> vulkan_context::make_geometry(

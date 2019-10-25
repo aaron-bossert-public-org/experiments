@@ -608,6 +608,8 @@ vulkan_buffer_mediator::vulkan_buffer_mediator(
 #include <vulkan/buffer/Vulkan_geometry.h>
 #include <vulkan/buffer/vulkan_index_buffer.h>
 #include <vulkan/buffer/vulkan_vertex_buffer.h>
+#include <vulkan/material/vulkan_vertex_shader.h>
+#include <vulkan/material/vulkan_fragment_shader.h>
 #include <vulkan/texture/vulkan_texture2d.h>
 
 
@@ -872,7 +874,6 @@ private:
 
 	new_uniform_impl uniform_impl = { this };
 
-
 	struct old_program_impl
 	{
 		void create()
@@ -918,6 +919,7 @@ private:
 			layout_info.pBindings = bindings.data();
 
 			vkCreateDescriptorSetLayout(app->_device, &layout_info, nullptr, &descriptor_set_layout);
+			
 		}
 
 		const std::vector<VkPipelineShaderStageCreateInfo>& get_shader_stages()
@@ -977,11 +979,102 @@ private:
 
 		VkShaderModule vert_shader_module = nullptr;
 		VkShaderModule frag_shader_module = nullptr;
+		VkDescriptorSetLayout descriptor_set_layout = nullptr;
+
+		std::vector<VkPipelineShaderStageCreateInfo> shader_stages;
+
+	};
+
+	struct new_program_impl
+	{
+		void create()
+		{
+			shaders = {
+				app->_context->make_vertex_shader(),
+				app->_context->make_fragment_shader(),
+			};
+
+			auto* vulkan_vertex = ASSERT_CAST(vulkan_vertex_shader*, shaders.vertex.get());
+			auto* vulkan_fragment = ASSERT_CAST(vulkan_fragment_shader*, shaders.fragment.get());
+
+			build_shader_module(
+				"cooked_assets/shaders/shader.vert.spv",
+				vulkan_vertex);
+
+				build_shader_module(
+					"cooked_assets/shaders/shader.frag.spv",
+					vulkan_fragment);
+
+			shader_stages = { vulkan_vertex->shader_stage_info(), vulkan_fragment->shader_stage_info() };
+
+			VkDescriptorSetLayoutBinding ubo_layout_binding = {};
+			ubo_layout_binding.binding = 0;
+			ubo_layout_binding.descriptorCount = 1;
+			ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			ubo_layout_binding.pImmutableSamplers = nullptr;
+			ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+			VkDescriptorSetLayoutBinding sampler_layout_binding = {};
+			sampler_layout_binding.binding = 1;
+			sampler_layout_binding.descriptorCount = 1;
+			sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			sampler_layout_binding.pImmutableSamplers = nullptr;
+			sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+			std::array<VkDescriptorSetLayoutBinding, 2> bindings = { ubo_layout_binding, sampler_layout_binding };
+			VkDescriptorSetLayoutCreateInfo layout_info = {};
+			layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+			layout_info.bindingCount = static_cast<uint32_t>(bindings.size());
+			layout_info.pBindings = bindings.data();
+
+			vkCreateDescriptorSetLayout(app->_device, &layout_info, nullptr, &descriptor_set_layout);
+		}
+
+		const std::vector<VkPipelineShaderStageCreateInfo>& get_shader_stages()
+		{
+			return shader_stages;
+		}
+
+		void build_shader_module(const std::string& path, shader* shader)
+		{
+			std::ifstream ifs(path.c_str(), std::ios::binary | std::ios::ate);
+			if (!ifs)
+			{
+				throw std::runtime_error(EXCEPTION_CONTEXT("failed to load texture %s", TEXTURE_PATH.c_str()));
+			}
+
+			size_t byte_size = ifs.tellg();
+			ifs.seekg(0, std::ios::beg);
+			byte_size -= ifs.tellg();
+
+
+			buffer_view<char> view;
+			shader->map(byte_size, &view);
+			ifs.read((char*)view.data(), byte_size);
+			ifs.close();
+			shader->unmap();
+		}
+
+		const VkDescriptorSetLayout& get_descriptor_set_layout()
+		{
+			return descriptor_set_layout;
+		}
+
+		void destroy()
+		{
+			shaders = {};
+			vkDestroyDescriptorSetLayout(app->_device, descriptor_set_layout, nullptr);
+		}
+
+		HelloTriangleApplication* app;
+		igpu::shaders shaders;
 		VkDescriptorSetLayout descriptor_set_layout;
 		
 		std::vector<VkPipelineShaderStageCreateInfo> shader_stages;
 
-	} program_impl = {this};
+	};
+	
+	new_program_impl program_impl = {this};
 
 	VkDescriptorPool _descriptor_pool;
 	std::vector<VkDescriptorSet> _descriptor_sets;

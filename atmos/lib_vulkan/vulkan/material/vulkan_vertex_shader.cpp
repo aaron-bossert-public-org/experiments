@@ -1,12 +1,13 @@
-﻿//
-//#include <gl/material/gl_vertex_shader.h>
-//#include <gl/material/gl_shader.h>
-//
-//using namespace igpu;
-//
-//
-//std::unique_ptr<gl_vertex_shader> gl_vertex_shader::make()
-//{
-//	return gl_shader_t<gl_vertex_shader>::make(
-//		GL_VERTEX_SHADER);
-//}
+﻿
+#include <vulkan/material/vulkan_vertex_shader.h>
+#include <vulkan/material/vulkan_shader.h>
+
+using namespace igpu;
+
+
+std::unique_ptr<vulkan_vertex_shader> vulkan_vertex_shader::make(VkDevice device)
+{
+	return vulkan_shader_t<vulkan_vertex_shader>::make({
+		device,
+		VK_SHADER_STAGE_VERTEX_BIT });
+}

@@ -1,21 +1,29 @@
 
 #pragma once
 
-#include <gl/defines/gl_includes.h>
+#include <vulkan/defines/vulkan_includes.h>
 
 #include <framework/utility/buffer_view.h>
 
 namespace igpu
 {   
-    class gl_shader
+    class vulkan_shader
     {
     public:
 
-		gl_shader(GLenum type);
-		
-		~gl_shader();
+		struct config
+		{
+			VkDevice device;
+			VkShaderStageFlagBits shader_stage;
+		};
 
-		GLuint gl_handle() const;
+		vulkan_shader(const config&);
+		
+		~vulkan_shader();
+
+		const config& cfg() const;
+
+		VkShaderModule shader_module() const;
 
 		void map(size_t byte_size, buffer_view_base*);
 
@@ -23,9 +31,9 @@ namespace igpu
 
 	private:
 
-		GLenum _type;
-		GLenum _gl_handle;
-
+		const config _cfg;
+		VkShaderModule _shader_module = nullptr;
+		
 		struct
 		{
 			std::unique_ptr<char[]> raw;
@@ -34,13 +42,18 @@ namespace igpu
     };
 
 	template<typename T>
-	class gl_shader_t : public T
+	class vulkan_shader_t : public T
 	{
 	public:
 
-		GLuint gl_handle() const override
+		VkPipelineShaderStageCreateInfo shader_stage_info() override
 		{
-			return _shader.gl_handle();
+			VkPipelineShaderStageCreateInfo shader_stage_info = {};
+			shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			shader_stage_info.stage = _shader.cfg().shader_stage;
+			shader_stage_info.module = _shader.shader_module();
+			shader_stage_info.pName = "main";
+			return shader_stage_info;
 		}
 
 		void map(
@@ -55,33 +68,33 @@ namespace igpu
 			_shader.unmap();
 		}
 
-		static std::unique_ptr<gl_shader_t> make(GLenum type)
+		static std::unique_ptr<vulkan_shader_t> make(const vulkan_shader::config& cfg)
 		{
-			switch (type)
+			switch (cfg.shader_stage)
 			{
-			case GL_COMPUTE_SHADER:
-			case GL_VERTEX_SHADER:
-			case GL_TESS_CONTROL_SHADER:
-			case GL_TESS_EVALUATION_SHADER:
-			case GL_GEOMETRY_SHADER:
-			case GL_FRAGMENT_SHADER:
-				return std::unique_ptr<gl_shader_t>(
-					new gl_shader(type));
+			case VK_SHADER_STAGE_VERTEX_BIT:
+			case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT:
+			case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT:
+			case VK_SHADER_STAGE_GEOMETRY_BIT:
+			case VK_SHADER_STAGE_FRAGMENT_BIT:
+			case VK_SHADER_STAGE_COMPUTE_BIT:
+				return std::unique_ptr<vulkan_shader_t>(
+					new vulkan_shader_t(cfg));
 			}
 
-			LOG_CRITICAL("unhandled gl shader type: %d ", type);
+			LOG_CRITICAL("unhandled vulkan shader type: %d ", cfg.shader_stage);
 
 			return nullptr;
 		}
 
 	private:
 
-		gl_shader_t(GLenum type)
-			: _shader(type)
+		vulkan_shader_t(const vulkan_shader::config& cfg)
+			: _shader(cfg)
 		{ }
 
 	private:
 
-		gl_shader _shader;
+		vulkan_shader _shader;
 	};
 }
