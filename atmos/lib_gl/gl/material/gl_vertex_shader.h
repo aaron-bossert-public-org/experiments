@@ -13,6 +13,6 @@ namespace igpu
 
 		virtual unsigned gl_handle() const = 0;
 
-        static std::unique_ptr<gl_vertex_shader> make();
+        static std::unique_ptr<gl_vertex_shader> make(const config&);
     };
 }

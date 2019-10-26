@@ -5,8 +5,9 @@
 using namespace igpu;
 
 
-std::unique_ptr<gl_vertex_shader> gl_vertex_shader::make()
+std::unique_ptr<gl_vertex_shader> gl_vertex_shader::make(const config& cfg)
 {
 	return gl_shader_t<gl_vertex_shader>::make(
+		cfg,
 		GL_VERTEX_SHADER);
 }

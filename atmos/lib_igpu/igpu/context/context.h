@@ -23,7 +23,6 @@ namespace igpu
 	class back_buffer;
 
 	class batch_parameters;
-	class shaders;
 	class window;
 
 	class context
@@ -50,11 +49,13 @@ namespace igpu
 		virtual const config& cfg() const = 0;
 
 		virtual std::unique_ptr<program> make_program(
-			const shaders& shaders) = 0;
+			const program::config&) = 0;
 
-		virtual std::unique_ptr<vertex_shader> make_vertex_shader() = 0;
+		virtual std::unique_ptr<vertex_shader> make_vertex_shader(
+			const vertex_shader::config&) = 0;
 		
-		virtual std::unique_ptr<fragment_shader> make_fragment_shader() = 0;
+		virtual std::unique_ptr<fragment_shader> make_fragment_shader(
+			const fragment_shader::config&) = 0;
 
 		virtual std::unique_ptr<geometry> make_geometry(
 			const geometry::config&) = 0;

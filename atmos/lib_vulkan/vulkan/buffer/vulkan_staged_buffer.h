@@ -4,17 +4,13 @@
 #include <igpu/buffer/buffer_usage.h>
 #include <igpu/utility/scoped_ptr.h>
 
-// Vulkan implementation includes - begin
+#include <vulkan/buffer/vulkan_buffer.h>
 #include <vulkan/defines/vulkan_includes.h>
-// Vulkan implementation includes - end
-
 
 namespace igpu
 {
 	class vulkan_buffer_mediator;
 	class vulkan_queue;
-	class vulkan_buffer;
-
 
 	class vulkan_staged_buffer
 	{
@@ -50,9 +46,9 @@ namespace igpu
 	private:
 		
 		const config _cfg;
-		uint32_t _byte_size = 0;
-		std::unique_ptr<vulkan_buffer> _staging_buffer;
-		std::unique_ptr<vulkan_buffer> _gpu_buffer;
+		size_t _last_mapped_bytes = 0;
+		vulkan_buffer _staging_buffer;
+		vulkan_buffer _gpu_buffer;
 	};
 
 	template <typename T>

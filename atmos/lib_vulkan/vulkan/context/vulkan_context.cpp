@@ -479,21 +479,30 @@ const vulkan_context::config& vulkan_context::cfg() const
 }
 
 std::unique_ptr<program> vulkan_context::make_program(
-	const shaders& shaders)
+	const program::config& cfg)
 {
+	vulkan_program::config vulkan_cfg;
+	static_cast<program::config&>(vulkan_cfg) = cfg;
+	vulkan_cfg.context = this;
+
 	return vulkan_program::make(
-		this,
-		shaders);
+		vulkan_cfg);
 }
 
-std::unique_ptr<vertex_shader> vulkan_context::make_vertex_shader()
+std::unique_ptr<vertex_shader> vulkan_context::make_vertex_shader(
+	const vertex_shader::config& cfg)
 {
-	return vulkan_vertex_shader::make(_state.device);
+	return vulkan_vertex_shader::make(
+		cfg,
+		_state.device);
 }
 
-std::unique_ptr<fragment_shader> vulkan_context::make_fragment_shader()
+std::unique_ptr<fragment_shader> vulkan_context::make_fragment_shader(
+	const vertex_shader::config& cfg)
 {
-	return vulkan_fragment_shader::make(_state.device);
+	return vulkan_fragment_shader::make(
+		cfg,
+		_state.device);
 }
 
 std::unique_ptr<geometry> vulkan_context::make_geometry(

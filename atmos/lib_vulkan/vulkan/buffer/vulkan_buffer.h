@@ -3,27 +3,26 @@
 
 
 #include <framework/perf/metrics.h>
+#include <igpu/buffer/buffer.h>
 #include <igpu/utility/scoped_ptr.h>
 
-// Vulkan implementation includes - begin
 #include <vulkan/defines/vulkan_includes.h>
-// Vulkan implementation includes - end
+
 
 namespace igpu
 {
 	class vulkan_fence;
 	class vulkan_queue;
 
-	class vulkan_buffer
+	class vulkan_buffer : public buffer
 	{
 	public:
 		
-		struct config
+		struct config : buffer::config
 		{
 			VmaAllocator vma = nullptr;
 			VmaMemoryUsage vma_usage;
-			VkBufferUsageFlagBits usage;
-			VkDeviceSize size = 0;
+			VkBufferUsageFlagBits vk_usage;
 			VmaAllocationCreateFlagBits vma_flags = (VmaAllocationCreateFlagBits)0;
 			VkSharingMode sharing_mode = VK_SHARING_MODE_EXCLUSIVE;
 		};
@@ -36,7 +35,21 @@ namespace igpu
 			scoped_ptr < vulkan_queue > queue;
 		};
 
-		const config& cfg() const;
+		vulkan_buffer(const config&);
+
+		const config& cfg() const override;
+
+		void map(size_t byte_size, buffer_view_base*) override;
+
+		void unmap() override;
+
+		size_t byte_size() const override;
+
+		void reserve(size_t byte_size);
+
+		void release();
+
+		const buffer_view<char>& mapped_view() const;
 
 		const ownership& owner() const;
 
@@ -48,22 +61,13 @@ namespace igpu
 		
 		void fence(const scoped_ptr < vulkan_fence >&);
 
-		void* map();
-
-		void unmap();
-		
-		static std::unique_ptr < vulkan_buffer > make(const config&);
-
 		~vulkan_buffer();
 		
 	private:
 
-		vulkan_buffer(const config&, VkBuffer, VmaAllocation);
-
-	private:
-
 		const config _cfg;
 
+		buffer_view<char> _mapped_view = {};
 		VkBuffer _buffer = nullptr;
 		VmaAllocation _vma_allocation = nullptr;
 		scoped_ptr < vulkan_fence > _fence;

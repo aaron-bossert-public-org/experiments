@@ -5,62 +5,46 @@
 
 using namespace igpu;
 
-gl_shader::gl_shader(GLenum type)
-: _type(type)
+gl_shader::gl_shader(const config& cfg)
+	: _cfg(cfg)
+	, _buffer({ cfg.usage })
+	, _gl_shader(glCreateShader(cfg.type))
 {
 }
 
 gl_shader::~gl_shader()
 {
-	if (_gl_handle)
+	if (_gl_shader)
 	{
-		glDeleteProgram(_gl_handle);
+		glDeleteShader(_gl_shader);
 	}
 }
 
 GLuint gl_shader::gl_handle() const
 {
-	return _gl_handle;
+	return _gl_shader;
 }
 
 void gl_shader::map(
 	size_t byte_size, 
 	buffer_view_base* out_buffer_view)
 {
-	if (_mapped.raw)
-	{
-		LOG_CRITICAL("map/unmap mismatch");
-	}
-	else if(_gl_handle)
-	{
-		LOG_CRITICAL("cannot map shader multiple times");
-	}
-	else
-	{
-		_mapped.raw.reset(new char[byte_size]);
-		_mapped.view = 
-			*out_buffer_view = buffer_view_base(
-			byte_size,
-			_mapped.raw.get(),
-			out_buffer_view->stride());
-	}
+	_buffer.map(byte_size, out_buffer_view);
 }
 
 void gl_shader::unmap()
 {
-	if (!_mapped.raw)
-	{
-		LOG_CRITICAL("map/unmap mismatch");
-	}
-	else if (_gl_handle)
-	{
-		LOG_CRITICAL("cannot map shader multiple times");
-	}
-	else
-	{
-		_gl_handle = gl_compile_shader_code(_type, _mapped.view);
+	auto mapped_view = _buffer.mapped_view();
 
-		_mapped.raw.reset();
-		_mapped.view.reset();
+	if (mapped_view.data())
+	{
+		gl_compile_shader_code(_gl_shader, mapped_view);
 	}
+
+	_buffer.unmap();
+}
+
+size_t gl_shader::byte_size() const
+{
+	return _buffer.byte_size();
 }

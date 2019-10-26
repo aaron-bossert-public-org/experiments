@@ -47,9 +47,149 @@ namespace
 	}
 }
 
+vulkan_buffer::vulkan_buffer(const config& cfg)
+	: _cfg(cfg)
+	, _mem_metric(to_category(cfg.vma_usage), ::to_string(cfg.vk_usage))
+{
+}
+
+vulkan_buffer::~vulkan_buffer()
+{
+	release();
+}
+
 const vulkan_buffer::config& vulkan_buffer::cfg() const
 {
 	return _cfg;
+}
+
+void vulkan_buffer::map(size_t byte_size, buffer_view_base* out_buffer_view)
+{
+	if (_fence)
+	{
+		_fence->wait();
+		_fence = nullptr;
+	}
+
+	if (_mapped_view.data())
+	{
+		LOG_CRITICAL("map/unmap mismatch");
+	}
+	else
+	{
+		reserve(byte_size);
+
+		if (!_buffer)
+		{
+			LOG_CRITICAL("failed to create staging buffer");
+
+			_mapped_view =
+				*out_buffer_view =
+					buffer_view_base(
+						0,
+						nullptr,
+						out_buffer_view->stride());
+		}
+		else
+		{
+			void* mapped;
+			vmaMapMemory(_cfg.vma, _vma_allocation, &mapped);
+			
+			_mapped_view = buffer_view<char>(
+				_mapped_view.size(),
+				(char*)mapped);
+
+			size_t stride = out_buffer_view->stride();
+			*out_buffer_view = buffer_view_base(
+				byte_size / stride,
+				mapped,
+				stride);
+		}
+	}
+}
+
+void vulkan_buffer::unmap()
+{
+	if (!_mapped_view.data())
+	{
+		LOG_CRITICAL("map/unmap mismatch");
+	}
+	else
+	{
+		vmaUnmapMemory(_cfg.vma, _vma_allocation);
+		_mapped_view = buffer_view_base(
+			_mapped_view.size(),
+			nullptr,
+			_mapped_view.stride());
+	}
+}
+
+void vulkan_buffer::reserve(size_t byte_size)
+{
+	if (_mapped_view.data())
+	{
+		LOG_CRITICAL("cannot reserve while mapped");
+	}
+	else
+	{
+		if (_mapped_view.size() < byte_size)
+		{
+			release();
+		}
+
+		if (!_buffer)
+		{
+
+			VmaAllocationCreateInfo vma_info = {};
+			vma_info.usage = _cfg.vma_usage;
+			vma_info.flags = _cfg.vma_flags;
+
+			VkBufferCreateInfo info = {};
+			info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+			info.size = byte_size;
+			info.usage = _cfg.vk_usage;
+			info.sharingMode = _cfg.sharing_mode;
+
+			vmaCreateBuffer(_cfg.vma, &info, &vma_info, &_buffer, &_vma_allocation, nullptr);
+			_mapped_view = buffer_view<char>(
+				byte_size,
+				nullptr);
+
+			_mem_metric.add(byte_size);
+		}
+	}
+}
+void vulkan_buffer::release()
+{
+	// wait for buffer to no longer be in use by gpu
+	if (_fence)
+	{
+		_fence->wait();
+		_fence = nullptr;
+	}
+
+	if (_buffer)
+	{
+		vmaDestroyBuffer(_cfg.vma, _buffer, _vma_allocation);
+	}
+
+	_mem_metric.reset();
+	_buffer = nullptr;
+	_vma_allocation = nullptr;
+	_mapped_view = buffer_view<char>(
+		0,
+		nullptr);
+}
+
+size_t vulkan_buffer::byte_size() const
+{
+	return _mapped_view.byte_size();
+}
+
+
+const buffer_view<char>& vulkan_buffer::mapped_view() const
+{
+	return _mapped_view;
 }
 
 const vulkan_buffer::ownership& vulkan_buffer::owner() const
@@ -76,83 +216,3 @@ void vulkan_buffer::fence(const scoped_ptr < vulkan_fence >& fence)
 {
 	_fence = fence;
 }
-
-void* vulkan_buffer::map()
-{
-	if (_fence)
-	{
-		_fence->wait();
-	}
-
-	void* mapped;
-	vmaMapMemory(_cfg.vma, _vma_allocation, &mapped);
-	return mapped;
-}
-
-void vulkan_buffer::unmap()
-{
-	vmaUnmapMemory(_cfg.vma, _vma_allocation);
-}
-
-std::unique_ptr < vulkan_buffer > vulkan_buffer::make(const config& cfg)
-{
-	if (0 >= cfg.size)
-	{
-		LOG_CRITICAL("size is zero");
-	}
-	else if (VMA_MEMORY_USAGE_UNKNOWN == cfg.vma_usage)
-	{
-		LOG_CRITICAL("vma usage is unknown");
-	}
-	else if (0 == cfg.usage)
-	{
-		LOG_CRITICAL("usage is not set");
-	}
-	else
-	{
-		VmaAllocationCreateInfo vma_info = {};
-		vma_info.usage = cfg.vma_usage;
-		vma_info.flags = cfg.vma_flags;
-
-		VkBufferCreateInfo info = {};
-		info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		info.size = cfg.size;
-		info.usage = cfg.usage;
-		info.sharingMode = cfg.sharing_mode;
-
-		VkBuffer buffer = nullptr;
-		VmaAllocation vma_allocation = nullptr;
-
-		if (VK_SUCCESS == vmaCreateBuffer(cfg.vma, &info, &vma_info, &buffer, &vma_allocation, nullptr))
-		{
-			return std::unique_ptr < vulkan_buffer >(
-				new vulkan_buffer(
-					cfg,
-					buffer,
-					vma_allocation));
-		}
-	}
-
-	return nullptr;
-}
-
-vulkan_buffer::~vulkan_buffer()
-{
-	// wait for buffer to no longer be in use by gpu
-	if(_fence)
-	{
-		_fence->wait();
-	}
-
-	vmaDestroyBuffer(_cfg.vma, _buffer, _vma_allocation);
-}
-
-vulkan_buffer::vulkan_buffer(const config& cfg, VkBuffer buffer, VmaAllocation vma_allocation)
-	: _cfg(cfg)
-	, _buffer(buffer)
-	, _vma_allocation(vma_allocation)
-	, _mem_metric(to_category(cfg.vma_usage), to_string(cfg.usage))
-{
-	_mem_metric.add(cfg.size);
-}
-

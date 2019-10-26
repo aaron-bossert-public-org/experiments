@@ -673,13 +673,6 @@ private:
 
 		void create()
 		{
-			std::ifstream ifs(TEXTURE_PATH, std::ios::binary | std::ios::ate);
-			if (!ifs)
-			{
-				throw std::runtime_error(EXCEPTION_CONTEXT("failed to load texture %s", TEXTURE_PATH.c_str()));
-			}
-
-			
 			texture2d::config texture_cfg = {};
 			texture_cfg.name = TEXTURE_PATH;
 			texture_cfg.usage = buffer_usage::STATIC;
@@ -687,19 +680,7 @@ private:
 			texture_cfg.sampler = { sampler::filter::LINEAR, sampler::filter::LINEAR, sampler::address::WRAP,sampler::address::WRAP,};
 			texture = app->_context->make_texture(texture_cfg);
 
-
-			{
-				size_t byte_size = ifs.tellg();
-				ifs.seekg(0, std::ios::beg);
-				byte_size -= ifs.tellg();
-
-
-				buffer_view<char> view;
-				texture->map(byte_size, &view);
-				ifs.read((char*)view.data(), byte_size);
-				ifs.close();
-				texture->unmap_raw_file();
-			}
+			app->load_buffer(TEXTURE_PATH, texture.get());
 
 			// transition layout for use by graphics pipeline
 			auto* vulkan = (vulkan_texture2d*)texture.get();
@@ -878,132 +859,21 @@ private:
 	{
 		void create()
 		{
-			auto vert_shader_code = read_file("cooked_assets/shaders/shader.vert.spv");
-			auto frag_shader_code = read_file("cooked_assets/shaders/shader.frag.spv");
-
-			vert_shader_module = create_shader_module(vert_shader_code);
-			frag_shader_module = create_shader_module(frag_shader_code);
-
-			VkPipelineShaderStageCreateInfo vert_shader_stage_info = {};
-			vert_shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-			vert_shader_stage_info.stage = VK_SHADER_STAGE_VERTEX_BIT;
-			vert_shader_stage_info.module = vert_shader_module;
-			vert_shader_stage_info.pName = "main";
-
-			VkPipelineShaderStageCreateInfo frag_shader_stage_info = {};
-			frag_shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-			frag_shader_stage_info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-			frag_shader_stage_info.module = frag_shader_module;
-			frag_shader_stage_info.pName = "main";
-
-			shader_stages = { vert_shader_stage_info, frag_shader_stage_info };
-
-			VkDescriptorSetLayoutBinding ubo_layout_binding = {};
-			ubo_layout_binding.binding = 0;
-			ubo_layout_binding.descriptorCount = 1;
-			ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			ubo_layout_binding.pImmutableSamplers = nullptr;
-			ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-			VkDescriptorSetLayoutBinding sampler_layout_binding = {};
-			sampler_layout_binding.binding = 1;
-			sampler_layout_binding.descriptorCount = 1;
-			sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			sampler_layout_binding.pImmutableSamplers = nullptr;
-			sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-			std::array<VkDescriptorSetLayoutBinding, 2> bindings = { ubo_layout_binding, sampler_layout_binding };
-			VkDescriptorSetLayoutCreateInfo layout_info = {};
-			layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-			layout_info.bindingCount = static_cast<uint32_t>(bindings.size());
-			layout_info.pBindings = bindings.data();
-
-			vkCreateDescriptorSetLayout(app->_device, &layout_info, nullptr, &descriptor_set_layout);
-			
-		}
-
-		const std::vector<VkPipelineShaderStageCreateInfo>& get_shader_stages()
-		{
-			return shader_stages;
-		}
-
-		static std::vector<char> read_file(const std::string& filename)
-		{
-			std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-			if (!file.is_open())
-			{
-				throw std::runtime_error("failed to open file!");
-			}
-
-			size_t file_size = (size_t)file.tellg();
-			std::vector<char> buffer(file_size);
-
-			file.seekg(0);
-			file.read(buffer.data(), file_size);
-
-			file.close();
-
-			return buffer;
-		}
-
-		VkShaderModule create_shader_module(const std::vector<char>& code)
-		{
-			VkShaderModuleCreateInfo create_info = {};
-			create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-			create_info.codeSize = code.size();
-			create_info.pCode = reinterpret_cast<const uint32_t*>(code.data());
-
-			VkShaderModule shader_module;
-			if (vkCreateShaderModule(app->_device, &create_info, nullptr, &shader_module) != VK_SUCCESS)
-			{
-				throw std::runtime_error("failed to create shader module!");
-			}
-
-			return shader_module;
-		}
-
-		const VkDescriptorSetLayout& get_descriptor_set_layout()
-		{
-			return descriptor_set_layout;
-		}
-
-		void destroy()
-		{
-			vkDestroyShaderModule(app->_device, frag_shader_module, nullptr);
-			vkDestroyShaderModule(app->_device, vert_shader_module, nullptr);
-			vkDestroyDescriptorSetLayout(app->_device, descriptor_set_layout, nullptr);
-		}
-
-		HelloTriangleApplication* app;
-
-		VkShaderModule vert_shader_module = nullptr;
-		VkShaderModule frag_shader_module = nullptr;
-		VkDescriptorSetLayout descriptor_set_layout = nullptr;
-
-		std::vector<VkPipelineShaderStageCreateInfo> shader_stages;
-
-	};
-
-	struct new_program_impl
-	{
-		void create()
-		{
-			shaders = {
-				app->_context->make_vertex_shader(),
-				app->_context->make_fragment_shader(),
+			program_cfg = {
+				app->_context->make_vertex_shader({}),
+				app->_context->make_fragment_shader({}),
 			};
 
-			auto* vulkan_vertex = ASSERT_CAST(vulkan_vertex_shader*, shaders.vertex.get());
-			auto* vulkan_fragment = ASSERT_CAST(vulkan_fragment_shader*, shaders.fragment.get());
+			auto* vulkan_vertex = ASSERT_CAST(vulkan_vertex_shader*, program_cfg.vertex.get());
+			auto* vulkan_fragment = ASSERT_CAST(vulkan_fragment_shader*, program_cfg.fragment.get());
 
-			build_shader_module(
+			app->load_buffer(
 				"cooked_assets/shaders/shader.vert.spv",
 				vulkan_vertex);
 
-				build_shader_module(
-					"cooked_assets/shaders/shader.frag.spv",
-					vulkan_fragment);
+			app->load_buffer(
+				"cooked_assets/shaders/shader.frag.spv",
+				vulkan_fragment);
 
 			shader_stages = { vulkan_vertex->shader_stage_info(), vulkan_fragment->shader_stage_info() };
 
@@ -1035,24 +905,73 @@ private:
 			return shader_stages;
 		}
 
-		void build_shader_module(const std::string& path, shader* shader)
+		const VkDescriptorSetLayout& get_descriptor_set_layout()
 		{
-			std::ifstream ifs(path.c_str(), std::ios::binary | std::ios::ate);
-			if (!ifs)
-			{
-				throw std::runtime_error(EXCEPTION_CONTEXT("failed to load texture %s", TEXTURE_PATH.c_str()));
-			}
+			return descriptor_set_layout;
+		}
 
-			size_t byte_size = ifs.tellg();
-			ifs.seekg(0, std::ios::beg);
-			byte_size -= ifs.tellg();
+		void destroy()
+		{
+			program_cfg = {};
+			vkDestroyDescriptorSetLayout(app->_device, descriptor_set_layout, nullptr);
+		}
 
+		HelloTriangleApplication* app;
+		program::config program_cfg;
+		VkDescriptorSetLayout descriptor_set_layout;
+		
+		std::vector<VkPipelineShaderStageCreateInfo> shader_stages;
 
-			buffer_view<char> view;
-			shader->map(byte_size, &view);
-			ifs.read((char*)view.data(), byte_size);
-			ifs.close();
-			shader->unmap();
+	};
+	
+	struct new_program_impl
+	{
+		void create()
+		{
+			program_cfg = {
+				app->_context->make_vertex_shader({}),
+				app->_context->make_fragment_shader({}),
+			};
+
+			auto* vulkan_vertex = ASSERT_CAST(vulkan_vertex_shader*, program_cfg.vertex.get());
+			auto* vulkan_fragment = ASSERT_CAST(vulkan_fragment_shader*, program_cfg.fragment.get());
+
+			app->load_buffer(
+				"cooked_assets/shaders/shader.vert.spv",
+				vulkan_vertex);
+
+			app->load_buffer(
+				"cooked_assets/shaders/shader.frag.spv",
+				vulkan_fragment);
+
+			shader_stages = { vulkan_vertex->shader_stage_info(), vulkan_fragment->shader_stage_info() };
+
+			VkDescriptorSetLayoutBinding ubo_layout_binding = {};
+			ubo_layout_binding.binding = 0;
+			ubo_layout_binding.descriptorCount = 1;
+			ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			ubo_layout_binding.pImmutableSamplers = nullptr;
+			ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+			VkDescriptorSetLayoutBinding sampler_layout_binding = {};
+			sampler_layout_binding.binding = 1;
+			sampler_layout_binding.descriptorCount = 1;
+			sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			sampler_layout_binding.pImmutableSamplers = nullptr;
+			sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+			std::array<VkDescriptorSetLayoutBinding, 2> bindings = { ubo_layout_binding, sampler_layout_binding };
+			VkDescriptorSetLayoutCreateInfo layout_info = {};
+			layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+			layout_info.bindingCount = static_cast<uint32_t>(bindings.size());
+			layout_info.pBindings = bindings.data();
+
+			vkCreateDescriptorSetLayout(app->_device, &layout_info, nullptr, &descriptor_set_layout);
+		}
+
+		const std::vector<VkPipelineShaderStageCreateInfo>& get_shader_stages()
+		{
+			return shader_stages;
 		}
 
 		const VkDescriptorSetLayout& get_descriptor_set_layout()
@@ -1062,18 +981,18 @@ private:
 
 		void destroy()
 		{
-			shaders = {};
+			program_cfg = {};
 			vkDestroyDescriptorSetLayout(app->_device, descriptor_set_layout, nullptr);
 		}
 
 		HelloTriangleApplication* app;
-		igpu::shaders shaders;
+		program::config program_cfg;
 		VkDescriptorSetLayout descriptor_set_layout;
 		
 		std::vector<VkPipelineShaderStageCreateInfo> shader_stages;
 
 	};
-	
+
 	new_program_impl program_impl = {this};
 
 	VkDescriptorPool _descriptor_pool;
@@ -1304,6 +1223,25 @@ private:
 		{
 			throw std::runtime_error("failed to create graphics pipeline!");
 		}
+	}
+
+	void load_buffer(const std::string& path, buffer* buffer)
+	{
+		// load file with read head at the end
+		std::ifstream ifs(path.c_str(), std::ios::binary | std::ios::ate);
+		if (!ifs)
+		{
+			throw std::runtime_error(EXCEPTION_CONTEXT("failed to load texture %s", TEXTURE_PATH.c_str()));
+		}
+
+		const size_t byte_size = ifs.tellg();
+		ifs.seekg(0, std::ios::beg);
+
+		buffer_view<char> view;
+		buffer->map(byte_size, &view);
+		ifs.read((char*)view.data(), byte_size);
+		ifs.close();
+		buffer->unmap();
 	}
 
 	void load_model()

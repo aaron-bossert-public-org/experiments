@@ -191,6 +191,11 @@ namespace
 //------------------------------------------------------------------------------
 //
 //
+const gl_program::config& gl_program::cfg() const
+{
+	return _cfg;
+}
+
 gl_program::~gl_program()
 {
     glDeleteProgram(_gl_handle);
@@ -204,7 +209,7 @@ void gl_program::update(size_t batch_drawpass_id, const batch* batch)
 		return;
 	}
 
-	const auto& cfg_constraints = _gl_context->batch_constraints().cfg();
+	const auto& cfg_constraints = _cfg.context->batch_constraints().cfg();
 	const auto& batch_parameters = batch->parameters();
 
 	for (size_t param_index = 0; param_index < _batch_parameters.size(); ++param_index)
@@ -337,7 +342,7 @@ void gl_program::update(const gl_parameter& parameter, const primitive& primitiv
 			LOG_CRITICAL("unhandled variant index: %d", primitive.variant().index());
 		}
 
-		_gl_context->active_texture(parameter.binding_index(), gl_handle);
+		_cfg.context->active_texture(parameter.binding_index(), gl_handle);
 	}
 	default:
 		LOG_CRITICAL("unhandled type %s", parameter::to_string(primitive.type()).data());
@@ -414,10 +419,9 @@ const primitive& gl_program::default_instance_primitive(size_t instance_paramete
 }
 
 std::unique_ptr<gl_program> gl_program::make(
-	gl_context* gl_context,
-	const shaders& shaders)
+	const config& cfg)
 {
-    GLuint gl_handle = gl_compile(gl_context, shaders);
+    GLuint gl_handle = gl_compile(cfg);
 
     if(!gl_handle)
     {
@@ -425,7 +429,7 @@ std::unique_ptr<gl_program> gl_program::make(
         return false;
     }
 
-	ASSERT_CONTEXT(nullptr == gl_context->active_program());
+	ASSERT_CONTEXT(nullptr == cfg.context->active_program());
 
 	glUseProgram(gl_handle);
 
@@ -446,14 +450,14 @@ std::unique_ptr<gl_program> gl_program::make(
 		size_t constraint_index;
 
 		const std::string_view& name = parameters[param_index].cfg().name;
-		constraint_index = gl_context->batch_constraints().index_of(name);
+		constraint_index = cfg.context->batch_constraints().index_of(name);
 		if (-1 != constraint_index)
 		{
 			dest_parameters = &batch_parameters;
 		}
 		else
 		{
-			constraint_index = gl_context->material_constraints().index_of(name);
+			constraint_index = cfg.context->material_constraints().index_of(name);
 			if (-1 != constraint_index)
 			{
 				dest_parameters = &material_parameters;
@@ -481,7 +485,7 @@ std::unique_ptr<gl_program> gl_program::make(
 
 	return std::unique_ptr<gl_program>(
 		new gl_program(
-			gl_context,
+			cfg,
 			gl_handle,
 			std::move(batch_parameters),
 			std::move(material_parameters),
@@ -490,13 +494,13 @@ std::unique_ptr<gl_program> gl_program::make(
 }
 
 gl_program::gl_program(
-	gl_context* gl_context,
+	const config& cfg,
 	GLuint gl_handle,
 	std::vector<gl_parameter> batch_parameters,
 	std::vector<gl_parameter> material_parameters,
 	std::vector<gl_parameter> instance_parameters,
 	std::unordered_map<std::string_view, size_t> instance_parameter_lookup)
-	: _gl_context(gl_context)
+	: _cfg(cfg)
 	, _gl_handle(gl_handle)
 	, _batch_parameters(std::move(batch_parameters))
 	, _material_parameters(std::move(material_parameters))

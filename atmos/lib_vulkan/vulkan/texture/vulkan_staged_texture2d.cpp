@@ -11,13 +11,17 @@
 
 using namespace igpu;
 
-
-
 vulkan_staged_texture2d::vulkan_staged_texture2d(
 	const config& cfg,
 	const scoped_ptr < vulkan_buffer_mediator >& buffer_mediator)
 	: _cfg(cfg)
 	, _buffer_mediator(buffer_mediator)
+	, _staging_buffer({
+		cfg.usage,
+		buffer_mediator->vma(),
+		VMA_MEMORY_USAGE_CPU_ONLY,
+		VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		})
 {
 }
 
@@ -25,93 +29,68 @@ vulkan_staged_texture2d::~vulkan_staged_texture2d()
 {
 }
 
+const vulkan_staged_texture2d::config& vulkan_staged_texture2d::cfg() const
+{
+	return _cfg;
+}
+
 void vulkan_staged_texture2d::map(size_t byte_size, buffer_view_base* out_buffer_view)
 {
-	if (!_state.staging_buffer || _state.staging_buffer->cfg().size < byte_size)
-	{
-		_state.staging_buffer = vulkan_buffer::make({
-			_buffer_mediator->vma(),
-			VMA_MEMORY_USAGE_CPU_ONLY,
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			byte_size,
-			});
-	}
-
-	if (_state.staging_buffer)
-	{
-		_state.mapped_view = *out_buffer_view = buffer_view_base(
-			byte_size / out_buffer_view->stride(),
-			_state.staging_buffer->map(),
-			out_buffer_view->stride());
-	}
-	else
-	{
-		LOG_CRITICAL("failed to create staging buffer");
-
-		_state.mapped_view = *out_buffer_view = buffer_view_base(
-			0,
-			nullptr,
-			out_buffer_view->stride());
-	}
+	_staging_buffer.map(byte_size, out_buffer_view);
+	_mapped_view = *out_buffer_view;
 }
 
-void vulkan_staged_texture2d::unmap_explicit(
-	const glm::ivec2& res,
-	texture_format format)
+void vulkan_staged_texture2d::unmap(
+	const state& state)
 {
-	if (!_state.mapped_view.size())
+	if (!_staging_buffer.mapped_view().data())
 	{
 		LOG_CRITICAL("map/unmap mismatch");
 	}
-	else if (!_state.staging_buffer)
-	{
-		LOG_CRITICAL("staging buffer is null");
-	}
 	else
 	{
-		_state.source = source_type::EXPLICIT;
-		unmap(_state.mapped_view, res, format, 1);
+		unmap(
+			_mapped_view,
+			state);
 	}
 }
 
-void vulkan_staged_texture2d::unmap_raw_file()
+void vulkan_staged_texture2d::unmap()
 {
-	if (!_state.mapped_view.size())
+	if (!_staging_buffer.mapped_view().data())
 	{
 		LOG_CRITICAL("map/unmap mismatch");
 	}
-	else if (!_state.staging_buffer)
-	{
-		LOG_CRITICAL("staging buffer is null");
-	}
 	else
 	{
-		_state.source = source_type::RAW_FILE;
 		buffer_view<char> parsed_buffer_view = {};
-		glm::ivec2 res = {};
-		texture_format format = {};
-		size_t mipmap_count = 0;
+		texture2d::state state = {};
 
-		if (!texture_file_parsing::parse_as_ktx(_state.mapped_view, &parsed_buffer_view, &res, &format, &mipmap_count))
+		if (!texture_file_parsing::parse_as_ktx(_mapped_view, &parsed_buffer_view, &state))
 		{
-			if (!texture_file_parsing::parse_as_dds(_state.mapped_view, &parsed_buffer_view, &res, &format, &mipmap_count))
+			if (!texture_file_parsing::parse_as_dds(_mapped_view, &parsed_buffer_view, &state))
 			{
-				if (!texture_file_parsing::parse_as_pvr(_state.mapped_view, &parsed_buffer_view, &res, &format, &mipmap_count))
+				if (!texture_file_parsing::parse_as_pvr(_mapped_view, &parsed_buffer_view, &state))
 				{
-					texture_file_parsing::compressed_parser compressed_parser = _state.mapped_view;
-
-					_state.staging_buffer->unmap();
+					texture_file_parsing::compressed_parser compressed_parser = _mapped_view;
 
 					if (compressed_parser.format != texture_format::UNDEFINED)
 					{
-						buffer_view<char> mapped;
-						map(compressed_parser.decompressed.size(), &mapped);
+						state.res = compressed_parser.res;
+						state.format = compressed_parser.format;
+						
+						_staging_buffer.unmap();
+						_staging_buffer.map(compressed_parser.decompressed.size(), &parsed_buffer_view);
+						
 						memcpy(
-							mapped.data(),
+							parsed_buffer_view.data(),
 							compressed_parser.decompressed.data(),
 							compressed_parser.decompressed.size());
 
-						unmap(mapped, compressed_parser.res, compressed_parser.format, 1);
+
+						unmap(
+							parsed_buffer_view,
+							state);
 					}
 
 					return;
@@ -119,24 +98,48 @@ void vulkan_staged_texture2d::unmap_raw_file()
 			}
 		}
 
-		unmap(parsed_buffer_view, res, format, mipmap_count);
+		unmap(parsed_buffer_view, state);
 	}
+}
+
+size_t vulkan_staged_texture2d::byte_size() const
+{
+	return _staging_buffer.byte_size();
+}
+
+const vulkan_staged_texture2d::state& vulkan_staged_texture2d::current_state() const
+{
+	return _state;
 }
 
 void vulkan_staged_texture2d::unmap(
 	const buffer_view<char>& texture_data,
-	const glm::ivec2& res,
-	texture_format format,
-	size_t mipmap_count)
+	const state& state)
 {
-	if (!_state.staging_buffer)
+
+
+	_gpu_buffer.reserve(_last_mapped_bytes);
+
+	_cfg.buffer_mediator->copy(_staging_buffer, _gpu_buffer, (uint32_t)_last_mapped_bytes);
+
+	if (_cfg.usage == buffer_usage::STATIC)
 	{
-		LOG_CRITICAL("staging_buffer is null");
+		_staging_buffer.release();
+	}
+
+
+
+
+
+
+	if (!_staging_buffer.mapped_view().data())
+	{
+		LOG_CRITICAL("map/unmap mismatch");
 		return;
 	}
 
 	bool generate_mipmaps = false;
-	VkFormat vulkan_format = to_vulkan_format(format);
+	VkFormat vulkan_format = to_vulkan_format(state.format);
 
 	_state.staging_buffer->unmap();
 
@@ -246,11 +249,6 @@ void vulkan_staged_texture2d::unmap(
 	{
 		_state.staging_buffer.reset();
 	}
-}
-
-const vulkan_staged_texture2d::config& vulkan_staged_texture2d::cfg() const
-{
-	return _cfg;
 }
 
 vulkan_staged_texture2d::source_type vulkan_staged_texture2d::source() const

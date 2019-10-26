@@ -100,9 +100,7 @@ texture_file_parsing::compressed_parser::~compressed_parser()
 bool texture_file_parsing::parse_as_ktx(
 	const buffer_view<char>& raw_file_data,
 	buffer_view<char>* out_buffer_view,
-	glm::ivec2* out_res,
-	texture_format* out_format,
-	size_t* out_mipmap_count)
+	texture2d::state* out_state)
 {
 	// Specification of KTX file container format can be found at
 	// https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/
@@ -149,9 +147,11 @@ bool texture_file_parsing::parse_as_ktx(
 	}
 
 	*out_buffer_view = buffer_view<char>(ktxData->imageSize, ktxData->pixels);
-	*out_res = { (int32_t)ktxHeader->width, (int32_t)ktxHeader->height };
-	*out_format = texture_format::ETC1_RGB;
-	*out_mipmap_count = (size_t)ktxHeader->numberOfMipmapLevels;
+	*out_state = {
+		{ (int32_t)ktxHeader->width, (int32_t)ktxHeader->height },
+		texture_format::ETC1_RGB,
+		(size_t)ktxHeader->numberOfMipmapLevels,
+	};
 
 	return true;
 }
@@ -159,9 +159,7 @@ bool texture_file_parsing::parse_as_ktx(
 bool texture_file_parsing::parse_as_dds(
 	const buffer_view<char>& raw_file_data,
 	buffer_view<char>* out_buffer_view,
-	glm::ivec2* out_res,
-	texture_format* out_format,
-	size_t* out_mipmap_count)
+	texture2d::state* out_state)
 {
 	auto dwMagicNumber = *reinterpret_cast<const uint32_t*>(raw_file_data.data());
 	constexpr uint32_t DDS_MAGIC = 0x20534444; // "DDS "
@@ -245,9 +243,12 @@ bool texture_file_parsing::parse_as_dds(
 	}
 
 	// set texture data for texel_buffer2d
-	*out_mipmap_count = (size_t)ddsHeader->mipMapCount;
-	*out_format = format;
-	*out_res = { (int32_t)ddsHeader->width, (int32_t)ddsHeader->height };
+	*out_state = {
+		{ (int32_t)ddsHeader->width, (int32_t)ddsHeader->height },
+		format,
+		(size_t)ddsHeader->mipMapCount,
+	};
+
 	*out_buffer_view = buffer_view<char>(
 		raw_file_data.size() - sizeof(DDS_HEADER),
 		(char*)raw_file_data.data() + sizeof(DDS_HEADER));
@@ -263,9 +264,7 @@ bool texture_file_parsing::parse_as_dds(
 bool texture_file_parsing::parse_as_pvr(
 	const buffer_view<char>& raw_file_data,
 	buffer_view<char>* out_buffer_view,
-	glm::ivec2* out_res,
-	texture_format* out_format,
-	size_t* out_mipmap_count)
+	texture2d::state* out_state)
 {
 	PVRTextureHeaderV3 scratch;
 	const auto* pvr_header = (const PVRTextureHeaderV3*)raw_file_data.data();
@@ -322,10 +321,13 @@ bool texture_file_parsing::parse_as_pvr(
 			break;
 		}
 
-		*out_format = format;
-		*out_res = { (int32_t)pvr_header->u32Width, (int32_t)pvr_header->u32Height };
+		*out_state = {
+			{ (int32_t)pvr_header->u32Width, (int32_t)pvr_header->u32Height },
+			format,
+			(size_t)pvr_header->u32MIPMapCount,
+		};
+
 		*out_buffer_view = texture_data;
-		*out_mipmap_count = (size_t)pvr_header->u32MIPMapCount;
 
 		return true;
 	}

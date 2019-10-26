@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <igpu/buffer/buffer_usage.h>
+#include <igpu/buffer/buffer.h>
 #include <igpu/texture/texture_format.h>
 #include <igpu/texture/sampler.h>
 
@@ -9,43 +9,32 @@
 
 namespace igpu
 {
-    class texture2d
+    class texture2d : public buffer
     {
     public:
-
-		ENUM_SERIALIZABLE(
-
-			source_type, DEFAULT(UNDEFINED),
-			(UNDEFINED, 0),
-			(EXPLICIT, 1),
-			(RAW_FILE, 2)
-		);
 		
-		struct config
+		struct config : buffer::config
 		{
 			std::string name;
 			sampler sampler;
-			buffer_usage usage;
 			bool can_auto_generate_mips = false;
+		};
+
+		struct state
+		{
+			glm::ivec2 res = {};
+			texture_format format = texture_format::UNDEFINED;
+			size_t mipmap_count = 1;
 		};
 
         virtual ~texture2d() = default;
 
-		virtual void map(size_t, buffer_view_base*) = 0;
-
-		virtual void unmap_explicit(
-			const glm::ivec2&,
-			texture_format) = 0;
-
-		virtual void unmap_raw_file() = 0;
+		virtual void unmap(
+			const state&) = 0;
 
         virtual const config& cfg() const = 0;
 
-        virtual source_type source() const = 0;
-
-		virtual const glm::ivec2& res() const = 0;
-
-		virtual texture_format format() const = 0;
+		virtual const state& current_state() const = 0;
         
     protected:
         

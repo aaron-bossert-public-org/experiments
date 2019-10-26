@@ -86,11 +86,11 @@ namespace
         return error_desc;
     }
     
-    void output_errors(GLuint program, const buffer_view_base& source_code)
+    void output_errors(GLuint shader, const buffer_view_base& source_code)
     {
         char info_log[k_info_log_max_length] = {0};
         GLsizei info_log_length = 0;
-        glGetShaderInfoLog(program, k_info_log_max_length, &info_log_length, info_log);
+        glGetShaderInfoLog(shader, k_info_log_max_length, &info_log_length, info_log);
         
         std::vector<std::string> source_lines = split_shader_source_lines(source_code);
         
@@ -135,47 +135,41 @@ namespace
     }
 }
 
-GLuint gl_compile_shader_code(GLenum type, const buffer_view_base& source_code)
+bool gl_compile_shader_code(GLuint shader, const buffer_view_base& source_code)
 {
-	// make c-array of char* with shader chunks
-	// make shader with c-array of char*
-	GLuint program = glCreateShader(type);
 	const char* code[] = { (char*)source_code.data() };
 
-	glShaderSource(program, (GLsizei)1, code, NULL);
-	glCompileShader(program);
+	glShaderSource(shader, (GLsizei)1, code, NULL);
+	glCompileShader(shader);
 
 	// peek compile status
 	GLint result = 0;
-	glGetShaderiv(program, GL_COMPILE_STATUS, &result);
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
 
 	// on fail cleanup and output compile errors
 	if (GL_FALSE == result)
 	{
-		output_errors(program, source_code);
-		glDeleteShader(program);
-		program = 0;
+		output_errors(shader, source_code);
 	}
 
-	return program;
+	return GL_FALSE != result;
 }
 
 unsigned gl_compile(
-	gl_context* gl_context,
-	const shaders& shaders)
+	const gl_program::config& cfg)
 {
-	if (!shaders.vertex)
+	if (!cfg.vertex)
 	{
 		LOG_CRITICAL("vertex shader is null");
 	}
-	else if (!shaders.fragment)
+	else if (!cfg.fragment)
 	{
 		LOG_CRITICAL("fragment shader is null");
 	}
 	else
 	{
-		auto gl_vertex = ASSERT_CAST(gl_vertex_shader*, shaders.vertex.get());
-		auto gl_Fragment = ASSERT_CAST(gl_vertex_shader*, shaders.fragment.get());
+		auto gl_vertex = ASSERT_CAST(gl_vertex_shader*, cfg.vertex.get());
+		auto gl_Fragment = ASSERT_CAST(gl_vertex_shader*, cfg.fragment.get());
 
 		GLuint vertex_handle = gl_vertex->gl_handle();
 		GLuint fragment_handle = gl_Fragment->gl_handle();
@@ -199,7 +193,7 @@ unsigned gl_compile(
 			{
 				bool success = false;
     
-				bind_vertex_attribute_indices(gl_context->vertex_constraints(), program_handle);
+				bind_vertex_attribute_indices(cfg.context->vertex_constraints(), program_handle);
 	
 				if(gl_link_program(program_handle, vertex_handle, fragment_handle))
 				{

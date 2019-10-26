@@ -7,22 +7,22 @@
 
 namespace igpu
 {
-	class vertex_shader;
 	class fragment_shader;
-
 	class parameter;
-
-	class shaders
-	{
-	public:
-		std::shared_ptr<vertex_shader> vertex;
-		std::shared_ptr<fragment_shader> fragment;
-	};
+	class vertex_shader;
 
     class program
     {
     public:
         
+		struct config
+		{
+			std::shared_ptr<vertex_shader> vertex;
+			std::shared_ptr<fragment_shader> fragment;
+		};
+
+		virtual const config& cfg() const = 0;
+		
 		virtual ~program() = default;
 
 		virtual size_t batch_parameter_count() const = 0;

@@ -52,23 +52,28 @@ const gl_context::config& gl_context::cfg() const
 }
 
 std::unique_ptr<program> gl_context::make_program(
-	const shaders& shaders)
+	const program::config& cfg)
 {
 	ASSERT_CONTEXT(nullptr == active_program());
 
+	gl_program::config gl_cfg;
+	static_cast<program::config&>(gl_cfg) = cfg;
+	gl_cfg.context = this;
+
 	return gl_program::make(
-		this,
-		shaders);
+		gl_cfg);
 }
 
-std::unique_ptr<vertex_shader> gl_context::make_vertex_shader()
+std::unique_ptr<vertex_shader> gl_context::make_vertex_shader(
+	const vertex_shader::config& cfg)
 {
-	return gl_vertex_shader::make();
+	return gl_vertex_shader::make(cfg);
 }
 
-std::unique_ptr<fragment_shader> gl_context::make_fragment_shader()
+std::unique_ptr<fragment_shader> gl_context::make_fragment_shader(
+	const fragment_shader::config& cfg)
 {
-	return gl_fragment_shader::make();
+	return gl_fragment_shader::make(cfg);
 }
 
 std::unique_ptr<geometry> gl_context::make_geometry(

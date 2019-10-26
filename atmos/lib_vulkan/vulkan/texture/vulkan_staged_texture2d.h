@@ -2,6 +2,7 @@
 #pragma once
 
 
+#include <vulkan/buffer/vulkan_buffer.h>
 #include <vulkan/texture/vulkan_texture2d.h>
 #include <igpu/utility/scoped_ptr.h>
 #include <framework/perf/metrics.h>
@@ -16,6 +17,8 @@ namespace igpu
 	{
 	public:
 
+		const config& cfg() const override;
+
 		vulkan_staged_texture2d(
 			const config& cfg,
 			const scoped_ptr < vulkan_buffer_mediator >&);
@@ -24,19 +27,14 @@ namespace igpu
 
 		void map(size_t, buffer_view_base*) override;
 
-		void unmap_explicit(
-			const glm::ivec2&,
-			texture_format) override;
+		void unmap(
+			const state& state) override;
 
-		void unmap_raw_file() override;
+		void unmap() override;
 
-		const config& cfg() const override;
+		const state& current_state() const override;
 
-		source_type source() const override;
-
-		const glm::ivec2& res() const override;
-
-		texture_format format() const override;
+		size_t byte_size() const override;
 
 		vulkan_image& image() override;
 
@@ -44,23 +42,15 @@ namespace igpu
 
 		void unmap(
 			const buffer_view<char>&,
-			const glm::ivec2&,
-			texture_format,
-			size_t mipmap_count);
+			const state&);
 
 	private:
 
 		const config _cfg;
+		state _state = {};
 		scoped_ptr < vulkan_buffer_mediator > _buffer_mediator;
-		
-		struct
-		{
-			source_type source = source_type::UNDEFINED;
-			glm::ivec2 res = {};
-			texture_format format = texture_format::UNDEFINED;
-			buffer_view<char> mapped_view = {};
-			std::unique_ptr<vulkan_buffer> staging_buffer;
-			std::unique_ptr<vulkan_image> image;
-		} _state;
+		buffer_view<char> _mapped_view = {};
+		vulkan_buffer _staging_buffer;
+		std::unique_ptr<vulkan_image> _image;
 	};
 }

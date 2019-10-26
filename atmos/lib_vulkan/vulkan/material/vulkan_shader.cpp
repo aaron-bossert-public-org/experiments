@@ -7,6 +7,7 @@ using namespace igpu;
 
 vulkan_shader::vulkan_shader(const vulkan_shader::config& cfg)
 : _cfg(cfg)
+, _buffer({ cfg.usage })
 {
 }
 
@@ -32,45 +33,31 @@ void vulkan_shader::map(
 	size_t byte_size, 
 	buffer_view_base* out_buffer_view)
 {
-	if (_mapped.raw)
-	{
-		LOG_CRITICAL("map/unmap mismatch");
-	}
-	else if(_shader_module)
-	{
-		LOG_CRITICAL("cannot map shader multiple times");
-	}
-	else
-	{
-		_mapped.raw.reset(new char[byte_size]);
-		_mapped.view = 
-			*out_buffer_view = buffer_view_base(
-			byte_size,
-			_mapped.raw.get(),
-			out_buffer_view->stride());
-	}
+	_buffer.map(byte_size, out_buffer_view);
 }
 
 void vulkan_shader::unmap()
 {
-	if (!_mapped.raw)
+	auto mapped_view = _buffer.mapped_view();
+	if (mapped_view.data())
 	{
-		LOG_CRITICAL("map/unmap mismatch");
-	}
-	else if (_shader_module)
-	{
-		LOG_CRITICAL("cannot map shader multiple times");
-	}
-	else
-	{
+		if (_shader_module)
+		{
+			vkDestroyShaderModule(_cfg.device, _shader_module, nullptr);
+		}
+
 		VkShaderModuleCreateInfo create_info = {};
 		create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		create_info.codeSize = _mapped.view.byte_size();
-		create_info.pCode = reinterpret_cast<const uint32_t*>(_mapped.view.data());
+		create_info.codeSize = mapped_view.byte_size();
+		create_info.pCode = reinterpret_cast<const uint32_t*>(mapped_view.data());
 
 		vkCreateShaderModule(_cfg.device, &create_info, nullptr, &_shader_module);
-
-		_mapped.raw.reset();
-		_mapped.view.reset();
 	}
+
+	_buffer.unmap();
+}
+
+size_t vulkan_shader::byte_size() const
+{
+	return _buffer.byte_size();
 }

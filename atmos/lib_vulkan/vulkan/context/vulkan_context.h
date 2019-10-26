@@ -28,11 +28,13 @@ namespace igpu
 		const config& cfg() const override;
 
 		std::unique_ptr<program> make_program(
-			const shaders&) override;
+			const program::config&) override;
 
-		std::unique_ptr<vertex_shader> make_vertex_shader() override;
+		std::unique_ptr<vertex_shader> make_vertex_shader(
+			const vertex_shader::config&) override;
 
-		std::unique_ptr<fragment_shader> make_fragment_shader() override;
+		std::unique_ptr<fragment_shader> make_fragment_shader(
+			const fragment_shader::config&) override;
 
 		std::unique_ptr<geometry> make_geometry(
 			const geometry::config&) override;

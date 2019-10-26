@@ -13,6 +13,8 @@ namespace igpu
 
 		virtual VkPipelineShaderStageCreateInfo shader_stage_info() = 0;
 
-		static std::unique_ptr<vulkan_vertex_shader> make(VkDevice);
+		static std::unique_ptr<vulkan_vertex_shader> make(
+			const config& cfg,
+			VkDevice device);
 	};
 }

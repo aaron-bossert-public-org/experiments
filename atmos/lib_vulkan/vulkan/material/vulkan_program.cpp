@@ -15,6 +15,11 @@ using namespace igpu;
 //------------------------------------------------------------------------------
 //
 //
+const vulkan_program::config& vulkan_program::cfg() const
+{
+	return _cfg;
+}
+
 vulkan_program::~vulkan_program()
 {
 }
@@ -84,8 +89,7 @@ const primitive& vulkan_program::default_instance_primitive(size_t instance_para
 }
 
 std::unique_ptr<vulkan_program> vulkan_program::make(
-	vulkan_context* vulkan_context,
-	const shaders&)// shaders)
+	const config& cfg)
 {
 	ASSERT_CONTEXT(false && "not implemented");
 
@@ -104,14 +108,14 @@ std::unique_ptr<vulkan_program> vulkan_program::make(
 		size_t constraint_index;
 
 		const std::string_view& name = parameters[param_index].cfg().name;
-		constraint_index = vulkan_context->batch_constraints().index_of(name);
+		constraint_index = cfg.context->batch_constraints().index_of(name);
 		if (-1 != constraint_index)
 		{
 			dest_parameters = &batch_parameters;
 		}
 		else
 		{
-			constraint_index = vulkan_context->material_constraints().index_of(name);
+			constraint_index = cfg.context->material_constraints().index_of(name);
 			if (-1 != constraint_index)
 			{
 				dest_parameters = &material_parameters;
@@ -137,7 +141,7 @@ std::unique_ptr<vulkan_program> vulkan_program::make(
 
 	return std::unique_ptr<vulkan_program>(
 		new vulkan_program(
-			vulkan_context,
+			cfg,
 			std::move(batch_parameters),
 			std::move(material_parameters),
 			std::move(instance_parameters),
@@ -145,12 +149,12 @@ std::unique_ptr<vulkan_program> vulkan_program::make(
 }
 
 vulkan_program::vulkan_program(
-	vulkan_context* vulkan_context,
+	const config& cfg,
 	std::vector<vulkan_parameter> batch_parameters,
 	std::vector<vulkan_parameter> material_parameters,
 	std::vector<vulkan_parameter> instance_parameters,
 	std::unordered_map<std::string_view, size_t> instance_parameter_lookup)
-	: _vulkan_context(vulkan_context)
+	: _cfg(cfg)
 	, _batch_parameters(std::move(batch_parameters))
 	, _material_parameters(std::move(material_parameters))
 	, _instance_parameters(std::move(instance_parameters))

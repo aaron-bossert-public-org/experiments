@@ -2,18 +2,25 @@
 #pragma once
 
 #include <gl/defines/gl_includes.h>
-
-#include <framework/utility/buffer_view.h>
+#include <igpu/buffer/buffer_raw.h>
 
 namespace igpu
 {   
     class gl_shader
     {
     public:
+		
+		struct config
+		{
+			buffer_usage usage;
+			GLenum type;
+		};
 
-		gl_shader(GLenum type);
+		gl_shader(const config&);
 		
 		~gl_shader();
+
+		const config& cfg() const;
 
 		GLuint gl_handle() const;
 
@@ -21,22 +28,29 @@ namespace igpu
 
 		void unmap();
 
+		size_t byte_size() const;
+
 	private:
 
-		GLenum _type;
-		GLenum _gl_handle;
-
-		struct
-		{
-			std::unique_ptr<char[]> raw;
-			buffer_view_base view;
-		} _mapped;
+		const config _cfg;
+		buffer_raw _buffer;
+		GLenum _gl_shader;
     };
 
 	template<typename T>
 	class gl_shader_t : public T
 	{
 	public:
+
+		struct config : T::config
+		{
+			GLenum type;
+		};
+
+		const config& cfg() const
+		{
+			return _cfg;
+		}
 
 		GLuint gl_handle() const override
 		{
@@ -46,17 +60,29 @@ namespace igpu
 		void map(
 			size_t byte_size,
 			buffer_view_base* out_buffer_view)
+			override
 		{
 			_shader.map(byte_size, out_buffer_view);
 		}
 
-		void unmap()
+		void unmap() override
 		{
 			_shader.unmap();
 		}
 
-		static std::unique_ptr<gl_shader_t> make(GLenum type)
+		size_t byte_size() const override
 		{
+			return _shader.byte_size();
+		}
+
+		static std::unique_ptr<gl_shader_t> make(
+			const typename T::config& cfg,
+			GLenum type)
+		{
+			config cfg_t;
+			static_cast<typename T::config&>(cfg_t) = cfg;
+			cfg_t.type = type;
+
 			switch (type)
 			{
 #ifdef GL_COMPUTE_SHADER
@@ -74,7 +100,7 @@ namespace igpu
 			case GL_VERTEX_SHADER:
 			case GL_FRAGMENT_SHADER:
 				return std::unique_ptr<gl_shader_t>(
-					new gl_shader_t(type));
+					new gl_shader_t(cfg_t));
 			}
 
 			LOG_CRITICAL("unhandled gl shader type: %d ", type);
@@ -84,12 +110,14 @@ namespace igpu
 
 	private:
 
-		gl_shader_t(GLenum type)
-			: _shader(type)
+		gl_shader_t(const config& cfg)
+			: _cfg(cfg)
+			, _shader({ cfg.usage, cfg.type })
 		{ }
 
 	private:
-
+		
+		const config _cfg;
 		gl_shader _shader;
 	};
 }

@@ -5,8 +5,9 @@
 using namespace igpu;
 
 
-std::unique_ptr<gl_fragment_shader> gl_fragment_shader::make()
+std::unique_ptr<gl_fragment_shader> gl_fragment_shader::make(const config& cfg)
 {
 	return gl_shader_t<gl_fragment_shader>::make(
+		cfg,
 		GL_FRAGMENT_SHADER);
 }

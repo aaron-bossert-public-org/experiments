@@ -17,6 +17,13 @@ namespace igpu
     {
     public:
 
+		struct config : program::config
+		{
+			gl_context* context;
+		};
+
+		const config& cfg() const override;
+
 		size_t batch_parameter_count() const override;
 		const parameter& batch_parameter(size_t) const override;
 
@@ -41,15 +48,14 @@ namespace igpu
 		void update(const batch_binding*);
 
         static std::unique_ptr<gl_program> make(
-			gl_context*,
-			const shaders&);
+			const config&);
                 
     protected:
 
 		void update(const gl_parameter&, const primitive&) const;
         
 		gl_program(
-			gl_context*,
+			const config&,
 			unsigned gl_handle,
 			std::vector<gl_parameter> batch_parameters,
 			std::vector<gl_parameter> material_parameters,
@@ -57,8 +63,7 @@ namespace igpu
 			std::unordered_map<std::string_view, size_t> instance_parameter_lookup);
         
     private:
-
-		gl_context* const _gl_context;
+		const config _cfg;
 		const unsigned _gl_handle;
 		size_t _batch_drawpass_id = 0;
 		std::vector<gl_parameter> _batch_parameters;
