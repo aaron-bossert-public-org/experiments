@@ -291,7 +291,7 @@ namespace
 		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.buffer = buffer.get();
 		barrier.offset = 0;
-		barrier.size = buffer.cfg().size;
+		barrier.size = buffer.byte_size();
 
 		// cannot add dependency with null queue
 		if (!target_owner.queue)

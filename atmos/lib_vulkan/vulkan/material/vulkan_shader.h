@@ -112,7 +112,7 @@ namespace igpu
 
 		vulkan_shader_t(const config& cfg)
 			: _cfg(cfg)
-			, _shader({ cfg.device })
+			, _shader({ cfg.usage, cfg.device })
 		{ }
 
 	private:

@@ -80,7 +80,7 @@ void vulkan_staged_texture2d::unmap()
 						state.format = compressed_parser.format;
 						
 						_staging_buffer.unmap();
-						_staging_buffer.map(compressed_parser.decompressed.size(), &parsed_buffer_view);
+						map(compressed_parser.decompressed.size(), &parsed_buffer_view);
 						
 						memcpy(
 							parsed_buffer_view.data(),
@@ -116,59 +116,52 @@ void vulkan_staged_texture2d::unmap(
 	const buffer_view<char>& texture_data,
 	const state& state)
 {
-
-
-	_gpu_buffer.reserve(_last_mapped_bytes);
-
-	_cfg.buffer_mediator->copy(_staging_buffer, _gpu_buffer, (uint32_t)_last_mapped_bytes);
-
-	if (_cfg.usage == buffer_usage::STATIC)
-	{
-		_staging_buffer.release();
-	}
-
-
-
-
-
-
-	if (!_staging_buffer.mapped_view().data())
+	if (!_mapped_view.data())
 	{
 		LOG_CRITICAL("map/unmap mismatch");
 		return;
 	}
 
-	bool generate_mipmaps = false;
 	VkFormat vulkan_format = to_vulkan_format(state.format);
 
-	_state.staging_buffer->unmap();
+	size_t src_offset = (char*)texture_data.data() - (char*)_mapped_view.data();
+	ASSERT_CONTEXT(texture_data.data());
+	ASSERT_CONTEXT(_mapped_view.data());
+	ASSERT_CONTEXT(src_offset < _staging_buffer.byte_size());
+
+	_staging_buffer.unmap();
+	_mapped_view =
+		buffer_view<char>(
+			_mapped_view.byte_size(),
+			nullptr);
 
 	if (vulkan_format)
 	{
 		auto& buffer_mediator = *_buffer_mediator;
 		
-		if (_cfg.can_auto_generate_mips && mipmap_count == 1)
+		bool generate_mipmaps = false;
+		size_t mipmap_count = state.mipmap_count;
+		if (_cfg.can_auto_generate_mips && state.mipmap_count == 1)
 		{
 			if(buffer_mediator.can_generate_mipmaps(
 				vulkan_format,
 				VK_IMAGE_TILING_OPTIMAL))
 			{
 				generate_mipmaps = true;
-				auto max_dim = res.x > res.y ? res.x : res.y;
+				auto max_dim = state.res.x > state.res.y ? state.res.x : state.res.y;
 				mipmap_count = static_cast<uint32_t>(std::log2(max_dim)) + 1;
 			}
 		}
 
-		if (!_state.image ||
-			_state.image->cfg().image_info.extent.width != (uint32_t)res.x ||
-			_state.image->cfg().image_info.extent.height != (uint32_t)res.y ||
-			_state.image->cfg().image_info.format != vulkan_format ||
-			_state.image->cfg().image_info.mipLevels != mipmap_count)
+		if (!_image ||
+			_state.res != state.res ||
+			_state.format != state.format ||
+			_state.mipmap_count != mipmap_count)
 		{
 			VkImageCreateInfo image_info = {};
 			image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 			image_info.imageType = VK_IMAGE_TYPE_2D;
-			image_info.extent = { (uint32_t)res.x, (uint32_t)res.y , 1 };
+			image_info.extent = { (uint32_t)state.res.x, (uint32_t)state.res.y , 1 };
 			image_info.mipLevels = (uint32_t)mipmap_count;
 			image_info.arrayLayers = 1;
 			image_info.format = vulkan_format;
@@ -216,57 +209,34 @@ void vulkan_staged_texture2d::unmap(
 			image_cfg.sampler_info = sampler_info;
 
 
-			_state.image = nullptr;
-			_state = {
-				_state.source,
-				{},
-				{},
-				_state.mapped_view,
-				std::move(_state.staging_buffer),
-				vulkan_image::make(image_cfg),
-			};
-		}
+			_image = nullptr;
+			_image = vulkan_image::make(image_cfg);
 
-		if (!_state.image)
-		{
-			LOG_CRITICAL("failed to vulkan_image");
-		}
-		else
-		{
-			_state.res = res;
-			_state.format = format;
-
-			size_t src_offset = (char*)texture_data.data() - (char*)_state.mapped_view.data();
-			buffer_mediator.copy(*_state.staging_buffer, *_state.image, (uint32_t)src_offset);
-			if(generate_mipmaps)
+			if (!_image)
 			{
-				buffer_mediator.generate_mipmaps(*_state.image);
+				LOG_CRITICAL("failed to vulkan_image");
+				return;
 			}
+		}
+		
+		_state = state;
+		_state.mipmap_count = mipmap_count;
+
+		buffer_mediator.copy(_staging_buffer, *_image, (uint32_t)src_offset);
+		
+		if(generate_mipmaps)
+		{
+			buffer_mediator.generate_mipmaps(*_image);
 		}
 	}
 
 	if (_cfg.usage == buffer_usage::STATIC)
 	{
-		_state.staging_buffer.reset();
+		_staging_buffer.release();
 	}
-}
-
-vulkan_staged_texture2d::source_type vulkan_staged_texture2d::source() const
-{
-	return _state.source;
-}
-
-const glm::ivec2& vulkan_staged_texture2d::res() const
-{
-	return _state.res;
-}
-
-texture_format vulkan_staged_texture2d::format() const
-{
-	return _state.format;
 }
 
 vulkan_image& vulkan_staged_texture2d::image()
 {
-	return *_state.image;
+	return *_image;
 }

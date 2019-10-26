@@ -13,6 +13,11 @@ buffer_raw::buffer_raw(
 {
 }
 
+const buffer_raw::config& buffer_raw::cfg() const
+{
+	return _cfg;
+}
+
 void buffer_raw::map(size_t byte_size, buffer_view_base* out_mapped_view)
 {
 	if (_mapped_view.data())
@@ -38,7 +43,7 @@ void buffer_raw::map(size_t byte_size, buffer_view_base* out_mapped_view)
 		}
 
 		size_t stride = out_mapped_view->stride();
-		*out_texture_data = buffer_view_base(
+		*out_mapped_view = buffer_view_base(
 			byte_size / stride,
 			_memory.get(),
 			stride);
