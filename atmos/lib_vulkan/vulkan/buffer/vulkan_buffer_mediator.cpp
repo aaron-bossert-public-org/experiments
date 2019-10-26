@@ -919,11 +919,11 @@ private:
 		HelloTriangleApplication* app;
 		program::config program_cfg;
 		VkDescriptorSetLayout descriptor_set_layout;
-		
+
 		std::vector<VkPipelineShaderStageCreateInfo> shader_stages;
 
 	};
-	
+
 	struct new_program_impl
 	{
 		void create()
@@ -954,7 +954,7 @@ private:
 			ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
 			VkDescriptorSetLayoutBinding sampler_layout_binding = {};
-			sampler_layout_binding.binding = 1;
+			sampler_layout_binding.binding = 10;
 			sampler_layout_binding.descriptorCount = 1;
 			sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			sampler_layout_binding.pImmutableSamplers = nullptr;
@@ -988,7 +988,7 @@ private:
 		HelloTriangleApplication* app;
 		program::config program_cfg;
 		VkDescriptorSetLayout descriptor_set_layout;
-		
+
 		std::vector<VkPipelineShaderStageCreateInfo> shader_stages;
 
 	};
@@ -1320,10 +1320,7 @@ private:
 		alloc_info.pSetLayouts = layouts.data();
 
 		_descriptor_sets.resize(_swap_image_count);
-		if (vkAllocateDescriptorSets(_device, &alloc_info, _descriptor_sets.data()) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to allocate descriptor sets!");
-		}
+		vkAllocateDescriptorSets(_device, &alloc_info, _descriptor_sets.data());
 
 		for (size_t i = 0; i < _swap_image_count; i++)
 		{
@@ -1344,7 +1341,7 @@ private:
 
 			descriptor_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			descriptor_writes[1].dstSet = _descriptor_sets[i];
-			descriptor_writes[1].dstBinding = 1;
+			descriptor_writes[1].dstBinding = 10;
 			descriptor_writes[1].dstArrayElement = 0;
 			descriptor_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			descriptor_writes[1].descriptorCount = 1;
@@ -1400,8 +1397,6 @@ private:
 			vkCmdBeginRenderPass(_command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
 			vkCmdBindPipeline(_command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, _graphics_pipeline);
-
-
 			vkCmdBindDescriptorSets(_command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline_layout, 0, 1, &_descriptor_sets[i], 0, nullptr);
 
 			geo_impl.draw(_command_buffers[i]);
