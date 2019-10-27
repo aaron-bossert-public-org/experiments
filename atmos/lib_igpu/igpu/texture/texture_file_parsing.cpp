@@ -258,8 +258,7 @@ bool texture_file_parsing::parse_as_dds(
 
 #pragma warning(push)
 #pragma warning(disable:4005)
-#include <vulkan_third_party_builtins/>
-#include <igpu/third_party_builtins/pvr/tools/PVRTTexture.h>
+#include <igpu_third_party_builtins/pvr/tools/PVRTTexture.h>
 #pragma warning(pop)
 
 bool texture_file_parsing::parse_as_pvr(

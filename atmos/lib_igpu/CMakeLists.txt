@@ -2,7 +2,6 @@
 # Specify the minimum version for CMake
 cmake_minimum_required(VERSION 3.1)
 
-add_subdirectory(lib_igpu_third_party_builtins)
 
 BUILD_LIB(
 	igpu

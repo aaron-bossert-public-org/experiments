@@ -1,0 +1,3 @@
+[submodule "atmos/lib_igpu/lib_igpu_third_party_builtins/igpu_third_party_builtins/SPIRV-Cross"]
+	path = atmos/lib_igpu/lib_igpu_third_party_builtins/igpu_third_party_builtins/SPIRV-Cross
+	url = https://github.com/KhronosGroup/SPIRV-Cross.git
