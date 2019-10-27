@@ -585,12 +585,6 @@ vulkan_buffer_mediator::vulkan_buffer_mediator(
 #pragma warning(push)
 #pragma warning(disable:4505)
 
-//#define STBI_NO_STDIO
-#define STB_IMAGE_STATIC
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb/stb_image.h>
-#pragma warning(pop)
-
 #include <iostream>
 #include <fstream>
 #include <stdexcept>

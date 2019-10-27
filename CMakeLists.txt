@@ -31,7 +31,7 @@ function(configure_target target source_folders)
 
     separate_arguments(source_folders WINDOWS_COMMAND "${source_folders}")
 	
-	add_definitions(-DGLM_FORCE_SILENT_WARNINGS=1)
+    add_definitions(-DGLM_FORCE_SILENT_WARNINGS=1)
     add_definitions(-DGLM_FORCE_DEFAULT_ALIGNED_GENTYPES=1)
 
     if(MSVC)
@@ -39,14 +39,10 @@ function(configure_target target source_folders)
         add_definitions(-DATMOS_BUILD_WINDOWS=1)
         add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)
         add_definitions(-D_SCL_SECURE_NO_WARNINGS=1)
-        
-        target_compile_options(${target} PRIVATE /W4 /WX)
 
     else()
         
         add_definitions(-DATMOS_BUILD_OSX=1)
-
-        target_compile_options(${target} PRIVATE -Wall -Wextra -pedantic -Werror)
 
     endif()
 
@@ -64,16 +60,33 @@ function(configure_target target source_folders)
 
         STRING(REPLACE "/" "\\" group ${folder})
         source_group(${group} FILES ${files})
-endforeach()
+    endforeach()
 endfunction()
 
-function(BUILD_LIB lib source_folders)
+function(BUILD_LIB_WARNINGS_ALLOWED lib source_folders)
 
     set_sources(${lib} ${source_folders})
 
     add_library(${lib} ${sources})
 
     configure_target(${lib} ${source_folders})
+
+endfunction()
+
+function(BUILD_LIB lib source_folders)
+	
+	BUILD_LIB_WARNINGS_ALLOWED(${lib} ${source_folders})
+
+    if(MSVC)
+
+        target_compile_options(${lib} PRIVATE /W4 /WX)
+
+    else()
+        
+        target_compile_options(${lib} PRIVATE -Wall -Wextra -pedantic -Werror)
+
+    endif()
+
 endfunction()
 
 function(BUILD_EXE exe source_folders)

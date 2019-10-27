@@ -59,8 +59,12 @@
 #else
 
 #if defined(_WIN32) && !defined(__WINSCW__) && !defined(__BADA__) && !defined(__QT__)
-	#define _ASSERT(a)((void)0)
-	#define _ASSERTE(a)((void)0)
+	#if !defined(_ASSERT) 
+		#define _ASSERT(a)((void)0)
+	#endif
+	#if !defined(_ASSERTE) 
+		#define _ASSERTE(a)((void)0)
+	#endif
 #else
 #if defined(__linux__) || defined(__APPLE__)
 	#define _ASSERT(a)((void)0)

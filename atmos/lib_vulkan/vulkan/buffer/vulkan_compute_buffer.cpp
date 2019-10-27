@@ -16,6 +16,4 @@ std::unique_ptr<vulkan_compute_buffer> vulkan_compute_buffer::make(
 	return vulkan_staged_buffer_t < vulkan_compute_buffer >::make (
 		cfg, 
 		buffer_cfg);
-
-	return nullptr;
 }
