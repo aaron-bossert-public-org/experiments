@@ -36,12 +36,11 @@ namespace igpu
 
 		void unmap();
 
-		size_t byte_size() const;
+		size_t byte_capacity() const;
 		
 		void release();
 
-		// todo: delete access to this
-		VkBuffer get();
+		VkBuffer get() const;
 
 	private:
 		
@@ -78,12 +77,12 @@ namespace igpu
 			_vulkan_staged_buffer.unmap();
 		}
 
-		size_t byte_size() const override
+		size_t byte_capacity() const override
 		{
-			return _vulkan_staged_buffer.byte_size();
+			return _vulkan_staged_buffer.byte_capacity();
 		}
 
-		VkBuffer get() override
+		VkBuffer get() const override
 		{
 			return _vulkan_staged_buffer.get();
 		}

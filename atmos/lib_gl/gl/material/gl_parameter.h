@@ -16,7 +16,7 @@ namespace igpu
 
 		gl_parameter(
 			const config&,
-			size_t constraint_index,
+			size_t binding,
 			int location,
 			unsigned binding_index);
 

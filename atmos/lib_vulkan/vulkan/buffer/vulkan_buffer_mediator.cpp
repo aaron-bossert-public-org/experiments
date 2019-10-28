@@ -291,7 +291,7 @@ namespace
 		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.buffer = buffer.get();
 		barrier.offset = 0;
-		barrier.size = buffer.byte_size();
+		barrier.size = buffer.byte_capacity();
 
 		// cannot add dependency with null queue
 		if (!target_owner.queue)
@@ -716,8 +716,7 @@ private:
 
 			auto vertex_buffer = std::shared_ptr< igpu::vertex_buffer >(
 				app->_context->make_vertex_buffer({
-					buffer_usage::STATIC,
-					IGPU_VERT_FORMAT_OF(Vertex, pos, col, uv0)}));
+					IGPU_VERT_CFG_OF(buffer_usage::STATIC, Vertex, pos, col, uv0)}));
 
 			{
 				VkDeviceSize buffer_size = sizeof(indices[0]) * indices.size();
@@ -745,16 +744,10 @@ private:
 				});
 		}
 
-		const VkPipelineVertexInputStateCreateInfo& get_vertex_input_info()
-		{
-			auto* vulkan = ASSERT_CAST(vulkan_geometry*, geometry.get());
-			return vulkan->vertex_input_info();
-		}
-
 		const VkPipelineInputAssemblyStateCreateInfo& get_vertex_input_assembly_info()
 		{
 			auto* vulkan = ASSERT_CAST(vulkan_geometry*, geometry.get());
-			return vulkan->vertex_input_assembly_info();
+			return vulkan->cfg().input_assembly_info;
 		}
 
 		void draw(VkCommandBuffer command_buffer)
@@ -879,7 +872,7 @@ private:
 			ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
 			VkDescriptorSetLayoutBinding sampler_layout_binding = {};
-			sampler_layout_binding.binding = 1;
+			sampler_layout_binding.binding = 10;
 			sampler_layout_binding.descriptorCount = 1;
 			sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			sampler_layout_binding.pImmutableSamplers = nullptr;
@@ -902,6 +895,56 @@ private:
 		const VkDescriptorSetLayout& get_descriptor_set_layout()
 		{
 			return descriptor_set_layout;
+		}
+
+		static VkVertexInputBindingDescription get_binding_description()
+		{
+			VkVertexInputBindingDescription binding_description = {};
+			binding_description.binding = 0;
+			binding_description.stride = sizeof(Vertex);
+			binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+			return binding_description;
+		}
+
+		static std::array<VkVertexInputAttributeDescription, 3> get_attribute_descriptions()
+		{
+			static std::array<VkVertexInputAttributeDescription, 3> attribute_descriptions = {};
+
+			attribute_descriptions[0].binding = 0;
+			attribute_descriptions[0].location = 0;
+			attribute_descriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+			attribute_descriptions[0].offset = offsetof(Vertex, pos);
+
+			attribute_descriptions[1].binding = 0;
+			attribute_descriptions[1].location = 1;
+			attribute_descriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+			attribute_descriptions[1].offset = offsetof(Vertex, col);
+
+			attribute_descriptions[2].binding = 0;
+			attribute_descriptions[2].location = 2;
+			attribute_descriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+			attribute_descriptions[2].offset = offsetof(Vertex, uv0);
+
+			return attribute_descriptions;
+		}
+
+		const VkPipelineVertexInputStateCreateInfo& get_vertex_input_info()
+		{
+			static const auto binding_description = get_binding_description();
+			static const auto attribute_descriptions = get_attribute_descriptions();
+
+			static VkPipelineVertexInputStateCreateInfo vertex_input_info = {
+				VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+				nullptr,
+				0,
+				1, 
+				&binding_description,
+				static_cast<uint32_t>(attribute_descriptions.size()),
+				attribute_descriptions.data(),
+			};
+
+			return vertex_input_info;
 		}
 
 		void destroy()
@@ -987,7 +1030,7 @@ private:
 
 	};
 
-	new_program_impl program_impl = {this};
+	old_program_impl program_impl = {this};
 
 	VkDescriptorPool _descriptor_pool;
 	std::vector<VkDescriptorSet> _descriptor_sets;
@@ -1027,11 +1070,12 @@ public:
 		_swap_image_count = _context->back_buffer().framebuffers().size();
 		_msaa_samples = _context->back_buffer().cfg().sample_count;
 		create_command_pool();
-		load_model();
-
+		
 		uniform_impl.create();
 		texture_impl.create();
 		program_impl.create();
+
+		load_model();
 
 		create_graphics_pipeline();
 		create_descriptor_pool();
@@ -1124,7 +1168,6 @@ private:
 
 	void create_graphics_pipeline()
 	{
-
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
@@ -1201,7 +1244,7 @@ private:
 		pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		pipeline_info.stageCount = (uint32_t)shader_stages.size();
 		pipeline_info.pStages = shader_stages.data();
-		pipeline_info.pVertexInputState = &geo_impl.get_vertex_input_info();
+		pipeline_info.pVertexInputState = &program_impl.get_vertex_input_info();
 		pipeline_info.pInputAssemblyState = &geo_impl.get_vertex_input_assembly_info();
 		pipeline_info.pViewportState = &viewport_state;
 		pipeline_info.pRasterizationState = &rasterizer;

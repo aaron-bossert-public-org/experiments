@@ -47,7 +47,7 @@ bool geometry_batch::add(const binding_t& binding)
     return true;
 }
 
-void geometry_batch::remove(const binding& binding)
+void geometry_batch::remove(const batch_binding& binding)
 {
     auto find = _bindings.find(&binding);
     if (find == _bindings.end())
@@ -57,50 +57,18 @@ void geometry_batch::remove(const binding& binding)
     }
     
     _bindings.erase(find);
+
+
+	if (_bindings.empty())
+	{
+		// parents will remove themselves recursively up the batching tree if they are empty as a result of removal
+		parent()->remove_child(this);
+	}
 }
 
 size_t geometry_batch::size() const
 {
     return _bindings.size();
-}
-
-//-------------------------------------------------------------------------
-//
-//
-
-const geometry_batch::binding::config& geometry_batch::binding::cfg() const
-{
-	return _cfg;
-}
-
-geometry_batch::binding::binding(geometry_batch* geometry_batch, const batch_binding::config& cfg, const utility::sphere visibility_sphere)
-: batch_binding(cfg, visibility_sphere)
-, _cfg(cfg)
-, _geometry_batch(geometry_batch)
-{
-    ASSERT_CONTEXT(_geometry_batch);
-}
-
-geometry_batch::binding::~binding()
-{
-    if(_geometry_batch)
-    {
-        LOG_CRITICAL(
-            "%s was destroyed without being unbatched!",
-			cfg().geometry->cfg().name.c_str());
-    }
-}
-
-void geometry_batch::binding::unbind()
-{
-    _geometry_batch->remove(*this);
-    if(_geometry_batch->bindings().empty())
-    {
-        // parents will remove themselves recursively up the batching tree if they are empty as a result of removal
-        _geometry_batch->parent()->remove_child(_geometry_batch);
-    }
-    
-    _geometry_batch = nullptr;
 }
 
 //-------------------------------------------------------------------------
@@ -114,7 +82,28 @@ token material_batch::keygen(const batch_binding::config& cfg)
 
 bool material_batch::compare(token l_token, token r_token)
 {
-    return ((material*)l_token)->compare_parameters((material*)r_token);
+	auto* l_material = (material*)l_token;
+	auto* r_material = (material*)r_token;
+
+	// need to move this to 
+	ASSERT_CONTEXT(false && "not implemented, need to compare parameters used by program, also need to modify how parameters a melded");
+
+	return l_material != r_material;
+	//size_t size = std::min(_primitives.size(), _primitives.size());
+
+	//using hash_t = std::hash<primitive::variant_t>;
+
+	//for (size_t i = 0; i < size; ++i)
+	//{
+	//	size_t lhs = hash_t()(_primitives[i].variant());
+	//	size_t rhs = hash_t()(other->_primitives[i].variant());
+	//	if (lhs != rhs)
+	//	{
+	//		return ptrdiff_t(lhs - rhs);
+	//	}
+	//}
+
+	//return _primitives.size() - other->_primitives.size();
 }
 
 material_batch::material_batch(const batch_binding::config& cfg)
@@ -159,12 +148,12 @@ const render_state_batch::item_t& render_state_batch::item() const
 
 token program_batch::keygen(const batch_binding::config& cfg)
 {
-    return cfg.material->cfg().program.get();
+    return cfg.program.get();
 }
 
 program_batch::program_batch(const batch_binding::config& cfg)
 : opaque_batch_node(cfg, this)
-, _item(cfg.material->cfg().program)
+, _item(cfg.program)
 {
 }
 

@@ -43,9 +43,9 @@ namespace igpu
 
 		void unmap() override;
 
-		size_t byte_size() const override;
+		size_t byte_capacity() const override;
 
-		void reserve(size_t byte_size);
+		void reserve(size_t byte_capacity);
 
 		void release();
 

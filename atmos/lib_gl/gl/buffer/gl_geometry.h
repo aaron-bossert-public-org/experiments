@@ -32,8 +32,6 @@ namespace igpu
 
         unsigned vao() const;
 
-		const gl_vertex_format& vertex_format();
-
         static std::unique_ptr<gl_geometry> make(
 			const config&);
         

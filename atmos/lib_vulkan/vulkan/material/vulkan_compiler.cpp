@@ -5,7 +5,6 @@
 // #include <vulkan/defines/vulkan_includes.h>
 // // Vulkan implementation includes - end
 
-// #include <igpu/context/vertex_constraints.h>
 
 // #include <vector>
 // #include <sstream>

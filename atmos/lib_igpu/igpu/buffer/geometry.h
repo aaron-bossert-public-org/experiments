@@ -18,8 +18,8 @@ namespace igpu
         
 		struct config
 		{
-			const std::string name;
-			const igpu::topology topology;
+			std::string name;
+			igpu::topology topology;
 			std::shared_ptr<igpu::index_buffer> index_buffer;
 			std::vector<std::shared_ptr<vertex_buffer>> vertex_buffers;
 		};
@@ -32,10 +32,11 @@ namespace igpu
 
 		virtual size_t element_count() const = 0;
 
-		virtual igpu::index_buffer& index_buffer() = 0;
+		virtual const igpu::index_buffer& index_buffer() const = 0;
 
-		virtual igpu::vertex_buffer& vertex_buffer(size_t) = 0;
-
+		virtual size_t vertex_buffer_count() const = 0;
+		
+		virtual const igpu::vertex_buffer& vertex_buffer(size_t) const = 0;
 
 		virtual void element_start(size_t) = 0;
 

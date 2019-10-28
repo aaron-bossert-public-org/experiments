@@ -8,9 +8,25 @@
 
 namespace igpu
 {
-	struct vertex_parameter
+	class vertex_parameter
 	{
-		std::string name;
-		components components;
+	public:
+
+		struct config
+		{
+			std::string name;
+			components components;
+		};
+
+		virtual const config& cfg() const = 0;
+
+		virtual ~vertex_parameter() = default;
+
+	protected:
+
+		vertex_parameter() = default;
+
+		vertex_parameter(const vertex_parameter&) = delete;
+		vertex_parameter& operator= (const vertex_parameter&) = delete;
 	};
 }

@@ -34,7 +34,7 @@ namespace igpu
 
 		const state& current_state() const override;
 
-		size_t byte_size() const override;
+		size_t byte_capacity() const override;
 
 		vulkan_image& image() override;
 

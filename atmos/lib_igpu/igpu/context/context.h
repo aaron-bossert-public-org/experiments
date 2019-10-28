@@ -8,7 +8,6 @@
 #include <igpu/buffer/vertex_buffer.h>
 #include <igpu/context/batch_constraints.h>
 #include <igpu/context/material_constraints.h>
-#include <igpu/context/vertex_constraints.h>
 #include <igpu/material/fragment_shader.h>
 #include <igpu/material/program.h>
 #include <igpu/material/vertex_shader.h>
@@ -34,7 +33,6 @@ namespace igpu
 			std::string name;
 			batch_constraints::config batch_constraints;
 			material_constraints::config material_constraints;
-			vertex_constraints::config vertex_constraints;
 			color_format color_format;
 			depth_format depth_format;
 
@@ -75,8 +73,6 @@ namespace igpu
 		virtual const batch_constraints& batch_constraints() const = 0;
 
 		virtual const material_constraints& material_constraints() const = 0;
-
-		virtual const vertex_constraints& vertex_constraints() const = 0;
 
 		virtual const window& window() const = 0;
 

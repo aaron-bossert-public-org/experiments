@@ -14,9 +14,37 @@
 //
 //using namespace igpu;
 //
-////-------------------------------------------------------------------------
-////
-////
+//
+//
+//
+//const geometry_batch::binding::config& geometry_batch::binding::cfg() const
+//{
+//	return _cfg;
+//}
+//
+//geometry_batch::binding::binding(geometry_batch* geometry_batch, const batch_binding::config& cfg, const utility::sphere& visibility_sphere)
+//	: _cfg(cfg)
+//	, _visibility_sphere(visibility_sphere)
+//	, _geometry_batch(geometry_batch)
+//	,
+//{
+//	ASSERT_CONTEXT(_geometry_batch);
+//}
+//
+//geometry_batch::binding::~binding()
+//{
+//	if (_geometry_batch)
+//	{
+//		LOG_CRITICAL(
+//			"%s was destroyed without being unbatched!",
+//			cfg().geometry->cfg().name.c_str());
+//	}
+//}
+//
+//void geometry_batch::binding::unbind()
+//{
+//
+//}
 //
 //namespace
 //{
@@ -227,3 +255,62 @@
 //, _gl_context(gl_context)
 //{
 //}
+//
+//struct gl_attribute : vertex_attribute
+//{
+//	int size = 0;
+//	unsigned type = 0;
+//};
+//
+//gl_vertex_format::gl_vertex_format(const vertex_constraints& constraints, const config& cfg)
+//	: vertex_format(cfg)
+//{
+//	_attributes.reserve(cfg.attributes.size());
+//
+//	for (const auto& attribute : cfg.attributes)
+//	{
+//		int size = 4;
+//		unsigned type = GL_FLOAT;
+//		GLuint location = (GLuint)constraints.find_location(attribute.parameter.name);
+//		const vertex_parameter ref_parameter = constraints.find_parameter(attribute.parameter.name);
+//
+//		ASSERT_CONTEXT(
+//			attribute.parameter.components == ref_parameter.components,
+//			"attribute:%s components:%s does not match reference contained in vertex_constraints:%s",
+//			attribute.parameter.name.c_str(),
+//			to_string(attribute.parameter.components).data(),
+//			to_string(ref_parameter.components).data());
+//
+//		switch (attribute.parameter.components)
+//		{
+//		case components::FLOAT1:
+//			size = 1;
+//			type = GL_FLOAT;
+//			break;
+//		case components::FLOAT2:
+//			size = 2;
+//			type = GL_FLOAT;
+//			break;
+//		case components::FLOAT3:
+//			size = 3;
+//			type = GL_FLOAT;
+//			break;
+//		case components::FLOAT4:
+//			size = 4;
+//			type = GL_FLOAT;
+//			break;
+//		default:
+//			LOG_CRITICAL(
+//				"unhandled format: %s",
+//				to_string(attribute.parameter.components).data());
+//		};
+//
+//		_attributes.push_back({
+//			attribute,
+//			location,
+//			size,
+//			type
+//			});
+//	}
+//}
+//

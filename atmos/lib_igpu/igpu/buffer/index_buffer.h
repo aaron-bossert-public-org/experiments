@@ -19,7 +19,7 @@ namespace igpu
 
 		size_t count() const
 		{
-			return byte_size() / bytes_per_index(cfg().format);
+			return byte_capacity() / bytes_per_index(cfg().format);
 		}
     };   
 }

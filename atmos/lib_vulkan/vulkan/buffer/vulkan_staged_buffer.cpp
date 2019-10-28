@@ -62,11 +62,11 @@ void vulkan_staged_buffer::unmap()
 	} 
 }
 
-size_t vulkan_staged_buffer::byte_size() const
+size_t vulkan_staged_buffer::byte_capacity() const
 {
-	size_t size = _staging_buffer.byte_size();
+	size_t capacity = _staging_buffer.byte_capacity();
 	
-	return size ? size : _gpu_buffer.byte_size();
+	return capacity ? capacity : _gpu_buffer.byte_capacity();
 }
 
 void vulkan_staged_buffer::release()
@@ -82,7 +82,7 @@ void vulkan_staged_buffer::release()
 	}
 }
 
-VkBuffer vulkan_staged_buffer::get()
+VkBuffer vulkan_staged_buffer::get() const
 {
 	return _gpu_buffer.get();
 }

@@ -1,6 +1,8 @@
 
  #pragma once
 
+#include <vulkan/defines/vulkan_includes.h>
+
  #include <framework/meta_programming/va_macro.h>
  #include <igpu/material/parameter.h>
 
@@ -12,16 +14,19 @@
  	{
  	public:
 
- 		vulkan_parameter();
+		struct config : parameter::config
+		{
+			const size_t descriptor_set = (size_t)-1;
+			VkShaderStageFlags stage_flags;
+		};
+
+		const config& cfg() const override;
 
  		vulkan_parameter(
- 			const config&,
- 			size_t constraint_index);
-
- 		vulkan_parameter(const vulkan_parameter&) = default;
-
- 		vulkan_parameter& operator= (const vulkan_parameter&) = default;
+ 			const config&);
 
  	private:
+
+		const config _cfg;
  	};
  }

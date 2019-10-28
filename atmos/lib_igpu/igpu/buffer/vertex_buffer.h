@@ -1,20 +1,54 @@
 
 #pragma once
 
+
+#pragma once
+
+#include <igpu/buffer/vertex_parameter.h>
 #include <igpu/buffer/buffer.h>
-#include <igpu/buffer/vertex_format.h>
+#include <vector>
+
+#define IGPU_VERT_CFG_OF(U, V, ...)\
+		IGPU_VERT_CFG_OF_(U, V, __VA_ARGS__)
+
+// example usage of IGPU_VERT_CFG_OF:
+
+//struct Vertex
+//{
+//	glm::vec3 pos;
+//	glm::vec3 col;
+//	glm::vec2 uv0;
+//
+//	bool operator==(const Vertex& other) const
+//	{
+//		return pos == other.pos && col == other.col && uv0 == other.uv0;
+//	}
+//};
+//
+//vertex_format format = IGPU_VERT_CFG_OF(buffer_usage::DYNAMIC, Vertex, pos, col, uv0);
 
 namespace igpu
 {
 	class vertex_buffer : public buffer
 	{
 	public:
+		struct attribute
+		{
+			vertex_parameter::config parameter;
+			uint32_t offset = 0;
+		};
 
 		struct config : buffer::config
 		{
-			vertex_format::config format;
+			uint32_t stride = 0;
+			std::vector<attribute> attributes;
 		};
 
 		virtual const config& cfg() const = 0;
 	};
 }
+
+#define IGPU_VERT_CFG_OF_(U, V, ...) igpu::vertex_buffer::config({U, sizeof(V), { IGPU_VERT_CFG_OF_ATTRIBS(V, __VA_ARGS__) } })
+#define IGPU_VERT_CFG_OF_ATTRIBS(V, ...) VA_DISTRIBUTE_OP_ARGS_( IGPU_VERT_CFG_OF_ATTRIB__ARGS_EXPAND, (V) , __VA_ARGS__)
+#define IGPU_VERT_CFG_OF_ATTRIB__ARGS_EXPAND(V,A) { {#A, to_components((*((V*)0)).A) }, ((size_t)&(((V *)0)->A))},
+

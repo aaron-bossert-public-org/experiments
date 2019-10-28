@@ -26,7 +26,7 @@ namespace {
 		if (msg && *msg)
 		{
 			return string_utils::format(
-				"%s(%d): %s %s\n\t%s\n%s\n",
+				"%s(%d): %s %s\n\t%s\n\t%s\n",
 				file,
 				line,
 				type,

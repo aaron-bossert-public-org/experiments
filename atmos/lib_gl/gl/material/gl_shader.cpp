@@ -44,7 +44,7 @@ void gl_shader::unmap()
 	_buffer.unmap();
 }
 
-size_t gl_shader::byte_size() const
+size_t gl_shader::byte_capacity() const
 {
-	return _buffer.byte_size();
+	return _buffer.byte_capacity();
 }

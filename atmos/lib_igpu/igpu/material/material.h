@@ -15,12 +15,9 @@ namespace igpu
 		struct config
 		{
 			std::string name;
-			std::shared_ptr<program> program;
 			std::shared_ptr<render_states> render_states;
 			std::vector<primitive_kv> primitives;
 		};
-
-		ptrdiff_t compare_parameters(const material* other) const;
 
 		virtual ~material() = default;
 

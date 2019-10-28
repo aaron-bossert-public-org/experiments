@@ -26,26 +26,18 @@ void buffer_raw::map(size_t byte_size, buffer_view_base* out_mapped_view)
 	}
 	else
 	{
-		if (!_memory || _mapped_view.size() < byte_size)
-		{
-			_cpu_mem_metric.reset();
-			_cpu_mem_metric.add(byte_size);
-			_memory.reset(new char[byte_size]);
-			_mapped_view = buffer_view<char>(
-				byte_size, 
-				_memory.get());
-		}
-		else
-		{
-			_mapped_view = buffer_view<char>(
-				_mapped_view.byte_size(),
-				_memory.get());
-		}
+		_memory.reserve(byte_size);
+		_mapped_view = buffer_view<char>(
+			_memory.capacity(), 
+			_memory.data());
+
+		_cpu_mem_metric.reset();
+		_cpu_mem_metric.add(_mapped_view.byte_size());
 
 		size_t stride = out_mapped_view->stride();
 		*out_mapped_view = buffer_view_base(
 			byte_size / stride,
-			_memory.get(),
+			_memory.data(),
 			stride);
 	}
 }
@@ -58,23 +50,22 @@ void buffer_raw::unmap()
 	}
 	else
 	{
-		_mapped_view = buffer_view<char>(
-			_mapped_view.byte_size(),
-			nullptr);
-
 		if (_cfg.usage == buffer_usage::STATIC)
 		{
 			_cpu_mem_metric.reset();
-			_memory.reset();
+			_memory.shrink_to_fit();
 		}
+
+		_mapped_view = buffer_view<char>(
+			_memory.capacity(),
+			nullptr);
 	}
 }
 
-size_t buffer_raw::byte_size() const
+size_t buffer_raw::byte_capacity() const
 {
-	return _mapped_view.byte_size();
+	return _memory.capacity();
 }
-
 
 const buffer_view<char>& buffer_raw::mapped_view() const
 {

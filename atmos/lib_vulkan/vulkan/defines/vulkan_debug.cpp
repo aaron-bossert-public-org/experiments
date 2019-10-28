@@ -55,22 +55,67 @@ VK_RESULT_XMACRO(VK_RESULT_PAIR)
 
 using namespace igpu;
 
+struct
+{
+	const char* file;
+	int line;
+	const char* func;
+	const char* vk;
+} s_scope;
+
+static debug::callback_info s_callback_info = { logging::severity::VERBOSE };
+
+void debug::set_callback_info(callback_info info)
+{
+	s_callback_info = info;
+	logging::log_context(
+		s_scope.file,
+		s_scope.line,
+		s_scope.func,
+		s_callback_info.severity,
+		"%s\n\t%s",
+		s_scope.vk,
+		s_callback_info.message);
+}
+
+bool debug::consume_debug_break()
+{
+	bool should_break =
+		logging::severity::DEBUG > s_callback_info.severity;
+	
+	s_callback_info = { logging::severity::VERBOSE  };
+	return should_break;
+}
+
+
 std::string debug::stringify_result(VkResult res)
 {
+	vmaCreateAllocator(nullptr, nullptr);
+
 	return  kResultStr.at(res);
 }
 
-void debug::generate_exception(const char*, int, const char*, const char*, const std::function<void()>& fun)
+void debug::validate(const char* file, int line, const char* func, const char* vk, const std::function<void()>& fun)
 {
+	s_scope = {
+		file,
+		line,
+		func,
+		vk
+	};
+
 	fun();
 }
 
-VkResult debug::generate_exception(const char* file, int line, const char* func, const char* vk, const std::function<VkResult()>& fun)
+VkResult debug::validate(const char* file, int line, const char* func, const char* vk, const std::function<VkResult()>& fun)
 {
-	(void)file;
-	(void)line;
-	(void)func;
-	(void)vk;
+	s_scope = {
+		file,
+		line,
+		func,
+		vk
+	};
+	
 	auto res = fun();
 	if (res != VK_SUCCESS &&
 		res != VK_NOT_READY &&
@@ -86,25 +131,15 @@ VkResult debug::generate_exception(const char* file, int line, const char* func,
 	{
 		std::ostringstream oss;
 		oss
-			<< file << "(" << line << "): " << std::endl
-			<< "\t" << kResultStr.at(res) << " == " << vk << std::endl;
-		
+			<< " == "  << kResultStr.at(res) << std::endl;
 		auto str = oss.str();
-		OutputDebugString(str.c_str());
-		throw vulkan_result_exception(res, str.c_str());
+		
+		set_callback_info({
+			logging::severity::CRITICAL,
+			str.c_str()
+			});
 	}
 	return res;
-}
-
-debug::vulkan_result_exception::vulkan_result_exception(VkResult res, const char* desc)
-	: std::exception(desc)
-	, _res (res)
-{
-}
-
-VkResult debug::vulkan_result_exception::res() const
-{
-	return _res;
 }
 
 #endif // ATMOS_DEBUG

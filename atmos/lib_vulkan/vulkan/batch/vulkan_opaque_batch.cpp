@@ -1,4 +1,23 @@
 
+//
+//namespace
+//{
+//	VkPipelineVertexInputStateCreateInfo to_vulkan_vertex_input_info(
+//		const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+//		const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
+//	{
+//		VkPipelineVertexInputStateCreateInfo vertex_input_info = {};
+//		vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+//		vertex_input_info.vertexBindingDescriptionCount = (uint32_t)vertex_binding_descriptions.size();
+//		vertex_input_info.vertexAttributeDescriptionCount = (uint32_t)vertex_attribute_descriptions.size();
+//		vertex_input_info.pVertexBindingDescriptions = vertex_binding_descriptions.data();
+//		vertex_input_info.pVertexAttributeDescriptions = vertex_attribute_descriptions.data();
+//		return vertex_input_info;
+//	}
+//
+
+//
+
 // #include <vulkan/batch/vulkan_opaque_batch.h>
 
 // // Vulkan implementation includes - begin

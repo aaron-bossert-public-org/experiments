@@ -18,7 +18,7 @@ namespace igpu
 			const config&,
 			const scoped_ptr < vulkan_buffer_mediator >&);
 
-		virtual VkBuffer get() = 0;
+		virtual VkBuffer get() const = 0;
 
 	protected:
 

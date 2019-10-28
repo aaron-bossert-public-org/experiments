@@ -8,7 +8,6 @@
 #include <igpu/context/context.h>
 #include <igpu/context/batch_constraints.h>
 #include <igpu/context/material_constraints.h>
-#include <igpu/context/vertex_constraints.h>
 #include <igpu/utility/utility_types.h>
 #include <framework/perf/metrics.h>
 
@@ -60,8 +59,6 @@ namespace igpu
 		const igpu::batch_constraints& batch_constraints() const override;
 
 		const igpu::material_constraints& material_constraints() const override;
-
-		const igpu::vertex_constraints& vertex_constraints() const override;
 
 		const gl_window& window() const override;
 
@@ -136,7 +133,6 @@ namespace igpu
 		config _cfg;
 		igpu::batch_constraints _batch_constraints;
 		igpu::material_constraints _material_constraints;
-		igpu::vertex_constraints _vertex_constraints;
 		std::unique_ptr<gl_window> _gl_window;
 		utility::viewport _current_viewport;
 		size_t _batch_drawpass_id = 0;

@@ -24,7 +24,7 @@ namespace igpu
 
 		void unmap(const state&) override;
 
-		size_t byte_size() const override;
+		size_t byte_capacity() const override;
 
 		const config& cfg() const override;
 

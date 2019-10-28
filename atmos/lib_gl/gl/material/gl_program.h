@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <gl/buffer/gl_vertex_parameter.h>
+#include <gl/material/gl_parameter.h>
 #include <igpu/material/program.h>
 #include <framework/perf/metrics.h>
 #include <framework/utility/buffer_view.h>
@@ -10,9 +12,9 @@ namespace igpu
 	class batch;
     class batch_binding;
     class material;
+    class parameter;
     class gl_context;
-    class gl_parameter;
-    
+
     class gl_program : public program
     {
     public:
@@ -24,18 +26,13 @@ namespace igpu
 
 		const config& cfg() const override;
 
-		size_t batch_parameter_count() const override;
-		const parameter& batch_parameter(size_t) const override;
+		size_t parameter_count() const override;
 
-		size_t material_parameter_count() const override;
-		const parameter& material_parameter(size_t) const override;
+		const gl_parameter& parameter(size_t) const override;
 
-		size_t instance_parameter_count() const override;
-		const parameter& instance_parameter(size_t) const override;
+		size_t vertex_parameter_count() const override;
 
-		size_t index_of_instance_parameter(const std::string_view&) const override;
-		
-		const primitive& default_instance_primitive(size_t instance_parameter_index) const override;
+		const gl_vertex_parameter& vertex_parameter(size_t) const override;
 
         ~gl_program() override;
 		

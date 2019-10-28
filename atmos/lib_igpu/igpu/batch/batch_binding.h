@@ -10,6 +10,9 @@ namespace igpu
 {   
 	class geometry;
 	class material;
+	class primitive_block;
+	class primitives;
+	class program;
 
     class batch_binding
     {
@@ -17,8 +20,10 @@ namespace igpu
         
         struct config
         {
+            std::shared_ptr<program> program;
             std::shared_ptr<material> material;
             std::shared_ptr<geometry> geometry;
+			std::vector<primitive> primitives;
         };
         
         virtual ~batch_binding() = 0;
@@ -27,22 +32,18 @@ namespace igpu
         
         virtual const config& cfg() const = 0;
         
-        const utility::sphere& visibility_sphere() const;
+        virtual const utility::sphere& visibility_sphere() const = 0;
         
-        void visibility_sphere(const utility::sphere& visibility_sphere);
+		virtual const igpu::primitive_block& primitive_block() const = 0;
         
-		const igpu::primitive_block& primitive_block() const;
+        virtual void visibility_sphere(const utility::sphere& visibility_sphere) = 0;
 
     protected:
-        
-        batch_binding(
-            const config&,
-            const utility::sphere& visibility_sphere);
-        
-    private:
-        
-        utility::sphere _visibility_sphere;
-		igpu::primitive_block _primitive_block;
+
+		batch_binding() = default;
+
+		batch_binding(const batch_binding&) = delete;
+		batch_binding& operator= (const batch_binding&) = delete;
     };
 }
 

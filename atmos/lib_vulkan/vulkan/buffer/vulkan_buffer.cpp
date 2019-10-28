@@ -181,7 +181,7 @@ void vulkan_buffer::release()
 		nullptr);
 }
 
-size_t vulkan_buffer::byte_size() const
+size_t vulkan_buffer::byte_capacity() const
 {
 	return _mapped_view.byte_size();
 }

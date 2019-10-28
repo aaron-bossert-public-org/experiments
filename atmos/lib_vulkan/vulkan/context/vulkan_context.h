@@ -55,8 +55,6 @@ namespace igpu
 
 		const igpu::material_constraints& material_constraints() const override;
 
-		const igpu::vertex_constraints& vertex_constraints() const override;
-
 		const vulkan_window& window() const override;
 
 		const vulkan_back_buffer& back_buffer() const override;
@@ -111,7 +109,6 @@ namespace igpu
 
 		igpu::batch_constraints _batch_constraints;
 		igpu::material_constraints _material_constraints;
-		igpu::vertex_constraints _vertex_constraints;
 
 
 #if ATMOS_PERFORMANCE_TRACKING

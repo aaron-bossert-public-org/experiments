@@ -166,28 +166,9 @@ namespace igpu
         
     public:
         
-        struct binding : public batch_binding
-        {
-			const config& cfg() const override;
-
-            binding(
-				geometry_batch*,
-                const batch_binding::config&,
-				const utility::sphere visibility_sphere);
-            
-            ~binding();
-            
-            void unbind() override;
-            
-        private:
-
-			const config _cfg;
-            geometry_batch* _geometry_batch;
-        };
-        
         using item_t = std::shared_ptr<geometry>;
         
-        using binding_t = std::shared_ptr<const binding>;
+        using binding_t = std::shared_ptr<const batch_binding>;
         
         using bindings_t = std::unordered_map<const batch_binding*, binding_t>;
         
@@ -204,7 +185,7 @@ namespace igpu
 
 		bool add(const binding_t&);
         
-        void remove(const binding& binding);
+        void remove(const batch_binding& binding);
         
         size_t size() const;
         

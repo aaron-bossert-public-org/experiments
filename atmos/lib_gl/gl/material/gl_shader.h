@@ -28,7 +28,7 @@ namespace igpu
 
 		void unmap();
 
-		size_t byte_size() const;
+		size_t byte_capacity() const;
 
 	private:
 
@@ -70,9 +70,9 @@ namespace igpu
 			_shader.unmap();
 		}
 
-		size_t byte_size() const override
+		size_t byte_capacity() const override
 		{
-			return _shader.byte_size();
+			return _shader.byte_capacity();
 		}
 
 		static std::unique_ptr<gl_shader_t> make(

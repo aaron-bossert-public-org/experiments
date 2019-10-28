@@ -102,9 +102,9 @@ void vulkan_staged_texture2d::unmap()
 	}
 }
 
-size_t vulkan_staged_texture2d::byte_size() const
+size_t vulkan_staged_texture2d::byte_capacity() const
 {
-	return _staging_buffer.byte_size();
+	return _staging_buffer.byte_capacity();
 }
 
 const vulkan_staged_texture2d::state& vulkan_staged_texture2d::current_state() const
@@ -127,7 +127,7 @@ void vulkan_staged_texture2d::unmap(
 	size_t src_offset = (char*)texture_data.data() - (char*)_mapped_view.data();
 	ASSERT_CONTEXT(texture_data.data());
 	ASSERT_CONTEXT(_mapped_view.data());
-	ASSERT_CONTEXT(src_offset < _staging_buffer.byte_size());
+	ASSERT_CONTEXT(src_offset < _staging_buffer.byte_capacity());
 
 	_staging_buffer.unmap();
 	_mapped_view =

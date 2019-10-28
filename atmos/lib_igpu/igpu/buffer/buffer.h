@@ -24,7 +24,7 @@ namespace igpu
 
 		virtual void unmap() = 0;
 
-		virtual size_t byte_size() const = 0;
+		virtual size_t byte_capacity() const = 0;
 
 	protected:
 

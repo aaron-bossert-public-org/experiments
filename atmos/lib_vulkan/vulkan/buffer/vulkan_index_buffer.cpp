@@ -51,7 +51,7 @@ std::unique_ptr<vulkan_index_buffer> vulkan_index_buffer::make(
 	return nullptr;
 }
 
-VkIndexType vulkan_index_buffer::format()
+VkIndexType vulkan_index_buffer::format() const
 {
 	return _format;
 }

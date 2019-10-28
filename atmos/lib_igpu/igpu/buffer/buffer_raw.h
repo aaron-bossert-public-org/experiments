@@ -21,7 +21,7 @@ namespace igpu
 
 		void unmap() override;
 
-		size_t byte_size() const override;
+		size_t byte_capacity() const override;
 
 		const buffer_view<char>& mapped_view() const;
 
@@ -30,7 +30,7 @@ namespace igpu
 		const config _cfg;
 		
 		buffer_view<char> _mapped_view = {};
-		std::unique_ptr<char[]> _memory;
+		std::vector<char> _memory;
 
 		perf::metric _cpu_mem_metric;
 	};

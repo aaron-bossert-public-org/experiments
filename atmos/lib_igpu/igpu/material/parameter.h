@@ -24,19 +24,15 @@ namespace igpu
 			type type;
 		};
         
-        const config& cfg() const;
+        virtual const config& cfg() const = 0;
 
-		size_t constraint_index() const;
+		virtual ~parameter() = default;
         
-    protected:
+	protected:
+		
+		parameter() = default;
 
-		parameter(const config&, size_t constraint_index);
-		parameter(const parameter&) = default;
-		parameter& operator= (const parameter&) = default;
-
-    protected:
-        
-        config _cfg;
-		size_t _constraint_index;
+		parameter(const parameter&) = delete;
+		parameter& operator= (const parameter&) = delete;
     };
 }

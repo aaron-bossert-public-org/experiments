@@ -88,9 +88,9 @@ void gl_texture2d::unmap()
 	}
 }
 
-size_t gl_texture2d::byte_size() const
+size_t gl_texture2d::byte_capacity() const
 {
-	return _buffer.byte_size();
+	return _buffer.byte_capacity();
 }
 
 void gl_texture2d::unmap(

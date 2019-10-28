@@ -134,10 +134,9 @@ namespace
 			severity = logging::severity::VERBOSE;
 		}
 
-		LOG_CONTEXT(
+		igpu::debug::set_callback_info({
 			severity,
-			"Vulkan layer debug callback: %s",
-			p_callback_data->pMessage);
+			p_callback_data->pMessage });
 
 		return VK_FALSE;
 	}
@@ -516,8 +515,7 @@ std::unique_ptr<vertex_buffer> vulkan_context::make_vertex_buffer(
 {
 	return vulkan_vertex_buffer::make (
 		cfg, 
-		_buffer_mediator,
-		_vertex_constraints);
+		_buffer_mediator);
 }
 
 std::unique_ptr<index_buffer> vulkan_context::make_index_buffer(
@@ -554,11 +552,6 @@ const material_constraints& vulkan_context::material_constraints() const
 	return _material_constraints;
 }
 
-const vertex_constraints& vulkan_context::vertex_constraints() const
-{
-	return _vertex_constraints;
-}
-
 const vulkan_window& vulkan_context::window() const
 {
 	return *_window;
@@ -593,7 +586,6 @@ vulkan_context::vulkan_context(
 	, _back_buffer(std::move(back_buffer))
 	, _batch_constraints(cfg.batch_constraints)
 	, _material_constraints(cfg.material_constraints)
-	, _vertex_constraints(cfg.vertex_constraints)
 #if ATMOS_PERFORMANCE_TRACKING
 	, _renderstate_switch_metric(perf::category::SWITCH_RENDER_STATES, "Renderstates")
 	, _draw_target_clears_metric(perf::category::CLEAR_DRAW_TARGET, "Draw Target Clears")

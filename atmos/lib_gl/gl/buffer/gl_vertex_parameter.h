@@ -5,7 +5,7 @@
 
 namespace igpu
 {
-    class gl_vertex_parameter
+    class gl_vertex_parameter : public vertex_parameter
     {
     public:
 		
@@ -18,6 +18,5 @@ namespace igpu
     private:
         
 		int _location = -1;
-		vertex_parameter _vertex_parameter;
     };
 }

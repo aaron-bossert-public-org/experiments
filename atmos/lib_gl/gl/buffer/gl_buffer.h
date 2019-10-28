@@ -1,44 +1,44 @@
 
 #pragma once
 
-#include <igpu/buffer/buffer_usage.h>
+#include <igpu/buffer/buffer.h>
 #include <framework/perf/metrics.h>
 
 namespace igpu
 {
-    class gl_buffer
+    class gl_buffer : public buffer
     {
     public:
 
 		gl_buffer(
-			buffer_usage usage,
+			const config&,
 			unsigned gl_target);
 
         ~gl_buffer();
         
+		const config& cfg() const override;
+
 		void map(
 			size_t byte_size,
-			buffer_view_base*);
+			buffer_view_base*) override;
 
-		void unmap();
+		void unmap() override;
 		
-		void release();
+		size_t byte_capacity() const override;
 
 		unsigned gl_handle() const;
 
-		size_t byte_size() const;
-
-		buffer_usage usage() const;
+		void release();
         
     private:
 
+		const config _cfg;
 		const unsigned _gl_target;
 		const unsigned _gl_handle;
 		const unsigned _gl_usage;
 		const unsigned _gl_access;
-		const buffer_usage _usage;
-
-		size_t _byte_size;
+		
+		size_t _byte_capacity;
 		void* _mapped;
         perf::metric _gpu_mem_metric;
     };
@@ -65,9 +65,9 @@ namespace igpu
 			_gl_buffer.unmap();
 		}
 
-		size_t byte_size() const override
+		size_t byte_capacity() const override
 		{
-			return _gl_buffer.byte_size();
+			return _gl_buffer.byte_capacity();
 		}
 
 		unsigned gl_handle() const override;
@@ -104,7 +104,7 @@ namespace igpu
 			: T(args...)
 			, _cfg(cfg)
 			, _gl_buffer(
-				cfg.usage,
+				_cfg,
 				gl_target)
 		{
 		}

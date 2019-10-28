@@ -79,13 +79,13 @@ namespace
 }
 
 gl_buffer::gl_buffer(
-	buffer_usage usage,
+	const config& cfg,
 	unsigned gl_target)
 	: _gpu_mem_metric(perf::category::GPU_MEM_USAGE, ::to_string(gl_target))
-	, _usage(usage)
+	, _cfg(cfg)
 	, _gl_target(gl_target)
 	, _gl_handle(gl_gen_buffer())
-	, _gl_usage(gl_usage(usage))
+	, _gl_usage(gl_usage(cfg.usage))
 	, _gl_access(gl_access())
 {
 }
@@ -93,6 +93,11 @@ gl_buffer::gl_buffer(
 gl_buffer::~gl_buffer()
 {
 	glDeleteBuffers(1, &_gl_handle);
+}
+
+const gl_buffer::config& gl_buffer::cfg() const
+{
+	return _cfg;
 }
 
 void gl_buffer::map(size_t byte_size, buffer_view_base* out_buffer_view)
@@ -107,34 +112,22 @@ void gl_buffer::map(size_t byte_size, buffer_view_base* out_buffer_view)
 	glGetIntegerv(_gl_target, &active_handle);
 	glBindBuffer(_gl_target, _gl_handle);
 
-	if (_byte_size < byte_size)
+	if (_byte_capacity < byte_size)
 	{
-		_byte_size = byte_size;
-		glBufferData(_gl_target, _byte_size, nullptr, _gl_usage);
+		_byte_capacity = byte_size;
+		glBufferData(_gl_target, _byte_capacity, nullptr, _gl_usage);
 
 		_gpu_mem_metric.reset();
-		_gpu_mem_metric.add(_byte_size);
+		_gpu_mem_metric.add(_byte_capacity);
 	}
 
-//	if (0 <= offset)
-//	{
-//		_mapped =
-//#if defined(GL_EXT_map_buffer_range )
-//			glMapBufferRangeEXT(_gl_target, offset, size, _gl_access);
-//#else
-//			glMapBufferRange(_gl_target, offset, count, _gl_access);
-//#endif
-//	}
-//	else
-	{
-		_mapped =
 #if defined(GL_OES_mapbuffer )
-			glMapBufferOES(_gl_target, _gl_access);
+	_mapped =
+		glMapBufferOES(_gl_target, _gl_access);
 #else
-			glMapBuffer(_gl_target, _gl_access);
+	_mapped =
+		glMapBuffer(_gl_target, _gl_access);
 #endif
-
-	}
 
 	glBindBuffer(_gl_target, active_handle);
 
@@ -179,7 +172,7 @@ void gl_buffer::release()
 		glGetIntegerv(_gl_target, &active_handle);
 		glBindBuffer(_gl_target, _gl_handle);
 
-		_byte_size = 0;
+		_byte_capacity = 0;
 		glBufferData(_gl_target, 0, nullptr, _gl_usage);
 		_gpu_mem_metric.reset();		
 	}
@@ -190,14 +183,8 @@ unsigned gl_buffer::gl_handle() const
 	return _gl_handle;
 }
 
-size_t gl_buffer::byte_size() const
+size_t gl_buffer::byte_capacity() const
 {
-	return _byte_size;
+	return _byte_capacity;
 }
-
-buffer_usage gl_buffer::usage() const
-{
-	return _usage;
-}
-
 
