@@ -33,6 +33,5 @@ namespace igpu
 	private:
 
 		const config _cfg;
-		const std::vector<primitive> _primitives;
 	};
 }

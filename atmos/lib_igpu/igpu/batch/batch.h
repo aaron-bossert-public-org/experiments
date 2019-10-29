@@ -11,28 +11,25 @@ namespace igpu
 	{
     public:
 
+		struct config
+		{
+			std::vector<primitive_kv> primitives;
+		};
+
+		virtual const config& cfg() const = 0;
+
         virtual std::shared_ptr<batch_binding> make_binding(
 			const batch_binding::config&,
 			const utility::sphere& visibility_sphere) = 0;
         
         virtual void render(const utility::frustum& frustum) = 0;
         
-		virtual bool empty() const = 0;
-
         virtual ~batch() = 0;
 		
-		batch_parameters& parameters();
-
-		const batch_parameters& parameters() const;
-
     protected:
         
-		batch(std::shared_ptr <batch_parameters>);
-		batch(const batch&) = default;
-		batch& operator= (const batch&) = default;
-
-	private:
-
-		std::shared_ptr <batch_parameters> _parameters;
+		batch() = default;
+		batch(const batch&) = delete;
+		batch& operator= (const batch&) = delete;
 	};    
 }

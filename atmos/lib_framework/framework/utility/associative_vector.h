@@ -11,7 +11,10 @@ class associative_vector
 {
 public:
 
-	const T* get(const KEY& key) const
+	using map_t = std::unordered_map<KEY, size_t>;
+	using iter_t = typename map_t::iterator;
+
+	const VAL* find_value(const KEY& key) const
 	{
 		auto found = _index_map(key);
 		if (found == _index_map.end())
@@ -22,11 +25,21 @@ public:
 		return &_elements[found.second];
 	}
 
-	T* get(const KEY& key)
+	VAL* find_value(const KEY& key)
 	{
 		auto const_this = (const associative_vector*)this;
-		const VAL* found = const_this->find(key);
+		const VAL* found = const_this->find_value(key);
 		return (VAL*)found;
+	}
+
+	iter_t find_iter(const KEY& key)
+	{
+		return _index_map.find(key);
+	}
+
+	iter_t end_iter(const KEY& key) const
+	{
+		return _index_map.end();
 	}
 
 	template<typename... ARGS>
@@ -38,7 +51,7 @@ public:
 			_elements.emplace_back(std::forward<ARGS>(args)...);
 			auto emplaced = _index_map.emplace(key, _index_table.size());
 			_index_table.emplace_back(&emplaced.first);
-			return 
+			return
 		}
 
 		return { &_elements[found.first], false };
@@ -46,10 +59,14 @@ public:
 
 	bool erase(const KEY& key)
 	{
-		auto found = _index_map(key);
-		if (found != _index_map.end())
+		return erase(find_iter(key));
+	}
+
+	bool erase(const iter_t& iter)
+	{
+		if (iter != _index_map.end())
 		{
-			size_t index = found.second;
+			size_t index = iter.second;
 
 			_elements[index] = std::move(elements.back());
 			_elements.pop_back();
@@ -58,12 +75,27 @@ public:
 			*_index_table[index] = index;
 			_index_table.pop_back();
 
-			_index_map.erase(found);
-			
+			_index_map.erase(iter);
+
 			return true;
 		}
 
 		return false;
+	}
+
+	size_t size() const
+	{
+		return _elements.size();
+	}
+
+	const VAL& operator[](size_t i) const
+	{
+		return _elements[i];
+	}
+
+	VAL& operator[](size_t i)
+	{
+		return _elements[i];
 	}
 
 	const VAL* begin() const
@@ -87,7 +119,8 @@ public:
 	}
 
 private:
-	std::Vector<T> _elements;
-	std::Vector<size_t*> _index_table;
-	std::unordered_map<void*, size_t> _index_map;
+
+	std::vector<VAL> _elements;
+	std::vector<size_t*> _index_table;
+	map_t _index_map;
 };
