@@ -13,6 +13,7 @@ namespace igpu
 	class primitive_block;
 	class primitives;
 	class program;
+	class render_states;
 
     class batch_binding
     {
@@ -21,6 +22,7 @@ namespace igpu
         struct config
         {
             std::shared_ptr<program> program;
+			std::shared_ptr<render_states> render_states;
             std::shared_ptr<material> material;
             std::shared_ptr<geometry> geometry;
 			std::vector<primitive> primitives;

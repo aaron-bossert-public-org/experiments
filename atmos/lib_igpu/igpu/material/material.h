@@ -15,7 +15,6 @@ namespace igpu
 		struct config
 		{
 			std::string name;
-			std::shared_ptr<render_states> render_states;
 			std::vector<primitive_kv> primitives;
 		};
 
