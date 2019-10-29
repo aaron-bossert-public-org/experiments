@@ -12,13 +12,12 @@
 
 namespace igpu
 {
-	class primitive;
     class compute_buffer;
     class depth_texture2d;
+	class primitive;
+	class primitive_kv;
     class render_texture2d;
     class texture2d;
-
-	using primitive_kv = std::pair<std::string, primitive>;
 
     class primitive
     {
@@ -56,4 +55,8 @@ namespace igpu
 
 		variant_t _variant;
     };
+
+	class primitive_kv : public std::pair<std::string, primitive>
+	{
+	};
 }

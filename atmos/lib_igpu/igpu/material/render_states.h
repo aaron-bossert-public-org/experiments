@@ -5,17 +5,21 @@
 
 namespace igpu
 {
-	ENUM_SERIALIZABLE(
+	ENUM_SERIALIZABLE_TYPE(
 
-		cull, DEFAULT(BACK),
+		cull, uint8_t, 
+		DEFAULT(BACK),
+		
 		(BACK, 0),
 		(FRONT, 1),
 		(BOTH, 2)
 	);
 
-	ENUM_SERIALIZABLE(
+	ENUM_SERIALIZABLE_TYPE(
 
-		blend, DEFAULT(ZERO),
+		blend, uint8_t, 
+		DEFAULT(ZERO),
+		
 		(ZERO, 0),
 		(ONE, 1),
 		(SRC_COLOR, 2),
@@ -28,9 +32,10 @@ namespace igpu
 		(INV_DST_ALPHA, 9)
 	);
 
-	ENUM_SERIALIZABLE(
+	ENUM_SERIALIZABLE_TYPE(
 
-		compare, DEFAULT(NEVER),
+		compare, uint8_t, 
+		DEFAULT(NEVER),
 
 		(NEVER, 0),
 		(LESS, 1),
@@ -42,9 +47,10 @@ namespace igpu
 		(ALWAYS, 7)
 	);
 
-	ENUM_SERIALIZABLE(
+	ENUM_SERIALIZABLE_TYPE(
 
-		stencil, DEFAULT(KEEP),
+		stencil, uint8_t, 
+		DEFAULT(KEEP),
 
 		(KEEP, 0),
 		(ZERO, 1),
@@ -55,6 +61,10 @@ namespace igpu
 		(WRAP_DECREMENT, 6),
 		(INVERT, 7)
 	);
+
+
+	// raw byte comparison is done to prevent redundant state changes
+#pragma pack(push, 1)
 
 	struct cull_mode
 	{
@@ -88,10 +98,13 @@ namespace igpu
 		stencil depth_fail = stencil::KEEP;
 	};
 
+#pragma pack(pop)
+
 	class render_states
 	{
 	public:
-		
+
+#pragma pack(push, 1)
 		struct config
 		{
 			uint8_t color_write_mask;
@@ -100,10 +113,9 @@ namespace igpu
 			stencil_mode stencil;
 			depth_mode depth;
 		};
+#pragma pack(pop)
 
 		virtual const config& cfg() const = 0;
-		
-		virtual int compare(const render_states* other) = 0;
 
 	protected:
 		
@@ -111,5 +123,11 @@ namespace igpu
 		render_states(const render_states&) = delete;
 		render_states& operator= (const render_states&) = delete;
 	};
+
+	int mem_compare(const render_states::config& lhs, const render_states::config& rhs);
+	int mem_compare(const cull_mode& lhs, const cull_mode& rhs);
+	int mem_compare(const blend_mode& lhs, const blend_mode& rhs);
+	int mem_compare(const stencil_mode& lhs, const stencil_mode& rhs);
+	int mem_compare(const depth_mode& lhs, const depth_mode& rhs);
 }
 

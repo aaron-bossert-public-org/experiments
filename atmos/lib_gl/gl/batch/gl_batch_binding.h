@@ -9,7 +9,7 @@ namespace igpu
 
 	class gl_batch_binding : public batch_binding
 	{
-		struct config : batch_binding::config
+		struct config : instance_batch::config
 		{
 			gl_context* context = nullptr;
 		};
@@ -25,7 +25,7 @@ namespace igpu
 	protected:
 
 		gl_batch_binding(
-			const batch_binding::config&,
+			const instance_batch::config&,
 			const utility::sphere&);
 
 	private:

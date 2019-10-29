@@ -62,7 +62,7 @@
 //
 //gl_transparent_batch::binding::binding(
 //	gl_transparent_batch* gl_transparent_batch,
-//	const batch_binding::config& cfg,
+//	const instance_batch::config& cfg,
 //	const utility::sphere& visibility_sphere)
 //	: batch_binding(
 //		cfg,
@@ -83,8 +83,8 @@
 //	}
 //}
 //
-//std::shared_ptr<batch_binding> gl_transparent_batch::make_binding(
-//	const batch_binding::config& cfg,
+//std::unique_ptr<batch_binding> gl_transparent_batch::make_binding(
+//	const instance_batch::config& cfg,
 //	const utility::sphere& visibility_sphere)
 //{
 //	auto binding = std::shared_ptr<gl_transparent_batch::binding>(

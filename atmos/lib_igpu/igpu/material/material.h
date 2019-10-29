@@ -22,8 +22,6 @@ namespace igpu
 
 		const config& cfg() const;
 
-		const std::vector<primitive>& primitives() const;
-
 	protected:
 
 		material(config, std::vector<primitive>);

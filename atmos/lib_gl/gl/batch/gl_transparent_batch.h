@@ -20,7 +20,7 @@ namespace igpu
 
             binding(
 				gl_transparent_batch*,
-				const batch_binding::config&,
+				const instance_batch::config&,
 				const utility::sphere& visibility_sphere);
 
             ~binding();
@@ -38,8 +38,8 @@ namespace igpu
         using binding_t = std::shared_ptr<const binding>;
         using bindings_t = std::unordered_map<const binding*, binding_t>;
         
-		std::shared_ptr<batch_binding> make_binding(
-			const batch_binding::config&,
+		std::unique_ptr<batch_binding> make_binding(
+			const instance_batch::config&,
 			const utility::sphere& visibility_sphere) override;
 
         void render(const utility::frustum&) override;

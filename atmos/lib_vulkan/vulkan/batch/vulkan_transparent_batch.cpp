@@ -57,7 +57,7 @@
 
 // vulkan_transparent_batch::binding::binding(
 // 	vulkan_transparent_batch* vulkan_transparent_batch,
-// 	const batch_binding::config& cfg,
+// 	const instance_batch::config& cfg,
 // 	const utility::sphere& visibility_sphere)
 // 	: batch_binding(
 // 		cfg,
@@ -79,7 +79,7 @@
 // }
 
 // std::shared_ptr<batch_binding> vulkan_transparent_batch::make_binding(
-// 	const batch_binding::config& cfg,
+// 	const instance_batch::config& cfg,
 // 	const utility::sphere& visibility_sphere)
 // {
 //     auto binding = std::make_shared<vulkan_transparent_batch::binding>(

@@ -1,39 +1,17 @@
 
 #pragma once
 
-#include <igpu/batch/batch_binding.h>
-
-#include <framework/logging/log.h>
-
 namespace igpu
 {
 	class batch_parameters;
-	class instance;
-
-	// a "tree" of batches used for organizing opaque render passes
-	class batch_node
-	{
-	public:
-
-		virtual size_t child_count() const = 0;
-		
-		virtual const batch_node& child(size_t) const = 0;
-
-		virtual batch_node& child(size_t) = 0;
-
-	protected:
-		virtual ~batch_node() = default;
-		batch_node() = default;
-		batch_node(const batch_node&) = default;
-		batch_node& operator= (const batch_node&) = default;
-	};
-
-	class instance_batch : public batch_node
-	{
-	};
+	class geometry;
+	class material;
+	class program;
+	class render_states;
+	class instance_batch;
 
 	template<typename CHILD_T, typename ITEM_T>
-	class batch_api_t : public batch_node
+	class batch_api_t
 	{
 	public:
 
@@ -47,6 +25,12 @@ namespace igpu
 		virtual const child_t& child(size_t) const = 0;
 
 		virtual child_t& child(size_t) = 0;
+
+	protected:
+		virtual ~batch_api_t() = default;
+		batch_api_t() = default;
+		batch_api_t(const batch_api_t&) = default;
+		batch_api_t& operator= (const batch_api_t&) = default;
 	};
 
 	class geometry_batch : public batch_api_t<instance_batch, geometry>
@@ -67,7 +51,9 @@ namespace igpu
 
 	class root_batch : public batch_api_t<program_batch, batch_parameters>
 	{
-		root_batch(const batch_node&) = delete;
+	protected:
+		root_batch() = default;
+		root_batch(const root_batch&) = delete;
 		root_batch& operator= (const root_batch&) = delete;
 	};
 }

@@ -16,7 +16,7 @@
 //         void render(const utility::frustum& frustum) override;
         
 //         std::shared_ptr<batch_binding> make_binding(
-// 			const batch_binding::config&,
+// 			const instance_batch::config&,
 // 			const utility::sphere& visibility_sphere) override;
         
 //         static std::unique_ptr<vulkan_opaque_batch> make(

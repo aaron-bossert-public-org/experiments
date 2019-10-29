@@ -22,7 +22,7 @@
 //{
 //    std::shared_ptr<batch_binding> gl_make_batches(
 //		geometry_batch* geometry_batch, 
-//		const batch_binding::config& cfg,
+//		const instance_batch::config& cfg,
 //		const utility::sphere& visibility_sphere)
 //    {
 //		auto binding = std::shared_ptr<geometry_batch::binding>(
@@ -42,7 +42,7 @@
 //    template <typename batch_t>
 //	std::shared_ptr<batch_binding> gl_make_batches(
 //		batch_t* b,
-//		const batch_binding::config& cfg,
+//		const instance_batch::config& cfg,
 //		const utility::sphere& visibility_sphere)
 //    {
 //        auto* child = cast_to_child<batch_t>(b->find_child(cfg));
@@ -199,8 +199,8 @@
 //	_gl_context->end_batch(this);
 //}
 //
-//std::shared_ptr<batch_binding> gl_opaque_batch::make_binding(
-//	const batch_binding::config& cfg,
+//std::unique_ptr<batch_binding> gl_opaque_batch::make_binding(
+//	const instance_batch::config& cfg,
 //	const utility::sphere& visibility_sphere)
 //{
 //	return gl_make_batches(&root(), cfg, visibility_sphere);

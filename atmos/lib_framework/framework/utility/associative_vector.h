@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <vector>
+#include <memory>
 
 // use to store a cache friendly array of values that are searchable by key
 // a separate 
@@ -10,54 +11,57 @@ template <typename KEY, typename VAL>
 class associative_vector
 {
 public:
-
-	using map_t = std::unordered_map<KEY, size_t>;
+	using key_t = KEY;
+	using val_t = VAL;
+	using map_t = std::unordered_map<key_t, size_t>;
 	using iter_t = typename map_t::iterator;
 
-	const VAL* find_value(const KEY& key) const
+	const val_t* find_value(const key_t& key) const
 	{
-		auto found = _index_map(key);
+		auto found = _index_map.find(key);
 		if (found == _index_map.end())
 		{
 			return nullptr;
 		}
 
-		return &_elements[found.second];
+		return &_elements[found->second];
 	}
 
-	VAL* find_value(const KEY& key)
+	val_t* find_value(const key_t& key)
 	{
 		auto const_this = (const associative_vector*)this;
-		const VAL* found = const_this->find_value(key);
-		return (VAL*)found;
+		const val_t* found = const_this->find_value(key);
+		return (val_t*)found;
 	}
 
-	iter_t find_iter(const KEY& key)
+	iter_t find_iter(const key_t& key)
 	{
 		return _index_map.find(key);
 	}
 
-	iter_t end_iter(const KEY& key) const
+	iter_t end_iter()
 	{
 		return _index_map.end();
 	}
 
 	template<typename... ARGS>
-	std::pair<VAL*, bool> emplace(const KEY& key, ARGS&&...args)
+	std::pair<val_t*, bool> emplace(const key_t& key, ARGS&&...args)
 	{
-		auto found = _index_map(key);
+		auto found = _index_map.find(key);
 		if (found == _index_map.end())
 		{
-			_elements.emplace_back(std::forward<ARGS>(args)...);
 			auto emplaced = _index_map.emplace(key, _index_table.size());
-			_index_table.emplace_back(&emplaced.first);
-			return
+			_index_table.emplace_back(&emplaced.first->second);
+			_elements.emplace_back(std::forward<ARGS>(args)...);
+			*_begin_ptr = _elements.data();
+			
+			return { &_elements.back(), true };
 		}
 
-		return { &_elements[found.first], false };
+		return { &_elements[found->second], false };
 	}
 
-	bool erase(const KEY& key)
+	bool erase(const key_t& key)
 	{
 		return erase(find_iter(key));
 	}
@@ -66,9 +70,9 @@ public:
 	{
 		if (iter != _index_map.end())
 		{
-			size_t index = iter.second;
+			size_t index = iter->second;
 
-			_elements[index] = std::move(elements.back());
+			_elements[index] = std::move(_elements.back());
 			_elements.pop_back();
 
 			_index_table[index] = std::move(_index_table.back());
@@ -76,7 +80,7 @@ public:
 			_index_table.pop_back();
 
 			_index_map.erase(iter);
-
+			*_begin_ptr = _elements.data();
 			return true;
 		}
 
@@ -88,39 +92,49 @@ public:
 		return _elements.size();
 	}
 
-	const VAL& operator[](size_t i) const
+	const val_t& operator[](size_t i) const
 	{
 		return _elements[i];
 	}
 
-	VAL& operator[](size_t i)
+	val_t& operator[](size_t i)
 	{
 		return _elements[i];
 	}
 
-	const VAL* begin() const
+	const val_t* begin() const
 	{
 		return _elements.data();
 	}
 
-	const VAL* end() const
+	const val_t* end() const
 	{
 		return _elements.data() + _elements.size();
 	}
 
-	VAL* begin() const
+	val_t* begin()
 	{
 		return _elements.data();
 	}
 
-	VAL* end() const
+	val_t* end()
 	{
 		return _elements.data() + _elements.size();
+	}
+
+	const std::shared_ptr<val_t*>& begin_ptr() const
+	{
+		return _begin_ptr;
+	}
+
+	const std::vector<size_t*>& index_table() const
+	{
+		return _index_table;
 	}
 
 private:
-
-	std::vector<VAL> _elements;
+	std::shared_ptr<val_t*> _begin_ptr = std::shared_ptr<val_t*>(new val_t*());
+	std::vector<val_t> _elements;
 	std::vector<size_t*> _index_table;
 	map_t _index_map;
 };
