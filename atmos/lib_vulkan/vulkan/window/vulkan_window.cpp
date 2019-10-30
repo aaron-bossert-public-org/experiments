@@ -19,7 +19,9 @@ std::unique_ptr<vulkan_window> vulkan_window::make(
 	VkResult result = glfwCreateWindowSurface(cfg.instance, glfw_window, nullptr, &surface);
 	if (result != VK_SUCCESS)
 	{
+#if ATMOS_DEBUG
 		throw std::runtime_error(EXCEPTION_CONTEXT(debug::stringify_result(result).c_str()));
+#endif
 	}
 
 	auto w = std::unique_ptr<vulkan_window>(

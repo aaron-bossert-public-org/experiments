@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <igpu/batch/opaque_batch.h>
+#include <igpu/batch/transparent_batch.h>
 #include <igpu/buffer/compute_buffer.h>
 #include <igpu/buffer/geometry.h>
 #include <igpu/buffer/index_buffer.h>
@@ -20,8 +22,6 @@
 namespace igpu
 {
 	class back_buffer;
-
-	class batch_parameters;
 	class window;
 
 	class context
@@ -70,6 +70,12 @@ namespace igpu
 		virtual std::unique_ptr<texture2d> make_texture(
 			const texture2d::config&) = 0;
 
+		virtual std::unique_ptr<opaque_batch> make_opaque_batch(
+			const opaque_batch::config&) = 0;
+
+		virtual std::unique_ptr<transparent_batch> make_transparent_batch(
+			const transparent_batch::config&) = 0;
+
 		virtual const batch_constraints& batch_constraints() const = 0;
 
 		virtual const material_constraints& material_constraints() const = 0;
@@ -86,4 +92,10 @@ namespace igpu
 		context(const context&) = delete;
 		context& operator= (const context&) = delete;
 	};
+
+	template <typename CONFIG, typename DERRIVED>
+	void COPY_TO_DERRIVED_CONFIG(const CONFIG& base, DERRIVED* out_config)
+	{
+		static_cast<CONFIG&>(*out_config) = base;
+	}
 }

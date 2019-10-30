@@ -57,7 +57,7 @@
 //	ASSERT_CONTEXT(nullptr == active_program());
 //
 //	gl_program::config gl_cfg;
-//	static_cast<program::config&>(gl_cfg) = cfg;
+//  COPY_TO_DERRIVED_CONFIG(cfg, &gl_cfg);
 //	gl_cfg.context = this;
 //
 //	return gl_program::make(

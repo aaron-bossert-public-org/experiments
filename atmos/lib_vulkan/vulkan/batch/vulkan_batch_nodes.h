@@ -2,6 +2,7 @@
 #pragma once
 
 #include <igpu/batch/batch_nodes.h>
+#include <igpu/batch/batch_utility.h>
 
 #include<vulkan/batch/vulkan_instance_batch.h>
 
@@ -13,10 +14,24 @@ namespace igpu
 	class vulkan_program_batch;
 	class vulkan_root_batch;
 
+	struct vulkan_batch_stack
+	{
+		vulkan_root_batch* root_batch = nullptr;
+		vulkan_program_batch* program_batch = nullptr;
+		vulkan_render_state_batch* render_state_batch = nullptr;
+		vulkan_material_batch* material_batch = nullptr;
+		vulkan_geometry_batch* geometry_batch = nullptr;
+		vulkan_instance_batch* instance_batch = nullptr;
+	};
+
 	class vulkan_geometry_batch : public batch_utility::batch_impl_t<geometry_batch, vulkan_instance_batch, vulkan_geometry>
 	{
 	public:
 		vulkan_geometry_batch(const vulkan_instance_batch::config&);
+
+		void start_draw(const vulkan_batch_stack&);
+
+		void stop_draw();
 
 		static vulkan_geometry* get_key(const vulkan_instance_batch::config&);
 	};
@@ -26,6 +41,10 @@ namespace igpu
 	public:
 		vulkan_material_batch(const vulkan_instance_batch::config&);
 
+		void start_draw(const vulkan_batch_stack&);
+
+		void stop_draw();
+
 		static material* get_key(const vulkan_instance_batch::config&);
 	};
 
@@ -33,6 +52,10 @@ namespace igpu
 	{
 	public:
 		vulkan_render_state_batch(const vulkan_instance_batch::config&);
+
+		void start_draw(const vulkan_batch_stack&);
+
+		void stop_draw();
 
 		static vulkan_render_states* get_key(const vulkan_instance_batch::config&);
 	};
@@ -42,6 +65,10 @@ namespace igpu
 	public:
 		vulkan_program_batch(const vulkan_instance_batch::config&);
 
+		void start_draw(const vulkan_batch_stack&);
+
+		void stop_draw();
+
 		static vulkan_program* get_key(const vulkan_instance_batch::config&);
 	};
 
@@ -49,20 +76,32 @@ namespace igpu
 	{
 	public:
 
+		using batch_stack_t = vulkan_batch_stack;
+
 		struct config
 		{
 			vulkan_context* context = nullptr;
 		};
 
-		vulkan_root_batch(const config& cfg);
-
 		const config& cfg() const;
 
-		std::unique_ptr<batch_binding> make_binding(
-			const vulkan_instance_batch::config&,
+		void start_draw(const vulkan_batch_stack&);
+
+		void stop_draw();
+
+		std::shared_ptr<batch_binding> make_binding(
+			const instance_batch::config&,
 			const utility::sphere& visibility_sphere);
+
+		static std::unique_ptr<vulkan_root_batch> make(
+			const config&);
+		
+	private:
+		
+		vulkan_root_batch(const config& cfg);
+
 	private:
 
-		const config& _cfg;
+		const config _cfg;
 	};
 }

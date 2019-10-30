@@ -1,10 +1,11 @@
 
 #include <vulkan/defines/vulkan_includes.h>
+
+#if ATMOS_VULKAN_DEBUG
+
 #include <unordered_map>
 #include <sstream>
 #include <Windows.h>
-
-#if ATMOS_DEBUG
 
 #define VK_RESULT_XMACRO(OP)\
 OP(VK_SUCCESS)\
@@ -141,5 +142,4 @@ VkResult debug::validate(const char* file, int line, const char* func, const cha
 	}
 	return res;
 }
-
-#endif // ATMOS_DEBUG
+#endif // ATMOS_VULKAN_DEBUG

@@ -3,6 +3,7 @@
 
 #include <vulkan/defines/vulkan_includes.h>
 
+#include <vulkan/context/vulkan_context.h>
 #include <vulkan/material/vulkan_shader.h>
 
 #include <igpu/buffer/buffer.h>
@@ -124,7 +125,7 @@ namespace igpu
 			VkShaderStageFlagBits shader_stage)
 		{
 			config cfg_t;
-			static_cast<typename T::config&>(cfg_t) = cfg;
+			COPY_TO_DERRIVED_CONFIG(cfg, &cfg_t);
 			cfg_t.device = device;
 			cfg_t.shader_stage = shader_stage;
 

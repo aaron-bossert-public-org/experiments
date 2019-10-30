@@ -2,6 +2,8 @@
 
 #include <functional>
 
+#define ATMOS_VULKAN_DEBUG 1
+
 #define VULKAN_CHECK_ERR(F, ...) igpu::debug::validate(__FILE__, __LINE__ , __func__, #F"("#__VA_ARGS__")",  std::function<decltype(F(__VA_ARGS__))()>([&] { VULKAN_CONSUME_BREAK_(); return F(__VA_ARGS__);} ) )
 #define VULKAN_CONSUME_BREAK_() struct EAT { ~EAT() { if (igpu::debug::consume_debug_break()) { __debugbreak(); } } } _; (void)_
 #ifndef VMA_ASSERT
@@ -12,8 +14,6 @@
 #	define VMA_HEAVY_ASSERT(...) ASSERT_CONTEXT(__VA_ARGS__)
 #endif
 
-#if ATMOS_DEBUG
-
 #	ifndef VMA_DEBUG_LOG
 #		define VMA_DEBUG_LOG(...) LOG_VERBOSE("VulkanMemoryAllocator: " __VA_ARGS__)
 #	endif
@@ -21,8 +21,6 @@
 #	ifndef VMA_RECORDING_ENABLED
 #		define VMA_RECORDING_ENABLED 1
 #	endif
-
-#endif
 
 #	include <vulkan.h>
 #	include <VulkanMemoryAllocator\src\vk_mem_alloc.h>

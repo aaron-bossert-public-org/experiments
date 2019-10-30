@@ -1,69 +1,46 @@
 
-// #pragma once
+#pragma once
 
-// #include <igpu/batch/transparent_batch.h>
+#include <igpu/batch/transparent_batch.h>
 
-// #include <vector>
-// #include <unordered_map>
+namespace igpu
+{
+	class vulkan_root_batch;
+	class vulkan_context;
 
-// namespace igpu
-// {
-// 	class vulkan_context;
+	class vulkan_transparent_batch : public transparent_batch
+	{
+	public:
+		struct config : transparent_batch::config
+		{
+			struct
+			{
+				vulkan_context* context = nullptr;
+			} vulkan;
+		};
 
-// 	class vulkan_transparent_batch : public transparent_batch
-// 	{
-// 	public:
-        
-//         struct binding : batch_binding
-//         {
-//             binding(
-// 				vulkan_transparent_batch*,
-// 				const instance_batch::config&,
-// 				const utility::sphere& visibility_sphere);
+		const config& cfg() const override;
 
-//             ~binding();
+		~vulkan_transparent_batch() override;
 
-//             void unbind() override;
-            
-// 		private:
+		void render(const utility::frustum& frustum) override;
 
-//             vulkan_transparent_batch * _vulkan_transparent_batch;
-//         };
-        
-//         using sortable_t = std::pair<float, const binding*>;
-//         using sorted_t = std::vector<sortable_t>;
-//         using binding_t = std::shared_ptr<const binding>;
-//         using bindings_t = std::unordered_map<const binding*, binding_t>;
-        
-// 		std::shared_ptr<batch_binding> make_binding(
-// 			const instance_batch::configinstance_batch::config&,
-// 			const utility::sphere& visibility_sphere) override;
+		std::shared_ptr<batch_binding> make_binding(
+			const instance_batch::config&,
+			const utility::sphere& visibility_sphere) override;
 
-//         void render(const utility::frustum&) override;
+		static std::unique_ptr<vulkan_transparent_batch> make(
+			const config&);
 
-// 		bool empty() const override;
-        
-//         ~vulkan_transparent_batch() override;
+	private:
 
-//         void unbind(const binding*);
+		vulkan_transparent_batch(
+			const config&,
+			std::unique_ptr<vulkan_root_batch>);
 
-// 		static std::unique_ptr<vulkan_transparent_batch> make(
-// 			std::shared_ptr<batch_parameters> parameters, 
-// 			vulkan_context* vulkan_context);
+	private:
 
-//     private:
-
-// 		vulkan_transparent_batch(
-// 			std::shared_ptr<batch_parameters> parameters, 
-// 			vulkan_context* vulkan_context);
-
-// 	private:
-        
-// 		vulkan_context* _vulkan_context;
-//         bindings_t _bindings;
-        
-//         // retain set of sortable indices so that they do not need to
-//         // be re allocated each frame.
-//         sorted_t _sorted_visible_bindings;
-// 	};
-// }
+		const config _cfg;
+		std::unique_ptr<vulkan_root_batch> _root_batch;
+	};
+}

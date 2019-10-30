@@ -80,15 +80,8 @@ const vulkan_vertex_buffer& vulkan_geometry::vertex_buffer(size_t i) const
 }
 
 std::unique_ptr<vulkan_geometry> vulkan_geometry::make(
-	const geometry::config& base_cfg)
+	const config& cfg)
 {
-	config cfg = {};
-	static_cast<geometry::config&>(cfg) = base_cfg;
-
-	cfg.input_assembly_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	cfg.input_assembly_info.topology = to_vulkan_topology(cfg.topology);
-	cfg.input_assembly_info.primitiveRestartEnable = VK_FALSE;
-
 	if (nullptr == cfg.index_buffer)
 	{
 		LOG_CRITICAL("index buffer is null");

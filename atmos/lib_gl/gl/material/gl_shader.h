@@ -80,7 +80,7 @@ namespace igpu
 			GLenum type)
 		{
 			config cfg_t;
-			static_cast<typename T::config&>(cfg_t) = cfg;
+			COPY_TO_DERRIVED_CONFIG(cfg, &cfg_t);
 			cfg_t.type = type;
 
 			switch (type)

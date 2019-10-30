@@ -159,7 +159,8 @@ namespace igpu
 		template <
 			typename ROOT_BATCH,
 			typename BATCH_STACK = ROOT_BATCH::batch_stack_t>
-			void render_opaque(ROOT_BATCH& root_batch)
+			void render_opaque(ROOT_BATCH& root_batch,
+				const utility::frustum& frustum)
 		{
 			BATCH_STACK stack = {};
 			for (auto& program_batch : root_batch)
@@ -177,7 +178,8 @@ namespace igpu
 							for (auto& instance_batch : geometry_batch.map())
 							{
 								stack.instance_batch = nullptr;
-								if (instance_batch.visible())
+								if (instance_batch.count() &&
+									utility::intersects(frustum, instance_batch.visibility_sphere()))
 								{
 									stack.instance_batch = &instance_batch;
 									if (!stack.geometry_batch)
@@ -196,42 +198,42 @@ namespace igpu
 													{
 														stack.root_batch = &root_batch;
 
-														root_batch.begin(stack);
+														root_batch.start_draw(stack);
 													}
-													program_batch.begin(stack);
+													program_batch.start_draw(stack);
 												}
-												render_state_batch.begin(stack);
+												render_state_batch.start_draw(stack);
 											}
-											material_batch.begin(stack);
+											material_batch.start_draw(stack);
 										}
-										geometry_batch.begin(stack);
+										geometry_batch.start_draw(stack);
 									}
 									instance_batch.draw(stack);
 								}
 							}
 							if (stack.geometry_batch)
 							{
-								geometry_batch.end();
+								geometry_batch.stop_draw();
 							}
 						}
 						if (stack.material_batch)
 						{
-							material_batch.end();
+							material_batch.stop_draw();
 						}
 					}
 					if (stack.render_state_batch)
 					{
-						render_state_batch.end();
+						render_state_batch.stop_draw();
 					}
 				}
 				if (stack.program_batch)
 				{
-					program_batch.end();
+					program_batch.stop_draw();
 				}
 			}
 			if (stack.root_batch)
 			{
-				root_batch.end()
+				root_batch.stop_draw();
 			}
 		}
 
@@ -289,6 +291,26 @@ namespace igpu
 			map_t& map()
 			{
 				return _map;
+			}
+
+			const child_t* begin() const
+			{
+				return _map.begin();
+			}
+
+			const child_t* end() const
+			{
+				return _map.end();
+			}
+
+			child_t* begin()
+			{
+				return _map.begin();
+			}
+
+			child_t* end()
+			{
+				return _map.end();
 			}
 
 			batch_impl_t() = default;

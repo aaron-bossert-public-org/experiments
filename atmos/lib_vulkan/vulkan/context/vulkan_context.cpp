@@ -2,6 +2,8 @@
 #include <vulkan/context/vulkan_context.h>
 
 // Vulkan implementation includes - begin
+#include <vulkan/batch/vulkan_opaque_batch.h>
+#include <vulkan/batch/vulkan_transparent_batch.h>
 #include <vulkan/buffer/vulkan_geometry.h>
 #include <vulkan/buffer/vulkan_buffer_mediator.h>
 #include <vulkan/buffer/vulkan_compute_buffer.h>
@@ -104,15 +106,13 @@ namespace
 			{
 				LOG_CRITICAL("%s requested, but not available", layer_name);
 			}
-			else
-			{
-				vkCreateInstance(&create_info, nullptr, &instance);
-			}
 		}
 
+		vkCreateInstance(&create_info, nullptr, &instance);
 		return instance;
 	}
 	
+#if ATMOS_DEBUG
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT /* message_type */, const VkDebugUtilsMessengerCallbackDataEXT* p_callback_data, void* /* p_user_data */)
 	{
 		logging::severity severity = logging::severity::VERBOSE;
@@ -168,6 +168,7 @@ namespace
 		
 		return debug_messenger;
 	}
+#endif //ATMOS_DEBUG
 
 	struct queue_families
 	{
@@ -403,8 +404,11 @@ std::unique_ptr<vulkan_context> vulkan_context::make(
 	const glm::ivec2& screen_res)
 {
 	VkInstance instance = create_instance(cfg);
-	VkDebugUtilsMessengerEXT debug_messenger = create_debug_messenger(cfg, instance);
-
+	VkDebugUtilsMessengerEXT debug_messenger = nullptr;
+	
+#if ATMOS_DEBUG
+	debug_messenger = create_debug_messenger(cfg, instance);
+#endif
 
 	vulkan_window::config window_cfg = {};
 	window_cfg.name = cfg.name;
@@ -478,14 +482,13 @@ const vulkan_context::config& vulkan_context::cfg() const
 }
 
 std::unique_ptr<program> vulkan_context::make_program(
-	const program::config& cfg)
+	const program::config& base_cfg)
 {
-	vulkan_program::config vulkan_cfg;
-	static_cast<program::config&>(vulkan_cfg) = cfg;
-	vulkan_cfg.context = this;
+	vulkan_program::config cfg;
+	COPY_TO_DERRIVED_CONFIG(base_cfg, &cfg);
 
 	return vulkan_program::make(
-		vulkan_cfg);
+		cfg);
 }
 
 std::unique_ptr<vertex_shader> vulkan_context::make_vertex_shader(
@@ -505,8 +508,15 @@ std::unique_ptr<fragment_shader> vulkan_context::make_fragment_shader(
 }
 
 std::unique_ptr<geometry> vulkan_context::make_geometry(
-	const geometry::config& cfg)
+	const geometry::config& base_cfg)
 {
+	vulkan_geometry::config cfg = {};
+	COPY_TO_DERRIVED_CONFIG(base_cfg, &cfg);
+
+	cfg.input_assembly_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+	cfg.input_assembly_info.topology = to_vulkan_topology(cfg.topology);
+	cfg.input_assembly_info.primitiveRestartEnable = VK_FALSE;
+
 	return vulkan_geometry::make(cfg);
 }
 
@@ -540,6 +550,28 @@ std::unique_ptr<texture2d> vulkan_context::make_texture(
 		cfg,
 		_buffer_mediator);
 
+}
+
+std::unique_ptr<opaque_batch> vulkan_context::make_opaque_batch(
+	const opaque_batch::config& base_cfg)
+{
+	vulkan_opaque_batch::config cfg = {};
+	COPY_TO_DERRIVED_CONFIG(base_cfg, &cfg);
+	cfg.vulkan.context = this;
+
+	return vulkan_opaque_batch::make(
+		cfg);
+}
+
+std::unique_ptr<transparent_batch> vulkan_context::make_transparent_batch(
+	const transparent_batch::config& base_cfg)
+{
+	vulkan_transparent_batch::config cfg = {};
+	COPY_TO_DERRIVED_CONFIG(base_cfg, &cfg);
+	cfg.vulkan.context = this;
+
+	return vulkan_transparent_batch::make(
+		cfg);
 }
 
 const batch_constraints& vulkan_context::batch_constraints() const

@@ -32,9 +32,9 @@ namespace igpu
 
 		virtual const config& cfg() const = 0;
 
-		virtual void instance_count(size_t) = 0;
+		virtual void count(size_t) = 0;
 
-		virtual size_t instance_count() const = 0;
+		virtual size_t count() const = 0;
 
 		virtual const utility::sphere& visibility_sphere() const = 0;
 

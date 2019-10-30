@@ -10,7 +10,6 @@ namespace
 	vulkan_render_states::config to_vulkan(const render_states::config& base_cfg)
 	{
 		vulkan_render_states::config cfg = {};
-
 		static_cast<render_states::config&>(cfg) = base_cfg;
 		cfg.vulkan = to_vulkan_render_states(cfg);
 

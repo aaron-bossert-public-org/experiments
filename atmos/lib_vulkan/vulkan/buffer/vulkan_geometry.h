@@ -39,7 +39,7 @@ namespace igpu
 		const vulkan_vertex_buffer& vertex_buffer(size_t index) const override;
 
 		static std::unique_ptr<vulkan_geometry> make(
-			const geometry::config&);
+			const config&);
 
 		~vulkan_geometry() override;
 

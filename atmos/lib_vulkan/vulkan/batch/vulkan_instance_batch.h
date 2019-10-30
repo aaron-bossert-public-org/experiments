@@ -10,10 +10,10 @@
 #include <vulkan/material/vulkan_program.h>
 #include <vulkan/material/vulkan_render_states.h>
 
-#include <vulkan/batch/vulkan_batch_nodes.h>
-
 namespace igpu
 {
+	struct vulkan_batch_stack;
+
 	class vulkan_instance_batch : public instance_batch
 	{
 	public:
@@ -38,19 +38,20 @@ namespace igpu
 
 		const config& cfg() const override;
 
-		void instance_count(size_t) override;
+		void count(size_t) override;
 
-		size_t instance_count() const override;
+		size_t count() const override;
 
 		const utility::sphere& visibility_sphere() const override;
 
 		void visibility_sphere(const utility::sphere& visibility_sphere) override;
 
+		void draw(const vulkan_batch_stack&);
+
 	private:
 
 		config _cfg;
-
-		size_t _instance_count = 1;
+		size_t _count = 1;
 		utility::sphere _visibility_sphere;
 	};
 }

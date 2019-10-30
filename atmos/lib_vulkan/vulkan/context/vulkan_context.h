@@ -50,6 +50,12 @@ namespace igpu
 
 		std::unique_ptr<texture2d> make_texture(
 			const texture2d::config&) override;
+
+		std::unique_ptr<opaque_batch> make_opaque_batch(
+			const opaque_batch::config&) override;
+
+		std::unique_ptr<transparent_batch> make_transparent_batch(
+			const transparent_batch::config&) override;
 		
 		const igpu::batch_constraints& batch_constraints() const override;
 

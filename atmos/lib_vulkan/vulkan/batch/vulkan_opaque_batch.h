@@ -1,37 +1,45 @@
 
-// #pragma once
+#pragma once
 
-// #include <igpu/batch/opaque_batch.h>
+#include <igpu/batch/opaque_batch.h>
 
-// namespace igpu
-// {
-// 	class vulkan_context;
+namespace igpu
+{
+	class vulkan_root_batch;
+	class vulkan_context;
 
-// 	class vulkan_opaque_batch : opaque_batch
-// 	{
-//     public:
+	class vulkan_opaque_batch : public opaque_batch
+	{
+	public:
+		struct config : opaque_batch::config
+		{
+			struct {
+				vulkan_context* context = nullptr;
+			} vulkan;
+		};
 
-// 		~vulkan_opaque_batch() override;
+		const config& cfg() const override;
 
-//         void render(const utility::frustum& frustum) override;
-        
-//         std::shared_ptr<batch_binding> make_binding(
-// 			const instance_batch::config&,
-// 			const utility::sphere& visibility_sphere) override;
-        
-//         static std::unique_ptr<vulkan_opaque_batch> make(
-// 			std::shared_ptr<batch_parameters> parameters,
-// 			vulkan_context*);
+		~vulkan_opaque_batch() override;
 
-// 	private:
-        
-//         vulkan_opaque_batch(
-// 			std::shared_ptr<batch_parameters>,
-// 			std::unique_ptr<opaque_batch_root>,
-// 			vulkan_context*);
+		void render(const utility::frustum& frustum) override;
 
-// 	private:
+		std::shared_ptr<batch_binding> make_binding(
+			const instance_batch::config&,
+			const utility::sphere& visibility_sphere) override;
 
-// 		vulkan_context *const _vulkan_context;
-// 	};    
-// }
+		static std::unique_ptr<vulkan_opaque_batch> make(
+			const config&);
+
+	private:
+
+		vulkan_opaque_batch(
+			const config&,
+			std::unique_ptr<vulkan_root_batch>);
+
+	private:
+
+		const config _cfg;
+		std::unique_ptr<vulkan_root_batch> _root_batch;
+	};
+}

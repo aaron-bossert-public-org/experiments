@@ -13,45 +13,51 @@ using namespace igpu;
 
 namespace
 {
+	struct submit_context
+	{
+		VkSubmitInfo info;
+
+		operator const VkSubmitInfo* () const { return &info; }
+		operator VkCommandBuffer() const { return *info.pCommandBuffers; }
+	};
+
 	// allocate/build/execute/free a temporary command buffer before function exits
-	template<typename CommandBuilder, typename... Args>
+	template<typename SubmissonBuilder, typename... Args>
 	void submit_sync(
 		vulkan_queue & queue,
-		CommandBuilder&& builder)
+		SubmissonBuilder&& builder)
 	{
 		vulkan_command_buffer command_buffer({
 			queue.cfg().device,
 			queue.command_pool(),
 			VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 			});
+		VkCommandBuffer raw_command_buffer = command_buffer.get();
+
+		
+		submit_context submit_context = {};
+		submit_context.info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submit_context.info.commandBufferCount = 1;
+		submit_context.info.pCommandBuffers = &raw_command_buffer;
 
 		VkCommandBufferBeginInfo begin_info = {};
 		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-		
-		auto raw_command_buffer = command_buffer.get();
 		vkBeginCommandBuffer(raw_command_buffer, &begin_info);
 		builder(raw_command_buffer);
 		vkEndCommandBuffer(raw_command_buffer);
 
-
-
-		VkSubmitInfo submit_info = {};
-		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submit_info.commandBufferCount = 1;
-		submit_info.pCommandBuffers = &raw_command_buffer;
-
-		vkQueueSubmit(queue.get(), 1, &submit_info, VK_NULL_HANDLE);
+		vkQueueSubmit(queue.get(), 1, &submit_context.info, VK_NULL_HANDLE);
 		vkQueueWaitIdle(queue.get());
 	}
 
 	// allocate/build/submit command buffer to be executed asynnchronously
-	template<typename CommandBuilder>
+	template<typename SubmissonBuilder>
 	const scoped_ptr < vulkan_fence >&
 		submit(
 			vulkan_queue& queue,
-			CommandBuilder&& command_builder)
+			SubmissonBuilder&& builder)
 	{
 		queue.free_completed_commands();
 
@@ -65,25 +71,24 @@ namespace
 			cfg,
 			vulkan_fence::make({ queue.cfg().device })
 		);
-
 		vulkan_command_buffer& command_buffer = queue.pending_commands().back();
 		VkCommandBuffer raw_command_buffer = command_buffer.get();
-		VkCommandBufferBeginInfo begin_info = {};
 
+		
+		submit_context submit_context = {};
+		submit_context.info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submit_context.info.commandBufferCount = 1;
+		submit_context.info.pCommandBuffers = &raw_command_buffer;
+
+		VkCommandBufferBeginInfo begin_info = {};
 		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-		vkBeginCommandBuffer(raw_command_buffer, &begin_info);
+		vkBeginCommandBuffer(*raw_command_buffer, &begin_info);
+		builder(raw_command_buffer);
+		vkEndCommandBuffer(*raw_command_buffer);
 
-		command_builder(raw_command_buffer);
-		vkEndCommandBuffer(raw_command_buffer);
-
-		VkSubmitInfo submit_info = {};
-		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submit_info.commandBufferCount = 1;
-		submit_info.pCommandBuffers = &raw_command_buffer;
-
-		vkQueueSubmit(queue.cfg().queue, 1, &submit_info, command_buffer.fence()->get());
+		vkQueueSubmit(queue.cfg().queue, 1, &submit_context.info, command_buffer.fence()->get());
 
 		return command_buffer.fence();
 	}
