@@ -33,7 +33,7 @@ void vulkan_geometry_batch::stop_draw()
 
 vulkan_geometry* vulkan_geometry_batch::get_key(const vulkan_instance_batch::config& cfg)
 {
-	return cfg.vulkan.geometry.get();
+	return cfg.vk.geometry.get();
 }
 	
 vulkan_material_batch::vulkan_material_batch(const vulkan_instance_batch::config&)
@@ -73,7 +73,7 @@ void vulkan_render_state_batch::stop_draw()
 
 vulkan_render_states* vulkan_render_state_batch::get_key(const vulkan_instance_batch::config& cfg)
 {
-	return cfg.vulkan.render_states.get();
+	return cfg.vk.render_states.get();
 }
 
 vulkan_program_batch::vulkan_program_batch(const vulkan_instance_batch::config&)
@@ -93,7 +93,7 @@ void vulkan_program_batch::stop_draw()
 
 vulkan_program* vulkan_program_batch::get_key(const vulkan_instance_batch::config& cfg)
 {
-	return cfg.vulkan.program.get();
+	return cfg.vk.program.get();
 }
 
 const vulkan_root_batch::config& vulkan_root_batch::cfg() const
@@ -117,9 +117,9 @@ std::shared_ptr<batch_binding> vulkan_root_batch::make_binding(
 {
 	vulkan_instance_batch::config cfg;
 	COPY_TO_DERRIVED_CONFIG(base_cfg, &cfg);
-	cfg.vulkan.program = std::dynamic_pointer_cast < vulkan_program, program > (cfg.program);
-	cfg.vulkan.render_states = std::dynamic_pointer_cast < vulkan_render_states, render_states >(cfg.render_states);
-	cfg.vulkan.geometry = std::dynamic_pointer_cast <vulkan_geometry, geometry >(cfg.geometry);
+	cfg.vk.program = std::dynamic_pointer_cast < vulkan_program, program > (cfg.program);
+	cfg.vk.render_states = std::dynamic_pointer_cast < vulkan_render_states, render_states >(cfg.render_states);
+	cfg.vk.geometry = std::dynamic_pointer_cast <vulkan_geometry, geometry >(cfg.geometry);
 	
 	return batch_utility::create_binding(
 		*this,

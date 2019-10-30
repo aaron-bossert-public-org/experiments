@@ -32,11 +32,11 @@ std::shared_ptr<batch_binding> vulkan_transparent_batch::make_binding(
 std::unique_ptr<vulkan_transparent_batch> vulkan_transparent_batch::make(
 	const config& cfg)
 {
-	if (!cfg.vulkan.context)
+	if (!cfg.vk.context)
 	{
 		LOG_CRITICAL("context is null");
 	}
-	else if (auto root_batch = vulkan_root_batch::make({ cfg.vulkan.context }))
+	else if (auto root_batch = vulkan_root_batch::make({ cfg.vk.context }))
 	{
 		return std::unique_ptr<vulkan_transparent_batch>(
 			new vulkan_transparent_batch(

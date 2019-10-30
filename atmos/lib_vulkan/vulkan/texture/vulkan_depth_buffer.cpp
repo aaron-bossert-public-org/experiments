@@ -41,7 +41,7 @@ std::unique_ptr<vulkan_depth_buffer> vulkan_depth_buffer::make(const config& cfg
 	}
 
 	VkFormatProperties props;
-	vkGetPhysicalDeviceFormatProperties(cfg.physical_device, vulkan_format, &props);
+	vkGetPhysicalDeviceFormatProperties(cfg.vk.physical_device, vulkan_format, &props);
 
 	if (0 == (props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT))
 	{
@@ -59,8 +59,8 @@ std::unique_ptr<vulkan_depth_buffer> vulkan_depth_buffer::make(const config& cfg
 	image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
 	image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	image_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-	image_info.samples = cfg.sample_count;
-	image_info.sharingMode = cfg.sharing_mode;
+	image_info.samples = cfg.vk.sample_count;
+	image_info.sharingMode = cfg.vk.sharing_mode;
 
 
 	VkImageViewCreateInfo view_info = {};
@@ -94,12 +94,12 @@ std::unique_ptr<vulkan_depth_buffer> vulkan_depth_buffer::make(const config& cfg
 
 
 	vulkan_image::config image_cfg = {};
-	image_cfg.physical_device = cfg.physical_device;
-	image_cfg.device = cfg.device;
-	image_cfg.memory_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-	image_cfg.image_info = image_info;
-	image_cfg.view_info = view_info;
-	image_cfg.sampler_info = sampler_info;
+	image_cfg.vk.physical_device = cfg.vk.physical_device;
+	image_cfg.vk.device = cfg.vk.device;
+	image_cfg.vk.memory_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+	image_cfg.vk.image_info = image_info;
+	image_cfg.vk.view_info = view_info;
+	image_cfg.vk.sampler_info = sampler_info;
 
 
 	if (vulkan_image::validate(image_cfg))

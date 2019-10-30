@@ -19,7 +19,12 @@ namespace igpu
 
 		struct config : geometry::config
 		{
-			VkPipelineInputAssemblyStateCreateInfo input_assembly_info = {};
+			struct vulkan
+			{
+				VkPipelineInputAssemblyStateCreateInfo input_assembly_info = {};
+			};
+
+			vulkan vk;
 		};
 
 		const config& cfg() const override;

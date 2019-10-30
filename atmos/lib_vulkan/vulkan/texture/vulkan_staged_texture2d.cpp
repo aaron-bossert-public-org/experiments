@@ -201,12 +201,12 @@ void vulkan_staged_texture2d::unmap(
 			sampler_info.mipLodBias = 0;
 
 			vulkan_image::config image_cfg = {};
-			image_cfg.physical_device = buffer_mediator.cfg().physical_device;
-			image_cfg.device = buffer_mediator.cfg().device;
-			image_cfg.memory_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-			image_cfg.image_info = image_info;
-			image_cfg.view_info = view_info;
-			image_cfg.sampler_info = sampler_info;
+			image_cfg.vk.physical_device = buffer_mediator.cfg().physical_device;
+			image_cfg.vk.device = buffer_mediator.cfg().device;
+			image_cfg.vk.memory_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+			image_cfg.vk.image_info = image_info;
+			image_cfg.vk.view_info = view_info;
+			image_cfg.vk.sampler_info = sampler_info;
 
 
 			_image = nullptr;

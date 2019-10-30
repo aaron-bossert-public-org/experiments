@@ -174,7 +174,7 @@ namespace
 		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.image = image.get();
-		barrier.subresourceRange = image.cfg().view_info.subresourceRange;
+		barrier.subresourceRange = image.cfg().vk.view_info.subresourceRange;
 
 		// cannot add dependency with null queue
 		if (!target_owner.queue)
@@ -419,12 +419,12 @@ void vulkan_buffer_mediator::copy(
 			region.bufferOffset = src_offset;
 			region.bufferRowLength = 0;
 			region.bufferImageHeight = 0;
-			region.imageSubresource.aspectMask = dst.cfg().view_info.subresourceRange.aspectMask;
+			region.imageSubresource.aspectMask = dst.cfg().vk.view_info.subresourceRange.aspectMask;
 			region.imageSubresource.mipLevel = 0;
 			region.imageSubresource.baseArrayLayer = 0;
 			region.imageSubresource.layerCount = 1;
 			region.imageOffset = { 0, 0, 0 };
-			region.imageExtent = dst.cfg().image_info.extent;
+			region.imageExtent = dst.cfg().vk.image_info.extent;
 
 			vkCmdCopyBufferToImage(command_buffer, src_buffer, dst_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 		},
@@ -462,10 +462,10 @@ bool vulkan_buffer_mediator::can_generate_mipmaps(
 void vulkan_buffer_mediator::generate_mipmaps(vulkan_image& image)
 {
 	if (false == can_generate_mipmaps(
-		image.cfg().image_info.format,
-		image.cfg().image_info.tiling))
+		image.cfg().vk.image_info.format,
+		image.cfg().vk.image_info.tiling))
 	{
-		LOG_CRITICAL("vk format %d does not support linear blitting!", image.cfg().image_info.format);
+		LOG_CRITICAL("vk format %d does not support linear blitting!", image.cfg().vk.image_info.format);
 	}
 
 	submit_sync(
@@ -483,8 +483,8 @@ void vulkan_buffer_mediator::generate_mipmaps(vulkan_image& image)
 				barrier.subresourceRange.layerCount = 1;
 				barrier.subresourceRange.levelCount = 1;
 
-				int32_t mip_width = image.cfg().image_info.extent.width;
-				int32_t mip_height = image.cfg().image_info.extent.height;
+				int32_t mip_width = image.cfg().vk.image_info.extent.width;
+				int32_t mip_height = image.cfg().vk.image_info.extent.height;
 
 				// setting by hand, currently there isn't a way to represent per-mip ownership so we do the barriers by hand and
 				// track ownership manually.
@@ -496,7 +496,7 @@ void vulkan_buffer_mediator::generate_mipmaps(vulkan_image& image)
 					0,
 					_cfg.graphics_queue });
 
-				for (uint32_t i = 1; i < image.cfg().view_info.subresourceRange.levelCount; i++)
+				for (uint32_t i = 1; i < image.cfg().vk.view_info.subresourceRange.levelCount; i++)
 				{
 					barrier.subresourceRange.baseMipLevel = i;
 					barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
@@ -752,7 +752,7 @@ private:
 		const VkPipelineInputAssemblyStateCreateInfo& get_vertex_input_assembly_info()
 		{
 			auto* vulkan = ASSERT_CAST(vulkan_geometry*, geometry.get());
-			return vulkan->cfg().input_assembly_info;
+			return vulkan->cfg().vk.input_assembly_info;
 		}
 
 		void draw(VkCommandBuffer command_buffer)
@@ -1073,7 +1073,7 @@ public:
 		_present_queue = _context->buffer_mediator().cfg().present_queue;
 		_graphics_queue = _context->buffer_mediator().cfg().graphics_queue;
 		_swap_image_count = _context->back_buffer().framebuffers().size();
-		_msaa_samples = _context->back_buffer().cfg().sample_count;
+		_msaa_samples = _context->back_buffer().cfg().vk.sample_count;
 		create_command_pool();
 		
 		uniform_impl.create();

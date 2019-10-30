@@ -16,8 +16,13 @@
 
 		struct config : parameter::config
 		{
-			const size_t descriptor_set = (size_t)-1;
-			VkShaderStageFlags stage_flags;
+			struct vulkan
+			{
+				const size_t descriptor_set = (size_t)-1;
+				VkShaderStageFlags stage_flags;
+			};
+
+			vulkan vk;
 		};
 
 		const config& cfg() const override;

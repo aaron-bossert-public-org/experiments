@@ -44,7 +44,12 @@ namespace igpu
 
 		struct config : T::config
 		{
-			GLenum type;
+			struct gl
+			{
+				GLenum type;
+			};
+
+			gl gl;
 		};
 
 		const config& cfg() const

@@ -17,10 +17,6 @@ namespace igpu
     {
     public:
 
-		struct config : context::config
-		{
-		};
-
 		static std::unique_ptr<vulkan_context> make(
 			const config&,
 			const glm::ivec2& screen_res);

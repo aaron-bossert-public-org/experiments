@@ -19,12 +19,17 @@ namespace igpu
 
 		struct config
 		{
-			VkPhysicalDevice physical_device = nullptr;
-			VkDevice device = nullptr;
-			VkMemoryPropertyFlagBits memory_properties;
-			VkImageCreateInfo image_info = {};
-			VkImageViewCreateInfo view_info = {};
-			VkSamplerCreateInfo sampler_info = {};
+			struct vulkan
+			{
+				VkPhysicalDevice physical_device = nullptr;
+				VkDevice device = nullptr;
+				VkMemoryPropertyFlagBits memory_properties;
+				VkImageCreateInfo image_info = {};
+				VkImageViewCreateInfo view_info = {};
+				VkSamplerCreateInfo sampler_info = {};
+			};
+
+			vulkan vk;
 		};
 
 		struct ownership
@@ -66,7 +71,6 @@ namespace igpu
 	private:
 
 		const config _cfg;
-		VkDevice _device = nullptr;
 		VkImage _image = nullptr;
 		VkMemoryAllocateInfo _alloc_info;
 		VkDeviceMemory _device_memory = nullptr;

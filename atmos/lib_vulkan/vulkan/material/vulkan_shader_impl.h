@@ -18,8 +18,13 @@ namespace igpu
 
 		struct config : buffer::config
 		{
-			VkDevice device = nullptr;
-			VkShaderStageFlagBits shader_stage = {};
+			struct vulkan
+			{
+				VkDevice device = nullptr;
+				VkShaderStageFlagBits shader_stage = {};
+			};
+
+			vulkan vk;
 		};
 
 		vulkan_shader_impl(const config&);
@@ -63,8 +68,7 @@ namespace igpu
 
 		struct config : T::config
 		{
-			VkDevice device = nullptr;
-			VkShaderStageFlagBits shader_stage = {};
+			vulkan_shader_impl::config::vulkan vk;
 		};
 
 		const config& cfg() const override
@@ -93,7 +97,7 @@ namespace igpu
 		{
 			VkPipelineShaderStageCreateInfo shader_stage_info = {};
 			shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-			shader_stage_info.stage = _cfg.shader_stage;
+			shader_stage_info.stage = _cfg.vk.shader_stage;
 			shader_stage_info.module = _shader.shader_module();
 			shader_stage_info.pName = "main";
 			return shader_stage_info;
@@ -126,8 +130,8 @@ namespace igpu
 		{
 			config cfg_t;
 			COPY_TO_DERRIVED_CONFIG(cfg, &cfg_t);
-			cfg_t.device = device;
-			cfg_t.shader_stage = shader_stage;
+			cfg_t.vk.device = device;
+			cfg_t.vk.shader_stage = shader_stage;
 
 			switch (shader_stage)
 			{
@@ -141,7 +145,7 @@ namespace igpu
 					new vulkan_shader_impl_t(cfg_t));
 			}
 
-			LOG_CRITICAL("unhandled vulkan shader type: %d ", cfg_t.shader_stage);
+			LOG_CRITICAL("unhandled vulkan shader type: %d ", cfg_t.vk.shader_stage);
 
 			return nullptr;
 		}
@@ -150,7 +154,7 @@ namespace igpu
 
 		vulkan_shader_impl_t(const config& cfg)
 			: _cfg(cfg)
-			, _shader({ cfg.usage, cfg.device, cfg.shader_stage })
+			, _shader({ cfg.usage, cfg.vk })
 		{ }
 
 	private:

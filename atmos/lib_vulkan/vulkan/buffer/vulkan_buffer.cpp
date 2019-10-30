@@ -49,7 +49,7 @@ namespace
 
 vulkan_buffer::vulkan_buffer(const config& cfg)
 	: _cfg(cfg)
-	, _mem_metric(to_category(cfg.vma_usage), ::to_string(cfg.vk_usage))
+	, _mem_metric(to_category(cfg.vk.vma_usage), ::to_string(cfg.vk.usage))
 {
 }
 
@@ -93,7 +93,7 @@ void vulkan_buffer::map(size_t byte_size, buffer_view_base* out_buffer_view)
 		else
 		{
 			void* mapped;
-			vmaMapMemory(_cfg.vma, _vma_allocation, &mapped);
+			vmaMapMemory(_cfg.vk.vma, _vma_allocation, &mapped);
 			
 			_mapped_view = buffer_view<char>(
 				_mapped_view.size(),
@@ -116,7 +116,7 @@ void vulkan_buffer::unmap()
 	}
 	else
 	{
-		vmaUnmapMemory(_cfg.vma, _vma_allocation);
+		vmaUnmapMemory(_cfg.vk.vma, _vma_allocation);
 		_mapped_view = buffer_view_base(
 			_mapped_view.size(),
 			nullptr,
@@ -141,16 +141,16 @@ void vulkan_buffer::reserve(size_t byte_size)
 		{
 
 			VmaAllocationCreateInfo vma_info = {};
-			vma_info.usage = _cfg.vma_usage;
-			vma_info.flags = _cfg.vma_flags;
+			vma_info.usage = _cfg.vk.vma_usage;
+			vma_info.flags = _cfg.vk.vma_flags;
 
 			VkBufferCreateInfo info = {};
 			info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 			info.size = byte_size;
-			info.usage = _cfg.vk_usage;
-			info.sharingMode = _cfg.sharing_mode;
+			info.usage = _cfg.vk.usage;
+			info.sharingMode = _cfg.vk.sharing_mode;
 
-			vmaCreateBuffer(_cfg.vma, &info, &vma_info, &_buffer, &_vma_allocation, nullptr);
+			vmaCreateBuffer(_cfg.vk.vma, &info, &vma_info, &_buffer, &_vma_allocation, nullptr);
 			_mapped_view = buffer_view<char>(
 				byte_size,
 				nullptr);
@@ -170,7 +170,7 @@ void vulkan_buffer::release()
 
 	if (_buffer)
 	{
-		vmaDestroyBuffer(_cfg.vma, _buffer, _vma_allocation);
+		vmaDestroyBuffer(_cfg.vk.vma, _buffer, _vma_allocation);
 	}
 
 	_mem_metric.reset();

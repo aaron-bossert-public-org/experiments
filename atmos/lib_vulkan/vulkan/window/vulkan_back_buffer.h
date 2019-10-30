@@ -17,15 +17,20 @@ namespace igpu
 	{
 	public:
 
-		struct config : back_buffer::config {
+		struct config : back_buffer::config 
+		{
+			struct vulkan
+			{
+				VkPhysicalDevice physical_device = nullptr;
+				VkSurfaceKHR surface = nullptr;
+				VkDevice device = nullptr;
+				VkColorSpaceKHR color_space;
+				uint32_t present_queue_family = 0;
+				uint32_t graphics_queue_family = 0;
+				VkSampleCountFlagBits sample_count;
+			};
 
-			VkPhysicalDevice physical_device = nullptr;
-			VkSurfaceKHR surface = nullptr;
-			VkDevice device = nullptr;
-			VkColorSpaceKHR color_space;
-			uint32_t present_queue_family = 0;
-			uint32_t graphics_queue_family = 0;
-			VkSampleCountFlagBits sample_count;
+			vulkan vk;
 		};
 
 		const config& cfg() const override;

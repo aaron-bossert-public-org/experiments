@@ -9,10 +9,6 @@ namespace igpu
 	{
 	public:
 
-		struct config : vertex_parameter::config
-		{
-		};
-
 		const config& cfg() const override;
 
 		vulkan_vertex_parameter(const config&);

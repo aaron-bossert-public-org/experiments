@@ -13,9 +13,12 @@ namespace igpu
 	public:
 		struct config : opaque_batch::config
 		{
-			struct {
+			struct vulkan
+			{
 				vulkan_context* context = nullptr;
-			} vulkan;
+			};
+			
+			vulkan vk;
 		};
 
 		const config& cfg() const override;

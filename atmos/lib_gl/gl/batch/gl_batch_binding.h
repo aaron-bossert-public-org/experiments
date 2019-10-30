@@ -11,7 +11,12 @@ namespace igpu
 	{
 		struct config : instance_batch::config
 		{
-			gl_context* context = nullptr;
+			struct gl
+			{
+				gl_context* context = nullptr;
+			};
+
+			gl gl;
 		};
 
 		const config& cfg() const override;

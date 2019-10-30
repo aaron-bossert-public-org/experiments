@@ -16,7 +16,7 @@ std::unique_ptr<vulkan_window> vulkan_window::make(
 
 	auto glfw_window = glfwCreateWindow(res.x, res.y, cfg.name.data(), nullptr, nullptr);
 	VkSurfaceKHR surface = nullptr;
-	VkResult result = glfwCreateWindowSurface(cfg.instance, glfw_window, nullptr, &surface);
+	VkResult result = glfwCreateWindowSurface(cfg.vk.instance, glfw_window, nullptr, &surface);
 	if (result != VK_SUCCESS)
 	{
 #if ATMOS_DEBUG
@@ -59,7 +59,7 @@ glm::ivec2 vulkan_window::res() const
 
 vulkan_window::~vulkan_window()
 {
-	vkDestroySurfaceKHR(_cfg.instance, _surface, nullptr);
+	vkDestroySurfaceKHR(_cfg.vk.instance, _surface, nullptr);
 	glfwDestroyWindow(_glfw_window);
 	glfwTerminate();
 }

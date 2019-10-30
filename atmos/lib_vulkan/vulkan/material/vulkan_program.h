@@ -21,7 +21,12 @@ namespace igpu
 
 		struct config : program::config
 		{
-			vulkan_context* context;
+			struct vulkan
+			{
+				vulkan_context* context;
+			};
+
+			vulkan vk;
 		};
 
 		const config& cfg() const override;

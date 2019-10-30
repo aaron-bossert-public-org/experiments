@@ -18,10 +18,12 @@ namespace
 			cfg.color_format,
 			cfg.sampler,
 			cfg.res,
-			cfg.physical_device,
-			cfg.device,
-			cfg.sample_count,
-			VK_SHARING_MODE_EXCLUSIVE });
+			{
+				cfg.vk.physical_device,
+				cfg.vk.device,
+				cfg.vk.sample_count,
+				VK_SHARING_MODE_EXCLUSIVE
+			} });
 	}
 
 	std::unique_ptr<vulkan_depth_buffer> create_depth_buffer(
@@ -32,10 +34,12 @@ namespace
 			cfg.depth_format,
 			cfg.sampler,
 			cfg.res,
-			cfg.physical_device,
-			cfg.device,
-			cfg.sample_count,
-			VK_SHARING_MODE_EXCLUSIVE });
+			{
+				cfg.vk.physical_device,
+				cfg.vk.device,
+				cfg.vk.sample_count,
+				VK_SHARING_MODE_EXCLUSIVE
+			} });
 	}
 
 	bool validate_swap_surface_format(
@@ -43,12 +47,12 @@ namespace
 		const VkSurfaceFormatKHR& surface_format)
 	{
 		uint32_t format_count;
-		vkGetPhysicalDeviceSurfaceFormatsKHR(cfg.physical_device, cfg.surface, &format_count, nullptr);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(cfg.vk.physical_device, cfg.vk.surface, &format_count, nullptr);
 
 		std::vector<VkSurfaceFormatKHR> formats(format_count);
 		if (format_count != 0)
 		{
-			vkGetPhysicalDeviceSurfaceFormatsKHR(cfg.physical_device, cfg.surface, &format_count, formats.data());
+			vkGetPhysicalDeviceSurfaceFormatsKHR(cfg.vk.physical_device, cfg.vk.surface, &format_count, formats.data());
 		}
 
 		if (formats.size() == 1 && formats[0].format == VK_FORMAT_UNDEFINED)
@@ -77,7 +81,7 @@ namespace
 		}
 		else
 		{
-			LOG_CRITICAL("could not find support for surface color space %d", cfg.color_space);
+			LOG_CRITICAL("could not find support for surface color space %d", cfg.vk.color_space);
 		}
 
 		return false;
@@ -87,12 +91,12 @@ namespace
 		const vulkan_back_buffer::config& cfg)
 	{
 		uint32_t present_mode_count;
-		vkGetPhysicalDeviceSurfacePresentModesKHR(cfg.physical_device, cfg.surface, &present_mode_count, nullptr);
+		vkGetPhysicalDeviceSurfacePresentModesKHR(cfg.vk.physical_device, cfg.vk.surface, &present_mode_count, nullptr);
 
 		std::vector<VkPresentModeKHR> present_modes(present_mode_count);
 		if (present_mode_count != 0)
 		{
-			vkGetPhysicalDeviceSurfacePresentModesKHR(cfg.physical_device, cfg.surface, &present_mode_count, present_modes.data());
+			vkGetPhysicalDeviceSurfacePresentModesKHR(cfg.vk.physical_device, cfg.vk.surface, &present_mode_count, present_modes.data());
 		}
 
 		VkPresentModeKHR best_mode = VK_PRESENT_MODE_FIFO_KHR;
@@ -122,7 +126,7 @@ namespace
 
 		VkSwapchainCreateInfoKHR create_info = {};
 		create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-		create_info.surface = cfg.surface;
+		create_info.surface = cfg.vk.surface;
 		create_info.minImageCount = image_count;
 		create_info.imageFormat = surface_format.format;
 		create_info.imageColorSpace = surface_format.colorSpace;
@@ -135,8 +139,8 @@ namespace
 		create_info.clipped = VK_TRUE;
 
 		uint32_t queue_family_indices[2] = {
-			cfg.present_queue_family,
-			cfg.graphics_queue_family
+			cfg.vk.present_queue_family,
+			cfg.vk.graphics_queue_family
 		};
 
 		if (queue_family_indices[0] != queue_family_indices[1])
@@ -151,7 +155,7 @@ namespace
 		}
 
 		VkSwapchainKHR swap_chain = nullptr;
-		vkCreateSwapchainKHR(cfg.device, &create_info, nullptr, &swap_chain);
+		vkCreateSwapchainKHR(cfg.vk.device, &create_info, nullptr, &swap_chain);
 		return swap_chain;
 	}
 
@@ -160,9 +164,9 @@ namespace
 		VkSwapchainKHR swap_chain)
 	{
 		uint32_t image_count = 0;
-		vkGetSwapchainImagesKHR(cfg.device, swap_chain, &image_count, nullptr);
+		vkGetSwapchainImagesKHR(cfg.vk.device, swap_chain, &image_count, nullptr);
 		std::vector<VkImage>images(image_count);
-		vkGetSwapchainImagesKHR(cfg.device, swap_chain, &image_count, images.data());
+		vkGetSwapchainImagesKHR(cfg.vk.device, swap_chain, &image_count, images.data());
 		return images;
 	}
 
@@ -188,7 +192,7 @@ namespace
 			view_info.subresourceRange.layerCount = 1;
 
 			VkImageView image_view;
-			vkCreateImageView(cfg.device, &view_info, nullptr, &image_view);
+			vkCreateImageView(cfg.vk.device, &view_info, nullptr, &image_view);
 			swap_chain_image_views.push_back(image_view);
 		}
 
@@ -202,7 +206,7 @@ namespace
 	{
 		VkAttachmentDescription color_attachment = {};
 		color_attachment.format = color_format;
-		color_attachment.samples = cfg.sample_count;
+		color_attachment.samples = cfg.vk.sample_count;
 		color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -212,7 +216,7 @@ namespace
 
 		VkAttachmentDescription depth_attachment = {};
 		depth_attachment.format = depth_format;
-		depth_attachment.samples = cfg.sample_count;
+		depth_attachment.samples = cfg.vk.sample_count;
 		depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		depth_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -268,7 +272,7 @@ namespace
 		render_pass_info.pDependencies = &dependency;
 		
 		VkRenderPass render_pass = nullptr;
-		vkCreateRenderPass(cfg.device, &render_pass_info, nullptr, &render_pass);
+		vkCreateRenderPass(cfg.vk.device, &render_pass_info, nullptr, &render_pass);
 		return render_pass;
 	}
 
@@ -297,7 +301,7 @@ namespace
 			framebuffer_info.width = cfg.res.x;
 			framebuffer_info.height = cfg.res.y;
 			framebuffer_info.layers = 1;
-			vkCreateFramebuffer(cfg.device, &framebuffer_info, nullptr, &framebuffers[i]);
+			vkCreateFramebuffer(cfg.vk.device, &framebuffer_info, nullptr, &framebuffers[i]);
 		}
 
 		return framebuffers;
@@ -332,11 +336,11 @@ std::unique_ptr<vulkan_back_buffer> vulkan_back_buffer::make(const config& cfg)
 
 	vulkan_back_buffer::config back_buffer_cfg = {};
 	VkSurfaceCapabilitiesKHR surface_caps = {};
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(cfg.physical_device, cfg.surface, &surface_caps);
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(cfg.vk.physical_device, cfg.vk.surface, &surface_caps);
 
 	VkSurfaceFormatKHR surface_format = {
-		color->image_cfg().image_info.format,
-		cfg.color_space,
+		color->image_cfg().vk.image_info.format,
+		cfg.vk.color_space,
 	};
 
 	if (!validate_swap_surface_format(cfg, surface_format))
@@ -356,8 +360,8 @@ std::unique_ptr<vulkan_back_buffer> vulkan_back_buffer::make(const config& cfg)
 	auto image_views = create_image_views(cfg, images, surface_format.format);
 	VkRenderPass render_pass = create_render_pass(
 		cfg,
-		color->image_cfg().image_info.format,
-		depth->image_cfg().image_info.format);
+		color->image_cfg().vk.image_info.format,
+		depth->image_cfg().vk.image_info.format);
 	
 	image_count = (uint32_t)images.size();
 
@@ -399,17 +403,17 @@ vulkan_back_buffer::~vulkan_back_buffer()
 {
 	for (auto framebuffer : _framebuffers)
 	{
-		vkDestroyFramebuffer(_cfg.device, framebuffer, nullptr);
+		vkDestroyFramebuffer(_cfg.vk.device, framebuffer, nullptr);
 	}
 
 	for (auto image_view : _image_views)
 	{
-		vkDestroyImageView(_cfg.device, image_view, nullptr);
+		vkDestroyImageView(_cfg.vk.device, image_view, nullptr);
 	}
 
-	vkDestroySwapchainKHR(_cfg.device, _swap_chain, nullptr);
+	vkDestroySwapchainKHR(_cfg.vk.device, _swap_chain, nullptr);
 
-	vkDestroyRenderPass(_cfg.device, _render_pass, nullptr);
+	vkDestroyRenderPass(_cfg.vk.device, _render_pass, nullptr);
 
 
 }

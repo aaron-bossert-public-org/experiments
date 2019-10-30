@@ -6,13 +6,6 @@
 
 namespace igpu
 {
-	struct vulkan_render_states_raw
-	{
-		VkCullModeFlagBits vk_cull_mode = {};
-		VkPipelineColorBlendAttachmentState vk_color_blend = {};
-		VkPipelineDepthStencilStateCreateInfo vk_depth_stencil = {};
-	};
-
 	VkCullModeFlagBits to_vulkan_cull_mode(const cull_mode& mode);
 
 	VkBlendFactor to_vulkan_blend(blend);
@@ -20,10 +13,6 @@ namespace igpu
 	VkCompareOp to_vulkan_compare(compare);
 	
 	VkStencilOp to_vulkan_stencil(stencil);
-
-	vulkan_render_states_raw
-		to_vulkan_render_states
-		(const render_states::config&);
 
 	VkPipelineColorBlendAttachmentState
 		to_vulkan_color_blend
@@ -39,7 +28,14 @@ namespace igpu
 
 		struct config : render_states::config
 		{
-			vulkan_render_states_raw vulkan;
+			struct vulkan
+			{
+				VkCullModeFlagBits vk_cull_mode = {};
+				VkPipelineColorBlendAttachmentState vk_color_blend = {};
+				VkPipelineDepthStencilStateCreateInfo vk_depth_stencil = {};
+			};
+
+			vulkan vk;
 		};
 
 		vulkan_render_states(const render_states::config&);
@@ -52,4 +48,8 @@ namespace igpu
 
 		const config _cfg;
 	};
+
+	vulkan_render_states::config::vulkan
+		to_vulkan_render_states
+		(const render_states::config&);
 }

@@ -20,12 +20,14 @@ namespace igpu
 
 		struct config : instance_batch::config
 		{
-			struct
+			struct vulkan
 			{
 				std::shared_ptr<vulkan_program> program;
 				std::shared_ptr<vulkan_render_states> render_states;
 				std::shared_ptr<vulkan_geometry> geometry;
-			} vulkan;
+			};
+			
+			vulkan vk;
 		};
 
 		vulkan_instance_batch(

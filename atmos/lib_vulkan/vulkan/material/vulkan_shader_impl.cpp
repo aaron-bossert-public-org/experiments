@@ -17,7 +17,7 @@ vulkan_shader_impl::~vulkan_shader_impl()
 {
 	if (_shader_module)
 	{
-		vkDestroyShaderModule(_cfg.device, _shader_module, nullptr);
+		vkDestroyShaderModule(_cfg.vk.device, _shader_module, nullptr);
 	}
 }
 
@@ -65,7 +65,7 @@ void vulkan_shader_impl::unmap()
 	{
 		if (_shader_module)
 		{
-			vkDestroyShaderModule(_cfg.device, _shader_module, nullptr);
+			vkDestroyShaderModule(_cfg.vk.device, _shader_module, nullptr);
 		}
 
 		VkShaderModuleCreateInfo create_info = {};
@@ -73,13 +73,13 @@ void vulkan_shader_impl::unmap()
 		create_info.codeSize = _memory.size() * _element_size;
 		create_info.pCode = _memory.data();
 
-		vkCreateShaderModule(_cfg.device, &create_info, nullptr, &_shader_module);
+		vkCreateShaderModule(_cfg.vk.device, &create_info, nullptr, &_shader_module);
 		
 		_resources.clear();
 		_attributes.clear();
 
 		auto* p_attributes = &_attributes;
-		if (_cfg.shader_stage  != VK_SHADER_STAGE_VERTEX_BIT)
+		if (_cfg.vk.shader_stage  != VK_SHADER_STAGE_VERTEX_BIT)
 		{
 			p_attributes = nullptr;
 		}

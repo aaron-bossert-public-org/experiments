@@ -412,7 +412,7 @@ std::unique_ptr<vulkan_context> vulkan_context::make(
 
 	vulkan_window::config window_cfg = {};
 	window_cfg.name = cfg.name;
-	window_cfg.instance = instance;
+	window_cfg.vk.instance = instance;
 	auto window = vulkan_window::make(window_cfg, screen_res);
 	if (!window)
 	{
@@ -513,9 +513,9 @@ std::unique_ptr<geometry> vulkan_context::make_geometry(
 	vulkan_geometry::config cfg = {};
 	COPY_TO_DERRIVED_CONFIG(base_cfg, &cfg);
 
-	cfg.input_assembly_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	cfg.input_assembly_info.topology = to_vulkan_topology(cfg.topology);
-	cfg.input_assembly_info.primitiveRestartEnable = VK_FALSE;
+	cfg.vk.input_assembly_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+	cfg.vk.input_assembly_info.topology = to_vulkan_topology(cfg.topology);
+	cfg.vk.input_assembly_info.primitiveRestartEnable = VK_FALSE;
 
 	return vulkan_geometry::make(cfg);
 }
@@ -557,7 +557,7 @@ std::unique_ptr<opaque_batch> vulkan_context::make_opaque_batch(
 {
 	vulkan_opaque_batch::config cfg = {};
 	COPY_TO_DERRIVED_CONFIG(base_cfg, &cfg);
-	cfg.vulkan.context = this;
+	cfg.vk.context = this;
 
 	return vulkan_opaque_batch::make(
 		cfg);
@@ -568,7 +568,7 @@ std::unique_ptr<transparent_batch> vulkan_context::make_transparent_batch(
 {
 	vulkan_transparent_batch::config cfg = {};
 	COPY_TO_DERRIVED_CONFIG(base_cfg, &cfg);
-	cfg.vulkan.context = this;
+	cfg.vk.context = this;
 
 	return vulkan_transparent_batch::make(
 		cfg);

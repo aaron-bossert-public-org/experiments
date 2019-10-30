@@ -11,7 +11,7 @@ namespace
 	{
 		vulkan_render_states::config cfg = {};
 		static_cast<render_states::config&>(cfg) = base_cfg;
-		cfg.vulkan = to_vulkan_render_states(cfg);
+		cfg.vk = to_vulkan_render_states(cfg);
 
 		return cfg;
 	}
@@ -203,7 +203,7 @@ VkPipelineDepthStencilStateCreateInfo igpu::to_vulkan_depth_stencil(const depth_
 	return vulkan;
 }
 
-vulkan_render_states_raw igpu::to_vulkan_render_states(const render_states::config& cfg)
+vulkan_render_states::config::vulkan igpu::to_vulkan_render_states(const render_states::config& cfg)
 {
 	return 	{
 		to_vulkan_cull_mode(cfg.cull),

@@ -19,7 +19,12 @@ namespace igpu
 
 		struct config : window::config
 		{
-			VkInstance instance;
+			struct vulkan
+			{
+				VkInstance instance;
+			};
+
+			vulkan vk;
 		};
 
 		using on_resize_t = std::function<void(vulkan_window*)>;

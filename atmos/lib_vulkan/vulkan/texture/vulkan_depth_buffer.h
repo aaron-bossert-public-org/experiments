@@ -15,10 +15,15 @@ namespace igpu
 
 		struct config : depth_target::config
 		{
-			VkPhysicalDevice physical_device = nullptr;
-			VkDevice device = nullptr;
-			VkSampleCountFlagBits sample_count;
-			VkSharingMode sharing_mode;
+			struct vulkan
+			{
+				VkPhysicalDevice physical_device = nullptr;
+				VkDevice device = nullptr;
+				VkSampleCountFlagBits sample_count;
+				VkSharingMode sharing_mode;
+			};
+
+			vulkan vk;
 		};
 
 		const config& cfg() const override;

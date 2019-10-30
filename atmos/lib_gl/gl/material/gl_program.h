@@ -21,7 +21,12 @@ namespace igpu
 
 		struct config : program::config
 		{
-			gl_context* context;
+			struct gl
+			{
+				gl_context* context = nullptr;
+			};
+
+			gl gl;
 		};
 
 		const config& cfg() const override;

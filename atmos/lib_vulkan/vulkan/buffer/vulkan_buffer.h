@@ -21,11 +21,16 @@ namespace igpu
 		
 		struct config : buffer::config
 		{
-			VmaAllocator vma = nullptr;
-			VmaMemoryUsage vma_usage;
-			VkBufferUsageFlagBits vk_usage;
-			VmaAllocationCreateFlagBits vma_flags = (VmaAllocationCreateFlagBits)0;
-			VkSharingMode sharing_mode = VK_SHARING_MODE_EXCLUSIVE;
+			struct vulkan
+			{
+				VmaAllocator vma = nullptr;
+				VmaMemoryUsage vma_usage;
+				VkBufferUsageFlagBits usage;
+				VmaAllocationCreateFlagBits vma_flags = (VmaAllocationCreateFlagBits)0;
+				VkSharingMode sharing_mode = VK_SHARING_MODE_EXCLUSIVE;
+			};
+			
+			vulkan vk;
 		};
 
 		struct ownership
