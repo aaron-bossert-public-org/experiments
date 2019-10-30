@@ -1,9 +1,9 @@
 
 #pragma once
 
+#include <framework/utility/scoped_ptr.h>
 
 #include <igpu/texture/texture2d.h>
-#include <igpu/utility/scoped_ptr.h>
 
 #include <vulkan/defines/vulkan_includes.h>
 

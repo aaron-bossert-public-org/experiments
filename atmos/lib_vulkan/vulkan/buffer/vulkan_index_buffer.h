@@ -1,9 +1,10 @@
 
 #pragma once
 
+#include <framework/utility/scoped_ptr.h>
+
 #include <igpu/buffer/index_buffer.h>
 #include <igpu/buffer/index_format.h>
-#include <igpu/utility/scoped_ptr.h>
 
 #include <vulkan/defines/vulkan_includes.h>
 

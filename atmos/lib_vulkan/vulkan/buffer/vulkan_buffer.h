@@ -3,8 +3,9 @@
 
 
 #include <framework/perf/metrics.h>
+#include <framework/utility/scoped_ptr.h>
+
 #include <igpu/buffer/buffer.h>
-#include <igpu/utility/scoped_ptr.h>
 
 #include <vulkan/defines/vulkan_includes.h>
 

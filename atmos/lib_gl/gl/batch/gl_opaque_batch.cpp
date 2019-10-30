@@ -1,6 +1,8 @@
 //
 //#include <gl/batch/gl_opaque_batch.h>
 //
+//#include <framework/utility/scoped_ptr.h>
+//
 //// GL implementation includes - begin
 //#include <gl/buffer/gl_geometry.h>
 //#include <gl/context/gl_context.h>
@@ -9,8 +11,6 @@
 //
 //#include <igpu/batch/opaque_batch_nodes.h>
 //#include <igpu/buffer/geometry.h>
-//
-//#include <igpu/utility/scoped_ptr.h>
 //
 //using namespace igpu;
 //

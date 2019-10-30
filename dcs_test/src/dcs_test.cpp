@@ -2,9 +2,11 @@
 #include <dcs_test/include/dcs_test.h>
 
 #include <framework/logging/log.h>
+#include <framework/utility/scoped_ptr.h>
 #include <framework_tests/main/tests.h>
+
 #include <igpu/context/context.h>
-#include <igpu/utility/scoped_ptr.h>
+
 #include <igpu/window/window.h>
 
 #include <iostream>
@@ -37,7 +39,7 @@ std::unique_ptr<dcs_test> dcs_test::make(const config& cfg)
 	return nullptr;
 }
 
-void test_init_vulkan_context(const igpu::scoped_ptr< igpu::vulkan_context >& context);
+void test_init_vulkan_context(const scoped_ptr< igpu::vulkan_context >& context);
 bool test_loop_vulkan_context();
 void test_cleanup_vulkan_context();
 

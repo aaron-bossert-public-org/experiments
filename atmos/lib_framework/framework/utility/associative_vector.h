@@ -1,140 +1,212 @@
 
 #pragma once
 
+#include <framework/utility/scoped_ptr.h>
+
 #include <unordered_map>
-#include <vector>
 #include <memory>
 
-// use to store a cache friendly array of values that are searchable by key
-// a separate 
+// use to store a cache array of values for cache friendly traversal 
+// that are searchable by key. 
+// adds an extra layer of indirection to key lookup.
+// also provides support for weak_ptr style references to elements.
 template <typename KEY, typename VAL>
 class associative_vector
 {
 public:
+	
+	class element_ref;
+
 	using key_t = KEY;
 	using val_t = VAL;
-	using map_t = std::unordered_map<key_t, size_t>;
-	using iter_t = typename map_t::iterator;
-
-	const val_t* find_value(const key_t& key) const
+	using vec_t = std::vector< val_t >;
+	using shared_element_t = std::shared_ptr < element_ref >;
+	using vec_element_ptr_t = std::vector < shared_element_t >;
+	using map_element_ptr_t = std::unordered_map < key_t, element_ref* >;
+	using iter_t = typename map_element_ptr_t::iterator;
+	using emplaced_t = std::pair<iter_t, bool>;
+	
+	class element_ref
 	{
-		auto found = _index_map.find(key);
-		if (found == _index_map.end())
-		{
-			return nullptr;
-		}
+	public:
 
-		return &_elements[found->second];
-	}
+		const key_t& key() const noexcept;
 
-	val_t* find_value(const key_t& key)
-	{
-		auto const_this = (const associative_vector*)this;
-		const val_t* found = const_this->find_value(key);
-		return (val_t*)found;
-	}
+		const val_t& val() const noexcept;
 
-	iter_t find_iter(const key_t& key)
-	{
-		return _index_map.find(key);
-	}
+		val_t& val() noexcept;
 
-	iter_t end_iter()
-	{
-		return _index_map.end();
-	}
+	private:
 
+		friend class associative_vector;
+
+		associative_vector* _owner = nullptr;
+		key_t _key;
+		size_t _index = (size_t)-1;
+	};
+
+	/// map interface
 	template<typename... ARGS>
-	std::pair<val_t*, bool> emplace(const key_t& key, ARGS&&...args)
-	{
-		auto found = _index_map.find(key);
-		if (found == _index_map.end())
-		{
-			auto emplaced = _index_map.emplace(key, _index_table.size());
-			_index_table.emplace_back(&emplaced.first->second);
-			_elements.emplace_back(std::forward<ARGS>(args)...);
-			*_begin_ptr = _elements.data();
-			
-			return { &_elements.back(), true };
-		}
+	emplaced_t emplace(const key_t& key, ARGS&&...args);
 
-		return { &_elements[found->second], false };
-	}
+	iter_t find(const key_t& key);
 
-	bool erase(const key_t& key)
-	{
-		return erase(find_iter(key));
-	}
+	bool erase(const iter_t& iter);
 
-	bool erase(const iter_t& iter)
-	{
-		if (iter != _index_map.end())
-		{
-			size_t index = iter->second;
+	
+	// array interface
+	size_t size() const;
 
-			_elements[index] = std::move(_elements.back());
-			_elements.pop_back();
+	const val_t& operator[](size_t i) const;
 
-			_index_table[index] = std::move(_index_table.back());
-			*_index_table[index] = index;
-			_index_table.pop_back();
+	val_t& operator[](size_t i);
 
-			_index_map.erase(iter);
-			*_begin_ptr = _elements.data();
-			return true;
-		}
+	const val_t* begin() const;
 
-		return false;
-	}
+	const val_t* end() const;
 
-	size_t size() const
-	{
-		return _elements.size();
-	}
+	val_t* begin();
 
-	const val_t& operator[](size_t i) const
-	{
-		return _elements[i];
-	}
+	val_t* end();
 
-	val_t& operator[](size_t i)
-	{
-		return _elements[i];
-	}
-
-	const val_t* begin() const
-	{
-		return _elements.data();
-	}
-
-	const val_t* end() const
-	{
-		return _elements.data() + _elements.size();
-	}
-
-	val_t* begin()
-	{
-		return _elements.data();
-	}
-
-	val_t* end()
-	{
-		return _elements.data() + _elements.size();
-	}
-
-	const std::shared_ptr<val_t*>& begin_ptr() const
-	{
-		return _begin_ptr;
-	}
-
-	const std::vector<size_t*>& index_table() const
-	{
-		return _index_table;
-	}
+	// take a reference that will remain valid after vector resizes
+	::scoped_ptr<element_ref> scoped_ptr(const val_t& p_val) const;
 
 private:
-	std::shared_ptr<val_t*> _begin_ptr = std::shared_ptr<val_t*>(new val_t*());
-	std::vector<val_t> _elements;
-	std::vector<size_t*> _index_table;
-	map_t _index_map;
+
+	vec_t _elements;
+	vec_element_ptr_t _element_ptrs;
+	map_element_ptr_t _key_to_element_ptrs;
 };
+
+template <typename KEY, typename VAL>
+template<typename... ARGS>
+typename associative_vector<KEY, VAL>::emplaced_t associative_vector<KEY, VAL>::emplace(const KEY& key, ARGS&&...args)
+{
+	auto found = _key_to_element_ptrs.find(key);
+	if (found == _key_to_element_ptrs.end())
+	{
+		auto ref_ptr = new element_ref();
+		ref_ptr->_owner = this;
+		ref_ptr->_key = key;
+		ref_ptr->_index = _element_ptrs.size();
+
+		_element_ptrs.emplace_back(ref_ptr);
+
+		auto emplaced = _key_to_element_ptrs.emplace(key, ref_ptr);
+
+		_elements.emplace_back(std::forward<ARGS>(args)...);
+
+		return emplaced;
+	}
+
+	return { found, false };
+}
+
+template < typename KEY, typename VAL >
+typename associative_vector<KEY, VAL>::iter_t
+associative_vector<KEY, VAL>::find(const KEY& key)
+{
+	return _key_to_element_ptrs.find(key);
+}
+
+template < typename KEY, typename VAL >
+bool associative_vector<KEY, VAL>::erase(const iter_t& iter)
+{
+	if (iter != _key_to_element_ptrs.end())
+	{
+		size_t index = iter->second->_index;
+
+		_key_to_element_ptrs.erase(iter);
+
+		_element_ptrs[index] = std::move(_element_ptrs.back());
+		_element_ptrs[index]->_index = index;
+		_element_ptrs.pop_back();
+
+		_elements[index] = std::move(_elements.back());
+		_elements.pop_back();
+
+		return true;
+	}
+
+	LOG_CRITICAL("iter not found");
+
+	return false;
+}
+
+template < typename KEY, typename VAL >
+size_t associative_vector<KEY, VAL>::size() const
+{
+	return _elements.size();
+}
+
+template < typename KEY, typename VAL >
+const VAL& associative_vector<KEY, VAL>::operator[](size_t i) const
+{
+	return _elements[i];
+}
+
+template < typename KEY, typename VAL >
+VAL& associative_vector<KEY, VAL>::operator[](size_t i)
+{
+	return _elements[i];
+}
+
+template < typename KEY, typename VAL >
+const VAL* associative_vector<KEY, VAL>::begin() const
+{
+	return _elements.data();
+}
+
+template < typename KEY, typename VAL >
+const VAL* associative_vector<KEY, VAL>::end() const
+{
+	return _elements.data() + _elements.size();
+}
+
+template < typename KEY, typename VAL >
+VAL* associative_vector<KEY, VAL>::begin()
+{
+	return _elements.data();
+}
+
+template < typename KEY, typename VAL >
+VAL* associative_vector<KEY, VAL>::end()
+{
+	return _elements.data() + _elements.size();
+}
+
+template < typename KEY, typename VAL >
+	::scoped_ptr<typename associative_vector<KEY, VAL>::element_ref>
+	associative_vector<KEY, VAL>::scoped_ptr(const VAL& val) const
+{
+	size_t index = &val - _elements.data();
+
+	if (index < _elements.size())
+	{
+		return _element_ptrs[index];
+	}
+
+	ASSERT_CONTEXT(
+		"address of val is not within the vector's active data");
+
+	return nullptr;
+}
+
+template <typename KEY, typename VAL>
+const KEY& associative_vector<KEY, VAL>::element_ref::key() const noexcept
+{
+	return _key;
+}
+
+template <typename KEY, typename VAL>
+const VAL& associative_vector<KEY, VAL>::element_ref::val() const noexcept
+{
+	return (*_owner)[_index];
+}
+
+template <typename KEY, typename VAL>
+VAL& associative_vector<KEY, VAL>::element_ref::val() noexcept
+{
+	return (*_owner)[_index];
+}

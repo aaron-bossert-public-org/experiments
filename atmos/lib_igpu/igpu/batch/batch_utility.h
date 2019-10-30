@@ -25,13 +25,13 @@ namespace igpu
 		{
 			auto key = CHILD::get_key(cfg);
 			auto& map = batch.map();
-			auto child = map.find_value(key);
-			if (child)
+			auto found = map.find(key);
+			if (found->second)
 			{
-				return *child;
+				return found->second->val();
 			}
 
-			return *map.emplace(key, cfg).first;
+			return map.emplace(key, cfg).first->second->val();
 		}
 
 		template <
@@ -66,46 +66,49 @@ namespace igpu
 			typename INSTANCE_CONFIG>
 			auto find_child(MAP& map, const INSTANCE_CONFIG& cfg)
 			-> decltype(
-				map.find_iter(nullptr))
+				map.find(nullptr))
 		{
 			auto key = typename MAP::val_t::get_key(cfg);
 
-			return map.find_iter(key);
+			return map.find(key);
 		}
 
 		template <
-			typename ROOT_BATCH>
-			void remove_child(ROOT_BATCH& root_batch, batch_binding_t<typename ROOT_BATCH>& binding)
+			typename ROOT_BATCH,
+			typename BINDING = typename batch_binding_t<typename ROOT_BATCH>>
+			void remove_child(
+				ROOT_BATCH& root_batch, 
+				BINDING& binding)
 		{
 			const auto& cfg = binding.instance_batch().cfg();
 
 			auto& program_map = root_batch.map();
 			auto program_found = find_child(program_map, cfg);
-			if (program_found != program_map.end_iter())
+			if (program_found->second)
 			{
-				auto& program_batch = program_map[program_found->second];
+				BINDING::program_batch_t& program_batch = program_found->second->val();
 
 				auto& render_states_map = program_batch.map();
 				auto render_states_found = find_child(render_states_map, cfg);
-				if (render_states_found != render_states_map.end_iter())
+				if (render_states_found->second)
 				{
-					auto& render_states_batch = render_states_map[render_states_found->second];
+					BINDING::render_state_batch_t& render_states_batch = render_states_found->second->val();
 
 					auto& material_map = render_states_batch.map();
 					auto material_found = find_child(material_map, cfg);
-					if (material_found != material_map.end_iter())
+					if (material_found->second)
 					{
-						auto& material_batch = material_map[material_found->second];
+						BINDING::material_batch_t& material_batch = material_found->second->val();
 
 						auto& geometry_map = material_batch.map();
 						auto geometry_found = find_child(geometry_map, cfg);
-						if (geometry_found != geometry_map.end_iter())
+						if (geometry_found->second)
 						{
-							auto& geometry_batch = geometry_map[geometry_found->second];
+							BINDING::geometry_batch_t& geometry_batch = geometry_found->second->val();
 
 							auto& instance_map = geometry_batch.map();
-							auto instance_found = instance_map.find_iter(&binding);
-							if (instance_found != instance_map.end_iter())
+							auto instance_found = instance_map.find(&binding);
+							if (instance_found->second)
 							{
 								// destroy instance
 								instance_map.erase(instance_found);
@@ -309,8 +312,9 @@ namespace igpu
 			using material_batch_t = typename render_state_batch_t::child_t;
 			using geometry_batch_t = typename material_batch_t::child_t;
 			using instance_batch_t = typename geometry_batch_t::child_t;
-			using instance_batch_ptr_ptr_t = typename std::shared_ptr<instance_batch_t*>;
-
+			using instance_ptr_t = typename scoped_ptr<
+				typename geometry_batch_t::map_t::element_ref >;
+			
 			template<typename... ARGS>
 			batch_binding_t(
 				root_batch_t* root_batch,
@@ -332,16 +336,12 @@ namespace igpu
 
 			const instance_batch_t& instance_batch() const override
 			{
-				size_t index = *_dependencies.instance_batch_index_ptr;
-				const instance_batch_t* arry = *_dependencies.instance_batch_ptr_ptr;
-				return arry[index];
+				return _dependencies.instance_batch_ptr->val();
 			}
 
 			instance_batch_t& instance_batch() override
 			{
-				size_t index = *_dependencies.instance_batch_index_ptr;
-				instance_batch_t* arry = *_dependencies.instance_batch_ptr_ptr;
-				return arry[index];
+				return _dependencies.instance_batch_ptr->val();
 			}
 
 		private:
@@ -349,9 +349,8 @@ namespace igpu
 			struct dependencies
 			{
 				root_batch_t* root_batch;
-				size_t* instance_batch_index_ptr = 0;
-				instance_batch_ptr_ptr_t instance_batch_ptr_ptr;
-			} const _dependencies;
+				instance_ptr_t instance_batch_ptr;
+			} _dependencies;
 
 			template<typename... ARGS>
 			static dependencies make_dependencies(
@@ -361,14 +360,17 @@ namespace igpu
 				ARGS&& ... args)
 			{
 				auto& map = geometry_batch->map();
-				map.emplace(
+				auto emplaced = map.emplace(
 					ptr_this,
 					std::forward<ARGS>(args)...);
 
+				ASSERT_CONTEXT(emplaced.second, "this binding appears to have already been added");
+
+				geometry_batch_t::map_t::iter_t& iter = emplaced.first;
+
 				return {
 					root_batch,
-					map.index_table().back(),
-					map.begin_ptr(),
+					map.scoped_ptr(iter->second->val()),
 				};
 			}
 		};

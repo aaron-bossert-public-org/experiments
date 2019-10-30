@@ -1,8 +1,8 @@
 
 #pragma once
 
+#include <framework/utility/scoped_ptr.h>
 #include <framework/perf/metrics.h>
-#include <igpu/utility/scoped_ptr.h>
 
 #include <vulkan/defines/vulkan_includes.h>
 

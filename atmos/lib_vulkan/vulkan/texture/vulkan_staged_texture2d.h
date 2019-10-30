@@ -1,10 +1,11 @@
 
 #pragma once
 
+#include <framework/utility/scoped_ptr.h>
 
 #include <vulkan/buffer/vulkan_buffer.h>
 #include <vulkan/texture/vulkan_texture2d.h>
-#include <igpu/utility/scoped_ptr.h>
+
 #include <framework/perf/metrics.h>
 
 namespace igpu
