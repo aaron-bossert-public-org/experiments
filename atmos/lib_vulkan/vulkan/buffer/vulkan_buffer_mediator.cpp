@@ -603,12 +603,14 @@ vulkan_buffer_mediator::vulkan_buffer_mediator(
 #include <thread>
 #include <unordered_map>
 #include <vulkan/window/vulkan_back_buffer.h>
+#include <vulkan/batch/vulkan_vertex_mapper.h>
 #include <vulkan/buffer/vulkan_compute_buffer.h>
 #include <vulkan/buffer/Vulkan_geometry.h>
 #include <vulkan/buffer/vulkan_index_buffer.h>
 #include <vulkan/buffer/vulkan_vertex_buffer.h>
-#include <vulkan/material/vulkan_vertex_shader.h>
 #include <vulkan/material/vulkan_fragment_shader.h>
+#include <vulkan/material/vulkan_program.h>
+#include <vulkan/material/vulkan_vertex_shader.h>
 #include <vulkan/texture/vulkan_texture2d.h>
 
 
@@ -661,7 +663,6 @@ private:
 	scoped_ptr< vulkan_queue > _graphics_queue;
 	scoped_ptr< vulkan_queue > _present_queue;
 
-	VkPipelineLayout _pipeline_layout;
 	VkPipeline _graphics_pipeline;
 
 	struct new_texture_impl
@@ -851,7 +852,8 @@ private:
 	{
 		void create()
 		{
-			program_cfg = {
+			program::config program_cfg = {
+				"test program",
 				app->_context->make_vertex_shader({}),
 				app->_context->make_fragment_shader({}),
 			};
@@ -867,29 +869,13 @@ private:
 				"cooked_assets/shaders/shader.frag.spv",
 				vulkan_fragment);
 
-			shader_stages = { vulkan_vertex->shader_stage_info(), vulkan_fragment->shader_stage_info() };
+			program = app->_context->make_program(program_cfg);
 
-			VkDescriptorSetLayoutBinding ubo_layout_binding = {};
-			ubo_layout_binding.binding = 0;
-			ubo_layout_binding.descriptorCount = 1;
-			ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			ubo_layout_binding.pImmutableSamplers = nullptr;
-			ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+			shader_stages = { vulkan_vertex->stage_info(), vulkan_fragment->stage_info() };
 
-			VkDescriptorSetLayoutBinding sampler_layout_binding = {};
-			sampler_layout_binding.binding = 10;
-			sampler_layout_binding.descriptorCount = 1;
-			sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			sampler_layout_binding.pImmutableSamplers = nullptr;
-			sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-			std::array<VkDescriptorSetLayoutBinding, 2> bindings = { ubo_layout_binding, sampler_layout_binding };
-			VkDescriptorSetLayoutCreateInfo layout_info = {};
-			layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-			layout_info.bindingCount = static_cast<uint32_t>(bindings.size());
-			layout_info.pBindings = bindings.data();
-
-			vkCreateDescriptorSetLayout(app->_device, &layout_info, nullptr, &descriptor_set_layout);
+			auto vulkan = ASSERT_CAST(vulkan_program*, program.get());
+			descriptor_set_layouts = vulkan->descriptor_set_layouts();
+			pipeline_layout = vulkan->pipeline_layout();
 		}
 
 		const std::vector<VkPipelineShaderStageCreateInfo>& get_shader_stages()
@@ -897,70 +883,16 @@ private:
 			return shader_stages;
 		}
 
-		const VkDescriptorSetLayout& get_descriptor_set_layout()
-		{
-			return descriptor_set_layout;
-		}
-
-		static VkVertexInputBindingDescription get_binding_description()
-		{
-			VkVertexInputBindingDescription binding_description = {};
-			binding_description.binding = 0;
-			binding_description.stride = sizeof(Vertex);
-			binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-			return binding_description;
-		}
-
-		static std::array<VkVertexInputAttributeDescription, 3> get_attribute_descriptions()
-		{
-			static std::array<VkVertexInputAttributeDescription, 3> attribute_descriptions = {};
-
-			attribute_descriptions[0].binding = 0;
-			attribute_descriptions[0].location = 0;
-			attribute_descriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-			attribute_descriptions[0].offset = offsetof(Vertex, pos);
-
-			attribute_descriptions[1].binding = 0;
-			attribute_descriptions[1].location = 1;
-			attribute_descriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-			attribute_descriptions[1].offset = offsetof(Vertex, col);
-
-			attribute_descriptions[2].binding = 0;
-			attribute_descriptions[2].location = 2;
-			attribute_descriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-			attribute_descriptions[2].offset = offsetof(Vertex, uv0);
-
-			return attribute_descriptions;
-		}
-
-		const VkPipelineVertexInputStateCreateInfo& get_vertex_input_info()
-		{
-			static const auto binding_description = get_binding_description();
-			static const auto attribute_descriptions = get_attribute_descriptions();
-
-			static VkPipelineVertexInputStateCreateInfo vertex_input_info = {
-				VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-				nullptr,
-				0,
-				1, 
-				&binding_description,
-				static_cast<uint32_t>(attribute_descriptions.size()),
-				attribute_descriptions.data(),
-			};
-
-			return vertex_input_info;
-		}
-
 		void destroy()
 		{
-			program_cfg = {};
-			vkDestroyDescriptorSetLayout(app->_device, descriptor_set_layout, nullptr);
+			// destroy
+			program = nullptr;
 		}
 
 		HelloTriangleApplication* app;
-		program::config program_cfg;
-		VkDescriptorSetLayout descriptor_set_layout;
+		std::unique_ptr<program> program;
+		std::array< VkDescriptorSetLayout, 3> descriptor_set_layouts;
+		VkPipelineLayout pipeline_layout;
 
 		std::vector<VkPipelineShaderStageCreateInfo> shader_stages;
 
@@ -970,7 +902,8 @@ private:
 	{
 		void create()
 		{
-			program_cfg = {
+			program::config program_cfg = {
+				"test program",
 				app->_context->make_vertex_shader({}),
 				app->_context->make_fragment_shader({}),
 			};
@@ -986,29 +919,13 @@ private:
 				"cooked_assets/shaders/shader.frag.spv",
 				vulkan_fragment);
 
-			shader_stages = { vulkan_vertex->shader_stage_info(), vulkan_fragment->shader_stage_info() };
+			program = app->_context->make_program(program_cfg);
 
-			VkDescriptorSetLayoutBinding ubo_layout_binding = {};
-			ubo_layout_binding.binding = 0;
-			ubo_layout_binding.descriptorCount = 1;
-			ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			ubo_layout_binding.pImmutableSamplers = nullptr;
-			ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+			shader_stages = { vulkan_vertex->stage_info(), vulkan_fragment->stage_info() };
 
-			VkDescriptorSetLayoutBinding sampler_layout_binding = {};
-			sampler_layout_binding.binding = 10;
-			sampler_layout_binding.descriptorCount = 1;
-			sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			sampler_layout_binding.pImmutableSamplers = nullptr;
-			sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-			std::array<VkDescriptorSetLayoutBinding, 2> bindings = { ubo_layout_binding, sampler_layout_binding };
-			VkDescriptorSetLayoutCreateInfo layout_info = {};
-			layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-			layout_info.bindingCount = static_cast<uint32_t>(bindings.size());
-			layout_info.pBindings = bindings.data();
-
-			vkCreateDescriptorSetLayout(app->_device, &layout_info, nullptr, &descriptor_set_layout);
+			auto vulkan = ASSERT_CAST(vulkan_program*, program.get());
+			descriptor_set_layouts = vulkan->descriptor_set_layouts();
+			pipeline_layout = vulkan->pipeline_layout();
 		}
 
 		const std::vector<VkPipelineShaderStageCreateInfo>& get_shader_stages()
@@ -1016,26 +933,22 @@ private:
 			return shader_stages;
 		}
 
-		const VkDescriptorSetLayout& get_descriptor_set_layout()
-		{
-			return descriptor_set_layout;
-		}
-
 		void destroy()
 		{
-			program_cfg = {};
-			vkDestroyDescriptorSetLayout(app->_device, descriptor_set_layout, nullptr);
+			// destroy
+			program = nullptr;
 		}
 
 		HelloTriangleApplication* app;
-		program::config program_cfg;
-		VkDescriptorSetLayout descriptor_set_layout;
+		std::unique_ptr<program> program;
+		std::array< VkDescriptorSetLayout, 3> descriptor_set_layouts;
+		VkPipelineLayout pipeline_layout;
 
 		std::vector<VkPipelineShaderStageCreateInfo> shader_stages;
 
 	};
 
-	old_program_impl program_impl = {this};
+	new_program_impl program_impl = {this};
 
 	VkDescriptorPool _descriptor_pool;
 	std::vector<VkDescriptorSet> _descriptor_sets;
@@ -1137,7 +1050,6 @@ private:
 		vkDeviceWaitIdle(_device);
 
 		vkDestroyPipeline(_device, _graphics_pipeline, nullptr);
-		vkDestroyPipelineLayout(_device, _pipeline_layout, nullptr);
 		vkFreeCommandBuffers(_device, _command_pool, static_cast<uint32_t>(_command_buffers.size()), _command_buffers.data());
 	}
 
@@ -1233,30 +1145,27 @@ private:
 		color_blending.blendConstants[2] = 0.0f;
 		color_blending.blendConstants[3] = 0.0f;
 
-		VkPipelineLayoutCreateInfo pipeline_layout_info = {};
-		pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipeline_layout_info.setLayoutCount = 1;
-		pipeline_layout_info.pSetLayouts = &program_impl.get_descriptor_set_layout();
 
-		if (vkCreatePipelineLayout(_device, &pipeline_layout_info, nullptr, &_pipeline_layout) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create pipeline layout!");
-		}
-
+		
 		const auto& shader_stages = program_impl.get_shader_stages();
+
+		vulkan_program* program = ASSERT_CAST(vulkan_program*, program_impl.program.get());
+		vulkan_geometry* geometry = ASSERT_CAST(vulkan_geometry*, geo_impl.geometry.get());
+
+		vulkan_vertex_mapper vertex_mapper(*program, *geometry);
 
 		VkGraphicsPipelineCreateInfo pipeline_info = {};
 		pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		pipeline_info.stageCount = (uint32_t)shader_stages.size();
 		pipeline_info.pStages = shader_stages.data();
-		pipeline_info.pVertexInputState = &program_impl.get_vertex_input_info();
+		pipeline_info.pVertexInputState = vertex_mapper.results();
 		pipeline_info.pInputAssemblyState = &geo_impl.get_vertex_input_assembly_info();
 		pipeline_info.pViewportState = &viewport_state;
 		pipeline_info.pRasterizationState = &rasterizer;
 		pipeline_info.pMultisampleState = &multisampling;
 		pipeline_info.pDepthStencilState = &depth_stencil;
 		pipeline_info.pColorBlendState = &color_blending;
-		pipeline_info.layout = _pipeline_layout;
+		pipeline_info.layout = program_impl.pipeline_layout;
 		pipeline_info.renderPass = _context->back_buffer().render_pass();;
 		pipeline_info.subpass = 0;
 		pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
@@ -1354,7 +1263,7 @@ private:
 
 	void create_descriptor_sets()
 	{
-		std::vector<VkDescriptorSetLayout> layouts(_swap_image_count, program_impl.get_descriptor_set_layout());
+		std::vector<VkDescriptorSetLayout> layouts(_swap_image_count, program_impl.descriptor_set_layouts[0]);
 		VkDescriptorSetAllocateInfo alloc_info = {};
 		alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		alloc_info.descriptorPool = _descriptor_pool;
@@ -1439,7 +1348,7 @@ private:
 			vkCmdBeginRenderPass(_command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
 			vkCmdBindPipeline(_command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, _graphics_pipeline);
-			vkCmdBindDescriptorSets(_command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline_layout, 0, 1, &_descriptor_sets[i], 0, nullptr);
+			vkCmdBindDescriptorSets(_command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, program_impl.pipeline_layout, 0, 1, &_descriptor_sets[i], 0, nullptr);
 
 			geo_impl.draw(_command_buffers[i]);
 

@@ -1,10 +1,10 @@
 ﻿
 #include <vulkan/material/vulkan_program.h>
 
-#include <vulkan/context/vulkan_context.h>
 #include <vulkan/material/vulkan_parameter.h>
 #include <vulkan/material/vulkan_fragment_shader.h>
 #include <vulkan/material/vulkan_vertex_shader.h>
+#include <vulkan/material/vulkan_shader_stages.h>
 
 #include <igpu/material/program_parsing.h>
 
@@ -15,76 +15,55 @@
 
 using namespace igpu;
 
-//
-////std::vector<VkVertexInputAttributeDescription> to_vulkan_attribute_descriptions(
-//	const vertex_format::config& cfg)
-//{
-//	bool success = true;
-//	const auto& attributes = cfg.attributes;
-//	std::vector<VkVertexInputAttributeDescription> attribute_descriptions;
-//	attribute_descriptions.reserve(attributes.size());
-//
-//	for (int i = 0; i < attributes.size(); ++i)
-//	{
-//		const auto& attribute = attributes[i];
-//		size_t location = vertex_constraints.find_location(attribute.parameter.name);
-//
-//		if (vertex_constraints::NOT_FOUND == location)
-//		{
-//			LOG_CRITICAL(
-//				"in context vertex constraints could not find %s",
-//				attribute.parameter.name.c_str());
-//		}
-//		else
-//		{
-//			const auto& found = vertex_constraints.cfg().vertex_parameters[location];
-//			if (attribute.parameter.components != found.components)
-//			{
-//				LOG_CRITICAL("in context vertex constraints vertex parameter %s is expected to have components %s but vertex buffer is being created with %s instead",
-//					attribute.parameter.name.c_str(),
-//					to_string(found.components).data(),
-//					to_string(attribute.parameter.components).data());
-//			}
-//			else
-//			{
-//				VkVertexInputAttributeDescription description;
-//				description.location = (uint32_t)location;
-//				description.binding = 0;
-//				description.format = to_vulkan_format(attribute.parameter.components);
-//				description.offset = attribute.offset;
-//				attribute_descriptions.push_back(description);
-//			}
-//		}
-//	}
-//
-//	if (!success)
-//	{
-//		return {};
-//	}
-//
-//	return attribute_descriptions;
-//}
-////VkVertexInputBindingDescription to_vulkan_binding_description(
-//	const vertex_format::config& cfg)
-//{
-//	VkVertexInputBindingDescription binding_description = {};
-//	binding_description.binding = 0;
-//	binding_description.stride = cfg.stride;
-//	binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-//	return binding_description;
-//}
-//
+namespace
+{
+	void merge_parameters(
+		const vulkan_shader& shader,
+		std::array<std::array<uint8_t, 64>, 3>* out_indices,
+		std::array<std::vector<spirv::parameter>, 3>* descriptor_set_parameter_cfgs)
+	{
+		// Get all sampled images in the shader.
+		for (size_t i = 0; i < shader.parameter_count(); ++i)
+		{
+			const spirv::parameter& parameter = shader.parameter(i);
+			auto& parameters = (*descriptor_set_parameter_cfgs)[parameter.spv.descriptor_set];
+			
+			uint8_t* index = &(*out_indices)[parameter.spv.descriptor_set][parameter.spv.binding];
+			if (*index == (uint8_t)-1)
+			{
+				*index = static_cast<uint8_t>(parameters.size());
 
-//------------------------------------------------------------------------------
-//
-//
+				parameters.push_back(parameter);
+			}
+			else
+			{
+				spirv::parameter* expect = &parameters[*index];
+				
+#define ERR_CHECK(MEMBER, FMT, F_OP)\
+				if (expect->MEMBER != parameter.MEMBER)\
+				{\
+					LOG_CRITICAL(\
+						"descriptor set %d binding %d previously seen as "FMT" but now seen as "FMT,\
+						(int)parameter.spv.descriptor_set,\
+						(int)parameter.spv.binding,\
+						F_OP(expect->MEMBER),\
+						F_OP(parameter.MEMBER));\
+				}
+
+				ERR_CHECK(name, "%s", [](const std::string& s) { return s.c_str(); });
+				ERR_CHECK(type, "%s", [](const igpu::parameter::type& t) {return igpu::parameter::to_string(t).data(); });
+				ERR_CHECK(array_size, "%d", int);
+#undef ERR_CHECK
+
+				expect->spv.stages |= parameter.spv.stages;
+			}
+		}
+	}
+}
+
 const vulkan_program::config& vulkan_program::cfg() const
 {
 	return _cfg;
-}
-
-vulkan_program::~vulkan_program()
-{
 }
 
 size_t vulkan_program::parameter_count() const
@@ -137,168 +116,134 @@ const vulkan_parameter& vulkan_program::instance_parameter(size_t i) const
 	return _instance_parameters[i];
 }
 
+const std::array<VkDescriptorSetLayout, 3>& vulkan_program::descriptor_set_layouts() const
+{
+	return _descriptor_set_layouts;
+}
+
+VkPipelineLayout vulkan_program::pipeline_layout() const
+{
+	return _pipeline_layout;
+}
+
 std::unique_ptr<vulkan_program> vulkan_program::make(
 	const config& cfg)
 {
+	// create merged list of shader uniform inputs
+	std::array<std::vector<spirv::parameter>, 3> descriptor_set_parameter_cfgs;
+	std::array<std::array<uint8_t, 64>, 3> indices = {};
+	memset(&indices, -1, sizeof indices);
+
+	for (vulkan_shader* shader : { (vulkan_shader*)cfg.vk.vertex.get(), (vulkan_shader*)cfg.vk.fragment.get() })
+	{
+		merge_parameters(
+			*shader,
+			&indices,
+			&descriptor_set_parameter_cfgs);
+	}
+
+
+	// create shader parameters, descriptor set layouts, and pipeline layout
+	std::array<std::vector<vulkan_parameter>, 3> descriptor_set_parameters;
 	std::vector<vulkan_parameter*> parameters;
-	std::vector<vulkan_parameter> batch_parameters;
-	std::vector<vulkan_parameter> material_parameters;
-	std::vector<vulkan_parameter> instance_parameters;
-	std::vector<vulkan_vertex_parameter> vertex_parameters;
+	std::array<VkDescriptorSetLayout, 3> descriptor_set_layouts = {};
+	VkPipelineLayout pipeline_layout = nullptr;
+	std::vector<VkDescriptorSetLayoutBinding> scratch_bindings;
 
-	ASSERT_CONTEXT(false && "not implemented");
 
-	//// sort vertex and shader parameters into batch/material/instance parameters by descriptor_set.
-	//// tracked_params is used to avoid adding the same items multiple times if they exist in both vertex and fragment shader. 
-	//// validate batch and material parameters using batch_constraints and material_constraints.
-	//// validate instance parameters to ensure they are the same between vertex and fragment shader.
-	//for (igpu::shader* shader : { (igpu::shader*)cfg.vertex.get(), (igpu::shader*)cfg.fragment.get() })
-	//{
-	//	auto vulkan = ASSERT_CAST(vulkan_shader*, shader);
+	parameters.reserve(
+		descriptor_set_parameter_cfgs[0].size() +
+		descriptor_set_parameter_cfgs[1].size() +
+		descriptor_set_parameter_cfgs[2].size());
 
-	//	for (size_t i = 0; i < vulkan->program_parameter_count(); ++i)
-	//	{
-	//		const auto* param = &vulkan->program_parameter(i);
 
-	//		const parameter_constraints* constraints = nullptr;
-	//		std::vector<vulkan_parameter>* dest_parameters = nullptr;
+	for (size_t d = 0; d < 3; ++d)
+	{
+		auto& set_parameters = descriptor_set_parameters[d];
+		auto& configs = descriptor_set_parameter_cfgs[d];
 
-	//		switch (param->descriptor_set)
-	//		{
-	//		case 0:
-	//			constraints = &batch_constraints;
-	//			dest_parameters = &batch_parameters;
-	//			break;
+		set_parameters.reserve(configs.size());
+		scratch_bindings.resize(configs.size());
 
-	//		case 1:
-	//			constraints = &material_constraints;
-	//			dest_parameters = &material_parameters;
-	//			break;
+		for (size_t i = 0; i < configs.size(); ++i)
+		{
+			spirv::parameter& parameter = configs[i];
+			set_parameters.emplace_back(parameter);
+			parameters.emplace_back(&set_parameters.back());
 
-	//		case 2:
-	//			dest_parameters = &instance_parameters;
-	//			break;
+			auto& binding = scratch_bindings[i];
+			binding.binding = parameter.spv.binding;
+			binding.descriptorCount = (uint32_t)parameter.array_size;
+			binding.descriptorType = to_vulkan_type(parameter.type);
+			binding.pImmutableSamplers = nullptr;
+			binding.stageFlags = to_vulkan_stage_flags(parameter.spv.stages);
+		}
 
-	//		default:
-	//			LOG_CRITICAL(
-	//				"descriptor set index %d is out of range %d",
-	//				(int)param->descriptor_set,
-	//				(int)tracked_params.size());
+		VkDescriptorSetLayoutCreateInfo layout_info = {};
+		layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		layout_info.bindingCount = (uint32_t)scratch_bindings.size();
+		layout_info.pBindings = scratch_bindings.data();
 
-	//			continue;
-	//		}
+		vkCreateDescriptorSetLayout(cfg.vk.device, &layout_info, nullptr, &descriptor_set_layouts[d]);
+		scratch_bindings.clear();
+	}
 
-	//		if (constraints)
-	//		{
-	//			if (param->binding >= constraints->cfg().parameters.size())
-	//			{
-	//				LOG_CRITICAL(
-	//				"binding %d is out of range %d",
-	//				(int)param->binding,
-	//				(int)constraints->cfg().parameters.size());
+	// create pipeline layouts
+	VkPipelineLayoutCreateInfo pipeline_layout_info = {};
+	pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	pipeline_layout_info.setLayoutCount = (uint32_t)descriptor_set_layouts.size();
+	pipeline_layout_info.pSetLayouts = &descriptor_set_layouts[0];
 
-	//				continue;
-	//			}
-	//			else
-	//			{
-	//				const primitive_kv& kv = constraints->cfg().parameters[param->binding];
-	//				
-	//				if (param->cfg.name != kv.first)
-	//				{
-	//					LOG_CRITICAL(
-	//						"binding %d name mismatch, expected:%s actual:%s",
-	//						(int)param->binding,
-	//						param->cfg.name.c_str(),
-	//						kv.first.c_str());
-
-	//					continue;
-	//				}
-	//				else if (param->cfg.type != kv.second.type())
-	//				{
-	//					LOG_CRITICAL(
-	//						"binding %s type mismatch, expected:%s actual:%s",
-	//						param->cfg.name.c_str(),
-	//						parameter::to_string(param->cfg.type).data(),
-	//						parameter::to_string(kv.second.type()).data());
-
-	//					continue;
-	//				}
-	//			}
-	//		}
-	//		
-	//		bool& is_tracked = tracked_params[param->descriptor_set][param->binding];
-
-	//		if (!is_tracked)
-	//		{
-	//			dest_parameters->push_back(vulkan_parameter(
-	//				param->cfg,
-	//				param->descriptor_set,
-	//				param->binding));
-	//		}
-	//		
-	//		if (!constraints)
-	//		{
-	//			if (param->cfg.name != kv.first)
-	//			{
-	//				LOG_CRITICAL(
-	//					"binding %d name mismatch, expected:%s actual:%s",
-	//					(int)param->binding,
-	//					param->cfg.name.c_str(),
-	//					kv.first.c_str());
-
-	//				continue;
-	//			}
-	//			else if (param->cfg.type != kv.second.type())
-	//			{
-	//				LOG_CRITICAL(
-	//					"binding %s type mismatch, expected:%s actual:%s",
-	//					param->cfg.name.c_str(),
-	//					parameter::to_string(param->cfg.type).data(),
-	//					parameter::to_string(kv.second.type()).data());
-
-	//				continue;
-	//			}
-	//		}
-
-	//		is_tracked = true;
-	//	}
-	//}
-
-	//// creat mapping of 
-	//std::unordered_map<std::string_view, size_t> instance_parameter_lookup;
-	//for (const auto& instance_parameter : instance_parameters)
-	//{
-	//	const std::string& name = instance_parameter.cfg().name;
-	//	ASSERT_CONTEXT(instance_parameter_lookup.find(name) == instance_parameter_lookup.end());
-	//	instance_parameter_lookup[name] = instance_parameter.binding();
-	//}
-	//
+	vkCreatePipelineLayout(cfg.vk.device, &pipeline_layout_info, nullptr, &pipeline_layout);
 	
-	ASSERT_CONTEXT(false && "need to implement vertex constraints here too");
+
+	vulkan_vertex_shader& vertex_shader = *cfg.vk.vertex;
+	std::vector<vulkan_vertex_parameter> vertex_parameters;
+	vertex_parameters.reserve(vertex_shader.vertex_parameter_count());
+	for (size_t i = 0; i < vertex_shader.vertex_parameter_count(); ++i)
+	{
+		vertex_parameters.emplace_back(vertex_shader.vertex_parameter(i));
+	}
 
 	return std::unique_ptr<vulkan_program>(
 		new vulkan_program(
 			cfg,
+			std::move(descriptor_set_parameters[0]),
+			std::move(descriptor_set_parameters[1]),
+			std::move(descriptor_set_parameters[2]),
 			std::move(parameters),
-			std::move(batch_parameters),
-			std::move(material_parameters),
-			std::move(instance_parameters),
-			std::move(vertex_parameters)));
+			std::move(vertex_parameters),
+			descriptor_set_layouts,
+			pipeline_layout));
+}
+
+vulkan_program::~vulkan_program()
+{
+	vkDestroyPipelineLayout(_cfg.vk.device, _pipeline_layout, nullptr);
+
+	for (VkDescriptorSetLayout descriptor_set_layout : _descriptor_set_layouts)
+	{
+		vkDestroyDescriptorSetLayout(_cfg.vk.device, descriptor_set_layout, nullptr);
+	}
 }
 
 vulkan_program::vulkan_program(
 	const config& cfg,
-	std::vector<vulkan_parameter*> parameters,
 	std::vector<vulkan_parameter> batch_parameters,
 	std::vector<vulkan_parameter> material_parameters,
 	std::vector<vulkan_parameter> instance_parameters,
-	std::vector<vulkan_vertex_parameter> vertex_parameters)
+	std::vector<vulkan_parameter*> parameters,
+	std::vector<vulkan_vertex_parameter> vertex_parameters,
+	std::array<VkDescriptorSetLayout, 3> descriptor_set_layouts,
+	VkPipelineLayout pipeline_layout)
 	: _cfg(cfg)
-	, _parameters(std::move(parameters))
 	, _batch_parameters(std::move(batch_parameters))
 	, _material_parameters(std::move(material_parameters))
 	, _instance_parameters(std::move(instance_parameters))
+	, _parameters(std::move(parameters))
 	, _vertex_parameters(std::move(vertex_parameters))
+	, _descriptor_set_layouts(descriptor_set_layouts)
+	, _pipeline_layout(pipeline_layout)
 	, _texture_switch_metric(perf::category::SWITCH_TEXTURES, "Shader Texture Switches")
 	, _parameter_switch_metric(perf::category::SWITCH_PARAMETERS, "Shader parameter Switches")
 {

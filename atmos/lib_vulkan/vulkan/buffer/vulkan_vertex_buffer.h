@@ -11,8 +11,6 @@ namespace igpu
 {
 	class vulkan_buffer_mediator;
 
-	VkFormat to_vulkan_format(components);
-
 	class vulkan_vertex_buffer : public vertex_buffer
 	{
 	public:

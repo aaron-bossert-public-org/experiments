@@ -1,9 +1,12 @@
 
 #pragma once
 
+#include <igpu/material/program_parsing.h>
 #include <igpu/material/vertex_shader.h>
+
 #include <vulkan/defines/vulkan_includes.h>
 #include <vulkan/material/vulkan_shader.h>
+
 #include <memory>
 
 namespace igpu
@@ -12,12 +15,18 @@ namespace igpu
 	{
 	public:
 
-		virtual size_t attribute_count() const = 0;
+		struct config : vertex_shader::config
+		{
+			vulkan vk;
+		};
 
-		virtual const spirv_attribute& attribute(size_t) const = 0;
+		virtual const config& cfg() const = 0;
+
+		virtual size_t vertex_parameter_count() const = 0;
+
+		virtual const spirv::vertex_parameter& vertex_parameter(size_t) const = 0;
 
 		static std::unique_ptr<vulkan_vertex_shader> make(
-			const config& cfg,
-			VkDevice device);
+			const config& cfg);
 	};
 }

@@ -115,11 +115,13 @@ std::shared_ptr<batch_binding> vulkan_root_batch::make_binding(
 	const instance_batch::config& base_cfg,
 	const utility::sphere& visibility_sphere)
 {
-	vulkan_instance_batch::config cfg;
-	COPY_TO_DERRIVED_CONFIG(base_cfg, &cfg);
-	cfg.vk.program = std::dynamic_pointer_cast < vulkan_program, program > (cfg.program);
-	cfg.vk.render_states = std::dynamic_pointer_cast < vulkan_render_states, render_states >(cfg.render_states);
-	cfg.vk.geometry = std::dynamic_pointer_cast <vulkan_geometry, geometry >(cfg.geometry);
+	vulkan_instance_batch::config cfg{
+	base_cfg,
+	{
+		std::dynamic_pointer_cast < vulkan_program, program > (cfg.program),
+		std::dynamic_pointer_cast < vulkan_render_states, render_states >(cfg.render_states),
+		std::dynamic_pointer_cast <vulkan_geometry, geometry >(cfg.geometry),
+	}};
 	
 	return batch_utility::create_binding(
 		*this,

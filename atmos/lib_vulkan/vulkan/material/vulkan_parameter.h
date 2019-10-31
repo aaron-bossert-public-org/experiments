@@ -1,37 +1,31 @@
 
- #pragma once
+#pragma once
 
 #include <vulkan/defines/vulkan_includes.h>
 
- #include <framework/meta_programming/va_macro.h>
- #include <igpu/material/parameter.h>
+#include <framework/meta_programming/va_macro.h>
+#include <igpu/material/program_parsing.h>
 
- #include <optional>
+#include <optional>
 
- namespace igpu
- {
- 	class vulkan_parameter : public parameter
- 	{
- 	public:
+namespace igpu
+{
+	VkDescriptorType to_vulkan_type(parameter::type);
+	class vulkan_parameter : public parameter
+	{
+	public:
 
-		struct config : parameter::config
+		struct config : spirv::parameter
 		{
-			struct vulkan
-			{
-				const size_t descriptor_set = (size_t)-1;
-				VkShaderStageFlags stage_flags;
-			};
-
-			vulkan vk;
 		};
-
+		
 		const config& cfg() const override;
 
- 		vulkan_parameter(
- 			const config&);
+		vulkan_parameter(
+			const spirv::parameter&);
 
- 	private:
+	private:
 
 		const config _cfg;
- 	};
- }
+	};
+}

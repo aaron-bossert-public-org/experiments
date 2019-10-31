@@ -22,17 +22,11 @@ namespace igpu
 		{
 			std::string name;
 			type type;
+			size_t array_size;
 		};
         
         virtual const config& cfg() const = 0;
 
 		virtual ~parameter() = default;
-        
-	protected:
-		
-		parameter() = default;
-
-		parameter(const parameter&) = delete;
-		parameter& operator= (const parameter&) = delete;
     };
 }

@@ -484,34 +484,50 @@ const vulkan_context::config& vulkan_context::cfg() const
 std::unique_ptr<program> vulkan_context::make_program(
 	const program::config& base_cfg)
 {
-	vulkan_program::config cfg;
-	COPY_TO_DERRIVED_CONFIG(base_cfg, &cfg);
+	vulkan_program::config cfg = { 
+		base_cfg,
+	{
+		_state.device,
+		std::dynamic_pointer_cast <vulkan_vertex_shader, vertex_shader> (cfg.vertex),
+		std::dynamic_pointer_cast <vulkan_fragment_shader, fragment_shader>(cfg.fragment),
+	} };
 
 	return vulkan_program::make(
 		cfg);
 }
 
 std::unique_ptr<vertex_shader> vulkan_context::make_vertex_shader(
-	const vertex_shader::config& cfg)
+	const vertex_shader::config& base_cfg)
 {
+	vulkan_vertex_shader::config cfg = {
+		base_cfg,
+	{
+		this->_state.device,
+		VK_SHADER_STAGE_VERTEX_BIT,
+	} };
+
 	return vulkan_vertex_shader::make(
-		cfg,
-		_state.device);
+		cfg);
 }
 
 std::unique_ptr<fragment_shader> vulkan_context::make_fragment_shader(
-	const vertex_shader::config& cfg)
+	const fragment_shader::config& base_cfg)
 {
+	vulkan_fragment_shader::config cfg = { 
+		base_cfg,
+	{
+		this->_state.device,
+		VK_SHADER_STAGE_FRAGMENT_BIT,
+	} };
+	
 	return vulkan_fragment_shader::make(
-		cfg,
-		_state.device);
+		cfg);
 }
 
 std::unique_ptr<geometry> vulkan_context::make_geometry(
 	const geometry::config& base_cfg)
 {
-	vulkan_geometry::config cfg = {};
-	COPY_TO_DERRIVED_CONFIG(base_cfg, &cfg);
+	vulkan_geometry::config cfg = { base_cfg };
 
 	cfg.vk.input_assembly_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 	cfg.vk.input_assembly_info.topology = to_vulkan_topology(cfg.topology);
@@ -555,9 +571,7 @@ std::unique_ptr<texture2d> vulkan_context::make_texture(
 std::unique_ptr<opaque_batch> vulkan_context::make_opaque_batch(
 	const opaque_batch::config& base_cfg)
 {
-	vulkan_opaque_batch::config cfg = {};
-	COPY_TO_DERRIVED_CONFIG(base_cfg, &cfg);
-	cfg.vk.context = this;
+	vulkan_opaque_batch::config cfg = { base_cfg, this };
 
 	return vulkan_opaque_batch::make(
 		cfg);
@@ -566,9 +580,7 @@ std::unique_ptr<opaque_batch> vulkan_context::make_opaque_batch(
 std::unique_ptr<transparent_batch> vulkan_context::make_transparent_batch(
 	const transparent_batch::config& base_cfg)
 {
-	vulkan_transparent_batch::config cfg = {};
-	COPY_TO_DERRIVED_CONFIG(base_cfg, &cfg);
-	cfg.vk.context = this;
+	vulkan_transparent_batch::config cfg = { base_cfg, this };
 
 	return vulkan_transparent_batch::make(
 		cfg);

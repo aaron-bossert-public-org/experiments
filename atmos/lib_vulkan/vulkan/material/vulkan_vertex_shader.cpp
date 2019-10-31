@@ -6,11 +6,8 @@ using namespace igpu;
 
 
 std::unique_ptr<vulkan_vertex_shader> vulkan_vertex_shader::make(
-	const config& cfg,
-	VkDevice device)
+	const config& cfg)
 {
 	return vulkan_shader_impl_t<vulkan_vertex_shader>::make(
-		cfg,
-		device,
-		VK_SHADER_STAGE_VERTEX_BIT);
+		cfg);
 }

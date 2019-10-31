@@ -21,12 +21,5 @@ namespace igpu
 		virtual const config& cfg() const = 0;
 
 		virtual ~vertex_parameter() = default;
-
-	protected:
-
-		vertex_parameter() = default;
-
-		vertex_parameter(const vertex_parameter&) = delete;
-		vertex_parameter& operator= (const vertex_parameter&) = delete;
 	};
 }

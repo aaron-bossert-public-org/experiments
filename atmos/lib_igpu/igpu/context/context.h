@@ -92,10 +92,4 @@ namespace igpu
 		context(const context&) = delete;
 		context& operator= (const context&) = delete;
 	};
-
-	template <typename CONFIG, typename DERRIVED>
-	void COPY_TO_DERRIVED_CONFIG(const CONFIG& base, DERRIVED* out_config)
-	{
-		static_cast<CONFIG&>(*out_config) = base;
-	}
 }

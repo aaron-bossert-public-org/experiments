@@ -87,6 +87,11 @@ std::unique_ptr<vulkan_geometry> vulkan_geometry::make(
 		LOG_CRITICAL("index buffer is null");
 	}
 
+	if (0 == cfg.vertex_buffers.size())
+	{
+		LOG_CRITICAL("vertex_buffers is empty");
+	}
+
 	auto* vulkan_index_buffer = ASSERT_CAST(igpu::vulkan_index_buffer*, cfg.index_buffer.get());
 
 	std::vector < vulkan_vertex_buffer* > vertex_buffers;
@@ -107,7 +112,9 @@ std::unique_ptr<vulkan_geometry> vulkan_geometry::make(
 		vertex_buffers.push_back(vulkan_vertex_buffer);
 	}
 
-	if (vulkan_index_buffer && vertex_buffers.size() == cfg.vertex_buffers.size())
+	if (vulkan_index_buffer && 
+		vertex_buffers.size() && 
+		vertex_buffers.size() == cfg.vertex_buffers.size())
 	{
 		return std::unique_ptr<vulkan_geometry>(
 			new vulkan_geometry(

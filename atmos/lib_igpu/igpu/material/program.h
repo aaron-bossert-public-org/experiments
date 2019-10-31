@@ -18,6 +18,7 @@ namespace igpu
         
 		struct config
 		{
+			std::string name;
 			std::shared_ptr<vertex_shader> vertex;
 			std::shared_ptr<fragment_shader> fragment;
 		};

@@ -2,10 +2,16 @@
 #include <vulkan/material/vulkan_vertex_shader.h>
 #include <vulkan/material/vulkan_shader_impl.h>
 #include <vulkan/material/vulkan_compiler.h>
+#include <vulkan/material/vulkan_shader_stages.h>
 
 #include <igpu/material/program_parsing.h>
 
 using namespace igpu;
+
+namespace
+{
+	const std::string s_entry_point = "main";
+}
 
 vulkan_shader_impl::vulkan_shader_impl(const vulkan_shader_impl::config& cfg)
 : _cfg(cfg)
@@ -75,16 +81,12 @@ void vulkan_shader_impl::unmap()
 
 		vkCreateShaderModule(_cfg.vk.device, &create_info, nullptr, &_shader_module);
 		
-		_resources.clear();
-		_attributes.clear();
+		_parameters.clear();
+		_vertex_parameters.clear();
 
-		auto* p_attributes = &_attributes;
-		if (_cfg.vk.shader_stage  != VK_SHADER_STAGE_VERTEX_BIT)
-		{
-			p_attributes = nullptr;
-		}
-
-		parse_spirv(std::move(_memory), &_resources, p_attributes);
+		shader_stages stages = from_vulkan_stage_flags(_cfg.vk.stage_flags);
+		
+		spirv::parse(std::move(_memory), s_entry_point, stages, &_parameters, &_vertex_parameters);
 	}
 }
 
@@ -93,22 +95,33 @@ size_t vulkan_shader_impl::byte_capacity() const
 	return _memory.capacity() * sizeof(_memory[0]);
 }
 
-size_t vulkan_shader_impl::resource_count() const
+
+VkPipelineShaderStageCreateInfo vulkan_shader_impl::stage_info() const
 {
-	return _resources.size();
+	VkPipelineShaderStageCreateInfo shader_stage_info = {};
+	shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	shader_stage_info.stage = _cfg.vk.stage_flags;
+	shader_stage_info.module = _shader_module;
+	shader_stage_info.pName = s_entry_point.c_str();
+	return shader_stage_info;
 }
 
-const spirv_resource& vulkan_shader_impl::resource(size_t i) const
+size_t vulkan_shader_impl::parameter_count() const
 {
-	return _resources[i];
+	return _parameters.size();
 }
 
-size_t vulkan_shader_impl::attribute_count() const
+const spirv::parameter& vulkan_shader_impl::parameter(size_t i) const
 {
-	return _attributes.size();
+	return _parameters[i];
 }
 
-const spirv_attribute& vulkan_shader_impl::attribute(size_t i) const
+size_t vulkan_shader_impl::vertex_parameter_count() const
 {
-	return _attributes[i];
+	return _vertex_parameters.size();
+}
+
+const spirv::vertex_parameter& vulkan_shader_impl::vertex_parameter(size_t i) const
+{
+	return _vertex_parameters[i];
 }

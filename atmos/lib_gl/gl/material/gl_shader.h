@@ -84,9 +84,7 @@ namespace igpu
 			const typename T::config& cfg,
 			GLenum type)
 		{
-			config cfg_t;
-			COPY_TO_DERRIVED_CONFIG(cfg, &cfg_t);
-			cfg_t.type = type;
+			config cfg_t = { cfg, type };
 
 			switch (type)
 			{
