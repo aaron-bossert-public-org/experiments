@@ -3,17 +3,11 @@
 
 #include <framework/logging/log.h>
 
-#include <igpu/batch/batch_parameters.h>
-
 using namespace igpu;
 
 parameter_constraints::parameter_constraints(const config& cfg)
 	: _cfg (cfg)
 {
-	for (size_t i = 0; i < _cfg.parameters.size(); ++i)
-	{
-		_lookup[_cfg.parameters[i].first] = i;
-	}
 }
 
 const parameter_constraints::config& parameter_constraints::cfg() const

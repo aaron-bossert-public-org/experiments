@@ -1,14 +1,19 @@
 
 #pragma once
 
+#include <igpu/utility/utility_types.h>
 namespace igpu
 {
-	class batch_parameters;
 	class geometry;
-	class material;
 	class program;
 	class render_states;
+	class primitives;
 	class instance_batch;
+
+	struct batch_draw_config
+	{
+		utility::frustum frustum;
+	};
 
 	template<typename CHILD_T, typename ITEM_T>
 	class batch_api_t
@@ -37,19 +42,19 @@ namespace igpu
 	{
 	};
 
-	class material_batch : public batch_api_t<geometry_batch, material>
+	class material_batch : public batch_api_t<geometry_batch, primitives>
 	{
 	};
 
-	class render_state_batch : public batch_api_t<material_batch, render_states>
+	class render_states_batch : public batch_api_t<material_batch, render_states>
 	{
 	};
 
-	class program_batch : public batch_api_t<render_state_batch, program>
+	class program_batch : public batch_api_t<render_states_batch, program>
 	{
 	};
 
-	class root_batch : public batch_api_t<program_batch, batch_parameters>
+	class root_batch : public batch_api_t<program_batch, primitives>
 	{
 	protected:
 		root_batch() = default;

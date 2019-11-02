@@ -1,30 +1,40 @@
 
-// #pragma once
+#pragma once
 
-// #include <igpu/texture/draw_target.h>
+#include <igpu/texture/draw_target.h>
 
-// #include <memory>
+#include <memory>
 
-// namespace igpu
-// {
-//     class vulkan_draw_target : public draw_target
-//     {
-//     public:
-        
-//         unsigned int frame_buffer() const;
-        
-//         static bool validate_framebuffer_status(int status);
-        
-//         static std::unique_ptr<vulkan_draw_target> make(const std::shared_ptr<color_target>&,
-//                                                     const std::shared_ptr<depth_target>&);
-        
-//         ~vulkan_draw_target() override;
-        
-//     private:
-//         vulkan_draw_target(unsigned int frame_buffer,
-//                      const std::shared_ptr<color_target>&,
-//                      const std::shared_ptr<depth_target>&);
-        
-//         unsigned int _frame_buffer;
-//     };
-// }
+namespace igpu
+{
+	class vulkan_render_target;
+	class vulkan_depth_target;
+
+	class vulkan_draw_target : public draw_target
+	{
+	public:
+
+		struct config : draw_target::config
+		{
+			struct vulkan
+			{
+				vulkan_render_target* color = nullptr;
+				vulkan_depth_target* depth = nullptr;
+			};
+
+			vulkan vk;
+		};
+
+		const config& cfg() const override;
+
+		static std::unique_ptr<vulkan_draw_target> make(
+			const config&);
+
+	private:
+
+		vulkan_draw_target(
+			const config&);
+
+		const config _cfg;
+	};
+}

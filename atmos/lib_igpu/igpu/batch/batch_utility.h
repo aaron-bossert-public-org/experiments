@@ -35,27 +35,26 @@ namespace igpu
 		}
 
 		template <
+			typename BINDING,
 			typename ROOT_BATCH,
-			typename INSTANCE_CONFIG,
+			typename CONFIG,
 			typename... ARGS>
-			std::unique_ptr<batch_binding_t<typename ROOT_BATCH>> create_binding(
-				ROOT_BATCH& root_batch, 
-				const INSTANCE_CONFIG& cfg,
+			std::unique_ptr<BINDING> create_binding(
+				ROOT_BATCH& root_batch,
+				const CONFIG& cfg,
 				ARGS&& ... args)
 		{
-			auto& geometry_batch =
-				get_or_create_child(
-					get_or_create_child(
-						get_or_create_child(
-							get_or_create_child(root_batch, cfg),
-							cfg),
-						cfg),
-					cfg);
+			auto& program_batch = get_or_create_child(root_batch, cfg);
+			auto& render_states_batch = get_or_create_child(program_batch, cfg);
+			auto& material_batch = get_or_create_child(render_states_batch, cfg);
+			auto& geometry_batch = get_or_create_child(material_batch, cfg);
 
-			using binding_t = batch_binding_t<typename ROOT_BATCH>;
-			return std::unique_ptr<binding_t>(
-				new binding_t(
+			return std::unique_ptr<BINDING>(
+				new BINDING(
 					&root_batch,
+					&program_batch,
+					&render_states_batch,
+					&material_batch,
 					&geometry_batch,
 					cfg,
 					std::forward<ARGS>(args)...));
@@ -75,111 +74,35 @@ namespace igpu
 
 		template <
 			typename ROOT_BATCH,
-			typename BINDING = typename batch_binding_t<typename ROOT_BATCH>>
-			void remove_child(
-				ROOT_BATCH& root_batch, 
-				BINDING& binding)
-		{
-			const auto& cfg = binding.instance_batch().cfg();
-
-			auto& program_map = root_batch.map();
-			auto program_found = find_child(program_map, cfg);
-			if (program_found->second)
-			{
-				BINDING::program_batch_t& program_batch = program_found->second->val();
-
-				auto& render_states_map = program_batch.map();
-				auto render_states_found = find_child(render_states_map, cfg);
-				if (render_states_found->second)
-				{
-					BINDING::render_state_batch_t& render_states_batch = render_states_found->second->val();
-
-					auto& material_map = render_states_batch.map();
-					auto material_found = find_child(material_map, cfg);
-					if (material_found->second)
-					{
-						BINDING::material_batch_t& material_batch = material_found->second->val();
-
-						auto& geometry_map = material_batch.map();
-						auto geometry_found = find_child(geometry_map, cfg);
-						if (geometry_found->second)
-						{
-							BINDING::geometry_batch_t& geometry_batch = geometry_found->second->val();
-
-							auto& instance_map = geometry_batch.map();
-							auto instance_found = instance_map.find(&binding);
-							if (instance_found->second)
-							{
-								// destroy instance
-								instance_map.erase(instance_found);
-
-								if (0 == instance_map.size())
-								{
-									geometry_map.erase(geometry_found);
-
-									if (0 == geometry_map.size())
-									{
-										material_map.erase(material_found);
-
-										if (0 == material_map.size())
-										{
-											render_states_map.erase(render_states_found);
-
-											if (0 == render_states_map.size())
-											{
-												program_map.erase(program_found);
-											}
-										}
-									}
-								}
-								
-								return;
-							}
-
-							LOG_CRITICAL("failed to find batch binding in geometry_batch");
-							return;
-						}
-
-						LOG_CRITICAL("failed to find batch binding in material_batch");
-						return;
-					}
-
-					LOG_CRITICAL("failed to find batch binding in render_states_batch");
-					return;
-				}
-
-				LOG_CRITICAL("failed to find batch binding in program_batch");
-				return;
-			}
-
-			LOG_CRITICAL("failed to find batch binding in root_batch");
-			return;
-		}
-
-		template <
-			typename ROOT_BATCH,
+			typename DRAW_CONFIG,
 			typename BATCH_STACK = ROOT_BATCH::batch_stack_t>
-			void render_opaque(ROOT_BATCH& root_batch,
-				const utility::frustum& frustum)
+			void render_opaque(
+				ROOT_BATCH& root_batch,
+				const DRAW_CONFIG& draw_config)
 		{
 			BATCH_STACK stack = {};
 			for (auto& program_batch : root_batch)
 			{
 				stack.program_batch = nullptr;
-				for (auto& render_state_batch : program_batch.map())
+				for (auto& render_states_batch : program_batch.map())
 				{
-					stack.render_state_batch = nullptr;
-					for (auto& material_batch : render_state_batch.map())
+					stack.render_states_batch = nullptr;
+					for (auto& material_batch : render_states_batch.map())
 					{
 						stack.material_batch = nullptr;
 						for (auto& geometry_batch : material_batch.map())
 						{
 							stack.geometry_batch = nullptr;
+							const uint32_t geometry_index_count = (uint32_t)geometry_batch.item().index_buffer().element_count();
+
 							for (auto& instance_batch : geometry_batch.map())
 							{
 								stack.instance_batch = nullptr;
-								if (instance_batch.count() &&
-									utility::intersects(frustum, instance_batch.visibility_sphere()))
+								const uint32_t instance_count = (uint32_t)instance_batch.instance_count().value_or(0);
+								const uint32_t element_count = (uint32_t)instance_batch.element_count().value_or(geometry_index_count);
+								
+								if (instance_count && element_count &&
+									utility::intersects(draw_config.frustum, instance_batch.visibility_sphere()))
 								{
 									stack.instance_batch = &instance_batch;
 									if (!stack.geometry_batch)
@@ -188,21 +111,20 @@ namespace igpu
 										if (!stack.material_batch)
 										{
 											stack.material_batch = &material_batch;
-											if (!stack.render_state_batch)
+											if (!stack.render_states_batch)
 											{
-												stack.render_state_batch = &render_state_batch;
+												stack.render_states_batch = &render_states_batch;
 												if (!stack.program_batch)
 												{
 													stack.program_batch = &program_batch;
 													if (!stack.root_batch)
 													{
 														stack.root_batch = &root_batch;
-
-														root_batch.start_draw(stack);
+														root_batch.start_draw(draw_config);
 													}
 													program_batch.start_draw(stack);
 												}
-												render_state_batch.start_draw(stack);
+												render_states_batch.start_draw(stack);
 											}
 											material_batch.start_draw(stack);
 										}
@@ -221,9 +143,9 @@ namespace igpu
 							material_batch.stop_draw();
 						}
 					}
-					if (stack.render_state_batch)
+					if (stack.render_states_batch)
 					{
-						render_state_batch.stop_draw();
+						render_states_batch.stop_draw();
 					}
 				}
 				if (stack.program_batch)
@@ -330,70 +252,134 @@ namespace igpu
 
 			using root_batch_t = typename ROOT_BATCH;
 			using program_batch_t = typename root_batch_t::child_t;
-			using render_state_batch_t = typename program_batch_t::child_t;
-			using material_batch_t = typename render_state_batch_t::child_t;
+			using render_states_batch_t = typename program_batch_t::child_t;
+			using material_batch_t = typename render_states_batch_t::child_t;
 			using geometry_batch_t = typename material_batch_t::child_t;
 			using instance_batch_t = typename geometry_batch_t::child_t;
-			using instance_ptr_t = typename scoped_ptr<
-				typename geometry_batch_t::map_t::element_ref >;
-			
+			using config_t = typename instance_batch_t::config;
+			using program_ptr_t = typename scoped_ptr<typename root_batch_t::map_t::element_ref >;
+			using render_states_ptr_t = typename scoped_ptr<typename program_batch_t::map_t::element_ref >;
+			using material_ptr_t = typename scoped_ptr<typename render_states_batch_t::map_t::element_ref >;
+			using geometry_ptr_t = typename scoped_ptr<typename material_batch_t::map_t::element_ref >;
+			using instance_ptr_t = typename scoped_ptr<typename geometry_batch_t::map_t::element_ref >;
+
 			template<typename... ARGS>
 			batch_binding_t(
 				root_batch_t* root_batch,
+				program_batch_t* program_batch,
+				render_states_batch_t* render_states_batch,
+				material_batch_t* material_batch,
 				geometry_batch_t* geometry_batch,
+				const config_t& cfg,
 				ARGS&& ... args)
-				: _dependencies(
-					make_dependencies(
-						this,
-						root_batch,
-						geometry_batch,
-						std::forward<ARGS>(args)...))
+				: _root_batch(root_batch)
+				, _program_ptr(root_batch->map().scoped_ptr(program_batch))
+				, _render_states_ptr(program_batch->map().scoped_ptr(render_states_batch))
+				, _material_ptr(render_states_batch->map().scoped_ptr(material_batch))
+				, _geometry_ptr(material_batch->map().scoped_ptr(geometry_batch))
+				, _instance_ptr(make_instance(this, geometry_batch, cfg, std::forward<ARGS>(args)...))
+				, _cfg (cfg)
 			{
 			}
 
 			~batch_binding_t()
 			{
-				remove_child(*_dependencies.root_batch, *this);
+				auto& geometry = _geometry_ptr->val();
+				{
+					auto& map = geometry.map();
+					map.erase(map.find(this));
+					if (map.size()) { 
+						return; 
+					}
+				}
+
+				auto& material = _material_ptr->val();
+				{
+					auto& map = material.map();
+					map.erase(map.find(&geometry.item()));
+					if (map.size())
+					{
+						return;
+					}
+				}
+
+				auto& render_states = _render_states_ptr->val();
+				{
+					auto& map = render_states.map();
+					map.erase(map.find(&material.item()));
+					if (map.size())
+					{
+						return;
+					}
+				}
+
+				auto& program = _program_ptr->val();
+				{
+					auto& map = program.map();
+					map.erase(map.find(&render_states.item()));
+					if (map.size())
+					{
+						return;
+					}
+				}
+
+				auto& map = _root_batch->map();
+				map.erase(map.find(&program.item()));
+
+				LOG_CRITICAL(
+
+					"when deleting a batch node, need to add last drawn frame's fence to resources it owns"
+					"eg: to materials parameters such as textures, we share our fence"
+					"when sharing a fence, we should wait on the last fence before replacing it with a new one"
+				);
+				// something to the tune of something like this at each layer of deletion
+				// for(auto& param : instance) { param->fence(_root_batch->fence() }
+				// for(auto& param : material) { param->fence(_root_batch->fence() }
+				// for(auto& shader: program) { param->fence(_root_batch->fence() }
 			}
 
 			const instance_batch_t& instance_batch() const override
 			{
-				return _dependencies.instance_batch_ptr->val();
+				return _instance_ptr->val();
 			}
 
 			instance_batch_t& instance_batch() override
 			{
-				return _dependencies.instance_batch_ptr->val();
+				return _instance_ptr->val();
+			}
+
+			const config_t& cfg() const override
+			{
+				return _cfg;
 			}
 
 		private:
 
-			struct dependencies
-			{
-				root_batch_t* root_batch;
-				instance_ptr_t instance_batch_ptr;
-			} _dependencies;
+			root_batch_t* _root_batch;
+			program_ptr_t _program_ptr;
+			render_states_ptr_t _render_states_ptr;
+			material_ptr_t _material_ptr;
+			geometry_ptr_t _geometry_ptr;
+			instance_ptr_t _instance_ptr;
+			const config_t _cfg;
 
 			template<typename... ARGS>
-			static dependencies make_dependencies(
+			static instance_ptr_t make_instance(
 				batch_binding_t* ptr_this,
-				root_batch_t* root_batch,
 				geometry_batch_t* geometry_batch,
 				ARGS&& ... args)
 			{
 				auto& map = geometry_batch->map();
 				auto emplaced = map.emplace(
 					ptr_this,
+					
 					std::forward<ARGS>(args)...);
 
 				ASSERT_CONTEXT(emplaced.second, "this binding appears to have already been added");
 
 				geometry_batch_t::map_t::iter_t& iter = emplaced.first;
 
-				return {
-					root_batch,
-					map.scoped_ptr(iter->second->val()),
-				};
+				return map.scoped_ptr(&iter->second->val());
 			}
 		};
 	}

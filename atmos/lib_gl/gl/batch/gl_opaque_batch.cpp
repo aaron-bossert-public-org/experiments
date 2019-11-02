@@ -87,9 +87,9 @@
 //        void set(opaque_batch_root*)
 //        {}
 //
-//        void set(render_state_batch* node)
+//        void set(render_states_batch* node)
 //        {
-//            _render_state_batch = node;
+//            _render_states_batch = node;
 //        }
 //        
 //        void set(program_batch* node)
@@ -141,10 +141,10 @@
 //						_gl_context->begin_program(program);
 //                    }
 //                    
-//                    if(!_render_state_batch->active())
+//                    if(!_render_states_batch->active())
 //                    {
-//						_render_state_batch->active(true);
-//						const auto* render_states = ASSERT_CAST(gl_render_states*, _render_state_batch->item().get());
+//						_render_states_batch->active(true);
+//						const auto* render_states = ASSERT_CAST(gl_render_states*, _render_states_batch->item().get());
 //						
 //						_gl_context->set_render_states(render_states);
 //                    }
@@ -179,7 +179,7 @@
 //        utility::frustum _frustum;
 //        gl_context* _gl_context = nullptr;
 //        program_batch* _program_batch = nullptr;
-//        render_state_batch* _render_state_batch = nullptr;
+//        render_states_batch* _render_states_batch = nullptr;
 //		material_batch* _material_batch = nullptr;
 //    };
 //}

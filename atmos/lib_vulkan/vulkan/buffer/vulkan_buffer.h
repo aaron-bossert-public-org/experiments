@@ -8,14 +8,14 @@
 #include <igpu/buffer/buffer.h>
 
 #include <vulkan/defines/vulkan_includes.h>
+#include <vulkan/sync/vulkan_resource.h>
 
 
 namespace igpu
 {
-	class vulkan_fence;
 	class vulkan_queue;
 
-	class vulkan_buffer : public buffer
+	class vulkan_buffer : public buffer, public vulkan_resource
 	{
 	public:
 		
@@ -61,11 +61,9 @@ namespace igpu
 
 		VkBuffer get() const;
 
-		const scoped_ptr < vulkan_fence >& fence() const;
-
 		void owner(const ownership&);
-		
-		void fence(const scoped_ptr < vulkan_fence >&);
+
+		vulkan_resource::state& resource_state() override;
 
 		~vulkan_buffer();
 		
@@ -76,7 +74,7 @@ namespace igpu
 		buffer_view<char> _mapped_view = {};
 		VkBuffer _buffer = nullptr;
 		VmaAllocation _vma_allocation = nullptr;
-		scoped_ptr < vulkan_fence > _fence;
+		vulkan_resource::state _resource_state;
 		
 		ownership _owner = {};
 		

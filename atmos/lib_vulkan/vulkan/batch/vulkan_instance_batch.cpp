@@ -7,26 +7,40 @@
 using namespace igpu;
 
 vulkan_instance_batch::vulkan_instance_batch(
-	const config& cfg,
+	const config&, // cfg,
 	const utility::sphere& visiblility_sphere)
-	: _cfg(cfg)
-	, _visibility_sphere(visiblility_sphere)
+	: _visibility_sphere(visiblility_sphere)
 {
 }
 
-const vulkan_instance_batch::config& vulkan_instance_batch::cfg() const
+void vulkan_instance_batch::element_start(const std::optional < size_t >& element_start)
 {
-	return _cfg;
+	_element_start = element_start;
 }
 
-void vulkan_instance_batch::count(size_t count)
+const std::optional < size_t >& vulkan_instance_batch::element_start() const
 {
-	_count = count;
+	return _element_start;
 }
 
-size_t vulkan_instance_batch::count() const
+void vulkan_instance_batch::element_count(const std::optional < size_t >& element_count)
 {
-	return _count;
+	_element_count = element_count;
+}
+
+const std::optional < size_t >& vulkan_instance_batch::element_count() const
+{
+	return _element_count;
+}
+
+void vulkan_instance_batch::instance_count(const std::optional < size_t >& instance_count)
+{
+	_instance_count = instance_count;
+}
+
+const std::optional < size_t >& vulkan_instance_batch::instance_count() const
+{
+	return _instance_count;
 }
 
 const utility::sphere& vulkan_instance_batch::visibility_sphere() const

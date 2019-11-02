@@ -1,5 +1,6 @@
 
 #include <vulkan/buffer/vulkan_geometry.h>
+#include <vulkan/buffer/vulkan_buffer.h>
 
 #include <framework/logging/log.h>
 
@@ -42,26 +43,6 @@ VkPrimitiveTopology igpu::to_vulkan_topology(topology topology)
 const vulkan_geometry::config& vulkan_geometry::cfg() const
 {
 	return _cfg;
-}
-
-size_t vulkan_geometry::element_start() const
-{
-	return _element_start.value_or(0);
-}
-
-void vulkan_geometry::element_start(size_t element_start)
-{
-	_element_start = element_start;
-}
-
-size_t vulkan_geometry::element_count() const
-{
-	return _element_count.has_value() ? _element_count.value() : _cfg.index_buffer->count();
-}
-
-void vulkan_geometry::element_count(size_t element_count)
-{
-	_element_count = element_count;
 }
 
 const vulkan_index_buffer& vulkan_geometry::index_buffer() const
@@ -124,6 +105,15 @@ std::unique_ptr<vulkan_geometry> vulkan_geometry::make(
 	}
 
 	return nullptr;
+}
+
+void vulkan_geometry::add_fence(const std::shared_ptr<vulkan_fence>& fence)
+{
+	_index_buffer->gpu_resource().add_fence(fence);
+	for (auto* vertex_buffer : _vertex_buffers)
+	{
+		vertex_buffer->gpu_resource().add_fence(fence);
+	}
 }
 
 vulkan_geometry::~vulkan_geometry()

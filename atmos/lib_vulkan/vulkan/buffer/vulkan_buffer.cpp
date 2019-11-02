@@ -1,7 +1,6 @@
 
 #include <vulkan/buffer/vulkan_buffer.h>
-#include <vulkan/buffer/vulkan_fence.h>
-#include <vulkan/buffer/vulkan_queue.h>
+#include <vulkan/sync/vulkan_queue.h>
 
 using namespace igpu;
 
@@ -65,12 +64,6 @@ const vulkan_buffer::config& vulkan_buffer::cfg() const
 
 void vulkan_buffer::map(size_t byte_size, buffer_view_base* out_buffer_view)
 {
-	if (_fence)
-	{
-		_fence->wait();
-		_fence = nullptr;
-	}
-
 	if (_mapped_view.data())
 	{
 		LOG_CRITICAL("map/unmap mismatch");
@@ -132,6 +125,8 @@ void vulkan_buffer::reserve(size_t byte_size)
 	}
 	else
 	{
+		vulkan_resource::wait_on_fences();
+
 		if (_mapped_view.size() < byte_size)
 		{
 			release();
@@ -161,12 +156,7 @@ void vulkan_buffer::reserve(size_t byte_size)
 }
 void vulkan_buffer::release()
 {
-	// wait for buffer to no longer be in use by gpu
-	if (_fence)
-	{
-		_fence->wait();
-		_fence = nullptr;
-	}
+	vulkan_resource::wait_on_fences();
 
 	if (_buffer)
 	{
@@ -202,17 +192,12 @@ VkBuffer vulkan_buffer::get() const
 	return _buffer;
 }
 
-const scoped_ptr < vulkan_fence >& vulkan_buffer::fence() const
-{
-	return _fence;
-}
-
 void vulkan_buffer::owner(const ownership& owner)
 {
 	_owner = owner;
 }
 
-void vulkan_buffer::fence(const scoped_ptr < vulkan_fence >& fence)
+vulkan_resource::state& vulkan_buffer::resource_state()
 {
-	_fence = fence;
+	return _resource_state;
 }

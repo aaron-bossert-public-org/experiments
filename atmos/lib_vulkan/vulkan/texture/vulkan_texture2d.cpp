@@ -1,8 +1,8 @@
 
 #include <vulkan/texture/vulkan_texture2d.h>
 
-#include <vulkan/buffer/vulkan_buffer_mediator.h>
 #include <vulkan/texture/vulkan_staged_texture2d.h>
+#include <vulkan/sync/vulkan_synchronization.h>
 
 using namespace igpu;
 
@@ -81,60 +81,10 @@ VkFormat igpu::to_vulkan_format(texture_format format)
 	return VK_FORMAT_UNDEFINED;
 }
 
-VkSamplerAddressMode igpu::to_vulkan_address(sampler::address address)
-{
-	switch (address)
-	{
-	case sampler::address::CLAMP:
-		return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-
-	case sampler::address::WRAP:
-		return VK_SAMPLER_ADDRESS_MODE_REPEAT;
-
-	case sampler::address::MIRROR:
-		return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
-	};
-
-	if (sampler::is_valid(address))
-	{
-		LOG_CRITICAL("unhandled format: %s", sampler::to_string(address).data());
-	}
-	else
-	{
-		LOG_CRITICAL("invalid format: %d", address);
-	}
-
-	return VK_SAMPLER_ADDRESS_MODE_REPEAT;
-}
-
-
-VkFilter igpu::to_vulkan_filter(sampler::filter filter)
-{
-	switch (filter)
-	{
-	case sampler::filter::NEAREST:
-		return VK_FILTER_NEAREST;
-
-	case sampler::filter::LINEAR:
-		return VK_FILTER_LINEAR;
-	};
-
-	if (sampler::is_valid(filter))
-	{
-		LOG_CRITICAL("unhandled format: %s", sampler::to_string(filter).data());
-	}
-	else
-	{
-		LOG_CRITICAL("invalid format: %d", filter);
-	}
-
-	return VK_FILTER_LINEAR;
-}
-
 std::unique_ptr<vulkan_texture2d> vulkan_texture2d::make(
 	const config& cfg,
-	const scoped_ptr < vulkan_buffer_mediator >& buffer_mediator)
+	const scoped_ptr < vulkan_synchronization >& synchronization)
 {
 	return std::unique_ptr<vulkan_texture2d>(
-		new vulkan_staged_texture2d(cfg, buffer_mediator));
+		new vulkan_staged_texture2d(cfg, synchronization));
 }

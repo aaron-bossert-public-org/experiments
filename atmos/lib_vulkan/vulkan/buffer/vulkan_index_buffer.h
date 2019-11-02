@@ -12,26 +12,31 @@ namespace igpu
 {
 	VkIndexType to_vulkan_format(index_format format);
 
-	class vulkan_buffer_mediator;
+	class vulkan_buffer;
+	class vulkan_synchronization;
 
 	class vulkan_index_buffer : public index_buffer
 	{
 	public:
 
+		struct config : index_buffer::config
+		{
+			struct vulkan
+			{
+				VkIndexType format;
+			};
+
+			vulkan vk;
+		};
+
+		virtual const config& cfg() const = 0;
+
+		virtual vulkan_buffer& gpu_resource() = 0;
+		
+		virtual const vulkan_buffer& gpu_resource() const = 0;
+
 		static std::unique_ptr<vulkan_index_buffer> make(
 			const config&,
-			const scoped_ptr < vulkan_buffer_mediator >&);
-
-		virtual VkBuffer get() const = 0;
-
-		VkIndexType format() const;
-
-	protected:
-
-		vulkan_index_buffer(VkIndexType);
-
-	private:
-
-		const VkIndexType _format;
+			const scoped_ptr < vulkan_synchronization >&);
 	};
 }

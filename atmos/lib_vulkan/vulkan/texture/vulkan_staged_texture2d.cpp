@@ -2,8 +2,9 @@
 #include <vulkan/texture/vulkan_staged_texture2d.h>
 
 #include <vulkan/buffer/vulkan_buffer.h>
-#include <vulkan/buffer/vulkan_buffer_mediator.h>
 #include <vulkan/texture/vulkan_image.h>
+#include <vulkan/texture/vulkan_image_t.h>
+#include <vulkan/sync/vulkan_synchronization.h>
 
 #include <igpu/texture/texture_file_parsing.h>
 
@@ -13,12 +14,12 @@ using namespace igpu;
 
 vulkan_staged_texture2d::vulkan_staged_texture2d(
 	const config& cfg,
-	const scoped_ptr < vulkan_buffer_mediator >& buffer_mediator)
+	const scoped_ptr < vulkan_synchronization >& synchronization)
 	: _cfg(cfg)
-	, _buffer_mediator(buffer_mediator)
+	, _synchronization(synchronization)
 	, _staging_buffer({
 		cfg.usage,
-		buffer_mediator->vma(),
+		synchronization->vma(),
 		VMA_MEMORY_USAGE_CPU_ONLY,
 		VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		})
@@ -41,7 +42,7 @@ void vulkan_staged_texture2d::map(size_t byte_size, buffer_view_base* out_buffer
 }
 
 void vulkan_staged_texture2d::unmap(
-	const state& state)
+	const texture2d::state& state)
 {
 	if (!_staging_buffer.mapped_view().data())
 	{
@@ -102,19 +103,31 @@ void vulkan_staged_texture2d::unmap()
 	}
 }
 
+const vulkan_staged_texture2d::state& vulkan_staged_texture2d::current_state() const
+{
+	return _current_state;
+}
+
 size_t vulkan_staged_texture2d::byte_capacity() const
 {
 	return _staging_buffer.byte_capacity();
 }
 
-const vulkan_staged_texture2d::state& vulkan_staged_texture2d::current_state() const
+vulkan_image& vulkan_staged_texture2d::gpu_resource()
 {
-	return _state;
+	ASSERT_CONTEXT((bool)_gpu_image);
+	return *_gpu_image;
+}
+
+const vulkan_image& vulkan_staged_texture2d::gpu_resource() const
+{
+	ASSERT_CONTEXT((bool)_gpu_image);
+	return *_gpu_image;
 }
 
 void vulkan_staged_texture2d::unmap(
 	const buffer_view<char>& texture_data,
-	const state& state)
+	const texture2d::state& state)
 {
 	if (!_mapped_view.data())
 	{
@@ -137,13 +150,13 @@ void vulkan_staged_texture2d::unmap(
 
 	if (vulkan_format)
 	{
-		auto& buffer_mediator = *_buffer_mediator;
+		auto& synchronization = *_synchronization;
 		
 		bool generate_mipmaps = false;
 		size_t mipmap_count = state.mipmap_count;
 		if (_cfg.can_auto_generate_mips && state.mipmap_count == 1)
 		{
-			if(buffer_mediator.can_generate_mipmaps(
+			if(synchronization.can_generate_mipmaps(
 				vulkan_format,
 				VK_IMAGE_TILING_OPTIMAL))
 			{
@@ -153,80 +166,44 @@ void vulkan_staged_texture2d::unmap(
 			}
 		}
 
-		if (!_image ||
-			_state.res != state.res ||
-			_state.format != state.format ||
-			_state.mipmap_count != mipmap_count)
+		if (!_gpu_image ||
+			_current_state.res != state.res ||
+			_current_state.format != state.format ||
+			_current_state.mipmap_count != mipmap_count)
 		{
-			VkImageCreateInfo image_info = {};
-			image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-			image_info.imageType = VK_IMAGE_TYPE_2D;
-			image_info.extent = { (uint32_t)state.res.x, (uint32_t)state.res.y , 1 };
-			image_info.mipLevels = (uint32_t)mipmap_count;
-			image_info.arrayLayers = 1;
-			image_info.format = vulkan_format;
-			image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-			image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-			image_info.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-			image_info.samples = VK_SAMPLE_COUNT_1_BIT;
-			image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
+			vulkan_image::config image_cfg = to_vulkan_image_info(
+				_cfg,
+				state.res,
+				vulkan_format,
+				VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+				VK_SAMPLE_COUNT_1_BIT,
+				VK_SHARING_MODE_EXCLUSIVE,
+				VK_IMAGE_ASPECT_COLOR_BIT,
+				mipmap_count);
 
-			VkImageViewCreateInfo view_info = {};
-			view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			view_info.format = vulkan_format;
-			view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			view_info.subresourceRange.baseMipLevel = 0;
-			view_info.subresourceRange.levelCount = image_info.mipLevels;
-			view_info.subresourceRange.baseArrayLayer = 0;
-			view_info.subresourceRange.layerCount = 1;
+			_gpu_image = nullptr;
 
-			VkSamplerCreateInfo sampler_info = {};
-			sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-			sampler_info.magFilter = to_vulkan_filter(_cfg.sampler.mag_filter);
-			sampler_info.minFilter = to_vulkan_filter(_cfg.sampler.min_filter);
-			sampler_info.addressModeU = to_vulkan_address(_cfg.sampler.addressu);
-			sampler_info.addressModeV = to_vulkan_address(_cfg.sampler.addressv);
-			sampler_info.addressModeW = to_vulkan_address(sampler::address::DEFAULT);
-			sampler_info.anisotropyEnable = VK_TRUE;
-			sampler_info.maxAnisotropy = 16;
-			sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-			sampler_info.unnormalizedCoordinates = VK_FALSE;
-			sampler_info.compareEnable = VK_FALSE;
-			sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
-			sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-			sampler_info.minLod = 0;
-			sampler_info.maxLod = (float)image_info.mipLevels;
-			sampler_info.mipLodBias = 0;
-
-			vulkan_image::config image_cfg = {};
-			image_cfg.vk.physical_device = buffer_mediator.cfg().physical_device;
-			image_cfg.vk.device = buffer_mediator.cfg().device;
-			image_cfg.vk.memory_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-			image_cfg.vk.image_info = image_info;
-			image_cfg.vk.view_info = view_info;
-			image_cfg.vk.sampler_info = sampler_info;
-
-
-			_image = nullptr;
-			_image = vulkan_image::make(image_cfg);
-
-			if (!_image)
+			if(vulkan_image::validate(image_cfg))
 			{
-				LOG_CRITICAL("failed to vulkan_image");
+				_gpu_image = vulkan_image::make(image_cfg);
+			}
+
+			if (!_gpu_image)
+			{
+				LOG_CRITICAL("failed to create vulkan_image");
 				return;
 			}
 		}
 		
-		_state = state;
-		_state.mipmap_count = mipmap_count;
+		_current_state = state;
+		_current_state.mipmap_count = mipmap_count;
 
-		buffer_mediator.copy(_staging_buffer, *_image, (uint32_t)src_offset);
+		synchronization.copy(_staging_buffer, *_gpu_image, (uint32_t)src_offset);
 		
 		if(generate_mipmaps)
 		{
-			buffer_mediator.generate_mipmaps(*_image);
+			synchronization.generate_mipmaps(*_gpu_image);
 		}
 	}
 
@@ -234,9 +211,4 @@ void vulkan_staged_texture2d::unmap(
 	{
 		_staging_buffer.release();
 	}
-}
-
-vulkan_image& vulkan_staged_texture2d::image()
-{
-	return *_image;
 }

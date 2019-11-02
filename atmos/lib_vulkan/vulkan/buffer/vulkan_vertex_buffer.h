@@ -9,20 +9,19 @@
 
 namespace igpu
 {
-	class vulkan_buffer_mediator;
+	class vulkan_buffer;
+	class vulkan_synchronization;
 
 	class vulkan_vertex_buffer : public vertex_buffer
 	{
 	public:
 
+		virtual vulkan_buffer& gpu_resource() = 0;
+
+		virtual const vulkan_buffer& gpu_resource() const = 0;
+
 		static std::unique_ptr<vulkan_vertex_buffer> make(
 			const config&,
-			const scoped_ptr< vulkan_buffer_mediator >&);
-
-		virtual VkBuffer get() const = 0;
-
-	protected:
-
-		vulkan_vertex_buffer() = default;
+			const scoped_ptr< vulkan_synchronization >&);
 	};
 }

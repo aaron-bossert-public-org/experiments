@@ -16,10 +16,11 @@ vulkan_opaque_batch::~vulkan_opaque_batch()
 
 void vulkan_opaque_batch::render(const utility::frustum& frustum)
 {
-	batch_utility::render_opaque(*_root_batch, frustum);
+	vulkan_batch_draw_config draw_config = { frustum };
+	batch_utility::render_opaque(*_root_batch, draw_config);
 }
 
-std::shared_ptr<batch_binding> vulkan_opaque_batch::make_binding(
+std::unique_ptr<batch_binding> vulkan_opaque_batch::make_binding(
 	const instance_batch::config& cfg,
 	const utility::sphere& visibility_sphere)
 {

@@ -1,6 +1,5 @@
 
 #include <vulkan/texture/vulkan_image.h>
-#include <vulkan/buffer/vulkan_fence.h>
 
 using namespace igpu;
 
@@ -10,7 +9,7 @@ namespace
 		const vulkan_image::config& cfg)
 	{
 		VkImage image = nullptr;
-		vkCreateImage(cfg.vk.device, &cfg.vk.image_info, nullptr, &image);
+		vkCreateImage(cfg.device, &cfg.image_info, nullptr, &image);
 		return image;
 	}
 	
@@ -18,11 +17,11 @@ namespace
 		const vulkan_image::config& cfg,
 		VkImage image)
 	{
-		VkImageViewCreateInfo view_info = cfg.vk.view_info;
+		VkImageViewCreateInfo view_info = cfg.view_info;
 		view_info.image = image;
 
 		VkImageView image_view = nullptr;
-		vkCreateImageView(cfg.vk.device, &view_info, nullptr, &image_view);
+		vkCreateImageView(cfg.device, &view_info, nullptr, &image_view);
 		return image_view;
 	}
 
@@ -30,9 +29,9 @@ namespace
 		const vulkan_image::config& cfg,
 		uint32_t type_filter)
 	{
-		VkFlags property_flags = (VkFlags)cfg.vk.memory_properties;
+		VkFlags property_flags = (VkFlags)cfg.memory_properties;
 		VkPhysicalDeviceMemoryProperties mem_properties;
-		vkGetPhysicalDeviceMemoryProperties(cfg.vk.physical_device, &mem_properties);
+		vkGetPhysicalDeviceMemoryProperties(cfg.physical_device, &mem_properties);
 		
 		for (uint32_t i = 0; i < mem_properties.memoryTypeCount; i++)
 		{
@@ -50,7 +49,7 @@ namespace
 		VkImage image)
 	{
 		VkMemoryRequirements mem_requirements;
-		vkGetImageMemoryRequirements(cfg.vk.device, image, &mem_requirements);
+		vkGetImageMemoryRequirements(cfg.device, image, &mem_requirements);
 
 		VkMemoryAllocateInfo alloc_info = {};
 		alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -66,22 +65,22 @@ namespace
 		VkImage image)
 	{
 		VkDeviceMemory device_memory = nullptr;
-		vkAllocateMemory(cfg.vk.device, &alloc_info, nullptr, &device_memory);
-		vkBindImageMemory(cfg.vk.device, image, device_memory, 0);
+		vkAllocateMemory(cfg.device, &alloc_info, nullptr, &device_memory);
+		vkBindImageMemory(cfg.device, image, device_memory, 0);
 		return device_memory;
 	}
 	VkSampler create_sampler(
 		const vulkan_image::config& cfg)
 	{
 		VkSampler sampler = nullptr;
-		vkCreateSampler(cfg.vk.device, &cfg.vk.sampler_info, nullptr, &sampler);
+		vkCreateSampler(cfg.device, &cfg.sampler_info, nullptr, &sampler);
 		return sampler;
 	}
 
 	std::string perf_name(const vulkan_image::config& cfg)
 	{
 		std::string result;
-		auto usage = cfg.vk.image_info.usage;
+		auto usage = cfg.image_info.usage;
 		if (VK_IMAGE_USAGE_TRANSFER_SRC_BIT & usage)
 		{
 			result += "transfer src/";
@@ -130,69 +129,69 @@ namespace
 
 bool vulkan_image::validate(const config& cfg)
 {
-	if (!cfg.vk.physical_device)
+	if (!cfg.physical_device)
 	{
 		LOG_CRITICAL("physical device is null");
 	} 
-	else if (!cfg.vk.device)
+	else if (!cfg.device)
 	{
 		LOG_CRITICAL("device is null");
 	}
-	else if (cfg.vk.memory_properties == 0)
+	else if (cfg.memory_properties == 0)
 	{
 		LOG_CRITICAL("no memory properties specified is null");
 	}
-	else if (cfg.vk.image_info.sType == 0)
+	else if (cfg.image_info.sType == 0)
 	{
 		LOG_CRITICAL("info.sType is zero");
 	}
 	else if (
-		cfg.vk.image_info.extent.width == 0 ||
-		cfg.vk.image_info.extent.height == 0 ||
-		cfg.vk.image_info.extent.depth == 0)
+		cfg.image_info.extent.width == 0 ||
+		cfg.image_info.extent.height == 0 ||
+		cfg.image_info.extent.depth == 0)
 	{
 		LOG_CRITICAL("info.extent(%d, %d, %d) has a zero coordinate",
-			cfg.vk.image_info.extent.width,
-			cfg.vk.image_info.extent.height,
-			cfg.vk.image_info.extent.depth);
+			cfg.image_info.extent.width,
+			cfg.image_info.extent.height,
+			cfg.image_info.extent.depth);
 	}
-	else if (cfg.vk.image_info.mipLevels == 0)
+	else if (cfg.image_info.mipLevels == 0)
 	{
 		LOG_CRITICAL("info.mipLevels is zero");
 	}
-	else if (cfg.vk.image_info.arrayLayers == 0)
+	else if (cfg.image_info.arrayLayers == 0)
 	{
 		LOG_CRITICAL("info.arrayLayers is zero");
 	}
-	else if (cfg.vk.image_info.format == VK_FORMAT_UNDEFINED)
+	else if (cfg.image_info.format == VK_FORMAT_UNDEFINED)
 	{
 		LOG_CRITICAL("info.format is VK_FORMAT_UNDEFINED");
 	}
-	else if (cfg.vk.image_info.usage == 0)
+	else if (cfg.image_info.usage == 0)
 	{
 		LOG_CRITICAL("info.usage is zero");
 	}
-	else if (cfg.vk.image_info.samples == 0)
+	else if (cfg.image_info.samples == 0)
 	{
 		LOG_CRITICAL("info.samples is zero");
 	}
-	else if (cfg.vk.view_info.sType == 0)
+	else if (cfg.view_info.sType == 0)
 	{
 		LOG_CRITICAL("view_info.sType is zero");
 	}
-	else if (cfg.vk.view_info.format == VK_FORMAT_UNDEFINED)
+	else if (cfg.view_info.format == VK_FORMAT_UNDEFINED)
 	{
 		LOG_CRITICAL("view_info.format is VK_FORMAT_UNDEFINED");
 	}
-	else if (cfg.vk.view_info.subresourceRange.aspectMask == 0)
+	else if (cfg.view_info.subresourceRange.aspectMask == 0)
 	{
 		LOG_CRITICAL("view_info.subresourceRange.aspectMask is zero");
 	}
-	else if (cfg.vk.view_info.subresourceRange.levelCount == 0)
+	else if (cfg.view_info.subresourceRange.levelCount == 0)
 	{
 		LOG_CRITICAL("view_info.subresourceRange.levelCount is zero");
 	}
-	else if (cfg.vk.view_info.subresourceRange.layerCount == 0)
+	else if (cfg.view_info.subresourceRange.layerCount == 0)
 	{
 		LOG_CRITICAL("view_info.subresourceRange.layerCount is zero");
 	}
@@ -227,11 +226,6 @@ const vulkan_image::ownership& vulkan_image::owner() const
 	return _owner;
 }
 
-const scoped_ptr < vulkan_fence >& vulkan_image::fence() const
-{
-	return _fence;
-}
-
 void vulkan_image::owner(const ownership& owner)
 {
 	_owner = owner;
@@ -252,11 +246,6 @@ VkImageView vulkan_image::image_view() const
 	return _image_view;
 }
 
-void vulkan_image::fence(const scoped_ptr < vulkan_fence >& fence)
-{
-	_fence = fence;
-}
-
 VkDescriptorImageInfo vulkan_image::create_descriptor_info() const
 {
 	VkDescriptorImageInfo image_info = {};
@@ -266,31 +255,33 @@ VkDescriptorImageInfo vulkan_image::create_descriptor_info() const
 	return image_info;
 }
 
+vulkan_resource::state& vulkan_image::resource_state()
+{
+	return _resource_state;
+}
+
 vulkan_image::~vulkan_image()
 {
-	if (_fence)
-	{
-		_fence->wait();
-	}
+	vulkan_resource::wait_on_fences();
 
 	if (_sampler)
 	{
-		vkDestroySampler(_cfg.vk.device, _sampler, nullptr);
+		vkDestroySampler(_cfg.device, _sampler, nullptr);
 	}
 
 	if (_image_view)
 	{
-		vkDestroyImageView(_cfg.vk.device, _image_view, nullptr);
+		vkDestroyImageView(_cfg.device, _image_view, nullptr);
 	}
 
 	if (_device_memory)
 	{
-		vkFreeMemory(_cfg.vk.device, _device_memory, nullptr);
+		vkFreeMemory(_cfg.device, _device_memory, nullptr);
 	}
 
 	if (_image)
 	{
-		vkDestroyImage(_cfg.vk.device, _image, nullptr);
+		vkDestroyImage(_cfg.device, _image, nullptr);
 	}
 }
 

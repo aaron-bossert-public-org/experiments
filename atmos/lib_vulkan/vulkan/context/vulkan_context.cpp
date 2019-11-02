@@ -5,15 +5,21 @@
 #include <vulkan/batch/vulkan_opaque_batch.h>
 #include <vulkan/batch/vulkan_transparent_batch.h>
 #include <vulkan/buffer/vulkan_geometry.h>
-#include <vulkan/buffer/vulkan_buffer_mediator.h>
 #include <vulkan/buffer/vulkan_compute_buffer.h>
 #include <vulkan/buffer/vulkan_index_buffer.h>
-#include <vulkan/buffer/vulkan_queue.h>
+#include <vulkan/sync/vulkan_queue.h>
 #include <vulkan/buffer/vulkan_vertex_buffer.h>
 #include <vulkan/defines/vulkan_includes.h>
-#include <vulkan/material/vulkan_fragment_shader.h>
-#include <vulkan/material/vulkan_program.h>
-#include <vulkan/material/vulkan_vertex_shader.h>
+#include <vulkan/shader/vulkan_fragment_shader.h>
+#include <vulkan/shader/vulkan_program.h>
+#include <vulkan/shader/vulkan_render_states.h>
+#include <vulkan/shader/vulkan_vertex_shader.h>
+#include <vulkan/sync/vulkan_synchronization.h>
+#include <vulkan/texture/vulkan_draw_target.h>
+#include <vulkan/texture/vulkan_depth_buffer.h>
+#include <vulkan/texture/vulkan_depth_texture2d.h>
+#include <vulkan/texture/vulkan_render_buffer.h>
+#include <vulkan/texture/vulkan_render_texture2d.h>
 #include <vulkan/texture/vulkan_texture2d.h>
 #include <vulkan/window/vulkan_back_buffer.h>
 #include <vulkan/window/vulkan_window.h>
@@ -113,8 +119,29 @@ namespace
 	}
 	
 #if ATMOS_DEBUG
-	static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT /* message_type */, const VkDebugUtilsMessengerCallbackDataEXT* p_callback_data, void* /* p_user_data */)
+	static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT* p_callback_data, void* /* p_user_data */)
 	{
+		// VkDebugUtilsMessengerEXT envokes our callback twice for each message?? wat
+		static struct
+		{
+			VkDebugUtilsMessageSeverityFlagBitsEXT severity;
+			VkDebugUtilsMessageTypeFlagsEXT type;
+			std::string message;
+		} prev = {};
+
+		if (prev.severity == message_severity &&
+			prev.type == message_type &&
+			prev.message == p_callback_data->pMessage)
+		{
+			return VK_FALSE;
+		}
+
+		prev.severity = message_severity;
+		prev.type = message_type;
+		prev.message = p_callback_data->pMessage;
+		
+
+
 		logging::severity severity = logging::severity::VERBOSE;
 
 		if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
@@ -129,14 +156,26 @@ namespace
 		{
 			severity = logging::severity::DEBUG;
 		}
-		else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
+
+		std::string message;
+		if (message_type & VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT)
 		{
-			severity = logging::severity::VERBOSE;
+			message = "< general message >\n";
 		}
+		else if (message_type & VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT)
+		{
+			message = "< validation message >\n";
+		}
+		else if (message_type & VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT)
+		{
+			message = "< performance message >\n";
+		}
+
+		message += p_callback_data->pMessage;
 
 		igpu::debug::set_callback_info({
 			severity,
-			p_callback_data->pMessage });
+			message.c_str() });
 
 		return VK_FALSE;
 	}
@@ -151,7 +190,10 @@ namespace
 		{
 			VkDebugUtilsMessengerCreateInfoEXT create_info = {};
 			create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-			create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+			create_info.messageType 
+				= VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT 
+				| VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT 
+				| VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 			create_info.pfnUserCallback = debug_callback;
 			create_info.messageSeverity = 0
 				//| VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
@@ -434,15 +476,15 @@ std::unique_ptr<vulkan_context> vulkan_context::make(
 		compute_queue = vulkan_queue::make({ device, families.compute.family_index.value(), 0 }),
 		transfer_queue = vulkan_queue::make({ device, families.transfer.family_index.value(), 0 });
 	
-	vulkan_buffer_mediator::config buffer_mediator_cfg = {};
-	buffer_mediator_cfg.physical_device = physical_device;
-	buffer_mediator_cfg.device = device;
-	buffer_mediator_cfg.present_queue = present_queue;
-	buffer_mediator_cfg.graphics_queue = graphics_queue;
-	buffer_mediator_cfg.compute_queue = compute_queue;
-	buffer_mediator_cfg.transfer_queue = transfer_queue;
-	auto buffer_mediator = vulkan_buffer_mediator::make(buffer_mediator_cfg);
-	if (!buffer_mediator)
+	vulkan_synchronization::config synchronization_cfg = {};
+	synchronization_cfg.physical_device = physical_device;
+	synchronization_cfg.device = device;
+	synchronization_cfg.present_queue = present_queue;
+	synchronization_cfg.graphics_queue = graphics_queue;
+	synchronization_cfg.compute_queue = compute_queue;
+	synchronization_cfg.transfer_queue = transfer_queue;
+	auto synchronization = vulkan_synchronization::make(synchronization_cfg);
+	if (!synchronization)
 	{
 		return nullptr;
 	}
@@ -471,7 +513,7 @@ std::unique_ptr<vulkan_context> vulkan_context::make(
 			graphics_queue,
 			compute_queue,
 			transfer_queue,
-			std::move(buffer_mediator),
+			std::move(synchronization),
 			std::move(window),
 			std::move(back_buffer)));
 }
@@ -479,6 +521,60 @@ std::unique_ptr<vulkan_context> vulkan_context::make(
 const vulkan_context::config& vulkan_context::cfg() const
 {
 	return _cfg;
+}
+
+std::unique_ptr<draw_target> vulkan_context::make_draw_target(
+	const draw_target::config& base_cfg)
+{
+	return vulkan_draw_target::make({
+		base_cfg,
+		ASSERT_CAST(vulkan_render_target*, base_cfg.color.get()),
+		ASSERT_CAST(vulkan_depth_target*, base_cfg.depth.get()) 
+		});
+}
+
+std::unique_ptr<render_buffer> vulkan_context::make_render_buffer(
+	const render_buffer::config& base_cfg)
+{
+	return vulkan_render_buffer::make({
+		base_cfg,
+		_state.physical_device,
+		_state.device,
+		_back_buffer->cfg().vk.sample_count,
+		VK_SHARING_MODE_EXCLUSIVE });
+}
+
+std::unique_ptr<render_texture2d> vulkan_context::make_render_texture2d(
+	const render_texture2d::config& base_cfg)
+{
+	return vulkan_render_texture2d::make({
+		base_cfg,
+		_state.physical_device,
+		_state.device,
+		_back_buffer->cfg().vk.sample_count,
+		VK_SHARING_MODE_EXCLUSIVE });
+}
+
+std::unique_ptr<depth_buffer> vulkan_context::make_depth_buffer(
+	const depth_buffer::config& base_cfg)
+{
+	return vulkan_depth_buffer::make({
+		base_cfg,
+		_state.physical_device,
+		_state.device,
+		_back_buffer->cfg().vk.sample_count,
+		VK_SHARING_MODE_EXCLUSIVE });
+}
+
+std::unique_ptr<depth_texture2d> vulkan_context::make_depth_texture2d(
+	const depth_texture2d::config& base_cfg)
+{
+	return vulkan_depth_texture2d::make({
+		base_cfg,
+		_state.physical_device,
+		_state.device,
+		_back_buffer->cfg().vk.sample_count,
+		VK_SHARING_MODE_EXCLUSIVE });
 }
 
 std::unique_ptr<program> vulkan_context::make_program(
@@ -524,6 +620,18 @@ std::unique_ptr<fragment_shader> vulkan_context::make_fragment_shader(
 		cfg);
 }
 
+std::unique_ptr<render_states> vulkan_context::make_render_states(
+	const render_states::config& base_cfg)
+{
+	vulkan_render_states::config cfg = {
+		base_cfg, 
+		to_vulkan_render_states(base_cfg) };
+
+	return std::unique_ptr<render_states>(
+		new vulkan_render_states(cfg) );
+}
+
+
 std::unique_ptr<geometry> vulkan_context::make_geometry(
 	const geometry::config& base_cfg)
 {
@@ -541,15 +649,20 @@ std::unique_ptr<vertex_buffer> vulkan_context::make_vertex_buffer(
 {
 	return vulkan_vertex_buffer::make (
 		cfg, 
-		_buffer_mediator);
+		_synchronization);
 }
 
 std::unique_ptr<index_buffer> vulkan_context::make_index_buffer(
-	const index_buffer::config& cfg)
+	const index_buffer::config& base_cfg)
 {
+	vulkan_index_buffer::config cfg = {
+		base_cfg,
+		to_vulkan_format(base_cfg.format),
+	};
+
 	return vulkan_index_buffer::make(
 		cfg,
-		_buffer_mediator);
+		_synchronization);
 }
 
 std::unique_ptr<compute_buffer> vulkan_context::make_compute_buffer(
@@ -557,14 +670,17 @@ std::unique_ptr<compute_buffer> vulkan_context::make_compute_buffer(
 {
 	return vulkan_compute_buffer::make(
 		cfg,
-		_buffer_mediator);
+		_synchronization);
 }
 std::unique_ptr<texture2d> vulkan_context::make_texture(
 	const texture2d::config& cfg)
 {
-	return vulkan_texture2d::make(
-		cfg,
-		_buffer_mediator);
+	return vulkan_texture2d::make({
+			cfg,
+			_state.physical_device,
+			_state.device,
+		},
+		_synchronization);
 
 }
 
@@ -616,7 +732,7 @@ vulkan_context::vulkan_context(
 	const std::shared_ptr<vulkan_queue>& graphics_queue,
 	const std::shared_ptr<vulkan_queue>& compute_queue,
 	const std::shared_ptr<vulkan_queue>& transfer_queue,
-	const std::shared_ptr<vulkan_buffer_mediator>& buffer_mediator,
+	const std::shared_ptr<vulkan_synchronization>& synchronization,
 	std::unique_ptr<vulkan_window> window,
 	std::unique_ptr<vulkan_back_buffer> back_buffer)
 	: _cfg(cfg)
@@ -625,7 +741,7 @@ vulkan_context::vulkan_context(
 	, _graphics_queue(graphics_queue)
 	, _compute_queue(compute_queue)
 	, _transfer_queue(transfer_queue)
-	, _buffer_mediator(buffer_mediator)
+	, _synchronization(synchronization)
 	, _window(std::move(window))
 	, _back_buffer(std::move(back_buffer))
 	, _batch_constraints(cfg.batch_constraints)
@@ -673,9 +789,9 @@ VkDevice vulkan_context::device()
 	return _state.device;
 }
 
-vulkan_buffer_mediator& vulkan_context::buffer_mediator()
+vulkan_synchronization& vulkan_context::synchronization()
 {
-	return *_buffer_mediator;
+	return *_synchronization;
 }
 
 void vulkan_context::resize_back_buffer(const glm::ivec2& screen_res)

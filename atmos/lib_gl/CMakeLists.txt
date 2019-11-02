@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.1)
 
 BUILD_LIB(
 	gl
-	"batch buffer context defines material texture utility window")
+	"batch buffer context defines shader texture utility window")
 
 IF (CMAKE_CL_64)
 

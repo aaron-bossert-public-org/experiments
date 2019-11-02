@@ -4,37 +4,43 @@
 #include <igpu/utility/utility_types.h>
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace igpu
 {
 	class batch_binding;
-	class geometry;
-	class material;
-	class primitive_kv;
 	class program;
 	class render_states;
+	class geometry;
+	class primitives;
 
 	class instance_batch
 	{
 	public:
-
-		using item_t = batch_binding;
-
+		
 		struct config
 		{
 			std::shared_ptr<program> program;
 			std::shared_ptr<render_states> render_states;
-			std::shared_ptr<material> material;
+			std::shared_ptr<primitives> material;
 			std::shared_ptr<geometry> geometry;
-			std::vector<primitive_kv> primitives;
+			std::shared_ptr<primitives> primitives;
 		};
 
-		virtual const config& cfg() const = 0;
+		using item_t = batch_binding;
 
-		virtual void count(size_t) = 0;
+		virtual void element_start(const std::optional < size_t >&) = 0;
 
-		virtual size_t count() const = 0;
+		virtual const std::optional < size_t >& element_start() const = 0;
+
+		virtual void element_count(const std::optional < size_t >&) = 0;
+
+		virtual const std::optional < size_t >& element_count() const = 0;
+
+		virtual void instance_count(const std::optional < size_t >&) = 0;
+
+		virtual const std::optional < size_t >& instance_count() const = 0;
 
 		virtual const utility::sphere& visibility_sphere() const = 0;
 

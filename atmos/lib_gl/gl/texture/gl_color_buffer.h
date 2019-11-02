@@ -2,12 +2,12 @@
 #pragma once
 
 #include <framework/perf/metrics.h>
-#include <igpu/texture/color_target.h>
-#include <gl/texture/gl_color_target.h>
+#include <igpu/texture/render_target.h>
+#include <gl/texture/gl_render_target.h>
 
 namespace igpu
 {
-    class gl_color_buffer : public color_target, gl_color_target
+    class gl_render_buffer : public render_target, gl_render_target
     {
     public:
         
@@ -17,15 +17,15 @@ namespace igpu
         
 		void gl_handle(int);
 		
-        static std::unique_ptr<gl_color_buffer> make_empty();
+        static std::unique_ptr<gl_render_buffer> make_empty();
         
-        static std::unique_ptr<gl_color_buffer> make(const config&);
+        static std::unique_ptr<gl_render_buffer> make(const config&);
         
-        ~gl_color_buffer();
+        ~gl_render_buffer();
         
     protected:
         
-        gl_color_buffer(const config&, int gl_handle);
+        gl_render_buffer(const config&, int gl_handle);
         
     private:
         

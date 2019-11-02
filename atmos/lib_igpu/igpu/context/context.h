@@ -10,11 +10,17 @@
 #include <igpu/buffer/vertex_buffer.h>
 #include <igpu/context/batch_constraints.h>
 #include <igpu/context/material_constraints.h>
-#include <igpu/material/fragment_shader.h>
-#include <igpu/material/program.h>
-#include <igpu/material/vertex_shader.h>
+#include <igpu/shader/fragment_shader.h>
+#include <igpu/shader/program.h>
+#include <igpu/shader/render_states.h>
+#include <igpu/shader/vertex_shader.h>
 #include <igpu/texture/color_format.h>
+#include <igpu/texture/draw_target.h>
+#include <igpu/texture/depth_buffer.h>
+#include <igpu/texture/depth_texture2d.h>
 #include <igpu/texture/depth_format.h>
+#include <igpu/texture/render_buffer.h>
+#include <igpu/texture/render_texture2d.h>
 #include <igpu/texture/texture2d.h>
 #include <functional>
 #include <memory>
@@ -46,6 +52,21 @@ namespace igpu
 
 		virtual const config& cfg() const = 0;
 
+		virtual std::unique_ptr<draw_target> make_draw_target(
+			const draw_target::config&) = 0;
+
+		virtual std::unique_ptr<render_buffer> make_render_buffer(
+			const render_buffer::config&) = 0;
+
+		virtual std::unique_ptr<render_texture2d> make_render_texture2d(
+			const render_texture2d::config&) = 0;
+
+		virtual std::unique_ptr<depth_buffer> make_depth_buffer(
+			const depth_buffer::config&) = 0;
+
+		virtual std::unique_ptr<depth_texture2d> make_depth_texture2d(
+			const depth_texture2d::config&) = 0;
+
 		virtual std::unique_ptr<program> make_program(
 			const program::config&) = 0;
 
@@ -54,6 +75,9 @@ namespace igpu
 		
 		virtual std::unique_ptr<fragment_shader> make_fragment_shader(
 			const fragment_shader::config&) = 0;
+
+		virtual std::unique_ptr<render_states> make_render_states(
+			const render_states::config&) = 0;
 
 		virtual std::unique_ptr<geometry> make_geometry(
 			const geometry::config&) = 0;

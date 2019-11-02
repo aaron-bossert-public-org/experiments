@@ -3,18 +3,18 @@
 
 namespace igpu
 {
-    class gl_color_target
+    class gl_render_target
     {
     public:
 
 		virtual void attach () const = 0;
         
-		virtual ~gl_color_target() = default;
+		virtual ~gl_render_target() = default;
         
     protected:
        
-		gl_color_target() = default;
-		gl_color_target(const gl_color_target&) = delete;
-		gl_color_target& operator= (const gl_color_target&) = delete;
+		gl_render_target() = default;
+		gl_render_target(const gl_render_target&) = delete;
+		gl_render_target& operator= (const gl_render_target&) = delete;
     };
 }

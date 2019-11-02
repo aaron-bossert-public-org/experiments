@@ -11,7 +11,7 @@
 
 namespace igpu
 {
-    class vulkan_buffer_mediator;
+    class vulkan_synchronization;
 	
     class vulkan_context : public context
     {
@@ -23,6 +23,21 @@ namespace igpu
 
 		const config& cfg() const override;
 
+		std::unique_ptr<draw_target> make_draw_target(
+			const draw_target::config&) override;
+
+		std::unique_ptr<render_buffer> make_render_buffer(
+			const render_buffer::config&) override;
+
+		std::unique_ptr<render_texture2d> make_render_texture2d(
+			const render_texture2d::config&) override;
+
+		std::unique_ptr<depth_buffer> make_depth_buffer(
+			const depth_buffer::config&) override;
+
+		std::unique_ptr<depth_texture2d> make_depth_texture2d(
+			const depth_texture2d::config&) override;
+
 		std::unique_ptr<program> make_program(
 			const program::config&) override;
 
@@ -31,6 +46,9 @@ namespace igpu
 
 		std::unique_ptr<fragment_shader> make_fragment_shader(
 			const fragment_shader::config&) override;
+
+		std::unique_ptr<render_states> make_render_states(
+			const render_states::config&) override;
 
 		std::unique_ptr<geometry> make_geometry(
 			const geometry::config&) override;
@@ -68,7 +86,7 @@ namespace igpu
 		VkInstance instance();
 		VkPhysicalDevice physical_device();
 		VkDevice device();
-		vulkan_buffer_mediator& buffer_mediator();
+		vulkan_synchronization& synchronization();
 		void resize_back_buffer(const glm::ivec2& screen_res);
 
     protected:
@@ -83,7 +101,7 @@ namespace igpu
 			const std::shared_ptr<vulkan_queue>& graphics_queue,
 			const std::shared_ptr<vulkan_queue>& compute_queue,
 			const std::shared_ptr<vulkan_queue>& transfer_queue, 
-			const std::shared_ptr<vulkan_buffer_mediator>&,
+			const std::shared_ptr<vulkan_synchronization>&,
 			std::unique_ptr<vulkan_window>,
 			std::unique_ptr<vulkan_back_buffer>);
         
@@ -105,7 +123,7 @@ namespace igpu
 		std::shared_ptr<vulkan_queue> _compute_queue;
 		std::shared_ptr<vulkan_queue> _transfer_queue;
 
-		std::shared_ptr<vulkan_buffer_mediator> _buffer_mediator;
+		std::shared_ptr<vulkan_synchronization> _synchronization;
 		std::unique_ptr<vulkan_window> _window;
 		std::unique_ptr<vulkan_back_buffer> _back_buffer;
 

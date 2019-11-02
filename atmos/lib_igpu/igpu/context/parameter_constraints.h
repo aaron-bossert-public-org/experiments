@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <igpu/material/primitive.h>
+#include <igpu/shader/primitive.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -11,7 +11,7 @@ namespace igpu
     class parameter_constraints
     {
     public:
-
+		struct primitive_kv {};
 		struct config
 		{
 			std::vector<primitive_kv> parameters;

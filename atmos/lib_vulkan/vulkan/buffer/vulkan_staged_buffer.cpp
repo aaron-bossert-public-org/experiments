@@ -1,11 +1,9 @@
 
 #include <vulkan/buffer/vulkan_staged_buffer.h>
 
-// Vulkan implementation includes - begin
 #include <vulkan/buffer/vulkan_buffer.h>
-#include <vulkan/buffer/vulkan_buffer_mediator.h>
 #include <vulkan/defines/vulkan_includes.h>
-// Vulkan implementation includes - end
+#include <vulkan/sync/vulkan_synchronization.h>
 
 #include <framework/utility/buffer_view.h>
 using namespace igpu;
@@ -15,12 +13,12 @@ vulkan_staged_buffer::vulkan_staged_buffer(
 	: _cfg(cfg)
 	, _staging_buffer({
 		cfg.usage,
-		cfg.buffer_mediator->vma(),
+		cfg.synchronization->vma(),
 		VMA_MEMORY_USAGE_CPU_ONLY,
 		VK_BUFFER_USAGE_TRANSFER_SRC_BIT})
 	, _gpu_buffer({
 		cfg.usage,
-		cfg.buffer_mediator->vma(),
+		cfg.synchronization->vma(),
 		VMA_MEMORY_USAGE_GPU_ONLY,
 		VkBufferUsageFlagBits(VK_BUFFER_USAGE_TRANSFER_DST_BIT | cfg.vk_usage_flags),})
 {
@@ -50,10 +48,10 @@ void vulkan_staged_buffer::unmap()
 	else 
 	{
 		_staging_buffer.unmap();
-		
+
 		_gpu_buffer.reserve(_last_mapped_bytes);
 		
-		_cfg.buffer_mediator->copy(_staging_buffer, _gpu_buffer, (uint32_t)_last_mapped_bytes);
+		_cfg.synchronization->copy(_staging_buffer, _gpu_buffer, (uint32_t)_last_mapped_bytes);
 		
 		if (_cfg.usage == buffer_usage::STATIC)
 		{
@@ -82,7 +80,12 @@ void vulkan_staged_buffer::release()
 	}
 }
 
-VkBuffer vulkan_staged_buffer::get() const
+vulkan_buffer& vulkan_staged_buffer::gpu_buffer()
 {
-	return _gpu_buffer.get();
+	return _gpu_buffer;
+}
+
+const vulkan_buffer& vulkan_staged_buffer::gpu_buffer() const
+{
+	return _gpu_buffer;
 }

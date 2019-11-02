@@ -28,19 +28,16 @@ namespace igpu
 
 		virtual const config& cfg() const = 0;
         
-		virtual size_t element_start() const = 0;
-
-		virtual size_t element_count() const = 0;
-
 		virtual const igpu::index_buffer& index_buffer() const = 0;
 
 		virtual size_t vertex_buffer_count() const = 0;
 		
 		virtual const igpu::vertex_buffer& vertex_buffer(size_t) const = 0;
 
-		virtual void element_start(size_t) = 0;
-
-		virtual void element_count(size_t) = 0;
+		bool find_expected_vertex_param(
+			const std::string& name, 
+			size_t* p_expected_buff, 
+			size_t* p_expected_attr) const; 
 
     protected:
         

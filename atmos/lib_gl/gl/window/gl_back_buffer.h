@@ -3,14 +3,14 @@
 
 #include <igpu/window/back_buffer.h>
 
-#include <gl/texture/gl_color_buffer.h>
+#include <gl/texture/gl_render_buffer.h>
 #include <gl/texture/gl_depth_buffer.h>
 
 #include <memory>
 
 namespace igpu
 {
-    class gl_color_buffer;
+    class gl_render_buffer;
     class gl_depth_buffer;
     
     class gl_back_buffer : public back_buffer
@@ -19,7 +19,7 @@ namespace igpu
         
 		const config& cfg() const override;
 
-		const gl_color_buffer& color() const override;
+		const gl_render_buffer& color() const override;
 
 		const gl_depth_buffer& depth() const override;
 
@@ -33,13 +33,13 @@ namespace igpu
 
         gl_back_buffer(
 			const config&,
-			const std::shared_ptr <gl_color_buffer>&,
+			const std::shared_ptr <gl_render_buffer>&,
 			const std::shared_ptr <gl_depth_buffer>&);
         
     private:
         
 		const config _cfg;
-		std::shared_ptr <gl_color_buffer> _color;
+		std::shared_ptr <gl_render_buffer> _color;
 		std::shared_ptr <gl_depth_buffer> _depth;
         int _gl_handle = 0;
     };

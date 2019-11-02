@@ -1,31 +1,33 @@
 
-// #pragma once
+#pragma once
 
+#include <igpu/texture/render_texture2d.h>
 
-// #include <framework/perf/metrics.h>
-// #include <igpu/texture/render_texture2d.h>
+#include <vulkan/defines/vulkan_includes.h>
+#include <vulkan/texture/vulkan_render_target.h>
 
-// namespace igpu
-// {
-//     class vulkan_render_texture2d : public render_texture2d
-//     {
-//     public:
-        
-//         unsigned gl_handle() const;
-        
-//         void attach() override;
-        
-//         static std::unique_ptr<vulkan_render_texture2d> make(const config&);
-        
-//         ~vulkan_render_texture2d() override;
-        
-//     protected:
-        
-//         vulkan_render_texture2d(const config&, unsigned gl_handle);
-        
-//     private:
-        
-//         unsigned _gl_handle = 0;
-//         perf::metric _gpu_mem_metric;
-//     };
-// }
+namespace igpu
+{
+	class vulkan_image;
+
+	class vulkan_render_texture2d : public render_texture2d, public vulkan_render_target
+	{
+
+	public:
+
+		struct config : render_texture2d::config
+		{
+			vulkan vk;
+		};
+
+		virtual const config& cfg() const = 0;
+
+		virtual vulkan_image& gpu_resource() = 0;
+
+		virtual const vulkan_image& gpu_resource() const = 0;
+
+		static std::unique_ptr<vulkan_render_texture2d> make(
+			const config&);
+	};
+}
+

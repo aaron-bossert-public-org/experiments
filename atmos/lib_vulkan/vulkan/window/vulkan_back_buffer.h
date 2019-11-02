@@ -4,7 +4,7 @@
 #include <vector>
 
 #include <vulkan/defines/vulkan_includes.h>
-#include <vulkan/texture/vulkan_color_buffer.h>
+#include <vulkan/texture/vulkan_render_buffer.h>
 #include <vulkan/texture/vulkan_depth_buffer.h>
 
 #include <igpu/window/back_buffer.h>
@@ -35,7 +35,7 @@ namespace igpu
 
 		const config& cfg() const override;
 
-		const vulkan_color_buffer& color() const override;
+		const vulkan_render_buffer& color() const override;
 
 		const vulkan_depth_buffer& depth() const override;
 
@@ -58,7 +58,7 @@ namespace igpu
 			const std::vector<VkImage>&,
 			const std::vector<VkImageView>&,
 			const std::vector<VkFramebuffer>&,
-			std::unique_ptr<vulkan_color_buffer>,
+			std::unique_ptr<vulkan_render_buffer>,
 			std::unique_ptr<vulkan_depth_buffer>);
 
 	private:
@@ -72,7 +72,7 @@ namespace igpu
 		std::vector<VkImageView> _image_views;
 		std::vector<VkFramebuffer> _framebuffers;
 
-		std::unique_ptr < vulkan_color_buffer > _color;
+		std::unique_ptr < vulkan_render_buffer > _color;
 		std::unique_ptr < vulkan_depth_buffer > _depth;
 	};
 }

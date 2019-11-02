@@ -11,21 +11,29 @@ namespace igpu
 {
 	VkFormat to_vulkan_format(texture_format);
 
-	VkSamplerAddressMode to_vulkan_address(sampler::address);
-
-	VkFilter to_vulkan_filter(sampler::filter);
-
-	class vulkan_buffer_mediator;
+	class vulkan_synchronization;
 	class vulkan_image;
 
 	class vulkan_texture2d : public texture2d
 	{
 	public:
 
-		virtual vulkan_image& image() = 0;
+		struct config : texture2d::config
+		{
+			struct vulkan
+			{
+				VkPhysicalDevice physical_device = nullptr;
+				VkDevice device = nullptr;
+			};
+
+			vulkan vk;
+		};
+		virtual vulkan_image& gpu_resource() = 0;
+
+		virtual const vulkan_image& gpu_resource() const = 0;
 
 		static std::unique_ptr<vulkan_texture2d> make(
 			const config&,
-			const scoped_ptr < vulkan_buffer_mediator >&);
+			const scoped_ptr < vulkan_synchronization >&);
 	};
 }

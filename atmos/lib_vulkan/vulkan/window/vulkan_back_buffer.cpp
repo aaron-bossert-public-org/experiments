@@ -1,7 +1,9 @@
 
 #include <vulkan/window/vulkan_back_buffer.h>
 
-#include <vulkan/buffer/vulkan_queue.h>
+#include <vulkan/sync/vulkan_queue.h>
+#include <vulkan/texture/vulkan_image.h>
+
 #include <framework/logging/log.h>
 
 #include <array>
@@ -10,10 +12,10 @@ using namespace igpu;
 
 namespace
 {
-	std::unique_ptr<vulkan_color_buffer> create_color_buffer(
+	std::unique_ptr<vulkan_render_buffer> create_render_buffer(
 		const vulkan_back_buffer::config& cfg)
 	{
-		return vulkan_color_buffer::make({
+		return vulkan_render_buffer::make({
 			"back buffer color",
 			cfg.color_format,
 			cfg.sampler,
@@ -314,7 +316,7 @@ const vulkan_back_buffer::config& vulkan_back_buffer::cfg() const
 	return _cfg;
 }
 
-const vulkan_color_buffer& vulkan_back_buffer::color() const
+const vulkan_render_buffer& vulkan_back_buffer::color() const
 {
 	return *_color;
 }
@@ -326,7 +328,7 @@ const vulkan_depth_buffer& vulkan_back_buffer::depth() const
 
 std::unique_ptr<vulkan_back_buffer> vulkan_back_buffer::make(const config& cfg)
 {
-	auto color = create_color_buffer(cfg);
+	auto color = create_render_buffer(cfg);
 	auto depth = create_depth_buffer(cfg);
 
 	if (!color || !depth)
@@ -339,7 +341,7 @@ std::unique_ptr<vulkan_back_buffer> vulkan_back_buffer::make(const config& cfg)
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(cfg.vk.physical_device, cfg.vk.surface, &surface_caps);
 
 	VkSurfaceFormatKHR surface_format = {
-		color->image_cfg().vk.image_info.format,
+		color->gpu_resource().cfg().image_info.format,
 		cfg.vk.color_space,
 	};
 
@@ -360,15 +362,15 @@ std::unique_ptr<vulkan_back_buffer> vulkan_back_buffer::make(const config& cfg)
 	auto image_views = create_image_views(cfg, images, surface_format.format);
 	VkRenderPass render_pass = create_render_pass(
 		cfg,
-		color->image_cfg().vk.image_info.format,
-		depth->image_cfg().vk.image_info.format);
+		color->gpu_resource().cfg().image_info.format,
+		depth->gpu_resource().cfg().image_info.format);
 	
 	image_count = (uint32_t)images.size();
 
 	auto framebuffers = create_framebuffers(
 		cfg, 
-		color->image_view(),
-		depth->image_view(),
+		color->gpu_resource().image_view(),
+		depth->gpu_resource().image_view(),
 		image_views,
 		render_pass);
 
@@ -425,7 +427,7 @@ vulkan_back_buffer::vulkan_back_buffer(
 	const std::vector<VkImage>& images,
 	const std::vector<VkImageView>& image_views,
 	const std::vector<VkFramebuffer>& framebuffers,
-	std::unique_ptr<vulkan_color_buffer> color,
+	std::unique_ptr<vulkan_render_buffer> color,
 	std::unique_ptr<vulkan_depth_buffer> depth)
 : _cfg(cfg)
 , _swap_chain(swap_chain)

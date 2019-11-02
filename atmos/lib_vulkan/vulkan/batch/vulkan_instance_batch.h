@@ -4,15 +4,16 @@
 #include <igpu/batch/instance_batch.h>
 
 #include <igpu/batch/batch_binding.h>
-#include <igpu/material/material.h>
 
 #include <vulkan/buffer/vulkan_geometry.h>
-#include <vulkan/material/vulkan_program.h>
-#include <vulkan/material/vulkan_render_states.h>
+#include <vulkan/shader/vulkan_primitives.h>
+#include <vulkan/shader/vulkan_program.h>
+#include <vulkan/shader/vulkan_render_states.h>
 
 namespace igpu
 {
 	struct vulkan_batch_stack;
+	class vulkan_root_batch;
 
 	class vulkan_instance_batch : public instance_batch
 	{
@@ -22,9 +23,12 @@ namespace igpu
 		{
 			struct vulkan
 			{
+				vulkan_root_batch* root_batch;
 				std::shared_ptr<vulkan_program> program;
 				std::shared_ptr<vulkan_render_states> render_states;
+				std::shared_ptr<vulkan_primitives> material;
 				std::shared_ptr<vulkan_geometry> geometry;
+				std::shared_ptr<vulkan_primitives> primitives;
 			};
 			
 			vulkan vk;
@@ -34,15 +38,17 @@ namespace igpu
 			const config& cfg,
 			const utility::sphere&);
 
-		vulkan_instance_batch() = default;
-		vulkan_instance_batch(vulkan_instance_batch&&) = default;
-		vulkan_instance_batch& operator= (vulkan_instance_batch&&) = default;
+		void element_start(const std::optional < size_t >&) override;
 
-		const config& cfg() const override;
+		const std::optional < size_t >& element_start() const override;
 
-		void count(size_t) override;
+		void element_count(const std::optional < size_t >&) override;
 
-		size_t count() const override;
+		const std::optional < size_t >& element_count() const override;
+
+		void instance_count(const std::optional < size_t >&) override;
+
+		const std::optional < size_t >& instance_count() const override;
 
 		const utility::sphere& visibility_sphere() const override;
 
@@ -50,10 +56,15 @@ namespace igpu
 
 		void draw(const vulkan_batch_stack&);
 
+		vulkan_instance_batch() = default;
+		vulkan_instance_batch(vulkan_instance_batch&&) = default;
+		vulkan_instance_batch& operator= (vulkan_instance_batch&&) = default;
+
 	private:
 
-		config _cfg;
-		size_t _count = 1;
+		std::optional< size_t > _element_start;
+		std::optional< size_t > _element_count;
+		std::optional< size_t > _instance_count;
 		utility::sphere _visibility_sphere;
 	};
 }

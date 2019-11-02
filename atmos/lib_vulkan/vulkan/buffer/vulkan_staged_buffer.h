@@ -10,7 +10,7 @@
 
 namespace igpu
 {
-	class vulkan_buffer_mediator;
+	class vulkan_synchronization;
 	class vulkan_queue;
 
 	class vulkan_staged_buffer
@@ -21,7 +21,7 @@ namespace igpu
 		{
 			buffer_usage usage;
 			VkBufferUsageFlagBits vk_usage_flags = (VkBufferUsageFlagBits)0;
-			scoped_ptr < vulkan_buffer_mediator > buffer_mediator;
+			scoped_ptr < vulkan_synchronization > synchronization;
 		};
 		
 		vulkan_staged_buffer(
@@ -41,7 +41,9 @@ namespace igpu
 		
 		void release();
 
-		VkBuffer get() const;
+		vulkan_buffer& gpu_buffer();
+
+		const vulkan_buffer& gpu_buffer() const;
 
 	private:
 		
@@ -83,9 +85,14 @@ namespace igpu
 			return _vulkan_staged_buffer.byte_capacity();
 		}
 
-		VkBuffer get() const override
+		vulkan_buffer& gpu_resource() override
 		{
-			return _vulkan_staged_buffer.get();
+			return _vulkan_staged_buffer.gpu_buffer();
+		}
+
+		const vulkan_buffer& gpu_resource() const override
+		{
+			return _vulkan_staged_buffer.gpu_buffer();
 		}
 
 		template<typename... ARGS>
@@ -106,7 +113,7 @@ namespace igpu
 			{
 				LOG_CRITICAL("vk_usage_flags is 0");
 			}
-			else if (!res_cfg.buffer_mediator)
+			else if (!res_cfg.synchronization)
 			{
 				LOG_CRITICAL("buffer mediator has expired");
 			}

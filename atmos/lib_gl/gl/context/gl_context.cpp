@@ -10,7 +10,7 @@
 //#include <gl/material/gl_program.h>
 //#include <gl/material/gl_vertex_shader.h>
 //#include <gl/material/gl_render_states.h>
-//#include <gl/texture/gl_color_buffer.h>
+//#include <gl/texture/gl_render_buffer.h>
 //#include <gl/texture/gl_depth_buffer.h>
 //#include <gl/texture/gl_draw_target.h>
 //#include <gl/texture/gl_texture2d.h>
@@ -373,7 +373,7 @@
 //    
 //    if(color)
 //    {
-//        mask |= GL_COLOR_BUFFER_BIT;
+//        mask |= GL_render_BUFFER_BIT;
 //
 //    	glClearColor(color->r, color->g, color->b, color->a);
 //    }

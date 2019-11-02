@@ -5,31 +5,26 @@
 #include <framework/perf/metrics.h>
 
 #include <vulkan/defines/vulkan_includes.h>
+#include <vulkan/sync/vulkan_resource.h>
 
 #include <glm/vec2.hpp>
 
 namespace igpu
 {
-	class vulkan_fence;
 	class vulkan_queue;
 
-	class vulkan_image
+	class vulkan_image : public vulkan_resource
 	{
 	public:
 
 		struct config
 		{
-			struct vulkan
-			{
-				VkPhysicalDevice physical_device = nullptr;
-				VkDevice device = nullptr;
-				VkMemoryPropertyFlagBits memory_properties;
-				VkImageCreateInfo image_info = {};
-				VkImageViewCreateInfo view_info = {};
-				VkSamplerCreateInfo sampler_info = {};
-			};
-
-			vulkan vk;
+			VkPhysicalDevice physical_device = nullptr;
+			VkDevice device = nullptr;
+			VkMemoryPropertyFlagBits memory_properties;
+			VkImageCreateInfo image_info = {};
+			VkImageViewCreateInfo view_info = {};
+			VkSamplerCreateInfo sampler_info = {};
 		};
 
 		struct ownership
@@ -48,8 +43,6 @@ namespace igpu
 
 		const ownership& owner() const;
 
-		const scoped_ptr < vulkan_fence >& fence() const;
-
 		void owner(const ownership&);
 
 		VkImage get() const;
@@ -58,11 +51,11 @@ namespace igpu
 
 		VkImageView image_view() const;
 
-		void fence(const scoped_ptr < vulkan_fence >&);
-
 		VkDescriptorImageInfo create_descriptor_info() const;
 
 		~vulkan_image();
+
+		vulkan_resource::state& resource_state() override;
 
 		static bool validate(const config&);
 
@@ -76,9 +69,9 @@ namespace igpu
 		VkDeviceMemory _device_memory = nullptr;
 		VkImageView _image_view = nullptr;
 		VkSampler _sampler = nullptr;
+		vulkan_resource::state _resource_state;
 
 		perf::metric _gpu_mem_metric;
-		scoped_ptr < vulkan_fence > _fence;
 
 		ownership _owner = {};
 

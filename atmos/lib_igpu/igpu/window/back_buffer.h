@@ -8,8 +8,8 @@
 
 namespace igpu
 {
-    class color_target;
-    class depth_target;
+    class render_buffer;
+    class depth_buffer;
     
     class back_buffer
     {
@@ -25,9 +25,9 @@ namespace igpu
 
         virtual const config& cfg() const = 0;
         
-		virtual const color_target& color() const = 0;
+		virtual const render_buffer& color() const = 0;
 
-		virtual const depth_target& depth() const = 0;
+		virtual const depth_buffer& depth() const = 0;
 
     protected:
                 

@@ -4,11 +4,11 @@
 
 #include <framework/perf/metrics.h>
 #include <igpu/texture/render_texture2d.h>
-#include <gl/texture/gl_color_target.h>
+#include <gl/texture/gl_render_target.h>
 
 namespace igpu
 {
-    class gl_render_texture2d : public render_texture2d, gl_color_target
+    class gl_render_texture2d : public render_texture2d, gl_render_target
     {
     public:
 

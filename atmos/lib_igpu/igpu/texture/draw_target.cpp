@@ -1,47 +1,27 @@
 
 #include <igpu/texture/draw_target.h>
 
-#include <igpu/texture/color_target.h>
-#include <igpu/texture/depth_target.h>
+#include <igpu/texture/render_buffer.h>
+#include <igpu/texture/depth_buffer.h>
 
 #include <glm/common.hpp>
 
 using namespace igpu;
 
-const std::shared_ptr<color_target>& draw_target::color() const
-{
-    return _color;
-}
-
-const std::shared_ptr<depth_target>& draw_target::depth() const
-{
-    return _depth;
-}
 
 glm::ivec2 draw_target::res() const
 {
-    if(_color)
-    {
-        if(_depth)
-        {
-            return glm::min(_color->cfg().res, _depth->cfg().res);
-        }
-        else
-        {
-            return _color->cfg().res;
-        }
-    }
-    else if(_depth)
-    {
-        return _depth->cfg().res;
-    }
-    
-    return glm::ivec2(0);
-}
+	render_buffer* color = this->cfg().color.get();
+	depth_buffer* depth = this->cfg().depth.get();
 
-draw_target::draw_target(const std::shared_ptr<color_target>& color,
-                       const std::shared_ptr<depth_target>& depth)
-: _color(color)
-, _depth(depth)
-{
+	if (!color)
+	{
+		return depth->cfg().res;
+	}
+	else if (!depth)
+	{
+		return color->cfg().res;
+	}
+
+	return glm::min(color->cfg().res, depth->cfg().res);
 }

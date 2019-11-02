@@ -2,17 +2,15 @@
 #pragma once
 
 #include <framework/utility/scoped_ptr.h>
+#include <framework/perf/metrics.h>
 
 #include <vulkan/buffer/vulkan_buffer.h>
 #include <vulkan/texture/vulkan_texture2d.h>
 
-#include <framework/perf/metrics.h>
 
 namespace igpu
 {
-	class vulkan_buffer;
-	class vulkan_buffer_mediator;
-	class vulkan_image;
+	class vulkan_synchronization;
 
 	class vulkan_staged_texture2d : public vulkan_texture2d
 	{
@@ -22,36 +20,38 @@ namespace igpu
 
 		vulkan_staged_texture2d(
 			const config& cfg,
-			const scoped_ptr < vulkan_buffer_mediator >&);
+			const scoped_ptr < vulkan_synchronization >&);
 
 		~vulkan_staged_texture2d() override;
 
 		void map(size_t, buffer_view_base*) override;
 
 		void unmap(
-			const state& state) override;
+			const texture2d::state& state) override;
 
 		void unmap() override;
 
-		const state& current_state() const override;
+		const texture2d::state& current_state() const override;
 
 		size_t byte_capacity() const override;
 
-		vulkan_image& image() override;
+		vulkan_image& gpu_resource() override;
 
+		const vulkan_image& gpu_resource() const override;
+		
 	private:
 
 		void unmap(
 			const buffer_view<char>&,
-			const state&);
+			const texture2d::state&);
 
 	private:
 
 		const config _cfg;
-		state _state = {};
-		scoped_ptr < vulkan_buffer_mediator > _buffer_mediator;
+		texture2d::state _current_state = {};
+		scoped_ptr < vulkan_synchronization > _synchronization;
 		buffer_view<char> _mapped_view = {};
 		vulkan_buffer _staging_buffer;
-		std::unique_ptr<vulkan_image> _image;
+		std::unique_ptr<vulkan_image> _gpu_image;
 	};
 }

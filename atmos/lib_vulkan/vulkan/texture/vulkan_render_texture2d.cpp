@@ -1,94 +1,40 @@
 
-// #include <vulkan/texture/vulkan_render_texture2d.h>
+#include <vulkan/texture/vulkan_render_texture2d.h>
 
-// // Vulkan implementation includes - begin
-// #include <vulkan/defines/vulkan_includes.h>
-// #include <vulkan/texture/vulkan_sampler.h>
-// // Vulkan implementation includes - end
+#include <vulkan/texture/vulkan_render_buffer.h>
+#include <vulkan/texture/vulkan_image_t.h>
 
-// using namespace igpu;
+using namespace igpu;
 
-// void vulkan_render_texture2d::attach()
-// {
-//     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _gl_handle, 0);
-// }
-    
-// GLuint vulkan_render_texture2d::gl_handle() const
-// {
-//     return _gl_handle;
-// }
+std::unique_ptr<vulkan_render_texture2d> vulkan_render_texture2d::make(const config& cfg)
+{
+	VkFormat vulkan_format = to_vulkan_format(cfg.format);
 
-// std::unique_ptr<vulkan_render_texture2d> vulkan_render_texture2d::make(const config& cfg)
-// {
-// 	if (0 >= cfg.res.x || 0 >= cfg.res.y)
-// 	{
-// 		LOG_CRITICAL("width(%d) and height(%d) must be greater than zero", cfg.res.x, cfg.res.y);
-// 		return nullptr;
-// 	}
+	if (VK_FORMAT_UNDEFINED == vulkan_format)
+	{
+		return nullptr;
+	}
 
-// 	GLenum format;
-// 	GLenum type;
+	VkFormatProperties props;
+	vkGetPhysicalDeviceFormatProperties(cfg.vk.physical_device, vulkan_format, &props);
 
-// 	switch (cfg.format)
-// 	{
-// 	case color_format::INT_R8G8B8A8:
-// 		format = GL_RGBA;
-// 		type = GL_UNSIGNED_BYTE;
-// 		break;
-// 	case color_format::INT_R5G6B5:
-// 		format = GL_RGB;
-// 		type = GL_UNSIGNED_SHORT_5_6_5;
-// 		break;
-// 	case color_format::INT_R16:
-// 		format = GL_RED;
-// 		type = GL_UNSIGNED_SHORT;
-// 		break;
-// 	case color_format::FLOAT_R16:
-// 		format = GL_RED;
-// 		type = GL_HALF_FLOAT_OES;
-// 		break;
-// 	default:
-// 		LOG_CRITICAL("texture(%s): no handler for format(%s)",
-// 			cfg.name.c_str(), to_string(cfg.format).data());
-// 		return nullptr;
-// 	}
+	if (0 == (props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT))
+	{
+		LOG_CRITICAL("%s not supported as a depth attachment format", to_string(cfg.format).data());
+		return false;
+	}
 
-// 	GLuint gl_handle;
-// 	GLint active_handle = 0;
-// 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &active_handle);
-// 	glGenTextures(1, &gl_handle);
-// 	glBindTexture(GL_TEXTURE_2D, gl_handle);
-// 	const glm::ivec2& res = cfg.res;
-	
-// 	glTexImage2D(GL_TEXTURE_2D, 0, format, res.x, res.y, 0, format, type, nullptr);
+	vulkan_image::config image_cfg = to_vulkan_image_info(
+		cfg,
+		cfg.res,
+		vulkan_format,
+		VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+		cfg.vk.sample_count,
+		cfg.vk.sharing_mode,
+		VK_IMAGE_ASPECT_COLOR_BIT,
+		1);
 
-// 	// set texture min/mag filters, wrapping, and debug name
-// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, to_gl(cfg.sampler.min_filter));
-// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, to_gl(cfg.sampler.mag_filter));
-// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, to_gl(cfg.sampler.addressu));
-// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, to_gl(cfg.sampler.addressu));
-// 	glLabelObjectEXT(GL_TEXTURE, gl_handle, (GLsizei)cfg.name.size(), cfg.name.c_str());
-
-// 	glBindTexture(GL_TEXTURE_2D, active_handle);
-
-// 	return std::unique_ptr<vulkan_render_texture2d>(new vulkan_render_texture2d(cfg, gl_handle));
-// }
-
-// vulkan_render_texture2d::~vulkan_render_texture2d()
-// {
-//     glDeleteTextures(1, &_gl_handle);
-// }
-    
-// vulkan_render_texture2d::vulkan_render_texture2d(const config& cfg, GLuint gl_handle)
-// : render_texture2d(cfg)
-// , _gl_handle(gl_handle)
-// , _gpu_mem_metric(perf::category::MEM_USAGE, "GPU Render Texture Buffer Mem")
-// {
-// 	const color_format format = cfg.format;
-// 	_gpu_mem_metric.add( cfg.res.x * cfg.res.y *
-//         ( format == color_format::INT_R8G8B8A8 ? 4
-//         : format == color_format::INT_R5G6B5   ? 2
-//         : format == color_format::INT_R16      ? 2
-//         : format == color_format::FLOAT_R16    ? 2
-//         : 0 )); // should not hit
-// }
+	return vulkan_image_target_t< vulkan_render_texture2d > ::make(
+		cfg,
+		image_cfg);
+}

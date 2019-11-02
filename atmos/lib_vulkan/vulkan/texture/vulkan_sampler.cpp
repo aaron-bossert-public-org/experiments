@@ -1,42 +1,54 @@
 
-// #include <igpu/texture/sampler.h>
+#include <vulkan/texture/vulkan_sampler.h>
 
-// // Vulkan implementation includes - begin
-// #include <vulkan/defines/vulkan_includes.h>
-// // Vulkan implementation includes - end
-// using namespace igpu;
+using namespace igpu;
+
+VkSamplerAddressMode igpu::to_vulkan_address(sampler::address address)
+{
+	switch (address)
+	{
+	case sampler::address::CLAMP:
+		return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+
+	case sampler::address::WRAP:
+		return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+
+	case sampler::address::MIRROR:
+		return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+	};
+
+	if (sampler::is_valid(address))
+	{
+		LOG_CRITICAL("unhandled format: %s", sampler::to_string(address).data());
+	}
+	else
+	{
+		LOG_CRITICAL("invalid format: %d", address);
+	}
+
+	return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+}
 
 
-// unsigned to_gl(sampler::filter filter)
-// {
-// 	switch (filter)
-// 	{
-// 	case sampler::filter::NEAREST:
-// 		return GL_NEAREST;
-// 	case sampler::filter::LINEAR:
-// 		return GL_LINEAR;
-// 	default:
-// 		LOG_CONTEXT(CRITICAL,
-// 			"unhandled type(%s)",
-// 			sampler::to_string(filter).data());
-// 		return GL_LINEAR;
-// 	}
-// }
+VkFilter igpu::to_vulkan_filter(sampler::filter filter)
+{
+	switch (filter)
+	{
+	case sampler::filter::NEAREST:
+		return VK_FILTER_NEAREST;
 
-// unsigned to_gl(sampler::address address)
-// {
-// 	switch (address)
-// 	{
-// 	case sampler::address::CLAMP:
-// 		return GL_CLAMP_TO_EDGE;
-// 	case sampler::address::WRAP:
-// 		return GL_REPEAT;
-// 	case sampler::address::MIRROR:
-// 		return GL_MIRRORED_REPEAT;
-// 	default:
-// 		LOG_CRITICAL(
-// 			"unhandled type(%s)", 
-// 			sampler::to_string(address).data());
-// 		return GL_CLAMP_TO_EDGE;
-// 	}
-// }
+	case sampler::filter::LINEAR:
+		return VK_FILTER_LINEAR;
+	};
+
+	if (sampler::is_valid(filter))
+	{
+		LOG_CRITICAL("unhandled format: %s", sampler::to_string(filter).data());
+	}
+	else
+	{
+		LOG_CRITICAL("invalid format: %d", filter);
+	}
+
+	return VK_FILTER_LINEAR;
+}

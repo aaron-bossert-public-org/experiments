@@ -6,29 +6,21 @@
 
 namespace igpu
 {
-    class depth_target;
-    class color_target;
+    class render_buffer;
+    class depth_buffer;
     
     class draw_target
     {
     public:
-        const std::shared_ptr<color_target>& color() const;
-        
-        const std::shared_ptr<depth_target>& depth() const;
-        
+
+		struct config
+		{
+			std::shared_ptr<render_buffer> color;
+			std::shared_ptr<depth_buffer> depth;
+		};
+
+		virtual const config& cfg() const = 0;
+
         glm::ivec2 res() const;
-        
-        virtual ~draw_target() = default;
-        
-    protected:
-        
-        draw_target(const std::shared_ptr<color_target>&,
-                   const std::shared_ptr<depth_target>&);
-        
-        std::shared_ptr<color_target> _color;
-        std::shared_ptr<depth_target> _depth;
-        
-        draw_target (const draw_target&) = delete;
-        draw_target& operator= (const draw_target&) = delete;
     };
 }

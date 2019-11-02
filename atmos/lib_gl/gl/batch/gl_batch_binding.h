@@ -23,7 +23,7 @@ namespace igpu
 
 		const utility::sphere& visibility_sphere() const override;
 
-		const igpu::primitive_block& primitive_block() const override;
+		const igpu::primitives& primitives() const override;
 
 		void visibility_sphere(const utility::sphere& visibility_sphere) override;
 
@@ -35,7 +35,7 @@ namespace igpu
 
 	private:
 
-		const igpu::primitive_block _primitive_block;
+		const igpu::primitives _primitives;
 		utility::sphere _visibility_sphere;
 	};
 

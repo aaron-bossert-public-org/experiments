@@ -70,7 +70,7 @@ public:
 	val_t* end();
 
 	// take a reference that will remain valid after vector resizes
-	::scoped_ptr<element_ref> scoped_ptr(const val_t& p_val) const;
+	::scoped_ptr<element_ref> scoped_ptr(const val_t* p_val) const;
 
 private:
 
@@ -178,9 +178,9 @@ VAL* associative_vector<KEY, VAL>::end()
 
 template < typename KEY, typename VAL >
 	::scoped_ptr<typename associative_vector<KEY, VAL>::element_ref>
-	associative_vector<KEY, VAL>::scoped_ptr(const VAL& val) const
+	associative_vector<KEY, VAL>::scoped_ptr(const VAL* val) const
 {
-	size_t index = &val - _elements.data();
+	size_t index = val - _elements.data();
 
 	if (index < _elements.size())
 	{

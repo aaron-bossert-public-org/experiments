@@ -20,7 +20,7 @@ void vulkan_transparent_batch::render(const utility::frustum&)
 	//batch_utility::render_transparent(*_root_batch, frustum);
 }
 
-std::shared_ptr<batch_binding> vulkan_transparent_batch::make_binding(
+std::unique_ptr<batch_binding> vulkan_transparent_batch::make_binding(
 	const instance_batch::config& cfg,
 	const utility::sphere& visibility_sphere)
 {
