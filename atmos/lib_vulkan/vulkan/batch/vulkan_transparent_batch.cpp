@@ -21,12 +21,10 @@ void vulkan_transparent_batch::render(const utility::frustum&)
 }
 
 std::unique_ptr<batch_binding> vulkan_transparent_batch::make_binding(
-	const instance_batch::config& cfg,
-	const utility::sphere& visibility_sphere)
+	const instance_batch::config& cfg)
 {
 	return _root_batch->make_binding(
-		cfg,
-		visibility_sphere);
+		cfg);
 }
 
 std::unique_ptr<vulkan_transparent_batch> vulkan_transparent_batch::make(

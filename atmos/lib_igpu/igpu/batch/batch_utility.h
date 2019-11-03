@@ -39,21 +39,21 @@ namespace igpu
 			typename ROOT_BATCH,
 			typename CONFIG,
 			typename... ARGS>
-			std::unique_ptr<BINDING> create_binding(
+			std::unique_ptr<BINDING> make_binding(
 				ROOT_BATCH& root_batch,
 				const CONFIG& cfg,
 				ARGS&& ... args)
 		{
 			auto& program_batch = get_or_create_child(root_batch, cfg);
-			auto& render_states_batch = get_or_create_child(program_batch, cfg);
-			auto& material_batch = get_or_create_child(render_states_batch, cfg);
+			auto& graphics_pipeline_batch = get_or_create_child(program_batch, cfg);
+			auto& material_batch = get_or_create_child(graphics_pipeline_batch, cfg);
 			auto& geometry_batch = get_or_create_child(material_batch, cfg);
 
 			return std::unique_ptr<BINDING>(
 				new BINDING(
 					&root_batch,
 					&program_batch,
-					&render_states_batch,
+					&graphics_pipeline_batch,
 					&material_batch,
 					&geometry_batch,
 					cfg,
@@ -74,87 +74,86 @@ namespace igpu
 
 		template <
 			typename ROOT_BATCH,
-			typename DRAW_CONFIG,
-			typename BATCH_STACK = ROOT_BATCH::batch_stack_t>
+			typename DRAW_STATE>
 			void render_opaque(
 				ROOT_BATCH& root_batch,
-				const DRAW_CONFIG& draw_config)
+				DRAW_STATE& draw_state)
 		{
-			BATCH_STACK stack = {};
 			for (auto& program_batch : root_batch)
 			{
-				stack.program_batch = nullptr;
-				for (auto& render_states_batch : program_batch.map())
+				for (auto& graphics_pipeline_batch : program_batch)
 				{
-					stack.render_states_batch = nullptr;
-					for (auto& material_batch : render_states_batch.map())
+					for (auto& material_batch : graphics_pipeline_batch)
 					{
-						stack.material_batch = nullptr;
-						for (auto& geometry_batch : material_batch.map())
+						for (auto& geometry_batch : material_batch)
 						{
-							stack.geometry_batch = nullptr;
-							const uint32_t geometry_index_count = (uint32_t)geometry_batch.item().index_buffer().element_count();
+							geometry_batch.pre_draw(&draw_state);
 
-							for (auto& instance_batch : geometry_batch.map())
+							for (auto& instance_batch : geometry_batch)
 							{
-								stack.instance_batch = nullptr;
-								const uint32_t instance_count = (uint32_t)instance_batch.instance_count().value_or(0);
-								const uint32_t element_count = (uint32_t)instance_batch.element_count().value_or(geometry_index_count);
-								
-								if (instance_count && element_count &&
-									utility::intersects(draw_config.frustum, instance_batch.visibility_sphere()))
+								if (!instance_batch.can_render(&draw_state))
 								{
-									stack.instance_batch = &instance_batch;
-									if (!stack.geometry_batch)
-									{
-										stack.geometry_batch = &geometry_batch;
-										if (!stack.material_batch)
-										{
-											stack.material_batch = &material_batch;
-											if (!stack.render_states_batch)
-											{
-												stack.render_states_batch = &render_states_batch;
-												if (!stack.program_batch)
-												{
-													stack.program_batch = &program_batch;
-													if (!stack.root_batch)
-													{
-														stack.root_batch = &root_batch;
-														root_batch.start_draw(draw_config);
-													}
-													program_batch.start_draw(stack);
-												}
-												render_states_batch.start_draw(stack);
-											}
-											material_batch.start_draw(stack);
-										}
-										geometry_batch.start_draw(stack);
-									}
-									instance_batch.draw(stack);
+									continue;
 								}
+
+								// only call batch.start_draw if we have instances to render
+								if (!draw_state.batches.geometry)
+								{
+									if (!draw_state.batches.material)
+									{
+										if (!draw_state.batches.graphics_pipeline)
+										{
+											if (!draw_state.batches.program)
+											{
+												if (!draw_state.batches.root)
+												{
+													root_batch.start_draw(draw_state);
+													draw_state.batches.root = &root_batch;
+												}
+												program_batch.start_draw(draw_state);
+												draw_state.batches.program = &program_batch;
+											}
+											graphics_pipeline_batch.start_draw(draw_state);
+											draw_state.batches.graphics_pipeline = &graphics_pipeline_batch;
+										}
+										material_batch.start_draw(draw_state);
+										draw_state.batches.material = &material_batch;
+									}
+									geometry_batch.start_draw(draw_state);
+									draw_state.batches.geometry = &geometry_batch;
+								}
+
+								draw_state.batches.instance = &instance_batch;
+								instance_batch.draw(draw_state);
+								draw_state.batches.instance = nullptr;
 							}
-							if (stack.geometry_batch)
+							if (draw_state.batches.geometry)
 							{
+								draw_state.batches.geometry = nullptr;
 								geometry_batch.stop_draw();
 							}
 						}
-						if (stack.material_batch)
+						if (draw_state.batches.material)
 						{
+							draw_state.batches.material = nullptr;
 							material_batch.stop_draw();
 						}
 					}
-					if (stack.render_states_batch)
+					if (draw_state.batches.graphics_pipeline)
 					{
-						render_states_batch.stop_draw();
+						draw_state.batches.graphics_pipeline = nullptr;
+						graphics_pipeline_batch.stop_draw();
 					}
 				}
-				if (stack.program_batch)
+				if (draw_state.batches.program)
 				{
+					draw_state.batches.program = nullptr;
 					program_batch.stop_draw();
 				}
 			}
-			if (stack.root_batch)
+			if (draw_state.batches.root)
 			{
+				draw_state.batches.root = nullptr;
 				root_batch.stop_draw();
 			}
 		}
@@ -252,14 +251,14 @@ namespace igpu
 
 			using root_batch_t = typename ROOT_BATCH;
 			using program_batch_t = typename root_batch_t::child_t;
-			using render_states_batch_t = typename program_batch_t::child_t;
-			using material_batch_t = typename render_states_batch_t::child_t;
+			using graphics_pipeline_batch_t = typename program_batch_t::child_t;
+			using material_batch_t = typename graphics_pipeline_batch_t::child_t;
 			using geometry_batch_t = typename material_batch_t::child_t;
 			using instance_batch_t = typename geometry_batch_t::child_t;
 			using config_t = typename instance_batch_t::config;
 			using program_ptr_t = typename scoped_ptr<typename root_batch_t::map_t::element_ref >;
-			using render_states_ptr_t = typename scoped_ptr<typename program_batch_t::map_t::element_ref >;
-			using material_ptr_t = typename scoped_ptr<typename render_states_batch_t::map_t::element_ref >;
+			using graphics_pipeline_ptr_t = typename scoped_ptr<typename program_batch_t::map_t::element_ref >;
+			using material_ptr_t = typename scoped_ptr<typename graphics_pipeline_batch_t::map_t::element_ref >;
 			using geometry_ptr_t = typename scoped_ptr<typename material_batch_t::map_t::element_ref >;
 			using instance_ptr_t = typename scoped_ptr<typename geometry_batch_t::map_t::element_ref >;
 
@@ -267,15 +266,15 @@ namespace igpu
 			batch_binding_t(
 				root_batch_t* root_batch,
 				program_batch_t* program_batch,
-				render_states_batch_t* render_states_batch,
+				graphics_pipeline_batch_t* graphics_pipeline_batch,
 				material_batch_t* material_batch,
 				geometry_batch_t* geometry_batch,
 				const config_t& cfg,
 				ARGS&& ... args)
 				: _root_batch(root_batch)
 				, _program_ptr(root_batch->map().scoped_ptr(program_batch))
-				, _render_states_ptr(program_batch->map().scoped_ptr(render_states_batch))
-				, _material_ptr(render_states_batch->map().scoped_ptr(material_batch))
+				, _graphics_pipeline_ptr(program_batch->map().scoped_ptr(graphics_pipeline_batch))
+				, _material_ptr(graphics_pipeline_batch->map().scoped_ptr(material_batch))
 				, _geometry_ptr(material_batch->map().scoped_ptr(geometry_batch))
 				, _instance_ptr(make_instance(this, geometry_batch, cfg, std::forward<ARGS>(args)...))
 				, _cfg (cfg)
@@ -303,9 +302,9 @@ namespace igpu
 					}
 				}
 
-				auto& render_states = _render_states_ptr->val();
+				auto& graphics_pipeline = _graphics_pipeline_ptr->val();
 				{
-					auto& map = render_states.map();
+					auto& map = graphics_pipeline.map();
 					map.erase(map.find(&material.item()));
 					if (map.size())
 					{
@@ -316,7 +315,7 @@ namespace igpu
 				auto& program = _program_ptr->val();
 				{
 					auto& map = program.map();
-					map.erase(map.find(&render_states.item()));
+					map.erase(map.find(&graphics_pipeline.item()));
 					if (map.size())
 					{
 						return;
@@ -357,7 +356,7 @@ namespace igpu
 
 			root_batch_t* _root_batch;
 			program_ptr_t _program_ptr;
-			render_states_ptr_t _render_states_ptr;
+			graphics_pipeline_ptr_t _graphics_pipeline_ptr;
 			material_ptr_t _material_ptr;
 			geometry_ptr_t _geometry_ptr;
 			instance_ptr_t _instance_ptr;

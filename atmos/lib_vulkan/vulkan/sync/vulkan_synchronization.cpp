@@ -587,7 +587,7 @@ vulkan_synchronization::vulkan_synchronization(
 #include <thread>
 #include <unordered_map>
 #include <vulkan/window/vulkan_back_buffer.h>
-#include <vulkan/batch/vulkan_vertex_mapper.h>
+#include <igpu/shader/attribute_finder.h>
 #include <vulkan/buffer/vulkan_compute_buffer.h>
 #include <vulkan/buffer/Vulkan_geometry.h>
 #include <vulkan/buffer/vulkan_index_buffer.h>
@@ -733,12 +733,6 @@ private:
 				index_buffer,
 				{ vertex_buffer },
 				});
-		}
-
-		const VkPipelineInputAssemblyStateCreateInfo& get_vertex_input_assembly_info()
-		{
-			auto* vulkan = ASSERT_CAST(vulkan_geometry*, geometry.get());
-			return vulkan->cfg().vk.input_assembly_info;
 		}
 
 		void draw(VkCommandBuffer command_buffer)
@@ -1184,14 +1178,66 @@ private:
 		vulkan_program* program = ASSERT_CAST(vulkan_program*, program_impl.program.get());
 		vulkan_geometry* geometry = ASSERT_CAST(vulkan_geometry*, geo_impl.geometry.get());
 
-		vulkan_vertex_mapper vertex_mapper(*program, *geometry);
+		attribute_finder attr_finder;
+		if (!attr_finder.find_all_attributes(*program, *geometry))
+		{
+			return;
+		}
+
+		uint32_t binding_description_count = 0;
+		std::array<VkVertexInputBindingDescription*, 16> binding_table = {};
+		std::array<VkVertexInputBindingDescription, 16> binding_descriptions = {};
+		std::array<VkVertexInputAttributeDescription, 16> attribute_descriptions = {};
+		
+		for (uint32_t i = 0; i < program->vertex_parameter_count(); ++i)
+		{
+			const auto& param = program->vertex_parameter(i);
+			const auto& source = attr_finder.attribute_sources()[i];
+
+			const auto& buff_cfg = geometry->cfg().vertex_buffers[source.buffer_index]->cfg();
+			const auto& attr_cfg = buff_cfg.attributes[source.attribute_index];
+			auto** pp_binding_description = &binding_table[source.buffer_index];
+
+			if (!*pp_binding_description)
+			{
+				VkVertexInputBindingDescription* binding_description 
+					= *pp_binding_description 
+					= &binding_descriptions[binding_description_count];
+
+				binding_description->binding = binding_description_count;
+				binding_description->stride = sizeof(Vertex);
+				binding_description->inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+				binding_description_count++;
+			}
+
+			VkVertexInputAttributeDescription* attribute_description = &attribute_descriptions[source.attribute_index];
+			attribute_description->binding = (*pp_binding_description)->binding;
+			attribute_description->location = param.cfg().spv.location;
+			attribute_description->format = param.cfg().vk.format;
+			attribute_description->offset = attr_cfg.offset;
+		}
+
+		VkPipelineInputAssemblyStateCreateInfo input_assembly = {};
+		input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+		input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		input_assembly.primitiveRestartEnable = VK_FALSE;
+
+		VkPipelineVertexInputStateCreateInfo vertex_input_info = {};
+		vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+
+		vertex_input_info.vertexBindingDescriptionCount = binding_description_count;
+		vertex_input_info.pVertexBindingDescriptions = binding_descriptions.data();
+
+		vertex_input_info.vertexAttributeDescriptionCount = (uint32_t)program->vertex_parameter_count();
+		vertex_input_info.pVertexAttributeDescriptions = attribute_descriptions.data();
 
 		VkGraphicsPipelineCreateInfo pipeline_info = {};
 		pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		pipeline_info.stageCount = (uint32_t)shader_stages.size();
 		pipeline_info.pStages = shader_stages.data();
-		pipeline_info.pVertexInputState = vertex_mapper.results();
-		pipeline_info.pInputAssemblyState = &geo_impl.get_vertex_input_assembly_info();
+		pipeline_info.pVertexInputState = &vertex_input_info;
+		pipeline_info.pInputAssemblyState = &input_assembly;
 		pipeline_info.pViewportState = &viewport_state;
 		pipeline_info.pRasterizationState = &rasterizer;
 		pipeline_info.pMultisampleState = &multisampling;

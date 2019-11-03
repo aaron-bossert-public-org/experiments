@@ -12,8 +12,8 @@ void vulkan_resource::add_fence(const std::shared_ptr<vulkan_fence>& fence)
 		if (fence->cfg().queue == existing->cfg().queue)
 		{
 			// should be overflow proof, in the sense that if new wraps around existing submit id, it should still
-			// count as being older after subtraction and casting to an int (unless it is more than 2 billion ahead.
-			int diff = (int)(fence->cfg().submit_index - existing->cfg().submit_index);
+			// count as being older after subtraction (unless it is more than 2 billion ahead.)
+			ptrdiff_t diff = fence->cfg().submit_index - existing->cfg().submit_index;
 			if (diff > 0)
 			{
 				existing = fence;

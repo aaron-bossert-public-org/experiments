@@ -633,14 +633,8 @@ std::unique_ptr<render_states> vulkan_context::make_render_states(
 
 
 std::unique_ptr<geometry> vulkan_context::make_geometry(
-	const geometry::config& base_cfg)
+	const geometry::config& cfg)
 {
-	vulkan_geometry::config cfg = { base_cfg };
-
-	cfg.vk.input_assembly_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	cfg.vk.input_assembly_info.topology = to_vulkan_topology(cfg.topology);
-	cfg.vk.input_assembly_info.primitiveRestartEnable = VK_FALSE;
-
 	return vulkan_geometry::make(cfg);
 }
 

@@ -3,37 +3,44 @@
 
 #include <igpu/batch/batch_nodes.h>
 #include <igpu/batch/batch_utility.h>
-
-#include<vulkan/batch/vulkan_instance_batch.h>
+#include <vulkan/batch/vulkan_instance_batch.h>
+#include <vulkan/buffer/vulkan_geometry.h>
+#include <vulkan/shader/vulkan_primitives.h>
+#include <vulkan/shader/vulkan_program.h>
+#include <vulkan/shader/vulkan_graphics_pipeline.h>
 
 namespace igpu
 {
 	class vulkan_geometry_batch;
 	class vulkan_fence;
 	class vulkan_material_batch;
-	class vulkan_render_states_batch;
+	class vulkan_graphics_pipeline_batch;
 	class vulkan_program_batch;
 	class vulkan_root_batch;
 	class vulkan_batch_binding;
 
-	struct vulkan_batch_draw_config : batch_draw_config
+	struct vulkan_batch_draw_state : batch_draw_state
 	{
-		struct vulkan
+		std::shared_ptr<vulkan_fence> fence;
+		VkCommandBuffer command_buffer;
+		struct
 		{
-			std::shared_ptr<vulkan_fence> fence;
-		};
-		
-		vulkan vk;
-	};
+			vulkan_root_batch* root = nullptr;
+			vulkan_program_batch* program = nullptr;
+			vulkan_graphics_pipeline_batch* graphics_pipeline = nullptr;
+			vulkan_material_batch* material = nullptr;
+			vulkan_geometry_batch* geometry = nullptr;
+			vulkan_instance_batch* instance = nullptr;
+		} batches;
 
-	struct vulkan_batch_stack
-	{
-		vulkan_root_batch* root_batch = nullptr;
-		vulkan_program_batch* program_batch = nullptr;
-		vulkan_render_states_batch* render_states_batch = nullptr;
-		vulkan_material_batch* material_batch = nullptr;
-		vulkan_geometry_batch* geometry_batch = nullptr;
-		vulkan_instance_batch* instance_batch = nullptr;
+		struct
+		{
+			int32_t base_vertex = 0;
+			uint32_t instance_start = 0;
+			uint32_t instance_count = 0;
+			uint32_t element_start = 0;
+			uint32_t element_count = 0;
+		} fallback, resolved;
 	};
 
 	class vulkan_geometry_batch : public batch_utility::batch_impl_t<geometry_batch, vulkan_instance_batch, vulkan_geometry>
@@ -45,8 +52,9 @@ namespace igpu
 		vulkan_geometry_batch(vulkan_geometry_batch&&) = default;
 		vulkan_geometry_batch& operator= (vulkan_geometry_batch&&) = default;
 
+		void pre_draw(vulkan_batch_draw_state*);
 
-		void start_draw(const vulkan_batch_stack&);
+		void start_draw(const vulkan_batch_draw_state&);
 
 		void stop_draw();
 
@@ -55,6 +63,8 @@ namespace igpu
 	private:
 
 		vulkan_root_batch* _root_batch;
+		uint32_t _active_buffer_count = 0;
+		std::array<uint8_t, 16> _active_buffers = {};
 	};
 
 	class vulkan_material_batch : public batch_utility::batch_impl_t<material_batch, vulkan_geometry_batch, vulkan_primitives>
@@ -66,7 +76,7 @@ namespace igpu
 		vulkan_material_batch(vulkan_material_batch&&) = default;
 		vulkan_material_batch& operator= (vulkan_material_batch&&) = default;
 
-		void start_draw(const vulkan_batch_stack&);
+		void start_draw(const vulkan_batch_draw_state&);
 
 		void stop_draw();
 
@@ -77,27 +87,27 @@ namespace igpu
 		vulkan_root_batch* _root_batch;
 	};
 
-	class vulkan_render_states_batch : public batch_utility::batch_impl_t<render_states_batch, vulkan_material_batch, vulkan_render_states>
+	class vulkan_graphics_pipeline_batch : public batch_utility::batch_impl_t<graphics_pipeline_batch, vulkan_material_batch, vulkan_graphics_pipeline>
 	{
 	public:
 
-		vulkan_render_states_batch(const vulkan_instance_batch::config&);
-		~vulkan_render_states_batch();
-		vulkan_render_states_batch(vulkan_render_states_batch&&) = default;
-		vulkan_render_states_batch& operator= (vulkan_render_states_batch&&) = default;
+		vulkan_graphics_pipeline_batch(const vulkan_instance_batch::config&);
+		~vulkan_graphics_pipeline_batch();
+		vulkan_graphics_pipeline_batch(vulkan_graphics_pipeline_batch&&) = default;
+		vulkan_graphics_pipeline_batch& operator= (vulkan_graphics_pipeline_batch&&) = default;
 
-		void start_draw(const vulkan_batch_stack&);
+		void start_draw(const vulkan_batch_draw_state&);
 
 		void stop_draw();
 
-		static vulkan_render_states* get_key(const vulkan_instance_batch::config&);
+		static vulkan_graphics_pipeline* get_key(const vulkan_instance_batch::config&);
 
 	private:
 
 		vulkan_root_batch* _root_batch;
 	};
 
-	class vulkan_program_batch : public batch_utility::batch_impl_t<program_batch, vulkan_render_states_batch, vulkan_program>
+	class vulkan_program_batch : public batch_utility::batch_impl_t<program_batch, vulkan_graphics_pipeline_batch, vulkan_program>
 	{
 	public:
 
@@ -106,7 +116,7 @@ namespace igpu
 		vulkan_program_batch(vulkan_program_batch&&) = default;
 		vulkan_program_batch& operator= (vulkan_program_batch&&) = default;
 
-		void start_draw(const vulkan_batch_stack&);
+		void start_draw(const vulkan_batch_draw_state&);
 
 		void stop_draw();
 
@@ -121,7 +131,7 @@ namespace igpu
 	{
 	public:
 
-		using batch_stack_t = vulkan_batch_stack;
+		using draw_state_t = vulkan_batch_draw_state;
 
 		struct config
 		{
@@ -130,15 +140,14 @@ namespace igpu
 
 		const config& cfg() const;
 
-		void start_draw(const vulkan_batch_draw_config&);
+		void start_draw(const vulkan_batch_draw_state&);
 
 		void stop_draw();
 
 		const std::shared_ptr<vulkan_fence>& fence() const;
 
 		std::unique_ptr<vulkan_batch_binding> make_binding(
-			const instance_batch::config&,
-			const utility::sphere& visibility_sphere);
+			const instance_batch::config&);
 
 		static std::unique_ptr<vulkan_root_batch> make(
 			const config&);

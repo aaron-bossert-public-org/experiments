@@ -15,7 +15,7 @@ namespace igpu
 		{
 			VkDevice device = nullptr;
 			VkQueue queue = nullptr;
-			size_t submit_index = 0;
+			ptrdiff_t submit_index = 0;
 			VkFenceCreateInfo info = {
 				VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
 				nullptr,

@@ -23,8 +23,7 @@ namespace igpu
 		virtual const config& cfg() const = 0;
 
         virtual std::unique_ptr<batch_binding> make_binding(
-			const instance_batch::config&,
-			const utility::sphere& visibility_sphere) = 0;
+			const instance_batch::config&) = 0;
         
         virtual void render(const utility::frustum& frustum) = 0;
 

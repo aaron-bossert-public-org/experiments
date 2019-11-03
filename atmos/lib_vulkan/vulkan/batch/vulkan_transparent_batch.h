@@ -28,8 +28,7 @@ namespace igpu
 		void render(const utility::frustum& frustum) override;
 
 		std::unique_ptr<batch_binding> make_binding(
-			const instance_batch::config&,
-			const utility::sphere& visibility_sphere) override;
+			const instance_batch::config&) override;
 
 		static std::unique_ptr<vulkan_transparent_batch> make(
 			const config&);

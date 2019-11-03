@@ -7,8 +7,6 @@
 
 #include <igpu/buffer/geometry.h>
 
-#include <optional>
-
 namespace igpu
 {
 	VkPrimitiveTopology to_vulkan_topology(topology topology);
@@ -18,18 +16,28 @@ namespace igpu
 	{
 	public:
 
-		struct config : geometry::config
-		{
-			struct vulkan
-			{
-				VkPipelineInputAssemblyStateCreateInfo input_assembly_info = {};
-			};
-
-			vulkan vk;
-		};
-
 		const config& cfg() const override;
 
+		void base_vertex(ptrdiff_t) override;
+
+		void instance_start(size_t) override;
+
+		void instance_count(size_t) override;
+
+		void element_start(size_t) override;
+
+		void element_count(const std::optional < size_t >&) override;
+
+		ptrdiff_t base_vertex() const override;
+
+		size_t instance_start() const override;
+
+		size_t instance_count() const override;
+
+		size_t element_start() const override;
+
+		size_t element_count() const override;
+		
 		const vulkan_index_buffer& index_buffer() const override;
 		
 		size_t vertex_buffer_count() const override;
@@ -53,6 +61,11 @@ namespace igpu
 	private:
 
 		const config _cfg;
+		ptrdiff_t _base_vertex = 0;
+		size_t _instance_start = 0;
+		size_t _instance_count = 1;
+		size_t _element_start = 0;
+		std::optional < size_t > _element_count = 0;
 		igpu::vulkan_index_buffer* const _index_buffer = nullptr;
 		const std::vector < vulkan_vertex_buffer* > _vertex_buffers;
 	};

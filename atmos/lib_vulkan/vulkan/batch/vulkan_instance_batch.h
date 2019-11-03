@@ -5,15 +5,15 @@
 
 #include <igpu/batch/batch_binding.h>
 
-#include <vulkan/buffer/vulkan_geometry.h>
-#include <vulkan/shader/vulkan_primitives.h>
-#include <vulkan/shader/vulkan_program.h>
-#include <vulkan/shader/vulkan_render_states.h>
-
 namespace igpu
 {
-	struct vulkan_batch_stack;
+	struct vulkan_batch_draw_state;
+
 	class vulkan_root_batch;
+	class vulkan_program;
+	class vulkan_graphics_pipeline;
+	class vulkan_geometry;
+	class vulkan_primitives;
 
 	class vulkan_instance_batch : public instance_batch
 	{
@@ -24,8 +24,7 @@ namespace igpu
 			struct vulkan
 			{
 				vulkan_root_batch* root_batch;
-				std::shared_ptr<vulkan_program> program;
-				std::shared_ptr<vulkan_render_states> render_states;
+				std::shared_ptr<vulkan_graphics_pipeline> graphics_pipeline;
 				std::shared_ptr<vulkan_primitives> material;
 				std::shared_ptr<vulkan_geometry> geometry;
 				std::shared_ptr<vulkan_primitives> primitives;
@@ -35,26 +34,39 @@ namespace igpu
 		};
 
 		vulkan_instance_batch(
-			const config& cfg,
-			const utility::sphere&);
+			const config& cfg);
 
-		void element_start(const std::optional < size_t >&) override;
+		void enabled(bool) override;
 
-		const std::optional < size_t >& element_start() const override;
+		void base_vertex(const std::optional < ptrdiff_t >&) override;
 
-		void element_count(const std::optional < size_t >&) override;
-
-		const std::optional < size_t >& element_count() const override;
+		void instance_start(const std::optional < size_t >&) override;
 
 		void instance_count(const std::optional < size_t >&) override;
 
+		void element_start(const std::optional < size_t >&) override;
+
+		void element_count(const std::optional < size_t >&) override;
+
+		void visibility_sphere(const std::optional<utility::sphere>&) override;
+
+		bool enabled() const override;
+
+		const std::optional < ptrdiff_t >& base_vertex() const override;
+
+		const std::optional < size_t >& instance_start() const override;
+
 		const std::optional < size_t >& instance_count() const override;
 
-		const utility::sphere& visibility_sphere() const override;
+		const std::optional < size_t >& element_start() const override;
 
-		void visibility_sphere(const utility::sphere& visibility_sphere) override;
+		const std::optional < size_t >& element_count() const override;
 
-		void draw(const vulkan_batch_stack&);
+		const std::optional<utility::sphere>& visibility_sphere() const override;
+
+		bool can_render(vulkan_batch_draw_state*);
+
+		void draw(const vulkan_batch_draw_state&);
 
 		vulkan_instance_batch() = default;
 		vulkan_instance_batch(vulkan_instance_batch&&) = default;
@@ -62,9 +74,18 @@ namespace igpu
 
 	private:
 
-		std::optional< size_t > _element_start;
-		std::optional< size_t > _element_count;
-		std::optional< size_t > _instance_count;
-		utility::sphere _visibility_sphere;
+		bool _enabled = true;
+		std::optional < ptrdiff_t > _base_vertex;
+		std::optional < size_t > _instance_start;
+		std::optional < size_t > _instance_count;
+		std::optional < size_t > _element_start;
+		std::optional < size_t > _element_count;
+
+#pragma warning(push)
+#pragma warning(disable:4324)
+		//  warning C4324: 'std::_Optional_destruct_base<_Ty,true>': structure was padded due to alignment specifier
+		std::optional < utility::sphere > _visibility_sphere;
+#pragma warning(pop)
+		vulkan_primitives* _primitives = nullptr;
 	};
 }

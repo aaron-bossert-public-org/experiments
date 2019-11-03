@@ -2,15 +2,16 @@
 #pragma once
 
 #include <igpu/utility/utility_types.h>
+
 namespace igpu
 {
 	class geometry;
 	class program;
-	class render_states;
+	class graphics_pipeline;
 	class primitives;
 	class instance_batch;
 
-	struct batch_draw_config
+	struct batch_draw_state
 	{
 		utility::frustum frustum;
 	};
@@ -46,11 +47,11 @@ namespace igpu
 	{
 	};
 
-	class render_states_batch : public batch_api_t<material_batch, render_states>
+	class graphics_pipeline_batch : public batch_api_t<material_batch, graphics_pipeline>
 	{
 	};
 
-	class program_batch : public batch_api_t<render_states_batch, program>
+	class program_batch : public batch_api_t<graphics_pipeline_batch, program>
 	{
 	};
 
