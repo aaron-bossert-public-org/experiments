@@ -8,6 +8,8 @@ namespace igpu
 	class gl_compute_buffer : public compute_buffer
 	{
 	public:
+		virtual size_t byte_size() const = 0;
+
 		virtual unsigned gl_handle() const = 0;
 
 		static std::unique_ptr< gl_compute_buffer > make( const config& );

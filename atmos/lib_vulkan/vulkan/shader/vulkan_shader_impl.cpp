@@ -24,7 +24,7 @@ vulkan_shader_impl::vulkan_shader_impl(
 	VkShaderModuleCreateInfo create_info = {};
 	create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 	create_info.codeSize = view_unmapped.byte_size();
-	create_info.pCode = (uint32_t*)view_unmapped.data();
+	create_info.pCode = view_unmapped.data();
 
 	vkCreateShaderModule( _vk.device, &create_info, nullptr, &_shader_module );
 

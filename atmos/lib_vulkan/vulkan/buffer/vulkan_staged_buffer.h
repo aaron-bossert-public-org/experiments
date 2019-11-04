@@ -39,9 +39,11 @@ namespace igpu
 
 		const vulkan_buffer& gpu_buffer() const;
 
+		size_t byte_size() const;
+
 	private:
 		const config _cfg;
-		size_t _last_mapped_bytes = 0;
+		size_t _byte_size = 0;
 		vulkan_buffer _staging_buffer;
 		vulkan_buffer _gpu_buffer;
 	};
@@ -69,6 +71,11 @@ namespace igpu
 			_vulkan_staged_buffer.unmap();
 		}
 
+		size_t byte_size() const
+		{
+			return _vulkan_staged_buffer.byte_size();
+		}
+
 		vulkan_buffer& gpu_resource() override
 		{
 			return _vulkan_staged_buffer.gpu_buffer();
@@ -85,9 +92,6 @@ namespace igpu
 			const vulkan_staged_buffer::config& res_cfg,
 			const ARGS&... args )
 		{
-			"make vulkan_staged_buffer last mapped bytes public and access it "
-			"from here to override a byte size member function which index "
-			"buffer can use to compute the index count";
 			if ( !is_valid( cfg.usage ) )
 			{
 				LOG_CRITICAL( "invalid usage:%d", (int)cfg.usage );

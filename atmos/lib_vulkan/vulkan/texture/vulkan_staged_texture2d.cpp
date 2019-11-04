@@ -33,12 +33,11 @@ const vulkan_staged_texture2d::config& vulkan_staged_texture2d::cfg() const
 	return _cfg;
 }
 
-void vulkan_staged_texture2d::map(
-	size_t byte_size,
-	buffer_view_base* out_buffer_view )
+void vulkan_staged_texture2d::map( buffer_view_base* out_buffer_view )
 {
-	_staging_buffer.map( byte_size, out_buffer_view );
-	_mapped_view = *out_buffer_view;
+	_staging_buffer.map( out_buffer_view );
+	_mapped_view = buffer_view<
+		char >( out_buffer_view->byte_size(), (char*)out_buffer_view->data() );
 }
 
 void vulkan_staged_texture2d::unmap( const texture2d::state& state )
@@ -81,12 +80,18 @@ void vulkan_staged_texture2d::unmap()
 
 					if ( compressed_parser.format != texture_format::UNDEFINED )
 					{
+						// if there is decompressed data to use, replace the
+						// contents of the staging buffer with it
 						state.res = compressed_parser.res;
 						state.format = compressed_parser.format;
 
 						_staging_buffer.unmap();
-						map( compressed_parser.decompressed.size(),
-							 &parsed_buffer_view );
+
+						parsed_buffer_view = buffer_view< char >(
+							compressed_parser.decompressed.size(),
+							nullptr );
+
+						map( &parsed_buffer_view );
 
 						memcpy(
 							parsed_buffer_view.data(),
@@ -138,7 +143,7 @@ void vulkan_staged_texture2d::upload(
 
 	VkFormat vulkan_format = to_vulkan_format( state.format );
 
-	size_t src_offset = (char*)texture_data.data() - (char*)_mapped_view.data();
+	size_t src_offset = texture_data.data() - _mapped_view.data();
 	ASSERT_CONTEXT( texture_data.data() );
 	ASSERT_CONTEXT( _mapped_view.data() );
 	ASSERT_CONTEXT( src_offset < _mapped_view.byte_size() );

@@ -36,7 +36,7 @@ const vulkan_staged_buffer::config& vulkan_staged_buffer::cfg() const
 void vulkan_staged_buffer::map( buffer_view_base* out_buffer_view )
 {
 	_staging_buffer.map( out_buffer_view );
-	_last_mapped_bytes = out_buffer_view->byte_size();
+	_byte_size = out_buffer_view->byte_size();
 }
 
 void vulkan_staged_buffer::unmap()
@@ -49,12 +49,10 @@ void vulkan_staged_buffer::unmap()
 	{
 		_staging_buffer.unmap();
 
-		_gpu_buffer.reserve( _last_mapped_bytes );
+		_gpu_buffer.reserve( _byte_size );
 
-		_cfg.synchronization->copy(
-			_staging_buffer,
-			_gpu_buffer,
-			(uint32_t)_last_mapped_bytes );
+		_cfg.synchronization
+			->copy( _staging_buffer, _gpu_buffer, (uint32_t)_byte_size );
 
 		if ( _cfg.usage == buffer_usage::STATIC )
 		{
@@ -84,4 +82,9 @@ vulkan_buffer& vulkan_staged_buffer::gpu_buffer()
 const vulkan_buffer& vulkan_staged_buffer::gpu_buffer() const
 {
 	return _gpu_buffer;
+}
+
+size_t vulkan_staged_buffer::byte_size() const
+{
+	return _byte_size;
 }

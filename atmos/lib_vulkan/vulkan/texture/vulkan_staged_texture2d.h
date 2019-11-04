@@ -23,7 +23,7 @@ namespace igpu
 
 		~vulkan_staged_texture2d() override;
 
-		void map( size_t, buffer_view_base* ) override;
+		void map( buffer_view_base* ) override;
 
 		void unmap( const texture2d::state& state ) override;
 

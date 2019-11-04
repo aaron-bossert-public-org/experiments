@@ -43,8 +43,8 @@
 #	define VMA_RECORDING_ENABLED 1
 #endif
 
-#include <VulkanMemoryAllocator\src\vk_mem_alloc.h>
 #include <vulkan.h>
+#include <VulkanMemoryAllocator\src\vk_mem_alloc.h>
 
 namespace igpu
 {

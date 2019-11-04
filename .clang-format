@@ -158,10 +158,6 @@ IncludeCategories:
     Priority:        4
 # Regular expressions denoting the different #include categories used for ordering #includes
 
-BasedOnStyle: LLVM
-Language: Cpp
-# Specify a regular expression of suffixes that are allowed in the file-to-main-include mapping.
-
 IndentCaseLabels: false
 # Indent case labels one level from the switch statement.
 

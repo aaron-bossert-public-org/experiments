@@ -116,7 +116,7 @@ texture_file_parsing::compressed_parser::~compressed_parser()
 }
 
 bool texture_file_parsing::parse_as_ktx(
-	const buffer_view< char >& raw_file_data,
+	buffer_view< char >& raw_file_data,
 	buffer_view< char >* out_buffer_view,
 	texture2d::state* out_state )
 {
@@ -198,7 +198,7 @@ bool texture_file_parsing::parse_as_ktx(
 }
 
 bool texture_file_parsing::parse_as_dds(
-	const buffer_view< char >& raw_file_data,
+	buffer_view< char >& raw_file_data,
 	buffer_view< char >* out_buffer_view,
 	texture2d::state* out_state )
 {
@@ -253,7 +253,7 @@ bool texture_file_parsing::parse_as_dds(
 	}
 
 	auto ddsHeader = reinterpret_cast< const DDS_HEADER* >(
-		(char*)raw_file_data.data() + sizeof( uint32_t ) );
+		raw_file_data.data() + sizeof( uint32_t ) );
 
 	if ( !( ddsHeader->ddspf.flags & DDSF_FOURCC ) )
 	{
@@ -295,7 +295,7 @@ bool texture_file_parsing::parse_as_dds(
 
 	*out_buffer_view = buffer_view< char >(
 		raw_file_data.size() - sizeof( DDS_HEADER ),
-		(char*)raw_file_data.data() + sizeof( DDS_HEADER ) );
+		raw_file_data.data() + sizeof( DDS_HEADER ) );
 
 	return true;
 }
@@ -306,7 +306,7 @@ bool texture_file_parsing::parse_as_dds(
 #pragma warning( pop )
 
 bool texture_file_parsing::parse_as_pvr(
-	const buffer_view< char >& raw_file_data,
+	buffer_view< char >& raw_file_data,
 	buffer_view< char >* out_buffer_view,
 	texture2d::state* out_state )
 {
@@ -321,7 +321,7 @@ bool texture_file_parsing::parse_as_pvr(
 		// set texture data for texel_buffer2d
 		texture_data = buffer_view< char >(
 			raw_file_data.size() - sizeof( PVRTextureHeaderV3 ),
-			(char*)raw_file_data.data() + sizeof( PVRTextureHeaderV3 ) );
+			raw_file_data.data() + sizeof( PVRTextureHeaderV3 ) );
 	}
 	else if (
 		raw_file_data.size() > sizeof( PVR_Texture_Header ) &&
@@ -331,7 +331,7 @@ bool texture_file_parsing::parse_as_pvr(
 		// & upgrade header from pvr 1 to pvr 3
 		texture_data = buffer_view< char >(
 			raw_file_data.size() - sizeof( PVR_Texture_Header ),
-			(char*)raw_file_data.data() + sizeof( PVR_Texture_Header ) );
+			raw_file_data.data() + sizeof( PVR_Texture_Header ) );
 		PVRTConvertOldTextureHeaderToV3( legacy_header, scratch, nullptr );
 		pvr_header = &scratch;
 	}

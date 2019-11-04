@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "vulkan/defines/vulkan_includes.h"
+
 namespace igpu
 {
 	class vulkan_image;

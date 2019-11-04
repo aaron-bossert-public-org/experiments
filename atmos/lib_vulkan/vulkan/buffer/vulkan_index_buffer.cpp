@@ -27,6 +27,11 @@ VkIndexType igpu::to_vulkan_format( index_format format )
 	return VK_INDEX_TYPE_UINT16;
 }
 
+size_t vulkan_index_buffer::element_count() const
+{
+	return byte_size() / bytes_per_index( cfg().format );
+}
+
 std::unique_ptr< vulkan_index_buffer > vulkan_index_buffer::make(
 	const config& cfg,
 	const scoped_ptr< vulkan_synchronization >& synchronization )

@@ -32,17 +32,17 @@ namespace igpu
 		};
 
 		bool parse_as_ktx(
-			const buffer_view< char >& raw_file_data,
+			buffer_view< char >& raw_file_data,
 			buffer_view< char >* out_buffer_view,
 			texture2d::state* out_state );
 
 		bool parse_as_dds(
-			const buffer_view< char >& raw_file_data,
+			buffer_view< char >& raw_file_data,
 			buffer_view< char >* out_buffer_view,
 			texture2d::state* out_state );
 
 		bool parse_as_pvr(
-			const buffer_view< char >& raw_file_data,
+			buffer_view< char >& raw_file_data,
 			buffer_view< char >* out_buffer_view,
 			texture2d::state* out_state );
 	};

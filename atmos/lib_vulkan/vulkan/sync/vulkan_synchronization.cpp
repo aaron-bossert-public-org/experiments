@@ -337,7 +337,7 @@ namespace
 		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.buffer = buffer.get();
 		barrier.offset = 0;
-		barrier.size = buffer.byte_size();
+		barrier.size = buffer.mapped_view().byte_size();
 
 		// cannot add dependency with null queue
 		if ( !target_owner.queue )
@@ -853,22 +853,20 @@ private:
 			} ) );
 
 			{
-				VkDeviceSize buffer_size =
-					sizeof( indices[0] ) * indices.size();
-				buffer_view< uint32_t > view;
+				buffer_view< char >
+					view( sizeof( indices[0] ) * indices.size(), nullptr );
 
-				index_buffer->map( buffer_size, &view );
-				memcpy( (char*)view.data(), indices.data(), buffer_size );
+				index_buffer->map(&view );
+				memcpy( view.data(), indices.data(), view.byte_size());
 				index_buffer->unmap();
 			}
 
 			{
-				VkDeviceSize buffer_size =
-					sizeof( vertices[0] ) * vertices.size();
-				buffer_view< uint32_t > view;
+				buffer_view< char >
+					view( sizeof( vertices[0] ) * vertices.size(), nullptr );
 
-				vertex_buffer->map( buffer_size, &view );
-				memcpy( (char*)view.data(), vertices.data(), buffer_size );
+				vertex_buffer->map( &view );
+				memcpy( view.data(), vertices.data(), view.size());
 				vertex_buffer->unmap();
 			}
 
@@ -970,9 +968,11 @@ private:
 				std::chrono::duration< float, std::chrono::seconds::period >(
 					current_time - start_time )
 					.count();
-			buffer_view< UniformBufferObject > view;
-			_compute_buffers[current_image]
-				->map( sizeof( UniformBufferObject ), &view );
+			
+			auto view = buffer_view<
+				UniformBufferObject >( sizeof( UniformBufferObject ), nullptr );
+			_compute_buffers[current_image]->map( &view );
+
 			UniformBufferObject& ubo = view[0] = {};
 
 			auto res = app->_context->back_buffer().cfg().res;
@@ -1014,37 +1014,37 @@ private:
 	{
 		void create()
 		{
-			auto vertex_file_data = app->_context->make_raw_buffer( {} ),
-				 auto fragment_file_data = app->_context->make_raw_buffer( {} ),
+			//auto vertex_file_data = app->_context->make_raw_buffer( {} ),
+			//	 auto fragment_file_data = app->_context->make_raw_buffer( {} ),
 
-				 app->load_buffer(
-					 "cooked_assets/shaders/shader.vert.spv",
-					 vertex_file_data );
+			//	 app->load_buffer(
+			//		 "cooked_assets/shaders/shader.vert.spv",
+			//		 vertex_file_data );
 
-			app->load_buffer(
-				"cooked_assets/shaders/shader.frag.spv",
-				fragment_file_data );
+			//app->load_buffer(
+			//	"cooked_assets/shaders/shader.frag.spv",
+			//	fragment_file_data );
 
-			program::config program_cfg = {
-				"test program",
-				app->_context->make_vertex_shader(
-					std::move( vertex_file_data ) ),
-				app->_context->make_fragment_shader(
-					std::move( fragment_file_data ) ),
-			};
+			//program::config program_cfg = {
+			//	"test program",
+			//	app->_context->make_vertex_shader(
+			//		std::move( vertex_file_data ) ),
+			//	app->_context->make_fragment_shader(
+			//		std::move( fragment_file_data ) ),
+			//};
 
-			program = app->_context->make_program( program_cfg );
-			vulkan_program* vulkan =
-				ASSERT_CAST( vulkan_program*, program.get() );
+			//program = app->_context->make_program( program_cfg );
+			//vulkan_program* vulkan =
+			//	ASSERT_CAST( vulkan_program*, program.get() );
 
-			shader_stages = {
-				vulkan->cfg().vk.vertex->stage_info(),
-				vulkan->cfg().vk.fragment->stage_info(),
-			};
+			//shader_stages = {
+			//	vulkan->cfg().vk.vertex->stage_info(),
+			//	vulkan->cfg().vk.fragment->stage_info(),
+			//};
 
-			auto vulkan = ASSERT_CAST( vulkan_program*, program.get() );
-			descriptor_set_layouts = vulkan->descriptor_set_layouts();
-			pipeline_layout = vulkan->pipeline_layout();
+			//auto vulkan = ASSERT_CAST( vulkan_program*, program.get() );
+			//descriptor_set_layouts = vulkan->descriptor_set_layouts();
+			//pipeline_layout = vulkan->pipeline_layout();
 		}
 
 		const std::vector< VkPipelineShaderStageCreateInfo >& get_shader_stages()
@@ -1072,8 +1072,8 @@ private:
 		{
 			program::config program_cfg = {
 				"test program",
-				app->_context->make_vertex_shader( {} ),
-				app->_context->make_fragment_shader( {} ),
+				//app->_context->make_vertex_shader( {} ),
+				//app->_context->make_fragment_shader( {} ),
 			};
 
 			auto* vulkan_vertex =
@@ -1082,13 +1082,13 @@ private:
 				vulkan_fragment_shader*,
 				program_cfg.fragment.get() );
 
-			app->load_buffer(
-				"cooked_assets/shaders/shader.vert.spv",
-				vulkan_vertex );
+			//app->load_buffer(
+			//	"cooked_assets/shaders/shader.vert.spv",
+			//	vulkan_vertex );
 
-			app->load_buffer(
-				"cooked_assets/shaders/shader.frag.spv",
-				vulkan_fragment );
+			//app->load_buffer(
+			//	"cooked_assets/shaders/shader.frag.spv",
+			//	vulkan_fragment );
 
 			program = app->_context->make_program( program_cfg );
 
@@ -1500,13 +1500,13 @@ private:
 				TEXTURE_PATH.c_str() ) );
 		}
 
-		const size_t byte_size = ifs.tellg();
-		ifs.seekg( 0, std::ios::beg );
+		buffer_view< char > view( ifs.tellg(), nullptr );
+		buffer->map( &view );
 
-		buffer_view< char > view;
-		buffer->map( byte_size, &view );
-		ifs.read( (char*)view.data(), byte_size );
+		ifs.seekg( 0, std::ios::beg );
+		ifs.read( view.data(), view.byte_size() );
 		ifs.close();
+
 		buffer->unmap();
 	}
 

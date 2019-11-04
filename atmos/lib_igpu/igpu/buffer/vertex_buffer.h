@@ -6,7 +6,7 @@
 
 #include <vector>
 
-#define IGPU_VERT_CFG_OF( U, V, ... )\IGPU_VERT_CFG_OF_( U, V, __VA_ARGS__ )
+#define IGPU_VERT_CFG_OF( U, V, ... ) IGPU_VERT_CFG_OF_( U, V, __VA_ARGS__ )
 
 // example usage of IGPU_VERT_CFG_OF:
 

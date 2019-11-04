@@ -41,7 +41,7 @@ task(){
 	${DIR}/clang-format.exe -style=file -i $file
 }
 
-N=8
+N=16
 (
 	for FORMAT_TARGET in ${FOLDERS[@]}
 	do

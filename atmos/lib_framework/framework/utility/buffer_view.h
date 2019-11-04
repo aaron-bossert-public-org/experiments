@@ -67,6 +67,10 @@ public:
 
 	T& operator[]( size_t i );
 
+	const T* data() const;
+
+	T* data();
+	
 	class iter;
 
 	iter begin();

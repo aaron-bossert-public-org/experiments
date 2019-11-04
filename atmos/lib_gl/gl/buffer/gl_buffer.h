@@ -34,8 +34,8 @@ namespace igpu
 		const unsigned _gl_access;
 
 		size_t _byte_size = 0;
-		size_t _byte_capacity;
-		void* _mapped;
+		size_t _byte_capacity = 0;
+		void* _mapped = nullptr;
 		perf::metric _gpu_mem_metric;
 	};
 
@@ -60,9 +60,15 @@ namespace igpu
 			_gl_buffer.unmap();
 		}
 
-		unsigned gl_handle() const override;
+		size_t byte_size() const override
+		{
+			return _gl_buffer.byte_size();
+		}
 
-		size_t byte_size() const;
+		unsigned gl_handle() const override
+		{
+			return _gl_buffer.gl_handle();
+		}
 
 		template < typename... ARGS >
 		static std::unique_ptr< gl_buffer_t > make(

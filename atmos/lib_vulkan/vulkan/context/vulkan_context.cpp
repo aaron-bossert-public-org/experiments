@@ -682,47 +682,50 @@ std::unique_ptr< render_texture2d > vulkan_context::make_render_texture2d(
 std::unique_ptr< depth_buffer > vulkan_context::make_depth_buffer(
 	const depth_buffer::config& base_cfg )
 {
-	return vulkan_depth_buffer::make(
-		{ base_cfg,
-		  _state.physical_device,
-		  _state.device,
-		  _back_buffer->cfg().vk.sample_count,
-		  VK_SHARING_MODE_EXCLUSIVE.} );
+	return vulkan_depth_buffer::make( {
+		base_cfg,
+		_state.physical_device,
+		_state.device,
+		_back_buffer->cfg().vk.sample_count,
+		VK_SHARING_MODE_EXCLUSIVE,
+	} );
 }
 
 std::unique_ptr< depth_texture2d > vulkan_context::make_depth_texture2d(
 	const depth_texture2d::config& base_cfg )
 {
-	return vulkan_depth_texture2d::make(
-		{ base_cfg,
-		  _state.physical_device,
-		  _state.device,
-		  _back_buffer->cfg().vk.sample_count,
-		  VK_SHARING_MODE_EXCLUSIVE.} );
+	return vulkan_depth_texture2d::make( {
+		base_cfg,
+		_state.physical_device,
+		_state.device,
+		_back_buffer->cfg().vk.sample_count,
+		VK_SHARING_MODE_EXCLUSIVE,
+	} );
 }
 
 std::unique_ptr< program > vulkan_context::make_program(
 	const program::config& base_cfg )
 {
+	auto vertex =
+		std::dynamic_pointer_cast< vulkan_vertex_shader, vertex_shader >(
+			base_cfg.vertex );
+	auto fragment =
+		std::dynamic_pointer_cast< vulkan_fragment_shader, fragment_shader >(
+			base_cfg.fragment );
+
 	vulkan_program::config cfg = {
 		base_cfg,
-		{
-			_state.device,
-			std::dynamic_pointer_cast< vulkan_vertex_shader, vertex_shader >(
-				cfg.vertex ),
-			std::
-				dynamic_pointer_cast< vulkan_fragment_shader, fragment_shader >(
-					cfg.fragment ),
-		},
+		_state.device,
+		vertex,
+		fragment,
 	};
 
 	return vulkan_program::make( cfg );
 }
 
-std::unique_ptr< vertex_shader > vulkan_context::make_vertex_shader(
-	const vertex_shader::config& base_cfg )
+std::unique_ptr< vertex_shader > vulkan_context::make_vertex_shader()
 {
-	vulkan_vertex_shader::config cfg = {
+	/*vulkan_vertex_shader::config cfg = {
 		base_cfg,
 		{
 			this->_state.device,
@@ -730,21 +733,22 @@ std::unique_ptr< vertex_shader > vulkan_context::make_vertex_shader(
 		},
 	};
 
-	return vulkan_vertex_shader::make( cfg );
+	return vulkan_vertex_shader::make( cfg );*/
+	return nullptr;
 }
 
-std::unique_ptr< fragment_shader > vulkan_context::make_fragment_shader(
-	const fragment_shader::config& base_cfg )
+std::unique_ptr< fragment_shader > vulkan_context::make_fragment_shader()
 {
-	vulkan_fragment_shader::config cfg = {
-		base_cfg,
-		{
-			this->_state.device,
-			VK_SHADER_STAGE_FRAGMENT_BIT,
-		},
-	};
+	//vulkan_fragment_shader::config cfg = {
+	//	base_cfg,
+	//	{
+	//		this->_state.device,
+	//		VK_SHADER_STAGE_FRAGMENT_BIT,
+	//	},
+	//};
 
-	return vulkan_fragment_shader::make( cfg );
+	//return vulkan_fragment_shader::make( cfg );
+	return nullptr;
 }
 
 std::unique_ptr< render_states > vulkan_context::make_render_states(
