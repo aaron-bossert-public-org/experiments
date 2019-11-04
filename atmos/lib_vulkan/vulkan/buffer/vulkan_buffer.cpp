@@ -78,7 +78,7 @@ const vulkan_buffer::config& vulkan_buffer::cfg() const
 	return _cfg;
 }
 
-void vulkan_buffer::map( size_t byte_size, buffer_view_base* out_buffer_view )
+void vulkan_buffer::map( buffer_view_base* out_buffer_view )
 {
 	if ( _mapped_view.data() )
 	{
@@ -86,7 +86,7 @@ void vulkan_buffer::map( size_t byte_size, buffer_view_base* out_buffer_view )
 	}
 	else
 	{
-		reserve( byte_size );
+		reserve( out_buffer_view->byte_size() );
 
 		if ( !_buffer )
 		{
@@ -105,7 +105,7 @@ void vulkan_buffer::map( size_t byte_size, buffer_view_base* out_buffer_view )
 
 			size_t stride = out_buffer_view->stride();
 			*out_buffer_view =
-				buffer_view_base( byte_size / stride, mapped, stride );
+				buffer_view_base( out_buffer_view->size(), mapped, stride );
 		}
 	}
 }
@@ -180,12 +180,6 @@ void vulkan_buffer::release()
 	_vma_allocation = nullptr;
 	_mapped_view = buffer_view< char >( 0, nullptr );
 }
-
-size_t vulkan_buffer::byte_capacity() const
-{
-	return _mapped_view.byte_size();
-}
-
 
 const buffer_view< char >& vulkan_buffer::mapped_view() const
 {

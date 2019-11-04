@@ -16,15 +16,15 @@ namespace igpu
 
 		const config& cfg() const override;
 
-		void map( size_t byte_size, buffer_view_base* ) override;
+		void map( buffer_view_base* ) override;
 
 		void unmap() override;
-
-		size_t byte_capacity() const override;
 
 		unsigned gl_handle() const;
 
 		void release();
+
+		size_t byte_size() const;
 
 	private:
 		const config _cfg;
@@ -33,6 +33,7 @@ namespace igpu
 		const unsigned _gl_usage;
 		const unsigned _gl_access;
 
+		size_t _byte_size = 0;
 		size_t _byte_capacity;
 		void* _mapped;
 		perf::metric _gpu_mem_metric;
@@ -49,9 +50,9 @@ namespace igpu
 			return _cfg;
 		}
 
-		void map( size_t byte_size, buffer_view_base* out_buffer_view ) override
+		void map( buffer_view_base* out_buffer_view ) override
 		{
-			_gl_buffer.map( byte_size, out_buffer_view );
+			_gl_buffer.map( out_buffer_view );
 		}
 
 		void unmap() override
@@ -59,12 +60,9 @@ namespace igpu
 			_gl_buffer.unmap();
 		}
 
-		size_t byte_capacity() const override
-		{
-			return _gl_buffer.byte_capacity();
-		}
-
 		unsigned gl_handle() const override;
+
+		size_t byte_size() const;
 
 		template < typename... ARGS >
 		static std::unique_ptr< gl_buffer_t > make(

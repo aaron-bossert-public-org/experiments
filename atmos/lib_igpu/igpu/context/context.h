@@ -70,11 +70,9 @@ namespace igpu
 		virtual std::unique_ptr< program > make_program(
 			const program::config& ) = 0;
 
-		virtual std::unique_ptr< vertex_shader > make_vertex_shader(
-			vector_buffer< uint32_t >&& binary ) = 0;
+		virtual std::unique_ptr< vertex_shader > make_vertex_shader() = 0;
 
-		virtual std::unique_ptr< fragment_shader > make_fragment_shader(
-			vector_buffer< uint32_t >&& binary ) = 0;
+		virtual std::unique_ptr< fragment_shader > make_fragment_shader() = 0;
 
 		virtual std::unique_ptr< render_states > make_render_states(
 			const render_states::config& ) = 0;

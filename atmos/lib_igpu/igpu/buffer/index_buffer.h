@@ -16,9 +16,6 @@ namespace igpu
 
 		virtual const config& cfg() const = 0;
 
-		size_t element_count() const
-		{
-			return byte_capacity() / bytes_per_index( cfg().format );
-		}
+		virtual size_t element_count() const = 0;
 	};
 }

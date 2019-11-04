@@ -12,9 +12,13 @@ namespace igpu
 
 		unsigned gl_format() const;
 
+		size_t element_count() const override;
+
 		static std::unique_ptr< gl_index_buffer > make( const config& );
 
 	protected:
+		virtual size_t byte_size() const = 0;
+
 		gl_index_buffer( unsigned gl_format );
 
 	private:

@@ -271,7 +271,7 @@ namespace
 				comp = igpu::components::FLOAT1;
 				break;
 			case 2:
-				// comp = igpu::components::FLOAT2;
+				comp = igpu::components::FLOAT2;
 				break;
 
 			case 3:

@@ -1,18 +1,25 @@
 #pragma once
 
-#include <string>
 #include <sstream>
+#include <string>
 
-#define APPEND_FAILURE(RESULTS, REASON) RESULTS.append_failure((std::ostringstream() << __FILE__ << "(" << __LINE__ << ") " << __func__ << " failure: " << REASON).str())
-#define CHECK_FAILURE(RESULTS, CONDITION, REASON) if(!(CONDITION)) { APPEND_FAILURE(RESULTS, REASON#CONDITION); }
+#define APPEND_FAILURE( RESULTS, REASON )                             \
+	RESULTS.append_failure( ( std::ostringstream()                    \
+							  << __FILE__ << "(" << __LINE__ << ") "  \
+							  << __func__ << " failure: " << REASON ) \
+								.str() )
+#define CHECK_FAILURE( RESULTS, CONDITION, REASON )   \
+	if ( !( CONDITION ) )                             \
+	{                                                 \
+		APPEND_FAILURE( RESULTS, REASON #CONDITION ); \
+	}
 
 namespace tests
 {
 	class results
 	{
 	public:
-
-		void append_failure(std::string);
+		void append_failure( std::string );
 
 		const std::string& failures() const;
 

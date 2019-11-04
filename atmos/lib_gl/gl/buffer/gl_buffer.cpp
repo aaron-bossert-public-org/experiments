@@ -94,21 +94,21 @@ const gl_buffer::config& gl_buffer::cfg() const
 	return _cfg;
 }
 
-void gl_buffer::map( size_t byte_size, buffer_view_base* out_buffer_view )
+void gl_buffer::map( buffer_view_base* out_buffer_view )
 {
 	if ( _mapped )
 	{
 		LOG_CRITICAL( "map/unmap mismatch" );
-		unmap();
+		return;
 	}
 
 	GLint active_handle = 0;
 	glGetIntegerv( _gl_target, &active_handle );
 	glBindBuffer( _gl_target, _gl_handle );
 
-	if ( _byte_capacity < byte_size )
+	if ( _byte_capacity < out_buffer_view->byte_size() )
 	{
-		_byte_capacity = byte_size;
+		_byte_capacity = out_buffer_view->byte_size();
 		glBufferData( _gl_target, _byte_capacity, nullptr, _gl_usage );
 
 		_gpu_mem_metric.reset();
@@ -122,9 +122,9 @@ void gl_buffer::map( size_t byte_size, buffer_view_base* out_buffer_view )
 #endif
 
 	glBindBuffer( _gl_target, active_handle );
-
+	_byte_size = out_buffer_view->byte_size();
 	*out_buffer_view = buffer_view_base(
-		byte_size / out_buffer_view->stride(),
+		out_buffer_view->size(),
 		_mapped,
 		out_buffer_view->stride() );
 }
@@ -175,7 +175,7 @@ unsigned gl_buffer::gl_handle() const
 	return _gl_handle;
 }
 
-size_t gl_buffer::byte_capacity() const
+size_t gl_buffer::byte_size() const
 {
-	return _byte_capacity;
+	return _byte_size;
 }

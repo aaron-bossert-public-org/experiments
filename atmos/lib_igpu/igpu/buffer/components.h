@@ -12,6 +12,7 @@ namespace igpu
 		components,
 		DEFAULT( FLOAT4 ),
 
+		( UNDEFINED, 0xFFFFFFFF ),
 		( FLOAT1, 0 ),
 		( FLOAT2, 1 ),
 		( FLOAT3, 2 ),

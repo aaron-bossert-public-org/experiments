@@ -47,11 +47,9 @@ namespace igpu
 
 		const config& cfg() const override;
 
-		void map( size_t byte_size, buffer_view_base* ) override;
+		void map( buffer_view_base* ) override;
 
 		void unmap() override;
-
-		size_t byte_size() const override;
 
 		void reserve( size_t byte_capacity );
 

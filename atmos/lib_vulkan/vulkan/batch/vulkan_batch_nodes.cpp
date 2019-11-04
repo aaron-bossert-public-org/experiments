@@ -69,9 +69,9 @@ vulkan_geometry_batch::vulkan_geometry_batch(
 	const vulkan_instance_batch::config& cfg )
 	: _root_batch( cfg.vk.root_batch )
 {
+	vulkan_program* program = ASSERT_CAST( vulkan_program*, cfg.program.get() );
 	vulkan_attribute_finder attribute_finder;
-	if ( attribute_finder
-			 .find_all_attributes( *cfg.vk.program, *cfg.vk.geometry ) )
+	if ( attribute_finder.find_all_attributes( *program, *cfg.vk.geometry ) )
 	{
 		_active_buffer_count = attribute_finder.binding_description_count();
 		for ( size_t i = 0; i < _active_buffer_count; ++i )
@@ -221,7 +221,7 @@ void vulkan_program_batch::stop_draw()
 vulkan_program* vulkan_program_batch::get_key(
 	const vulkan_instance_batch::config& cfg )
 {
-	return cfg.vk.program.get();
+	return ASSERT_CAST( vulkan_program*, cfg.program.get() );
 }
 
 const vulkan_root_batch::config& vulkan_root_batch::cfg() const
@@ -250,7 +250,7 @@ std::unique_ptr< vulkan_batch_binding > vulkan_root_batch::make_binding(
 		base_cfg,
 		{
 			this,
-			memoize_pipeline(
+			/*memoize_pipeline(
 				base_cfg.program,
 				base_cfg.render_states,
 				base_cfg.geometry ),
@@ -259,7 +259,7 @@ std::unique_ptr< vulkan_batch_binding > vulkan_root_batch::make_binding(
 			std::dynamic_pointer_cast< vulkan_geometry, geometry >(
 				cfg.geometry ),
 			std::dynamic_pointer_cast< vulkan_primitives, primitives >(
-				cfg.primitives ),
+				cfg.primitives ),*/
 		},
 	};
 

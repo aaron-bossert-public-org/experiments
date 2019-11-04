@@ -4,13 +4,11 @@ namespace tests
 {
 	class results;
 
-	class lock_ptr_tests {
-
+	class lock_ptr_tests
+	{
 	public:
-
-		static void run(results*);
+		static void run( results* );
 
 	private:
-
 	};
 }

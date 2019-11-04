@@ -1,11 +1,12 @@
 
 #include "framework_tests/main/tests.h"
+
 #include "framework_tests/concurrent/lock_ptr_tests.h"
 #include "framework_tests/concurrent/lockable_tests.h"
 
 using namespace tests;
 
-void results::append_failure(std::string failure)
+void results::append_failure( std::string failure )
 {
 	_failures += "\n" + failure;
 }
@@ -25,9 +26,9 @@ results tests::run()
 {
 	results res;
 
-	lockable_tests::run(&res);
-	
-	lock_ptr_tests::run(&res);
-	
+	lockable_tests::run( &res );
+
+	lock_ptr_tests::run( &res );
+
 	return res;
 }

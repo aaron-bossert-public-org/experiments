@@ -23,8 +23,8 @@
 #endif
 
 #pragma warning( push )
-#pragma warning( \
-	disable : 4189 )	// local variable not initialized, vk_mem_alloc.h
+// local variable not initialized, vk_mem_alloc.h
+#pragma warning( disable : 4189 )
 #if ATMOS_DEBUG
 #	include <vulkan/defines/vulkan_debug.h>
 #else

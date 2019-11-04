@@ -11,7 +11,7 @@ namespace igpu
 {
 	class batch_binding;
 	class program;
-	class graphics_pipeline;
+	class render_states;
 	class geometry;
 	class primitives;
 

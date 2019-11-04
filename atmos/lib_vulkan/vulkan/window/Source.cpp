@@ -1243,7 +1243,8 @@
 //(1000.0 / t_min) << " fps (" << t_min << " ms)" << std::endl;
 // std::cout
 //<< "worst  : " << (1000.0 / t_max) << " fps (" << t_max << " ms)" <<
-// std::endl; 					std::cout << "avg    : " << (1000.0 / t_avg) << " fps
+// std::endl; 					std::cout << "avg    : " << (1000.0 / t_avg) <<
+// " fps
 // ("
 // << t_avg
 //<< " ms)" << std::endl; 					std::cout << std::endl;
@@ -2074,8 +2075,8 @@
 //			}
 //
 //			// For other queue types or if no separate compute queue is present,
-// return the first one to support the requested flags 			for (uint32_t i =
-// 0; i < static_cast<uint32_t>(_queue_family_properties.size()); i++)
+// return the first one to support the requested flags 			for (uint32_t i
+// = 0; i < static_cast<uint32_t>(_queue_family_properties.size()); i++)
 //			{
 //				if (_queue_family_properties[i].queueFlags & queue_flags)
 //				{
@@ -2272,8 +2273,8 @@
 //				{
 //					VkMappedMemoryRange mapped_range =
 // vks::initializers::mappedMemoryRange(); 					mappedRange.memory =
-// *memory; 					mappedRange.offset = 0; 					mappedRange.size
-// = size;
+// *memory; 					mappedRange.offset = 0;
+// mappedRange.size = size;
 //					vkFlushMappedMemoryRanges(_logical_device, 1, &mappedRange);
 //				}
 //				vkUnmapMemory(_logical_device, *memory);
@@ -2988,12 +2989,12 @@
 // vks::initializers::image_create_info(); image_create_info.imageType =
 // VK_IMAGE_TYPE_2D; 				image_create_info.format = format;
 // image_create_info.extent = { _width, _height, 1 };
-// image_create_info.mipLevels = 1; 				image_create_info.arrayLayers
-// = 1; 				image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
-// image_create_info.tiling
+// image_create_info.mipLevels = 1; image_create_info.arrayLayers = 1;
+// image_create_info.samples = VK_SAMPLE_COUNT_1_BIT; image_create_info.tiling
 //= VK_IMAGE_TILING_LINEAR; 				image_create_info.usage =
-//image_usage_flags; 				image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-//				image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+// image_usage_flags; 				image_create_info.sharingMode =
+// VK_SHARING_MODE_EXCLUSIVE; 				image_create_info.initialLayout =
+// VK_IMAGE_LAYOUT_UNDEFINED;
 //
 //				// Load mip map level 0 to linear tiling image
 //				vkCreateImage(device->_logical_device, &image_create_info,

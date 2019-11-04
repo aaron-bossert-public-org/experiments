@@ -33,11 +33,9 @@ const vulkan_staged_buffer::config& vulkan_staged_buffer::cfg() const
 	return _cfg;
 }
 
-void vulkan_staged_buffer::map(
-	size_t byte_size,
-	buffer_view_base* out_buffer_view )
+void vulkan_staged_buffer::map( buffer_view_base* out_buffer_view )
 {
-	_staging_buffer.map( byte_size, out_buffer_view );
+	_staging_buffer.map( out_buffer_view );
 	_last_mapped_bytes = out_buffer_view->byte_size();
 }
 
@@ -63,13 +61,6 @@ void vulkan_staged_buffer::unmap()
 			_staging_buffer.release();
 		}
 	}
-}
-
-size_t vulkan_staged_buffer::byte_capacity() const
-{
-	size_t capacity = _staging_buffer.byte_capacity();
-
-	return capacity ? capacity : _gpu_buffer.byte_capacity();
 }
 
 void vulkan_staged_buffer::release()

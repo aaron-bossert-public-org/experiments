@@ -17,6 +17,7 @@
 #define ENUM_FLAGS_SERIALIZABLE_TYPE( ENUM, TYPE, DEF, VAL, ... ) \
 	ENUM_FLAGS_SERIALIZABLE_( ENUM, TYPE, DEF, VAL, __VA_ARGS__ )
 
+// clang-format off
 #define ENUM_SERIALIZABLE_( ENUM, TYPE, DEF, ... )  \
 	ENUM_CLASS_DECL( ENUM, TYPE, DEF, __VA_ARGS__ ) \
 	ENUM_IS_VALID( ENUM, __VA_ARGS__ )              \
@@ -54,14 +55,14 @@
 		return ( NAME )( ~(TYPE)val );   \
 	}
 
-#define ENUM_FLAG_BINARY_OP( NAME, TYPE, OP )          \
-	inline NAME operator OP( NAME lhs, NAME rhs )      \
-	{                                                  \
-		return ( NAME )( (TYPE)lhs OP( TYPE ) rhs );   \
-	}                                                  \
-	inline NAME& operator OP =( NAME& lhs, NAME rhs )  \
-	{                                                  \
-		return (NAME&)( *(TYPE*)&lhs OP = (TYPE)rhs ); \
+#define ENUM_FLAG_BINARY_OP( NAME, TYPE, OP )         \
+	inline NAME operator OP( NAME lhs, NAME rhs )     \
+	{                                                 \
+		return ( NAME )( (TYPE)lhs OP( TYPE ) rhs );  \
+	}                                                 \
+	inline NAME& operator OP=( NAME& lhs, NAME rhs )  \
+	{                                                 \
+		return (NAME&)( *(TYPE*)&lhs OP= (TYPE)rhs ); \
 	}
 
 #define ENUM_LIST( ... )   VA_DISTRIBUTE_PRE( ENUM_LIST_, __VA_ARGS__ )
@@ -132,7 +133,6 @@ NAME:                                         \
 #define VA_MACRO_IMPL_( base, count, args ) base##count##args
 
 
-// clang-format off
 #ifdef _MSC_VER // microsoft compilers
 
 #   define GET_ARG_COUNT(...)  INTERNAL_EXPAND_ARGS_PRIVATE(INTERNAL_ARGS_AUGMENTER(__VA_ARGS__))

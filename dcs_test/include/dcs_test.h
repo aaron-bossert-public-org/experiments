@@ -10,23 +10,19 @@ namespace igpu
 class dcs_test
 {
 public:
-
 	struct config
 	{
-		std::shared_ptr<igpu::vulkan_context> context;
+		std::shared_ptr< igpu::vulkan_context > context;
 	};
 
-	static std::unique_ptr<dcs_test> make(
-		const config&);
+	static std::unique_ptr< dcs_test > make( const config& );
 
 	~dcs_test();
 
 	bool advance();
 
 private:
-
-	dcs_test(
-		const config&);
+	dcs_test( const config& );
 
 	void update();
 	void handle_input();

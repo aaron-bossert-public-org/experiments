@@ -32,6 +32,11 @@ unsigned gl_index_buffer::gl_format() const
 	return _gl_format;
 }
 
+size_t gl_index_buffer::element_count() const
+{
+	return byte_size() / bytes_per_index( cfg().format );
+}
+
 std::unique_ptr< gl_index_buffer > gl_index_buffer::make( const config& cfg )
 {
 	if ( !is_valid( cfg.format ) )
