@@ -1,7 +1,7 @@
 
-#include <gl/window/gl_window.h>
-#include <GLFW/glfw3.h>
-#include <gl/defines/gl_includes.h>
+#include "gl/window/gl_window.h"
+#include "GLFW/glfw3.h"
+#include "gl/defines/gl_includes.h"
 
 using namespace igpu;
 

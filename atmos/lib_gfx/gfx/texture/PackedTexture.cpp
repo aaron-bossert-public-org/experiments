@@ -1,7 +1,7 @@
 
-#include <gfx/texture/packed_texture.h>
+#include "gfx/texture/packed_texture.h"
 
-#include <framework/logging/log.h>
+#include "framework/logging/log.h"
 
 using namespace gfx;
 

@@ -2,8 +2,8 @@
 #pragma once
 
 #include <functional>
-#include <gfx/perf/context/perf_test_config.h>
-#include <gfx/context/draw_pass_bundle.h>
+#include "gfx/perf/context/perf_test_config.h"
+#include "gfx/context/draw_pass_bundle.h"
 
 namespace igpu
 {

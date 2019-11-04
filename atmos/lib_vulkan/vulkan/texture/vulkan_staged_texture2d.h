@@ -1,11 +1,11 @@
 
 #pragma once
 
-#include <framework/utility/scoped_ptr.h>
-#include <framework/perf/metrics.h>
+#include "framework/utility/scoped_ptr.h"
+#include "framework/perf/metrics.h"
 
-#include <vulkan/buffer/vulkan_buffer.h>
-#include <vulkan/texture/vulkan_texture2d.h>
+#include "vulkan/buffer/vulkan_buffer.h"
+#include "vulkan/texture/vulkan_texture2d.h"
 
 
 namespace igpu
@@ -33,15 +33,13 @@ namespace igpu
 
 		const texture2d::state& current_state() const override;
 
-		size_t byte_capacity() const override;
-
 		vulkan_image& gpu_resource() override;
 
 		const vulkan_image& gpu_resource() const override;
 		
 	private:
 
-		void unmap(
+		void upload(
 			const buffer_view<char>&,
 			const texture2d::state&);
 

@@ -1,11 +1,11 @@
 
 #pragma once
 
-#include <igpu/buffer/buffer.h>
-#include <igpu/texture/texture_format.h>
-#include <igpu/texture/sampler.h>
+#include "igpu/buffer/buffer.h"
+#include "igpu/texture/texture_format.h"
+#include "igpu/texture/sampler.h"
 
-#include <glm/vec2.hpp>
+#include "glm/vec2.hpp"
 
 namespace igpu
 {

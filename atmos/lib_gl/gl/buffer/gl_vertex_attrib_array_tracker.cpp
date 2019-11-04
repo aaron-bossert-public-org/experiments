@@ -1,13 +1,11 @@
 //
-//#include <gl/buffer/gl_vertex_attrib_array_tracker.h>
+//#include "gl/buffer/gl_vertex_attrib_array_tracker.h"
 //
 //
-//// GL implementation includes - begin
-//#include <gl/buffer/gl_geometry.h>
-//#include <gl/buffer/gl_vertex_buffer.h>
-//#include <gl/defines/gl_includes.h>
-//#include <gl/material/gl_program.h>
-//// GL implementation includes - end
+//#include "gl/buffer/gl_geometry.h"
+//#include "gl/buffer/gl_vertex_buffer.h"
+//#include "gl/defines/gl_includes.h"
+//#include "gl/material/gl_program.h"
 //
 //using namespace igpu;
 //

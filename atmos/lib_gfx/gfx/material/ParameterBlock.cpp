@@ -1,11 +1,11 @@
 
-#include <gfx/material/parameter_block.h>
+#include "gfx/material/parameter_block.h"
 
-#include <framework/logging/log.h>
-#include <igpu/material/program.h>
-#include <igpu/material/parameter.h>
-#include <igpu/texture/render_texture_2d.h>
-#include <igpu/texture/texture_2d.h>
+#include "framework/logging/log.h"
+#include "igpu/material/program.h"
+#include "igpu/material/parameter.h"
+#include "igpu/texture/render_texture_2d.h"
+#include "igpu/texture/texture_2d.h"
 
 using namespace gfx;
 

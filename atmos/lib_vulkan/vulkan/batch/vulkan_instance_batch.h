@@ -1,9 +1,8 @@
 
 #pragma once
 
-#include <igpu/batch/instance_batch.h>
-
-#include <igpu/batch/batch_binding.h>
+#include "igpu/batch/batch_binding.h"
+#include "igpu/batch/instance_batch.h"
 
 namespace igpu
 {
@@ -18,74 +17,74 @@ namespace igpu
 	class vulkan_instance_batch : public instance_batch
 	{
 	public:
-
 		struct config : instance_batch::config
 		{
 			struct vulkan
 			{
 				vulkan_root_batch* root_batch;
-				std::shared_ptr<vulkan_graphics_pipeline> graphics_pipeline;
-				std::shared_ptr<vulkan_primitives> material;
-				std::shared_ptr<vulkan_geometry> geometry;
-				std::shared_ptr<vulkan_primitives> primitives;
+				std::shared_ptr< vulkan_graphics_pipeline > graphics_pipeline;
+				std::shared_ptr< vulkan_primitives > material;
+				std::shared_ptr< vulkan_geometry > geometry;
+				std::shared_ptr< vulkan_primitives > primitives;
 			};
-			
+
 			vulkan vk;
 		};
 
-		vulkan_instance_batch(
-			const config& cfg);
+		vulkan_instance_batch( const config& cfg );
 
-		void enabled(bool) override;
+		void enabled( bool ) override;
 
-		void base_vertex(const std::optional < ptrdiff_t >&) override;
+		void base_vertex( const std::optional< ptrdiff_t >& ) override;
 
-		void instance_start(const std::optional < size_t >&) override;
+		void instance_start( const std::optional< size_t >& ) override;
 
-		void instance_count(const std::optional < size_t >&) override;
+		void instance_count( const std::optional< size_t >& ) override;
 
-		void element_start(const std::optional < size_t >&) override;
+		void element_start( const std::optional< size_t >& ) override;
 
-		void element_count(const std::optional < size_t >&) override;
+		void element_count( const std::optional< size_t >& ) override;
 
-		void visibility_sphere(const std::optional<utility::sphere>&) override;
+		void visibility_sphere(
+			const std::optional< utility::sphere >& ) override;
 
 		bool enabled() const override;
 
-		const std::optional < ptrdiff_t >& base_vertex() const override;
+		const std::optional< ptrdiff_t >& base_vertex() const override;
 
-		const std::optional < size_t >& instance_start() const override;
+		const std::optional< size_t >& instance_start() const override;
 
-		const std::optional < size_t >& instance_count() const override;
+		const std::optional< size_t >& instance_count() const override;
 
-		const std::optional < size_t >& element_start() const override;
+		const std::optional< size_t >& element_start() const override;
 
-		const std::optional < size_t >& element_count() const override;
+		const std::optional< size_t >& element_count() const override;
 
-		const std::optional<utility::sphere>& visibility_sphere() const override;
+		const std::optional< utility::sphere >& visibility_sphere()
+			const override;
 
-		bool can_render(vulkan_batch_draw_state*);
+		bool can_render( vulkan_batch_draw_state* );
 
-		void draw(const vulkan_batch_draw_state&);
+		void draw( const vulkan_batch_draw_state& );
 
 		vulkan_instance_batch() = default;
-		vulkan_instance_batch(vulkan_instance_batch&&) = default;
-		vulkan_instance_batch& operator= (vulkan_instance_batch&&) = default;
+		vulkan_instance_batch( vulkan_instance_batch&& ) = default;
+		vulkan_instance_batch& operator=( vulkan_instance_batch&& ) = default;
 
 	private:
-
 		bool _enabled = true;
-		std::optional < ptrdiff_t > _base_vertex;
-		std::optional < size_t > _instance_start;
-		std::optional < size_t > _instance_count;
-		std::optional < size_t > _element_start;
-		std::optional < size_t > _element_count;
+		std::optional< ptrdiff_t > _base_vertex;
+		std::optional< size_t > _instance_start;
+		std::optional< size_t > _instance_count;
+		std::optional< size_t > _element_start;
+		std::optional< size_t > _element_count;
 
-#pragma warning(push)
-#pragma warning(disable:4324)
-		//  warning C4324: 'std::_Optional_destruct_base<_Ty,true>': structure was padded due to alignment specifier
-		std::optional < utility::sphere > _visibility_sphere;
-#pragma warning(pop)
+#pragma warning( push )
+#pragma warning( disable : 4324 )
+		//  warning C4324: 'std::_Optional_destruct_base<_Ty,true>': structure
+		//  was padded due to alignment specifier
+		std::optional< utility::sphere > _visibility_sphere;
+#pragma warning( pop )
 		vulkan_primitives* _primitives = nullptr;
 	};
 }

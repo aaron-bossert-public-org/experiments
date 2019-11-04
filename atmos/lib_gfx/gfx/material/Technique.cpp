@@ -1,5 +1,5 @@
 
-#include <gfx/material/technique.h>
+#include "gfx/material/technique.h"
 
 using namespace gfx;
 

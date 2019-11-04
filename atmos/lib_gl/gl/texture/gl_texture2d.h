@@ -2,10 +2,10 @@
 #pragma once
 
 
-#include <igpu/buffer/buffer_raw.h>
-#include <igpu/texture/texture2d.h>
-#include <framework/perf/metrics.h>
-#include <glm/vec2.hpp>
+#include "igpu/buffer/buffer_raw.h"
+#include "igpu/texture/texture2d.h"
+#include "framework/perf/metrics.h"
+#include "glm/vec2.hpp"
 
 namespace igpu
 {

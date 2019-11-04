@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <igpu/buffer/index_buffer.h>
+#include "igpu/buffer/index_buffer.h"
 
 namespace igpu
 {

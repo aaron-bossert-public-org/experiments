@@ -1,7 +1,7 @@
 
-#include <framework_tests/main/tests.h>
-#include <framework_tests/concurrent/lock_ptr_tests.h>
-#include <framework_tests/concurrent/lockable_tests.h>
+#include "framework_tests/main/tests.h"
+#include "framework_tests/concurrent/lock_ptr_tests.h"
+#include "framework_tests/concurrent/lockable_tests.h"
 
 using namespace tests;
 

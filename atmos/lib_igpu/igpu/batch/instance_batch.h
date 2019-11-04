@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <igpu/utility/utility_types.h>
+#include "igpu/utility/utility_types.h"
 
 #include <memory>
 #include <optional>

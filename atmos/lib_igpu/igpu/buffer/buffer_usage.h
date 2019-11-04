@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <framework/meta_programming/va_macro.h>
-#include <framework/utility/buffer_view.h>
+#include "framework/meta_programming/va_macro.h"
+#include "framework/utility/buffer_view.h"
 
 #include <memory>
 #include <stdint.h>

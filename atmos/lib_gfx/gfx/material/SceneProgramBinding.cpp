@@ -1,9 +1,9 @@
 
-#include <gfx/material/scene_program_binding.h>
+#include "gfx/material/scene_program_binding.h"
 
-#include <framework/logging/log.h>
-#include <igpu/material/program.h>
-#include <gfx/material/scene_parameters_manager.h>
+#include "framework/logging/log.h"
+#include "igpu/material/program.h"
+#include "gfx/material/scene_parameters_manager.h"
 
 using namespace gfx;
 

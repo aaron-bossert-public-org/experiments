@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <igpu/material/primitive.h>
+#include "igpu/material/primitive.h"
 
 #define SCENE_PARAMETERS_TUP(OP)      \
 OP(view_matrix     ,glm::mat4x4)\

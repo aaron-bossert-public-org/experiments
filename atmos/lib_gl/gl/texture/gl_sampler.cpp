@@ -1,9 +1,7 @@
 //
-//#include <igpu/texture/sampler.h>
+//#include "igpu/texture/sampler.h"
 //
-//// GL implementation includes - begin
-//#include <gl/defines/gl_includes.h>
-//// GL implementation includes - end
+//#include "gl/defines/gl_includes.h"
 //using namespace igpu;
 //
 //

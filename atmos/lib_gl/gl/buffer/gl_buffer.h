@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <igpu/buffer/buffer.h>
-#include <framework/perf/metrics.h>
+#include "igpu/buffer/buffer.h"
+#include "framework/perf/metrics.h"
 
 namespace igpu
 {

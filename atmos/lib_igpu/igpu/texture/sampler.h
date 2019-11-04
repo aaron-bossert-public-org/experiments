@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <framework/meta_programming/va_macro.h>
+#include "framework/meta_programming/va_macro.h"
 #include <string>
 
 namespace igpu

@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <gl/defines/gl_includes.h>
-#include <igpu/buffer/buffer_raw.h>
+#include "gl/defines/gl_includes.h"
+#include "igpu/buffer/buffer_raw.h"
 
 namespace igpu
 {   

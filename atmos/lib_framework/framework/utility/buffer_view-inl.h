@@ -1,12 +1,14 @@
 
 #pragma once
 
-#include <framework/logging/log.h>
+#include "framework/logging/log.h"
 
 inline
 buffer_view_base::buffer_view_base(size_t size, void* data, size_t stride)
+	: _size(size)
+	, _stride(stride)
+	, _data(data)
 {
-    set(size, data, stride);
 }
 
 template <typename T>
@@ -29,15 +31,6 @@ void buffer_view_base::reset()
 {
     _size = 0;
     _data = nullptr;
-}
-    
-inline
-void buffer_view_base::set(size_t size, void* data, size_t stride)
-{
-    _size = size;
-    _data = data;
-        
-    if( -1 != stride ) _stride = stride;
 }
     
 inline

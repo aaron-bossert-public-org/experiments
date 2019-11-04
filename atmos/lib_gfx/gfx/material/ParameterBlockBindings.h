@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <igpu/material/program.h>
-#include <gfx/material/parameter_block.h>
+#include "igpu/material/program.h"
+#include "gfx/material/parameter_block.h"
 
 namespace gfx
 {

@@ -2,7 +2,7 @@
 #pragma once
 
 #include <string_view>
-#include <framework/meta_programming/va_macro.h>
+#include "framework/meta_programming/va_macro.h"
 
 #define LOG_CRITICAL(...) logging::log_context(__FILE__, __LINE__, __FUNCSIG__, logging::severity::CRITICAL, __VA_ARGS__); __debugbreak()
 #define LOG_WARNING(...) logging::log_context(__FILE__, __LINE__, __FUNCSIG__, logging::severity::WARNING, __VA_ARGS__); __debugbreak()

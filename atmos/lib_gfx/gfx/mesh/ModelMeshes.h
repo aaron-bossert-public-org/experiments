@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <gfx/material/technique.h>
+#include "gfx/material/technique.h"
 
 namespace gfx
 {

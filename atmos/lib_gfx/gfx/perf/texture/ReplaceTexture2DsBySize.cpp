@@ -1,9 +1,9 @@
 
-#include <gfx/perf/texture/replace_texture_2ds_by_size.h>
+#include "gfx/perf/texture/replace_texture_2ds_by_size.h"
 
-#include <igpu/material/parameter.h>
-#include <igpu/texture/texture_2d.h>
-#include <gfx/material/program_instance.h>
+#include "igpu/material/parameter.h"
+#include "igpu/texture/texture_2d.h"
+#include "gfx/material/program_instance.h"
 
 using namespace gfx;
 

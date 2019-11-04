@@ -1,12 +1,12 @@
 
 #pragma once
 
-#include <vulkan/buffer/vulkan_vertex_parameter.h>
-#include <vulkan/shader/vulkan_parameter.h>
+#include "vulkan/buffer/vulkan_vertex_parameter.h"
+#include "vulkan/shader/vulkan_parameter.h"
 
-#include <igpu/shader/program.h>
-#include <framework/perf/metrics.h>
-#include <framework/utility/buffer_view.h>
+#include "igpu/shader/program.h"
+#include "framework/perf/metrics.h"
+#include "framework/utility/buffer_view.h"
 
 #include <array>
 

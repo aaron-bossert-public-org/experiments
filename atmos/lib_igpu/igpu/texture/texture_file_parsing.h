@@ -1,12 +1,12 @@
 
 #pragma once
 
-#include <framework/meta_programming/va_macro.h>
-#include <framework/utility/buffer_view.h>
-#include <igpu/buffer/buffer.h>
-#include <igpu/texture/sampler.h>
-#include <igpu/texture/texture2d.h>
-#include <glm/vec2.hpp>
+#include "framework/meta_programming/va_macro.h"
+#include "framework/utility/buffer_view.h"
+#include "igpu/buffer/buffer.h"
+#include "igpu/texture/sampler.h"
+#include "igpu/texture/texture2d.h"
+#include "glm/vec2.hpp"
 #include <memory>
 #include <string>
 

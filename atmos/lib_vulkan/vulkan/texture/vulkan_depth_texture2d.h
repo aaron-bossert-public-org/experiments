@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include <igpu/texture/depth_texture2d.h>
+#include "igpu/texture/depth_texture2d.h"
 
-#include <vulkan/defines/vulkan_includes.h>
-#include <vulkan/texture/vulkan_depth_target.h>
+#include "vulkan/defines/vulkan_includes.h"
+#include "vulkan/texture/vulkan_depth_target.h"
 
 namespace igpu
 {

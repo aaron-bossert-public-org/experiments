@@ -3,8 +3,8 @@
 
 #include <functional>
 
-#include <gfx/scene/scene_stage_binding.h>
-#include <gfx/context/draw_pass_bundle.h>
+#include "gfx/scene/scene_stage_binding.h"
+#include "gfx/context/draw_pass_bundle.h"
 
 namespace igpu
 {

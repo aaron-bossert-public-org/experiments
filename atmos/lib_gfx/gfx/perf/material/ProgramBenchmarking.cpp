@@ -1,10 +1,10 @@
 
-#include <gfx/perf/material/program_benchmarking.h>
-#include <gfx/perf/context/draw_pass_modifier.h>
-#include <gfx/material/program_instance.h>
-#include <gfx/material/scene_parameters_manager.h>
-#include <gfx/scene/scene_stage.h>
-#include <gfx/context/draw_pass_bundle.h>
+#include "gfx/perf/material/program_benchmarking.h"
+#include "gfx/perf/context/draw_pass_modifier.h"
+#include "gfx/material/program_instance.h"
+#include "gfx/material/scene_parameters_manager.h"
+#include "gfx/scene/scene_stage.h"
+#include "gfx/context/draw_pass_bundle.h"
 
 using namespace gfx;
 

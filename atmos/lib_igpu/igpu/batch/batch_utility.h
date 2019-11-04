@@ -1,11 +1,11 @@
 
 #pragma once
 
-#include <framework/logging/log.h>
-#include <framework/utility/associative_vector.h>
+#include "framework/logging/log.h"
+#include "framework/utility/associative_vector.h"
 
-#include <igpu/batch/batch_nodes.h>
-#include <igpu/batch/batch_binding.h>
+#include "igpu/batch/batch_nodes.h"
+#include "igpu/batch/batch_binding.h"
 
 namespace igpu
 {

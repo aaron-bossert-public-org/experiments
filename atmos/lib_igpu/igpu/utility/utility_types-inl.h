@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <glm/mat4x4.hpp>
-#include <glm/geometric.hpp>
+#include "glm/mat4x4.hpp"
+#include "glm/geometric.hpp"
 
 namespace utility
 {

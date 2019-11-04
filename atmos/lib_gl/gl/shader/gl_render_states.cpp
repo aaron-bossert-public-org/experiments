@@ -1,11 +1,9 @@
 //
-//#include <gl/material/gl_render_states.h>
+//#include "gl/material/gl_render_states.h"
 //
-//#include <framework/logging/log.h>
+//#include "framework/logging/log.h"
 //
-//// GL implementation includes - begin
-//#include <gl/defines/gl_includes.h>
-//// GL implementation includes - end
+//#include "gl/defines/gl_includes.h"
 //
 //using namespace igpu;
 //

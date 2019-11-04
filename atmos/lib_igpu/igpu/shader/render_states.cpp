@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <igpu/shader/render_states.h>
+#include "igpu/shader/render_states.h"
 
 
 int igpu::mem_compare(const render_states::config& lhs, const render_states::config& rhs)

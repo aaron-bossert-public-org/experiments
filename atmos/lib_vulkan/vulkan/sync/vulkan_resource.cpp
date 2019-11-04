@@ -1,6 +1,6 @@
 
-#include <vulkan/sync/vulkan_resource.h>
-#include <vulkan/sync/vulkan_fence.h>
+#include "vulkan/sync/vulkan_resource.h"
+#include "vulkan/sync/vulkan_fence.h"
 
 using namespace igpu;
 void vulkan_resource::add_fence(const std::shared_ptr<vulkan_fence>& fence)

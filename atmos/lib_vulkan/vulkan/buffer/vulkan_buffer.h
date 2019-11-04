@@ -2,13 +2,13 @@
 #pragma once
 
 
-#include <framework/perf/metrics.h>
-#include <framework/utility/scoped_ptr.h>
+#include "framework/perf/metrics.h"
+#include "framework/utility/scoped_ptr.h"
 
-#include <igpu/buffer/buffer.h>
+#include "igpu/buffer/buffer.h"
 
-#include <vulkan/defines/vulkan_includes.h>
-#include <vulkan/sync/vulkan_resource.h>
+#include "vulkan/defines/vulkan_includes.h"
+#include "vulkan/sync/vulkan_resource.h"
 
 
 namespace igpu
@@ -49,7 +49,7 @@ namespace igpu
 
 		void unmap() override;
 
-		size_t byte_capacity() const override;
+		size_t byte_size() const override;
 
 		void reserve(size_t byte_capacity);
 

@@ -1,8 +1,8 @@
 
-#include <gfx/material/scene_parameters_manager.h>
+#include "gfx/material/scene_parameters_manager.h"
 
-#include <gfx/material/parameter_block.h>
-#include <gfx/material/scene_program_binding.h>
+#include "gfx/material/parameter_block.h"
+#include "gfx/material/scene_program_binding.h"
 
 using namespace gfx;
 

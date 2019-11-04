@@ -1,12 +1,12 @@
 
-#include <gfx/material/program_instance.h>
+#include "gfx/material/program_instance.h"
 
-#include <framework/logging/log.h>
-#include <igpu/material/parameter.h>
-#include <igpu/material/program.h>
-#include <gfx/material/parameter_block.h>
-#include <gfx/material/parameter_block_bindings.h>
-#include <gfx/material/scene_program_binding.h>
+#include "framework/logging/log.h"
+#include "igpu/material/parameter.h"
+#include "igpu/material/program.h"
+#include "gfx/material/parameter_block.h"
+#include "gfx/material/parameter_block_bindings.h"
+#include "gfx/material/scene_program_binding.h"
 
 using namespace gfx;
 

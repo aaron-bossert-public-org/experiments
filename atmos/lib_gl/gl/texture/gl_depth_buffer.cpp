@@ -1,8 +1,6 @@
-#include <gl/texture/gl_depth_buffer.h>
+#include "gl/texture/gl_depth_buffer.h"
 
-// GL implementation includes - begin
-#include <gl/defines/gl_includes.h>
-// GL implementation includes - end
+#include "gl/defines/gl_includes.h"
 
 
 using namespace igpu;

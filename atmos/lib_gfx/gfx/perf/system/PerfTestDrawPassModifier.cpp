@@ -1,11 +1,11 @@
 
-#include <gfx/perf/context/perf_test_draw_pass_modifier.h>
+#include "gfx/perf/context/perf_test_draw_pass_modifier.h"
 
-#include <framework/logging/log.h>
+#include "framework/logging/log.h"
 
-#include <gfx/mesh/geometry.h>
-#include <gfx/perf/mesh/reduced_polycount_geometry.h>
-#include <gfx/perf/texture/replace_texture_2ds_by_size.h>
+#include "gfx/mesh/geometry.h"
+#include "gfx/perf/mesh/reduced_polycount_geometry.h"
+#include "gfx/perf/texture/replace_texture_2ds_by_size.h"
 
 using namespace gfx
 

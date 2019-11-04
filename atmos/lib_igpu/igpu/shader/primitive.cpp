@@ -1,8 +1,8 @@
 
-#include <igpu/shader/primitive.h>
+#include "igpu/shader/primitive.h"
 
-#include <igpu/texture/depth_texture2d.h>
-#include <igpu/texture/texture2d.h>
+#include "igpu/texture/depth_texture2d.h"
+#include "igpu/texture/texture2d.h"
 
 using namespace igpu;
 

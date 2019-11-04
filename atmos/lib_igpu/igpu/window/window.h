@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include <framework/meta_programming/va_macro.h>
+#include "framework/meta_programming/va_macro.h"
 
-#include <glm/glm.hpp>
+#include "glm/glm.hpp"
 #include <memory>
 
 namespace igpu

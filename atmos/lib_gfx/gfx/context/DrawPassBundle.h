@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include <igpu/material/program.h>
-#include <gfx/material/technique.h>
-#include <gfx/scene/scene_stage_binding.h>
+#include "igpu/material/program.h"
+#include "gfx/material/technique.h"
+#include "gfx/scene/scene_stage_binding.h"
 
 namespace gfx
 {

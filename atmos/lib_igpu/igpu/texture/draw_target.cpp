@@ -1,10 +1,10 @@
 
-#include <igpu/texture/draw_target.h>
+#include "igpu/texture/draw_target.h"
 
-#include <igpu/texture/render_buffer.h>
-#include <igpu/texture/depth_buffer.h>
+#include "igpu/texture/render_buffer.h"
+#include "igpu/texture/depth_buffer.h"
 
-#include <glm/common.hpp>
+#include "glm/common.hpp"
 
 using namespace igpu;
 

@@ -1,9 +1,9 @@
-#include <igpu/shader/attribute_finder.h>
+#include "igpu/shader/attribute_finder.h"
 
-#include <igpu/buffer/geometry.h>
-#include <igpu/buffer/vertex_buffer.h>
-#include <igpu/buffer/vertex_parameter.h>
-#include <igpu/shader/program.h>
+#include "igpu/buffer/geometry.h"
+#include "igpu/buffer/vertex_buffer.h"
+#include "igpu/buffer/vertex_parameter.h"
+#include "igpu/shader/program.h"
 
 using namespace igpu;
 

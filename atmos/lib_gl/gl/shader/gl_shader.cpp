@@ -1,7 +1,7 @@
 ﻿
-#include <gl/material/gl_vertex_shader.h>
-#include <gl/material/gl_shader.h>
-#include <gl/material/gl_compiler.h>
+#include "gl/material/gl_vertex_shader.h"
+#include "gl/material/gl_shader.h"
+#include "gl/material/gl_compiler.h"
 
 using namespace igpu;
 

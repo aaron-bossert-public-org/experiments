@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include <gl/buffer/gl_index_buffer.h>
-#include <gl/buffer/gl_vertex_buffer.h>
+#include "gl/buffer/gl_index_buffer.h"
+#include "gl/buffer/gl_vertex_buffer.h"
 
-#include <igpu/buffer/geometry.h>
+#include "igpu/buffer/geometry.h"
 
 #include <optional>
 

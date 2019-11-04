@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include <igpu/shader/parameter.h>
-#include <igpu/buffer/vertex_parameter.h>
-#include <igpu/shader/shader_stages.h>
+#include "igpu/shader/parameter.h"
+#include "igpu/buffer/vertex_parameter.h"
+#include "igpu/shader/shader_stages.h"
 
 class buffer_view_base;
 

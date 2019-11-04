@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <gfx/scene/general_render_stage.h>
+#include "gfx/scene/general_render_stage.h"
 
 namespace gfx
 {

@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <igpu/batch/opaque_batch.h>
+#include "igpu/batch/opaque_batch.h"
 
 namespace igpu
 {
@@ -17,7 +17,7 @@ namespace igpu
 			{
 				vulkan_context* context = nullptr;
 			};
-			
+
 			vulkan vk;
 		};
 
@@ -25,23 +25,20 @@ namespace igpu
 
 		~vulkan_opaque_batch() override;
 
-		void render(const utility::frustum& frustum) override;
+		void render( const utility::frustum& frustum ) override;
 
-		std::unique_ptr<batch_binding> make_binding(
-			const instance_batch::config&) override;
+		std::unique_ptr< batch_binding > make_binding(
+			const instance_batch::config& ) override;
 
-		static std::unique_ptr<vulkan_opaque_batch> make(
-			const config&);
+		static std::unique_ptr< vulkan_opaque_batch > make( const config& );
 
 	private:
-
 		vulkan_opaque_batch(
 			const config&,
-			std::unique_ptr<vulkan_root_batch>);
+			std::unique_ptr< vulkan_root_batch > );
 
 	private:
-
 		const config _cfg;
-		std::unique_ptr<vulkan_root_batch> _root_batch;
+		std::unique_ptr< vulkan_root_batch > _root_batch;
 	};
 }

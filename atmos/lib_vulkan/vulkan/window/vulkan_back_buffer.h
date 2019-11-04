@@ -1,13 +1,13 @@
 
 #pragma once
 
+#include "vulkan/defines/vulkan_includes.h"
+#include "vulkan/texture/vulkan_depth_buffer.h"
+#include "vulkan/texture/vulkan_render_buffer.h"
+
+#include "igpu/window/back_buffer.h"
+
 #include <vector>
-
-#include <vulkan/defines/vulkan_includes.h>
-#include <vulkan/texture/vulkan_render_buffer.h>
-#include <vulkan/texture/vulkan_depth_buffer.h>
-
-#include <igpu/window/back_buffer.h>
 
 namespace igpu
 {
@@ -16,8 +16,7 @@ namespace igpu
 	class vulkan_back_buffer : public back_buffer
 	{
 	public:
-
-		struct config : back_buffer::config 
+		struct config : back_buffer::config
 		{
 			struct vulkan
 			{
@@ -43,36 +42,34 @@ namespace igpu
 
 		VkRenderPass render_pass() const;
 
-		const std::vector<VkFramebuffer>& framebuffers() const;
+		const std::vector< VkFramebuffer >& framebuffers() const;
 
-		static std::unique_ptr<vulkan_back_buffer> make(const config&);
+		static std::unique_ptr< vulkan_back_buffer > make( const config& );
 
 		~vulkan_back_buffer();
 
 	private:
-
 		vulkan_back_buffer(
 			const config&,
 			VkSwapchainKHR,
 			VkRenderPass,
-			const std::vector<VkImage>&,
-			const std::vector<VkImageView>&,
-			const std::vector<VkFramebuffer>&,
-			std::unique_ptr<vulkan_render_buffer>,
-			std::unique_ptr<vulkan_depth_buffer>);
+			const std::vector< VkImage >&,
+			const std::vector< VkImageView >&,
+			const std::vector< VkFramebuffer >&,
+			std::unique_ptr< vulkan_render_buffer >,
+			std::unique_ptr< vulkan_depth_buffer > );
 
 	private:
-
 		const config _cfg;
 
 		VkSwapchainKHR _swap_chain;
 		VkRenderPass _render_pass;
 
-		std::vector<VkImage> _images;
-		std::vector<VkImageView> _image_views;
-		std::vector<VkFramebuffer> _framebuffers;
+		std::vector< VkImage > _images;
+		std::vector< VkImageView > _image_views;
+		std::vector< VkFramebuffer > _framebuffers;
 
-		std::unique_ptr < vulkan_render_buffer > _color;
-		std::unique_ptr < vulkan_depth_buffer > _depth;
+		std::unique_ptr< vulkan_render_buffer > _color;
+		std::unique_ptr< vulkan_depth_buffer > _depth;
 	};
 }

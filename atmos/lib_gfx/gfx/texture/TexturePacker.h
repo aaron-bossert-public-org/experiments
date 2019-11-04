@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include <igpu/texture/texture_format.h>
-#include <gfx/texture/packed_texture.h>
+#include "igpu/texture/texture_format.h"
+#include "gfx/texture/packed_texture.h"
 
-#include <igpu/texture/texel_buffer_2d.h>
+#include "igpu/texture/texel_buffer_2d.h"
 
 #include <list>
 

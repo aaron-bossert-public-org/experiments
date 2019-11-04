@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <gfx/texture/packed_texture.h>
+#include "gfx/texture/packed_texture.h"
 
 #include <unordered_map>
 

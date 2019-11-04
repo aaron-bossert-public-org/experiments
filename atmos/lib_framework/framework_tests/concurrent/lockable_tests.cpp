@@ -1,8 +1,8 @@
-#include <framework_tests/concurrent/lockable_tests.h>
-#include <framework/concurrent/lockable_individual.h>
-#include <framework/concurrent/lockable_triple.h>
+#include "framework_tests/concurrent/lockable_tests.h"
+#include "framework/concurrent/lockable_individual.h"
+#include "framework/concurrent/lockable_triple.h"
 
-#include <framework_tests/main/tests.h>
+#include "framework_tests/main/tests.h"
 
 using namespace tests;
 using namespace concurrent;

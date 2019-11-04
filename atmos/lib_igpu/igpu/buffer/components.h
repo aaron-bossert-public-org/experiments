@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <framework/meta_programming/va_macro.h>
-#include <glm/fwd.hpp>
+#include "framework/meta_programming/va_macro.h"
+#include "glm/fwd.hpp"
 
 namespace igpu
 {

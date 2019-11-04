@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
 
 namespace utility
 {
@@ -75,4 +75,4 @@ namespace utility
     };
 }
 
-#include <igpu/utility/utility_types-inl.h>
+#include "igpu/utility/utility_types-inl.h"

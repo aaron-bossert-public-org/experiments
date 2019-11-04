@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <igpu/shader/fragment_shader.h>
+#include "igpu/shader/fragment_shader.h"
 
 #include <memory>
 

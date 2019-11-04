@@ -1,7 +1,7 @@
 
-#include <igpu/shader/primitives.h>
+#include "igpu/shader/primitives.h"
 
-#include <framework/logging/log.h>
+#include "framework/logging/log.h"
 
 using namespace igpu;
 

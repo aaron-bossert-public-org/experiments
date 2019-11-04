@@ -2,7 +2,7 @@
 #pragma once
 
 #include <functional>
-#include <gfx/scene/scene_stage_binding.h>
+#include "gfx/scene/scene_stage_binding.h"
 
 namespace gfx
 {

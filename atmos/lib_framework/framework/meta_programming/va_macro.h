@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <framework/utility/string_utils.h>
+#include "framework/utility/string_utils.h"
 #include <string_view>
 
 #define ENUM_SERIALIZABLE(ENUM, DEF, VAL, ...)\

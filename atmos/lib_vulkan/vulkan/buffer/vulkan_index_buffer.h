@@ -1,12 +1,12 @@
 
 #pragma once
 
-#include <framework/utility/scoped_ptr.h>
+#include "framework/utility/scoped_ptr.h"
 
-#include <igpu/buffer/index_buffer.h>
-#include <igpu/buffer/index_format.h>
+#include "igpu/buffer/index_buffer.h"
+#include "igpu/buffer/index_format.h"
 
-#include <vulkan/defines/vulkan_includes.h>
+#include "vulkan/defines/vulkan_includes.h"
 
 namespace igpu
 {

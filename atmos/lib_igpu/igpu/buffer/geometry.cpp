@@ -1,6 +1,6 @@
 
-#include <igpu/buffer/geometry.h>
-#include <igpu/buffer/vertex_buffer.h>
+#include "igpu/buffer/geometry.h"
+#include "igpu/buffer/vertex_buffer.h"
 
 using namespace igpu;
 

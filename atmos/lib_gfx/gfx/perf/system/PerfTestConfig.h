@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <gfx/perf/context/reduce_batching_system_state_changes.h>
+#include "gfx/perf/context/reduce_batching_system_state_changes.h"
 
 struct perf_test_config 
 {

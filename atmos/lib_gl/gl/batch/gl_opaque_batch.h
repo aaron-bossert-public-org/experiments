@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <igpu/batch/opaque_batch.h>
+#include "igpu/batch/opaque_batch.h"
 
 namespace igpu
 {

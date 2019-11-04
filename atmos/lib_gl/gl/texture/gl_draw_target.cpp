@@ -1,14 +1,12 @@
 //
-//#include <gl/texture/gl_draw_target.h>
+//#include "gl/texture/gl_draw_target.h"
 //
-//// GL implementation includes - begin
-//#include <gl/defines/gl_includes.h>
-//#include <gl/texture/gl_render_target.h>
-//#include <gl/texture/gl_depth_target.h>
-//// GL implementation includes - end
+//#include "gl/defines/gl_includes.h"
+//#include "gl/texture/gl_render_target.h"
+//#include "gl/texture/gl_depth_target.h"
 //
-//#include <igpu/texture/render_target.h>
-//#include <igpu/texture/depth_target.h>
+//#include "igpu/texture/render_target.h"
+//#include "igpu/texture/depth_target.h"
 //
 //using namespace igpu;
 //

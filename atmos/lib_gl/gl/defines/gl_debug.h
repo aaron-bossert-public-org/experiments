@@ -4,7 +4,7 @@
 #pragma warning (disable : 4068 )
 
 
-#include <gl/defines/gl_redefine_functions.h>
+#include "gl/defines/gl_redefine_functions.h"
 
 #define RedefineGLFuncVoidReturn(GLFunc, ...) [&](const char* func, const char* file, unsigned line){ \
 GLFunc ( __VA_ARGS__ );\

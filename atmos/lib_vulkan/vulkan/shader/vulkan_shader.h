@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <igpu/shader/program_parsing.h>
-#include <igpu/shader/shader.h>
+#include "igpu/shader/program_parsing.h"
+#include "vulkan/defines/vulkan_includes.h"
 
 namespace igpu
 {

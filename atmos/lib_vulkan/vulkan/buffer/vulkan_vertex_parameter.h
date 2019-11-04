@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include <vulkan/defines/vulkan_includes.h>
+#include "vulkan/defines/vulkan_includes.h"
 
-#include <igpu/shader/program_parsing.h>
+#include "igpu/shader/program_parsing.h"
 
 namespace igpu
 {

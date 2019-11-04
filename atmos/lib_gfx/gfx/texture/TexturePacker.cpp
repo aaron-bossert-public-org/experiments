@@ -1,13 +1,13 @@
 
-#include <gfx/texture/texture_packer.h>
+#include "gfx/texture/texture_packer.h"
 
-#include <framework/logging/log.h>
-#include <framework/tweak/tweak.h>
+#include "framework/logging/log.h"
+#include "framework/tweak/tweak.h"
 
-#include <igpu/texture/texel_buffer_2d.h>
-#include <igpu/texture/texture_2d.h>
+#include "igpu/texture/texel_buffer_2d.h"
+#include "igpu/texture/texture_2d.h"
 
-#include <framework/perf/stack_timer.h>
+#include "framework/perf/stack_timer.h"
 
 #include <algorithm>
 

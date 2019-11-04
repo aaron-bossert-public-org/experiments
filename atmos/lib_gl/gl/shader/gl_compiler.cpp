@@ -1,15 +1,15 @@
 //
-//#include <gl/material/gl_compiler.h>
+//#include "gl/material/gl_compiler.h"
 //
-//#include <gl/context/gl_context.h>
-//#include <gl/defines/gl_includes.h>
-//#include <gl/material/gl_fragment_shader.h>
-//#include <gl/material/gl_vertex_shader.h>
+//#include "gl/context/gl_context.h"
+//#include "gl/defines/gl_includes.h"
+//#include "gl/material/gl_fragment_shader.h"
+//#include "gl/material/gl_vertex_shader.h"
 //
-//#include <framework/utility/buffer_view.h>
+//#include "framework/utility/buffer_view.h"
 //
-//#include <igpu/context/vertex_constraints.h>
-//#include <igpu/shader/program.h>
+//#include "igpu/context/vertex_constraints.h"
+//#include "igpu/shader/program.h"
 //
 //#include <vector>
 //#include <sstream>

@@ -1,12 +1,10 @@
 //
-//#include <gl/batch/gl_transparent_batch.h>
+//#include "gl/batch/gl_transparent_batch.h"
 //
-//// GL implementation includes - begin
-//#include <gl/context/gl_context.h>
-//// GL implementation includes - end
+//#include "gl/context/gl_context.h"
 //
-//#include <igpu/buffer/geometry.h>
-//#include <framework/logging/log.h>
+//#include "igpu/buffer/geometry.h"
+//#include "framework/logging/log.h"
 //#include <algorithm>
 //
 //using namespace igpu;

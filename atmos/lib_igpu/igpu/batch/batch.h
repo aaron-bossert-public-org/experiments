@@ -2,9 +2,9 @@
 #pragma once
 
 #include <memory>
-#include <igpu/batch/batch_binding.h>
-#include <igpu/shader/primitives.h>
-#include <igpu/utility/utility_types.h>
+#include "igpu/batch/batch_binding.h"
+#include "igpu/shader/primitives.h"
+#include "igpu/utility/utility_types.h"
 
 #include <functional>
 #include <memory>

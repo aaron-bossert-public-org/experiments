@@ -1,13 +1,13 @@
 
-#include <framework/logging/log.h>
-#include <framework/tweak/tweak.h>
+#include "framework/logging/log.h"
+#include "framework/tweak/tweak.h"
 
-#include <gfx/perf/context/draw_pass_modifier.h>
-#include <gfx/perf/context/perf_test_draw_pass_modifier.h>
-#include <gfx/scene/general_render_stage.h>
-#include <gfx/scene/scene.h>
-#include <gfx/scene/sorted_render_stage.h>
-#include <gfx/context/stream_output.h>
+#include "gfx/perf/context/draw_pass_modifier.h"
+#include "gfx/perf/context/perf_test_draw_pass_modifier.h"
+#include "gfx/scene/general_render_stage.h"
+#include "gfx/scene/scene.h"
+#include "gfx/scene/sorted_render_stage.h"
+#include "gfx/context/stream_output.h"
 
 
 using namespace gfx;

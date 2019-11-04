@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include <igpu/texture/color_format.h>
-#include <igpu/texture/depth_format.h>
-#include <igpu/texture/sampler.h>
-#include <glm/vec2.hpp>
+#include "igpu/texture/color_format.h"
+#include "igpu/texture/depth_format.h"
+#include "igpu/texture/sampler.h"
+#include "glm/vec2.hpp"
 
 namespace igpu
 {

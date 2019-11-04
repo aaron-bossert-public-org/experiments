@@ -1,8 +1,8 @@
 
-#include <gl/buffer/gl_compute_buffer.h>
+#include "gl/buffer/gl_compute_buffer.h"
 
-#include <gl/buffer/gl_buffer.h>
-#include <gl/defines/gl_includes.h>
+#include "gl/buffer/gl_buffer.h"
+#include "gl/defines/gl_includes.h"
 
 using namespace igpu;
 

@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <igpu/shader/primitive.h>
+#include "igpu/shader/primitive.h"
 #include <string>
 #include <unordered_map>
 #include <vector>

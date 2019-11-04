@@ -1,14 +1,14 @@
 ﻿
-#include <vulkan/shader/vulkan_program.h>
+#include "vulkan/shader/vulkan_program.h"
 
-#include <vulkan/shader/vulkan_parameter.h>
-#include <vulkan/shader/vulkan_fragment_shader.h>
-#include <vulkan/shader/vulkan_vertex_shader.h>
-#include <vulkan/shader/vulkan_shader_stages.h>
+#include "vulkan/shader/vulkan_parameter.h"
+#include "vulkan/shader/vulkan_fragment_shader.h"
+#include "vulkan/shader/vulkan_vertex_shader.h"
+#include "vulkan/shader/vulkan_shader_stages.h"
 
-#include <igpu/shader/program_parsing.h>
+#include "igpu/shader/program_parsing.h"
 
-#include <framework/logging/log.h>
+#include "framework/logging/log.h"
 
 #include <algorithm>
 #include <array>

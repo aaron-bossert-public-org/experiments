@@ -1,10 +1,10 @@
 
-#include <gfx/scene/outline_stage.h>
+#include "gfx/scene/outline_stage.h"
 
-#include <gfx/batching/batching_system.h>
-#include <gfx/mesh/mesh_state.h>
-#include <gfx/material/program_instance.h>
-#include <gfx/material/scene_parameters_manager.h>
+#include "gfx/batching/batching_system.h"
+#include "gfx/mesh/mesh_state.h"
+#include "gfx/material/program_instance.h"
+#include "gfx/material/scene_parameters_manager.h"
 
 using namespace gfx;
 

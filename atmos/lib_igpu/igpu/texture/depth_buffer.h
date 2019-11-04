@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include <igpu/texture/depth_format.h>
-#include <igpu/texture/sampler.h>
-#include <glm/vec2.hpp>
+#include "igpu/texture/depth_format.h"
+#include "igpu/texture/sampler.h"
+#include "glm/vec2.hpp"
 #include <string>
 
 namespace igpu

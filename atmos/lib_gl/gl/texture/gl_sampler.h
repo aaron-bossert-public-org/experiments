@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <igpu/texture/sampler.h>
+#include "igpu/texture/sampler.h"
 
 namespace igpu
 {

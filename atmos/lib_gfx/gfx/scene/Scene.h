@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <gfx/scene/view_state.h>
+#include "gfx/scene/view_state.h"
 
 namespace igpu
 {

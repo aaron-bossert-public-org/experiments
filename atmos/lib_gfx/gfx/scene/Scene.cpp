@@ -1,11 +1,11 @@
-#include <gfx/scene/scene.h>
+#include "gfx/scene/scene.h"
 
-#include <igpu/utility/markers.h>
-#include <gfx/light/light_manager.h>
-#include <gfx/material/scene_parameters_manager.h>
-#include <gfx/scene/clear_stage.h>
-#include <gfx/scene/scene_stage.h>
-#include <gfx/scene/view_state.h>
+#include "igpu/utility/markers.h"
+#include "gfx/light/light_manager.h"
+#include "gfx/material/scene_parameters_manager.h"
+#include "gfx/scene/clear_stage.h"
+#include "gfx/scene/scene_stage.h"
+#include "gfx/scene/view_state.h"
 
 #include <zna/source/common/utility/stack_timer.h>
 

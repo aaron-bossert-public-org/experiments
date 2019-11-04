@@ -1,11 +1,11 @@
 
 #pragma once
 
-#include <vulkan/buffer/vulkan_index_buffer.h>
-#include <vulkan/buffer/vulkan_vertex_buffer.h>
-#include <vulkan/defines/vulkan_includes.h>
+#include "vulkan/buffer/vulkan_index_buffer.h"
+#include "vulkan/buffer/vulkan_vertex_buffer.h"
+#include "vulkan/defines/vulkan_includes.h"
 
-#include <igpu/buffer/geometry.h>
+#include "igpu/buffer/geometry.h"
 
 namespace igpu
 {

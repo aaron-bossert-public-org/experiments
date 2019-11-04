@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <igpu/buffer/vertex_buffer.h>
-#include <igpu/buffer/topology.h>
+#include "igpu/buffer/vertex_buffer.h"
+#include "igpu/buffer/topology.h"
 
 namespace igpu
 {

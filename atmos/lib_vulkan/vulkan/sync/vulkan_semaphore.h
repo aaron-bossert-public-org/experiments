@@ -1,9 +1,7 @@
 
 #pragma once
 
-// Vulkan implementation includes - begin
-#include <vulkan/defines/vulkan_includes.h>
-// Vulkan implementation includes - end
+#include "vulkan/defines/vulkan_includes.h"
 
 namespace igpu
 {

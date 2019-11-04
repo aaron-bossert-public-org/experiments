@@ -1,5 +1,5 @@
 
-#include <gfx/perf/mesh/reduced_polycount_geometry.h>
+#include "gfx/perf/mesh/reduced_polycount_geometry.h"
 
 using namespace gfx;
 

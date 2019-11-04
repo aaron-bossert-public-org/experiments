@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <igpu/texture/texture_2d.h>
+#include "igpu/texture/texture_2d.h"
 
 namespace igpu
 {

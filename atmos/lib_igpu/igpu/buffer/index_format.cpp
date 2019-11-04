@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include <igpu/buffer/index_format.h>
+#include "igpu/buffer/index_format.h"
 
-#include <framework/logging/log.h>
+#include "framework/logging/log.h"
 
 using namespace igpu;
 

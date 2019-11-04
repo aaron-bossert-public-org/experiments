@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include <igpu/shader/primitives.h>
+#include "igpu/shader/primitives.h"
 
-#include <vulkan/shader/vulkan_primitive.h>
+#include "vulkan/shader/vulkan_primitive.h"
 
 namespace igpu
 {

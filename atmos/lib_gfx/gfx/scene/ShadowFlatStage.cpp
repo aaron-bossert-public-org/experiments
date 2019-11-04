@@ -1,10 +1,10 @@
 
-#include <gfx/scene/shadow_flat_stage.h>
+#include "gfx/scene/shadow_flat_stage.h"
 
-#include <gfx/batching/batching_system.h>
-#include <gfx/material/scene_parameters_manager.h>
-#include <gfx/mesh/mesh_state.h>
-#include <gfx/mesh/model_state.h>
+#include "gfx/batching/batching_system.h"
+#include "gfx/material/scene_parameters_manager.h"
+#include "gfx/mesh/mesh_state.h"
+#include "gfx/mesh/model_state.h"
 
 using namespace gfx
 

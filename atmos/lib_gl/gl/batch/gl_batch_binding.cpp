@@ -1,16 +1,14 @@
 //
-//#include <gl/batch/gl_opaque_batch.h>
+//#include "gl/batch/gl_opaque_batch.h"
 //
-//#include <framework/utility/scoped_ptr.h>
+//#include "framework/utility/scoped_ptr.h"
 //
-//// GL implementation includes - begin
-//#include <gl/buffer/gl_geometry.h>
-//#include <gl/context/gl_context.h>
-//#include <gl/material/gl_program.h>
-//// GL implementation includes - end
+//#include "gl/buffer/gl_geometry.h"
+//#include "gl/context/gl_context.h"
+//#include "gl/material/gl_program.h"
 //
-//#include <igpu/batch/opaque_batch_nodes.h>
-//#include <igpu/buffer/geometry.h>
+//#include "igpu/batch/opaque_batch_nodes.h"
+//#include "igpu/buffer/geometry.h"
 //
 //using namespace igpu;
 //

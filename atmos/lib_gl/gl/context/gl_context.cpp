@@ -1,26 +1,24 @@
-//#include <gl/context/gl_context.h>
+//#include "gl/context/gl_context.h"
 //
-//// GL implementation includes - begin
-//#include <gl/buffer/gl_compute_buffer.h>
-//#include <gl/buffer/gl_index_buffer.h>
-//#include <gl/buffer/gl_vertex_buffer.h>
-//#include <gl/buffer/gl_geometry.h>
-//#include <gl/defines/gl_includes.h>
-//#include <gl/material/gl_fragment_shader.h>
-//#include <gl/material/gl_program.h>
-//#include <gl/material/gl_vertex_shader.h>
-//#include <gl/material/gl_render_states.h>
-//#include <gl/texture/gl_render_buffer.h>
-//#include <gl/texture/gl_depth_buffer.h>
-//#include <gl/texture/gl_draw_target.h>
-//#include <gl/texture/gl_texture2d.h>
-//#include <gl/window/gl_back_buffer.h>
-//#include <gl/window/gl_window.h>
-//// GL implementation includes - end
+//#include "gl/buffer/gl_compute_buffer.h"
+//#include "gl/buffer/gl_index_buffer.h"
+//#include "gl/buffer/gl_vertex_buffer.h"
+//#include "gl/buffer/gl_geometry.h"
+//#include "gl/defines/gl_includes.h"
+//#include "gl/material/gl_fragment_shader.h"
+//#include "gl/material/gl_program.h"
+//#include "gl/material/gl_vertex_shader.h"
+//#include "gl/material/gl_render_states.h"
+//#include "gl/texture/gl_render_buffer.h"
+//#include "gl/texture/gl_depth_buffer.h"
+//#include "gl/texture/gl_draw_target.h"
+//#include "gl/texture/gl_texture2d.h"
+//#include "gl/window/gl_back_buffer.h"
+//#include "gl/window/gl_window.h"
 //
-//#include <igpu/batch/batch.h>
-//#include <igpu/batch/batch_parameters.h>
-//#include <igpu/buffer/topology.h>
+//#include "igpu/batch/batch.h"
+//#include "igpu/batch/batch_parameters.h"
+//#include "igpu/buffer/topology.h"
 //
 //using namespace igpu;
 //

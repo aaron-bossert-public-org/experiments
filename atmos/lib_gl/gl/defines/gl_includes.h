@@ -3,7 +3,7 @@
 
 #define ATMOS_USE_GL 1
 
-#include <framework/logging/log.h>
+#include "framework/logging/log.h"
 
 #if ATMOS_BUILD_IOS
 #	include <OpenGLES/ES3/gl.h>

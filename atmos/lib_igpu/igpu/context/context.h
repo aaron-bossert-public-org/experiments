@@ -1,27 +1,27 @@
 
 #pragma once
 
-#include <igpu/batch/opaque_batch.h>
-#include <igpu/batch/transparent_batch.h>
-#include <igpu/buffer/compute_buffer.h>
-#include <igpu/buffer/geometry.h>
-#include <igpu/buffer/index_buffer.h>
-#include <igpu/buffer/topology.h>
-#include <igpu/buffer/vertex_buffer.h>
-#include <igpu/context/batch_constraints.h>
-#include <igpu/context/material_constraints.h>
-#include <igpu/shader/fragment_shader.h>
-#include <igpu/shader/program.h>
-#include <igpu/shader/render_states.h>
-#include <igpu/shader/vertex_shader.h>
-#include <igpu/texture/color_format.h>
-#include <igpu/texture/draw_target.h>
-#include <igpu/texture/depth_buffer.h>
-#include <igpu/texture/depth_texture2d.h>
-#include <igpu/texture/depth_format.h>
-#include <igpu/texture/render_buffer.h>
-#include <igpu/texture/render_texture2d.h>
-#include <igpu/texture/texture2d.h>
+#include "igpu/batch/opaque_batch.h"
+#include "igpu/batch/transparent_batch.h"
+#include "igpu/buffer/compute_buffer.h"
+#include "igpu/buffer/geometry.h"
+#include "igpu/buffer/index_buffer.h"
+#include "igpu/buffer/topology.h"
+#include "igpu/buffer/vertex_buffer.h"
+#include "igpu/context/batch_constraints.h"
+#include "igpu/context/material_constraints.h"
+#include "igpu/shader/fragment_shader.h"
+#include "igpu/shader/program.h"
+#include "igpu/shader/render_states.h"
+#include "igpu/shader/vertex_shader.h"
+#include "igpu/texture/color_format.h"
+#include "igpu/texture/draw_target.h"
+#include "igpu/texture/depth_buffer.h"
+#include "igpu/texture/depth_texture2d.h"
+#include "igpu/texture/depth_format.h"
+#include "igpu/texture/render_buffer.h"
+#include "igpu/texture/render_texture2d.h"
+#include "igpu/texture/texture2d.h"
 #include <functional>
 #include <memory>
 
@@ -71,10 +71,10 @@ namespace igpu
 			const program::config&) = 0;
 
 		virtual std::unique_ptr<vertex_shader> make_vertex_shader(
-			const vertex_shader::config&) = 0;
+			vector_buffer<uint32_t>&& binary) = 0;
 		
 		virtual std::unique_ptr<fragment_shader> make_fragment_shader(
-			const fragment_shader::config&) = 0;
+			vector_buffer<uint32_t>&& binary) = 0;
 
 		virtual std::unique_ptr<render_states> make_render_states(
 			const render_states::config&) = 0;

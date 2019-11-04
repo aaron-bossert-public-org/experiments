@@ -1,9 +1,7 @@
 
-// GL implementation includes - begin
-#include <gl/utility/gl_markers.h>
+#include "gl/utility/gl_markers.h"
 
-#include <gl/defines/gl_includes.h>
-// GL implementation includes - end
+#include "gl/defines/gl_includes.h"
 
 using namespace igpu;
 

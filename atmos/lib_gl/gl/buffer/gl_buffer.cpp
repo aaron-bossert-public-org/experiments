@@ -1,11 +1,9 @@
 
-#include <gl/buffer/gl_buffer.h>
+#include "gl/buffer/gl_buffer.h"
 
-// GL implementation includes - begin
-#include <gl/defines/gl_includes.h>
-// GL implementation includes - end
+#include "gl/defines/gl_includes.h"
 
-#include <framework/utility/buffer_view.h>
+#include "framework/utility/buffer_view.h"
 
 using namespace igpu;
 

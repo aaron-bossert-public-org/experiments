@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <gfx/mesh/geometry.h>
+#include "gfx/mesh/geometry.h"
 
 namespace gfx
 {

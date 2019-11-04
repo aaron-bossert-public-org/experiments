@@ -2,8 +2,8 @@
 #pragma once
 
 #include <functional>
-#include <gfx/batching/batching_system_visitors.h>
-#include <gfx/context/draw_pass_bundle.h>
+#include "gfx/batching/batching_system_visitors.h"
+#include "gfx/context/draw_pass_bundle.h"
 
 namespace gfx
 {

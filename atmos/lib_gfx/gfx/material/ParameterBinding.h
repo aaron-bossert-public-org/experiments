@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <igpu/material/primitive.h>
+#include "igpu/material/primitive.h"
 
 namespace igpu
 {

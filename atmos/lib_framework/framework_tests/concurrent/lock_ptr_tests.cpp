@@ -1,6 +1,6 @@
-#include <framework_tests/concurrent/lock_ptr_tests.h>
+#include "framework_tests/concurrent/lock_ptr_tests.h"
 
-#include <framework/concurrent/lock_ptr.h>
+#include "framework/concurrent/lock_ptr.h"
 #include <type_traits>
 
 using namespace tests;

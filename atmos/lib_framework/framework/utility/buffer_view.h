@@ -21,8 +21,6 @@ public:
         
     virtual void reset();
         
-    void set(size_t size, void* data, size_t stride = -1);
-        
     size_t size() const;
 
     size_t byte_size() const;
@@ -41,7 +39,6 @@ protected:
         
     size_t _size = 0;
     size_t _stride = 0;
-        
     void* _data = nullptr;
 };
 
@@ -143,4 +140,4 @@ private:
 	char* _data = nullptr;
 };
 
-#include <framework/utility/buffer_view-inl.h>
+#include "framework/utility/buffer_view-inl.h"

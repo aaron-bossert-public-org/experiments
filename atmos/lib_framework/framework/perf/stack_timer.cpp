@@ -1,9 +1,9 @@
 
-#include <framework/perf/stack_timer.h>
+#include "framework/perf/stack_timer.h"
 
 #if ATMOS_STACK_TIMERS
 
-#include <framework/logging/log.h>
+#include "framework/logging/log.h"
 
 #include <algorithm>
 #include <vector>

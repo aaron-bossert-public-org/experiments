@@ -1,15 +1,15 @@
 
 #pragma once
-#include <gl/buffer/gl_vertex_attrib_array_tracker.h>
-#include <gl/material/gl_render_states.h>
-#include <gl/window/gl_back_buffer.h>
-#include <gl/window/gl_window.h>
+#include "gl/buffer/gl_vertex_attrib_array_tracker.h"
+#include "gl/material/gl_render_states.h"
+#include "gl/window/gl_back_buffer.h"
+#include "gl/window/gl_window.h"
 
-#include <igpu/context/context.h>
-#include <igpu/context/batch_constraints.h>
-#include <igpu/context/material_constraints.h>
-#include <igpu/utility/utility_types.h>
-#include <framework/perf/metrics.h>
+#include "igpu/context/context.h"
+#include "igpu/context/batch_constraints.h"
+#include "igpu/context/material_constraints.h"
+#include "igpu/utility/utility_types.h"
+#include "framework/perf/metrics.h"
 
 namespace igpu
 {

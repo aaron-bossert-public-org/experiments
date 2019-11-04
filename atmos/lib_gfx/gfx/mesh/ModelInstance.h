@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <gfx/material/technique.h>
-#include <gfx/context/draw_pass_bundle.h>
+#include "gfx/material/technique.h"
+#include "gfx/context/draw_pass_bundle.h"
 
 namespace gfx
 {

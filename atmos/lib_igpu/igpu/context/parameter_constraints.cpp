@@ -1,7 +1,7 @@
 
-#include <igpu/context/parameter_constraints.h>
+#include "igpu/context/parameter_constraints.h"
 
-#include <framework/logging/log.h>
+#include "framework/logging/log.h"
 
 using namespace igpu;
 

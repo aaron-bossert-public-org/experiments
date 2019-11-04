@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <igpu/shader/parameter.h>
+#include "igpu/shader/parameter.h"
 
 #include <string>
 #include <variant>

@@ -1,45 +1,50 @@
 
-#include <vulkan/window/vulkan_window.h>
-#include <vulkan/defines/vulkan_includes.h>
-#include <GLFW/glfw3.h>
+#include "vulkan/window/vulkan_window.h"
 
+#include "vulkan/defines/vulkan_includes.h"
+
+#include "GLFW/glfw3.h"
 #include <algorithm>
 
 using namespace igpu;
 
-std::unique_ptr<vulkan_window> vulkan_window::make(
+std::unique_ptr< vulkan_window > vulkan_window::make(
 	const config& cfg,
 	glm::ivec2 res,
-	const on_resize_t& on_resize)
+	const on_resize_t& on_resize )
 {
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
 
-	auto glfw_window = glfwCreateWindow(res.x, res.y, cfg.name.data(), nullptr, nullptr);
+	auto glfw_window =
+		glfwCreateWindow( res.x, res.y, cfg.name.data(), nullptr, nullptr );
 	VkSurfaceKHR surface = nullptr;
-	VkResult result = glfwCreateWindowSurface(cfg.vk.instance, glfw_window, nullptr, &surface);
-	if (result != VK_SUCCESS)
+	VkResult result = glfwCreateWindowSurface(
+		cfg.vk.instance,
+		glfw_window,
+		nullptr,
+		&surface );
+	if ( result != VK_SUCCESS )
 	{
 #if ATMOS_DEBUG
-		throw std::runtime_error(EXCEPTION_CONTEXT(debug::stringify_result(result).c_str()));
+		throw std::runtime_error(
+			EXCEPTION_CONTEXT( debug::stringify_result( result ).c_str() ) );
 #endif
 	}
 
-	auto w = std::unique_ptr<vulkan_window>(
-		new vulkan_window(
-			cfg,
-			on_resize,
-			glfw_window,
-			surface));
+	auto w = std::unique_ptr< vulkan_window >(
+		new vulkan_window( cfg, on_resize, glfw_window, surface ) );
 
-	glfwSetWindowUserPointer(glfw_window, w.get());
+	glfwSetWindowUserPointer( glfw_window, w.get() );
 
-	if (w->_on_resize)
+	if ( w->_on_resize )
 	{
-		glfwSetFramebufferSizeCallback(glfw_window, [](GLFWwindow* glfw_window, int /* width */, int /* height */)
-		{
-			vulkan_window* w = (vulkan_window*)glfwGetWindowUserPointer(glfw_window);
-			w->_on_resize(w);
-		});
+		glfwSetFramebufferSizeCallback(
+			glfw_window,
+			[]( GLFWwindow* glfw_window, int /* width */, int /* height */ ) {
+				vulkan_window* w =
+					(vulkan_window*)glfwGetWindowUserPointer( glfw_window );
+				w->_on_resize( w );
+			} );
 	}
 
 	return w;
@@ -53,29 +58,30 @@ const vulkan_window::config& vulkan_window::cfg() const
 glm::ivec2 vulkan_window::res() const
 {
 	glm::ivec2 res;
-	glfwGetWindowSize(_glfw_window, &res.x, &res.y);
+	glfwGetWindowSize( _glfw_window, &res.x, &res.y );
 	return res;
 }
 
 vulkan_window::~vulkan_window()
 {
-	vkDestroySurfaceKHR(_cfg.vk.instance, _surface, nullptr);
-	glfwDestroyWindow(_glfw_window);
+	vkDestroySurfaceKHR( _cfg.vk.instance, _surface, nullptr );
+	glfwDestroyWindow( _glfw_window );
 	glfwTerminate();
 }
 
-std::vector<const char*> vulkan_window::required_extensions()
+std::vector< const char* > vulkan_window::required_extensions()
 {
 	glfwInit();
 
 	uint32_t count = 0;
-	const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&count);
-	return std::vector<const char*>(glfw_extensions, glfw_extensions + count);
+	const char** glfw_extensions = glfwGetRequiredInstanceExtensions( &count );
+	return std::vector<
+		const char* >( glfw_extensions, glfw_extensions + count );
 }
 
 bool vulkan_window::poll_events() const
 {
-	if (!glfwWindowShouldClose(_glfw_window))
+	if ( !glfwWindowShouldClose( _glfw_window ) )
 	{
 		glfwPollEvents();
 		return true;
@@ -92,10 +98,9 @@ vulkan_window::vulkan_window(
 	const config& cfg,
 	const on_resize_t& on_resize,
 	GLFWwindow* glfw_window,
-	VkSurfaceKHR surface)
-	: _cfg(cfg)
-	, _on_resize(on_resize)
-	, _glfw_window(glfw_window)
-	, _surface(surface)
-{
-}
+	VkSurfaceKHR surface )
+	: _cfg( cfg )
+	, _on_resize( on_resize )
+	, _glfw_window( glfw_window )
+	, _surface( surface )
+{}

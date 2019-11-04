@@ -1,5 +1,5 @@
 
-#include <gfx/material/parameter_block_bindings.h>
+#include "gfx/material/parameter_block_bindings.h"
 
 namespace gfx;
 

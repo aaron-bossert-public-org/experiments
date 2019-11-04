@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include <igpu/material/program_binding_id.h>
-#include <gfx/material/parameter_block.h>
-#include <igpu/material/primitive.h>
-#include <igpu/material/program_binding_id.h>
+#include "igpu/material/program_binding_id.h"
+#include "gfx/material/parameter_block.h"
+#include "igpu/material/primitive.h"
+#include "igpu/material/program_binding_id.h"
 
 namespace igpu
 {

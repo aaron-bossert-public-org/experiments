@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include <igpu/texture/depth_target.h>
-#include <gl/texture/gl_depth_target.h>
+#include "igpu/texture/depth_target.h"
+#include "gl/texture/gl_depth_target.h"
 
-#include <framework/perf/metrics.h>
+#include "framework/perf/metrics.h"
 
 namespace igpu
 {

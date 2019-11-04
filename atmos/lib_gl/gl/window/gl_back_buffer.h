@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include <igpu/window/back_buffer.h>
+#include "igpu/window/back_buffer.h"
 
-#include <gl/texture/gl_render_buffer.h>
-#include <gl/texture/gl_depth_buffer.h>
+#include "gl/texture/gl_render_buffer.h"
+#include "gl/texture/gl_depth_buffer.h"
 
 #include <memory>
 

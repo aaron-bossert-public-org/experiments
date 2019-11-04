@@ -1,24 +1,22 @@
 ﻿//
-//#include <gl/material/gl_program.h>
+//#include "gl/material/gl_program.h"
 //
-//// GL implementation includes - begin
-//#include <gl/buffer/gl_compute_buffer.h>
-//#include <gl/buffer/gl_vertex_parameter.h>
-//#include <gl/context/gl_context.h>
-//#include <gl/defines/gl_includes.h>
-//#include <gl/material/gl_compiler.h>
-//#include <gl/material/gl_parameter.h>
-//#include <gl/texture/gl_render_texture2d.h>
-//#include <gl/texture/gl_depth_texture2d.h>
-//#include <gl/texture/gl_texture2d.h>
-//// GL implementation includes - end
+//#include "gl/buffer/gl_compute_buffer.h"
+//#include "gl/buffer/gl_vertex_parameter.h"
+//#include "gl/context/gl_context.h"
+//#include "gl/defines/gl_includes.h"
+//#include "gl/material/gl_compiler.h"
+//#include "gl/material/gl_parameter.h"
+//#include "gl/texture/gl_render_texture2d.h"
+//#include "gl/texture/gl_depth_texture2d.h"
+//#include "gl/texture/gl_texture2d.h"
 //
-//#include <igpu/batch/batch.h>
-//#include <igpu/batch/batch_parameters.h>
-//#include <igpu/buffer/vertex_format.h>
-//#include <igpu/shader/material.h>
+//#include "igpu/batch/batch.h"
+//#include "igpu/batch/batch_parameters.h"
+//#include "igpu/buffer/vertex_format.h"
+//#include "igpu/shader/material.h"
 //
-//#include <framework/logging/log.h>
+//#include "framework/logging/log.h"
 //
 //#include <algorithm>
 //

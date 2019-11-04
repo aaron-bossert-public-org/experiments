@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <igpu/material/primitive.h>
-#include <gfx/material/parameter_binding.h>
+#include "igpu/material/primitive.h"
+#include "gfx/material/parameter_binding.h"
 
 #include <unordered_map>
 

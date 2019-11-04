@@ -1,11 +1,11 @@
 
 #pragma once
 
-#include <gl/buffer/gl_vertex_parameter.h>
-#include <gl/material/gl_parameter.h>
-#include <igpu/shader/program.h>
-#include <framework/perf/metrics.h>
-#include <framework/utility/buffer_view.h>
+#include "gl/buffer/gl_vertex_parameter.h"
+#include "gl/material/gl_parameter.h"
+#include "igpu/shader/program.h"
+#include "framework/perf/metrics.h"
+#include "framework/utility/buffer_view.h"
 
 namespace igpu
 {

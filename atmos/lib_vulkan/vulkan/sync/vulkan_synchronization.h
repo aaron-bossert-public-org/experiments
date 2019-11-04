@@ -4,13 +4,13 @@
 #include <memory>
 #include <vector>
 
-#include <framework/utility/scoped_ptr.h>
+#include "framework/utility/scoped_ptr.h"
 
-#include <igpu/buffer/compute_buffer.h>
-#include <igpu/buffer/index_buffer.h>
-#include <igpu/buffer/vertex_buffer.h>
+#include "igpu/buffer/compute_buffer.h"
+#include "igpu/buffer/index_buffer.h"
+#include "igpu/buffer/vertex_buffer.h"
 
-#include <vulkan/defines/vulkan_includes.h>
+#include "vulkan/defines/vulkan_includes.h"
 
 namespace igpu
 {

@@ -1,14 +1,14 @@
 
-#include <vulkan/texture/vulkan_staged_texture2d.h>
+#include "vulkan/texture/vulkan_staged_texture2d.h"
 
-#include <vulkan/buffer/vulkan_buffer.h>
-#include <vulkan/texture/vulkan_image.h>
-#include <vulkan/texture/vulkan_image_t.h>
-#include <vulkan/sync/vulkan_synchronization.h>
+#include "vulkan/buffer/vulkan_buffer.h"
+#include "vulkan/texture/vulkan_image.h"
+#include "vulkan/texture/vulkan_image_t.h"
+#include "vulkan/sync/vulkan_synchronization.h"
 
-#include <igpu/texture/texture_file_parsing.h>
+#include "igpu/texture/texture_file_parsing.h"
 
-#include <framework/logging/log.h>
+#include "framework/logging/log.h"
 
 using namespace igpu;
 
@@ -50,7 +50,8 @@ void vulkan_staged_texture2d::unmap(
 	}
 	else
 	{
-		unmap(
+		_staging_buffer.unmap();
+		upload(
 			_mapped_view,
 			state);
 	}
@@ -88,8 +89,9 @@ void vulkan_staged_texture2d::unmap()
 							compressed_parser.decompressed.data(),
 							compressed_parser.decompressed.size());
 
+						_staging_buffer.unmap();
 
-						unmap(
+						upload(
 							parsed_buffer_view,
 							state);
 					}
@@ -99,18 +101,14 @@ void vulkan_staged_texture2d::unmap()
 			}
 		}
 
-		unmap(parsed_buffer_view, state);
+		_staging_buffer.unmap();
+		upload(parsed_buffer_view, state);
 	}
 }
 
 const vulkan_staged_texture2d::state& vulkan_staged_texture2d::current_state() const
 {
 	return _current_state;
-}
-
-size_t vulkan_staged_texture2d::byte_capacity() const
-{
-	return _staging_buffer.byte_capacity();
 }
 
 vulkan_image& vulkan_staged_texture2d::gpu_resource()
@@ -125,7 +123,7 @@ const vulkan_image& vulkan_staged_texture2d::gpu_resource() const
 	return *_gpu_image;
 }
 
-void vulkan_staged_texture2d::unmap(
+void vulkan_staged_texture2d::upload(
 	const buffer_view<char>& texture_data,
 	const texture2d::state& state)
 {
@@ -140,9 +138,8 @@ void vulkan_staged_texture2d::unmap(
 	size_t src_offset = (char*)texture_data.data() - (char*)_mapped_view.data();
 	ASSERT_CONTEXT(texture_data.data());
 	ASSERT_CONTEXT(_mapped_view.data());
-	ASSERT_CONTEXT(src_offset < _staging_buffer.byte_capacity());
+	ASSERT_CONTEXT(src_offset < _mapped_view.byte_size());
 
-	_staging_buffer.unmap();
 	_mapped_view =
 		buffer_view<char>(
 			_mapped_view.byte_size(),
