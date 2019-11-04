@@ -1,0 +1,289 @@
+
+
+BasedOnStyle: LLVM
+# The style used for all options not specifically set in the configuration.
+
+AccessModifierOffset: -4
+# The extra indent or outdent of access modifiers, e.g. public:.
+
+AlignAfterOpenBracket: AlwaysBreak 
+# If true, horizontally aligns arguments after an open bracket.
+
+AlignConsecutiveAssignments: false
+# If true, aligns consecutive assignments.
+
+AlignConsecutiveDeclarations: false
+# If true, aligns consecutive declarations.
+
+AlignConsecutiveMacros: true
+# If true, aligns consecutive C/C++ preprocessor macros.
+
+AlignEscapedNewlines: Left 
+# Options for aligning backslashes in escaped newlines.
+
+AlignOperands: false
+# If true, horizontally align operands of binary and ternary expressions.
+
+AlignTrailingComments: true
+# If true, aligns trailing comments.
+
+AllowAllArgumentsOnNextLine: false
+# If a function call or braced initializer list doesn’t fit on a line, allow putting all arguments onto the next line, even if BinPackArguments is false.
+
+AllowAllConstructorInitializersOnNextLine: false
+# If a constructor definition with a member initializer list doesn’t fit on a single line, allow putting all member initializers onto the next line, if `ConstructorInitializerAllOnOneLineOrOnePerLine` is true. Note that this parameter has no effect if `ConstructorInitializerAllOnOneLineOrOnePerLine` is false.
+
+AllowAllParametersOfDeclarationOnNextLine: false
+# If the function declaration doesn’t fit on a line, allow putting all parameters of a function declaration onto the next line even if BinPackParameters is false.
+
+AllowShortBlocksOnASingleLine: false 
+# Dependent on the value, while (true) { continue; } can be put on a single line.
+
+AllowShortCaseLabelsOnASingleLine: false
+# If true, short case labels will be contracted to a single line.
+
+AllowShortFunctionsOnASingleLine: None 
+# Dependent on the value, int f() { return 0; } can be put on a single line.
+
+AllowShortIfStatementsOnASingleLine: false
+# If true, if (a) return; can be put on a single line.
+
+AllowShortLambdasOnASingleLine: true 
+# Dependent on the value, auto lambda []() { return 0; } can be put on a single line.
+
+AllowShortLoopsOnASingleLine: false
+# If true, while (true) continue; can be put on a single line.
+
+AlwaysBreakAfterReturnType: None 
+# The function declaration return type breaking style to use.
+
+AlwaysBreakBeforeMultilineStrings: true
+# If true, always break before multiline string literals.
+
+AlwaysBreakTemplateDeclarations: Yes 
+# The template declaration breaking style to use.
+
+BinPackArguments: false
+# If false, a function call’s arguments will either be all on the same line or will have one line each.
+
+BinPackParameters: false
+# If false, a function declaration’s or function definition’s parameters will either all be on the same line or will have one line each.
+
+BraceWrapping: 
+  AfterCaseLabel: true
+  AfterControlStatement: true
+  AfterClass: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterObjCDeclaration: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+  #BraceWrappingAfterControlStatementStyle: Always 
+
+# Control of individual brace wrapping cases.
+
+BreakAfterJavaFieldAnnotations: false
+# Break after each annotation on a field in Java files.
+
+BreakBeforeBinaryOperators: None
+# The way to wrap binary operators.
+
+BreakBeforeBraces: Custom
+# The brace breaking style to use.
+
+BreakBeforeTernaryOperators: true
+# If true, ternary operators will be placed after line breaks.
+
+BreakConstructorInitializers: BeforeComma 
+# The constructor initializers style to use.
+
+BreakInheritanceList: BeforeComma 
+# The inheritance list style to use.
+
+BreakStringLiterals: true
+# Allow breaking string literals when formatting.
+
+ColumnLimit: 80
+# The column limit.
+
+# CommentPragmas: 
+# A regular expression that describes comments with special meaning, which should not be split into lines or otherwise changed.
+
+CompactNamespaces: false
+# If true, consecutive namespace declarations will be on the same line. If false, each namespace is declared on a new line.
+
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+# If the constructor initializers don’t fit on a line, put each initializer on its own line.
+
+ConstructorInitializerIndentWidth: 4
+# The number of characters to use for indentation of constructor initializer lists as well as inheritance lists.
+
+ContinuationIndentWidth: 4
+# Indent width for line continuations.
+
+Cpp11BracedListStyle: true
+# If true, format braced lists as best suited for C++11 braced lists. name is assumed. 
+
+DerivePointerAlignment: false
+# If true, analyze the formatted file for the most common alignment of & and *. Pointer and reference alignment styles are going to be updated according to the preferences found in the file. PointerAlignment is then used only as fallback.
+
+ExperimentalAutoDetectBinPacking: true
+# If true, clang-format detects whether function calls and definitions are formatted with one parameter per line.
+
+FixNamespaceComments: false
+# If true, clang-format adds missing namespace end comments and fixes invalid existing ones.
+
+ForEachMacros: ['RANGES_FOR', 'FOREACH']
+# A vector of macros that should be interpreted as foreach loops instead of as function calls.
+
+IncludeBlocks: Regroup
+# Dependent on the value, multiple #include blocks can be sorted as one and divided based on category.
+
+IncludeCategories:
+  - Regex:           '^["<]gl/'
+    Priority:        1
+  - Regex:           '^["<]vulkan/'
+    Priority:        2
+  - Regex:           '^["<]igpu/'
+    Priority:        3
+  - Regex:           '^["<]framework/'
+    Priority:        4
+# Regular expressions denoting the different #include categories used for ordering #includes
+
+BasedOnStyle: LLVM
+Language: Cpp
+# Specify a regular expression of suffixes that are allowed in the file-to-main-include mapping.
+
+IndentCaseLabels: false
+# Indent case labels one level from the switch statement.
+
+IndentGotoLabels: false
+# Indent goto labels.
+
+IndentPPDirectives: AfterHash 
+# The preprocessor directive indenting style to use.
+
+IndentWidth: 4
+# The number of columns to use for indentation.
+
+IndentWrappedFunctionNames: true
+# Indent if a function definition or declaration is wrapped after the type.
+
+JavaImportGroups: ['com.example', 'com', 'org']
+# A vector of prefixes ordered by the desired groups for Java imports.
+
+JavaScriptQuotes: Leave 
+# The JavaScriptQuoteStyle to use for JavaScript strings.
+
+JavaScriptWrapImports: true
+# Whether to wrap JavaScript import/export statements.
+
+KeepEmptyLinesAtTheStartOfBlocks: false
+# If true, the empty line at the start of blocks is kept.
+
+MaxEmptyLinesToKeep: 2
+# The maximum number of consecutive empty lines to keep.
+
+NamespaceIndentation: All 
+# The indentation used for namespaces.
+
+ObjCBinPackProtocolList: Never 
+# Controls bin-packing Objective-C protocol conformance list items into as few lines as possible when they go over ColumnLimit.
+
+ObjCBlockIndentWidth: 4
+# The number of characters to use for indentation of ObjC blocks.
+
+ObjCSpaceAfterProperty: true
+# Add a space after @property in Objective-C, i.e. use @property (readonly) instead of @property(readonly).
+
+ObjCSpaceBeforeProtocolList: true
+# Add a space in front of an Objective-C protocol list, i.e. use Foo <Protocol> instead of Foo<Protocol>.
+
+PenaltyBreakBeforeFirstCallParameter: 1000
+# The penalty for breaking a function call after call(.
+
+PenaltyReturnTypeOnItsOwnLine: 1000000
+# Penalty for putting the return type of a function onto its own line.
+
+PointerAlignment: Left 
+# Pointer and reference alignment style.
+
+ReflowComments: true
+# If true, clang-format will attempt to re-flow comments.
+
+SortIncludes: true
+# If true, clang-format will sort #includes.
+
+SortUsingDeclarations: true
+# If true, clang-format will sort using declarations.
+
+SpaceAfterCStyleCast: false
+# If true, a space is inserted after C style casts.
+
+SpaceAfterLogicalNot: false
+# If true, a space is inserted after the logical not operator (!).
+
+SpaceAfterTemplateKeyword: true
+# If true, a space will be inserted after the ‘template’ keyword.
+
+SpaceBeforeAssignmentOperators: true 
+# If false, spaces will be removed before assignment operators.
+
+SpaceBeforeCpp11BracedList: false
+# If true, a space will be inserted before a C++11 braced list used to initialize an object (after the preceding identifier or type).
+
+SpaceBeforeCtorInitializerColon: true
+# If false, spaces will be removed before constructor initializer colon.
+
+SpaceBeforeInheritanceColon: true
+# If false, spaces will be removed before inheritance colon.
+
+SpaceBeforeParens: true
+# Defines in which cases to put a space before opening parentheses.
+
+SpaceBeforeRangeBasedForLoopColon: true
+# If false, spaces will be removed before range-based for loop colon.
+
+SpaceInEmptyBlock: false
+# If true, spaces will be inserted into {}.
+
+SpaceInEmptyParentheses: false
+# If true, spaces may be inserted into ().
+
+SpacesBeforeTrailingComments: 4
+# The number of spaces before trailing line comments (// - comments).
+
+SpacesInAngles: true
+# If true, spaces will be inserted after < and before > in template argument lists.
+
+SpacesInCStyleCastParentheses: false
+# If true, spaces may be inserted into C style casts.
+
+SpacesInContainerLiterals: true
+# If true, spaces are inserted inside container literals (e.g. ObjC and Javascript array and dict literals).
+
+SpacesInParentheses: true
+# If true, spaces will be inserted after ( and before ).
+
+SpacesInSquareBrackets: false
+# If true, spaces will be inserted after [ and before ]. Lambdas without arguments or unspecified size array declarations will not be affected.
+
+Standard: Cpp11 
+# Parse and format C++ constructs compatible with this standard.
+
+TabWidth: 4 
+# The number of columns used for tab stops.
+
+TypenameMacros:  [ 'ENUM_SERIALIZABLE', 'ENUM_SERIALIZABLE_TYPE', 'ENUM_FLAGS_SERIALIZABLE', 'ENUM_FLAGS_SERIALIZABLE_TYPE', 'IGPU_VERT_CFG_OF' ]
+# A vector of macros that should be interpreted as type declarations instead of as function calls.
+
+UseTab: Always 
+# The way to use tab characters in the resulting file.
