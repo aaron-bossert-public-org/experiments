@@ -1,15 +1,15 @@
 
 #pragma once
 
-#include "igpu/shader/program_parsing.h"
 #include "vulkan/defines/vulkan_includes.h"
+
+#include "igpu/shader/program_parsing.h"
 
 namespace igpu
 {
 	class vulkan_shader
 	{
 	public:
-
 		struct vulkan
 		{
 			VkDevice device = nullptr;
@@ -22,6 +22,6 @@ namespace igpu
 
 		virtual size_t parameter_count() const = 0;
 
-		virtual const spirv::parameter& parameter(size_t) const = 0;
+		virtual const spirv::parameter& parameter( size_t ) const = 0;
 	};
 }

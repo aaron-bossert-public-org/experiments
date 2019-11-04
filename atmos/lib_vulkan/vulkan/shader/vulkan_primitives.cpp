@@ -1,5 +1,6 @@
 
 #include "vulkan/shader/vulkan_primitives.h"
+
 #include "vulkan/buffer/vulkan_compute_buffer.h"
 #include "vulkan/texture/vulkan_depth_texture2d.h"
 #include "vulkan/texture/vulkan_render_texture2d.h"
@@ -72,7 +73,8 @@ std::unique_ptr< vulkan_primitives > vulkan_primitives::make(
 			[&]( auto&& ptr ) {
 				vulkan_primitive::config vulkan_cfg = {
 					prim_cfg,
-					to_vulkan_variant( ptr ) };
+					to_vulkan_variant( ptr ),
+				};
 				primitives.emplace_back( vulkan_cfg );
 			},
 			prim_cfg.value );

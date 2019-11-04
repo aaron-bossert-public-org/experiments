@@ -9,9 +9,9 @@
 #elif ATMOS_BUILD_ANDROID
 #	define VK_USE_PLATFORM_ANDROID_KHR 1
 #elif ATMOS_BUILD_WINDOWS
-	#define VK_USE_PLATFORM_WIN32_KHR 1
+#	define VK_USE_PLATFORM_WIN32_KHR 1
 #elif ATMOS_BUILD_OSX
-	#define VK_USE_PLATFORM_MACOS_MVK 1
+#	define VK_USE_PLATFORM_MACOS_MVK 1
 #else
 #	error No build platform defined ATMOS_BUILD_IOS/ ATMOS_BUILD_WINDOWS/ etc...
 #endif
@@ -22,21 +22,25 @@
 #	define NOMINMAX
 #endif
 
-#pragma warning(push)
-#pragma warning(disable:4189)// local variable not initialized, vk_mem_alloc.h
+#pragma warning( push )
+#pragma warning( \
+	disable : 4189 )	// local variable not initialized, vk_mem_alloc.h
 #if ATMOS_DEBUG
 #	include <vulkan/defines/vulkan_debug.h>
 #else
-#	define VULKAN_CHECK_ERR(f, ...) f(__VA_ARGS__)
+#	define VULKAN_CHECK_ERR( f, ... ) f( __VA_ARGS__ )
 #	include <vulkan.h>
 #	include <VulkanMemoryAllocator\src\vk_mem_alloc.h>
 #endif
-#pragma warning(pop)
+#pragma warning( pop )
 
 #if ATMOS_BUILD_WINDOWS
 #	undef far
 #	undef near
 #endif
+
+
+// clang-format off
 
 #define vmaCreateAllocator(                 ...) VULKAN_CHECK_ERR(vmaCreateAllocator                 , __VA_ARGS__)
 #define vmaFindMemoryTypeIndex(             ...) VULKAN_CHECK_ERR(vmaFindMemoryTypeIndex             , __VA_ARGS__)
@@ -235,3 +239,5 @@
 #define vkCreateDebugReportCallbackEXT(                  ...) VULKAN_CHECK_ERR(vkCreateDebugReportCallbackEXT                  , __VA_ARGS__)
 #define vkDestroyDebugReportCallbackEXT(                 ...) VULKAN_CHECK_ERR(vkDestroyDebugReportCallbackEXT                 , __VA_ARGS__)
 #define vkDebugReportMessageEXT(                         ...) VULKAN_CHECK_ERR(vkDebugReportMessageEXT                         , __VA_ARGS__)
+
+// clang-format on

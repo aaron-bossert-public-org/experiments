@@ -25,16 +25,15 @@ namespace igpu
 
 		const igpu::primitives& primitives() const override;
 
-		void visibility_sphere(const utility::sphere& visibility_sphere) override;
+		void visibility_sphere(
+			const utility::sphere& visibility_sphere ) override;
 
 	protected:
-
 		gl_batch_binding(
 			const instance_batch::config&,
-			const utility::sphere&);
+			const utility::sphere& );
 
 	private:
-
 		const igpu::primitives _primitives;
 		utility::sphere _visibility_sphere;
 	};
@@ -42,8 +41,7 @@ namespace igpu
 	template < typename BATCH_T >
 	class gl_batch_binding_t : public gl_batch_binding
 	{
-    public:
-
+	public:
 		struct config
 		{
 			BATCH_T* batch = nullptr;
@@ -56,29 +54,24 @@ namespace igpu
 
 		void unbind() override
 		{
-			_cfg.batch->remove(*this);
+			_cfg.batch->remove( *this );
 			_cfg.batch = nullptr;
 		}
 
 		~gl_batch_binding_t() override
-		{
+		{}
 
-		}
-
-		std::unique_ptr<gl_batch_binding_t> make(
+		std::unique_ptr< gl_batch_binding_t > make(
 			const config::config&,
-			const utility::sphere& visibility_sphere) override
-		{
-
-		}
+			const utility::sphere& visibility_sphere ) override
+		{}
 
 	protected:
 		gl_batch_binding_t(
 			const config::config&,
-			const utility::sphere& visibility_sphere);
+			const utility::sphere& visibility_sphere );
 
 	private:
-
 		const config _cfg;
-	};  
+	};
 }

@@ -2,10 +2,10 @@
 //#include "igpu/texture/sampler.h"
 //
 //#include "gl/defines/gl_includes.h"
-//using namespace igpu;
+// using namespace igpu;
 //
 //
-//unsigned to_gl(sampler::filter filter)
+// unsigned to_gl(sampler::filter filter)
 //{
 //	switch (filter)
 //	{
@@ -21,7 +21,7 @@
 //	}
 //}
 //
-//unsigned to_gl(sampler::address address)
+// unsigned to_gl(sampler::address address)
 //{
 //	switch (address)
 //	{
@@ -33,7 +33,7 @@
 //		return GL_MIRRORED_REPEAT;
 //	default:
 //		LOG_CRITICAL(
-//			"unhandled type(%s)", 
+//			"unhandled type(%s)",
 //			sampler::to_string(address).data());
 //		return GL_CLAMP_TO_EDGE;
 //	}

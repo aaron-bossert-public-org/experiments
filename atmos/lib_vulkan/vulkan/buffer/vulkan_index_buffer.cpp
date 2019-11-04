@@ -1,12 +1,13 @@
 
 #include "vulkan/buffer/vulkan_index_buffer.h"
+
 #include "vulkan/buffer/vulkan_staged_buffer.h"
 
 using namespace igpu;
 
-VkIndexType igpu::to_vulkan_format(index_format format)
+VkIndexType igpu::to_vulkan_format( index_format format )
 {
-	switch (format)
+	switch ( format )
 	{
 	case index_format::UNSIGNED_INT:
 		return VK_INDEX_TYPE_UINT32;
@@ -14,36 +15,35 @@ VkIndexType igpu::to_vulkan_format(index_format format)
 		return VK_INDEX_TYPE_UINT16;
 	};
 
-	if (is_valid(format))
+	if ( is_valid( format ) )
 	{
-		LOG_CRITICAL("unhandled format: %s", to_string(format).data());
+		LOG_CRITICAL( "unhandled format: %s", to_string( format ).data() );
 	}
 	else
 	{
-		LOG_CRITICAL("invalid format: %d", format);
+		LOG_CRITICAL( "invalid format: %d", format );
 	}
 
 	return VK_INDEX_TYPE_UINT16;
 }
 
-std::unique_ptr<vulkan_index_buffer> vulkan_index_buffer::make(
+std::unique_ptr< vulkan_index_buffer > vulkan_index_buffer::make(
 	const config& cfg,
-	const scoped_ptr < vulkan_synchronization >& synchronization)
+	const scoped_ptr< vulkan_synchronization >& synchronization )
 {
-	vulkan_staged_buffer::config buffer_cfg({
-		cfg.usage,
-		VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-		synchronization });
-
-	if (!is_valid(cfg.format))
+	if ( !is_valid( cfg.format ) )
 	{
-		LOG_CRITICAL("invalid format: %d", cfg.format);
+		LOG_CRITICAL( "invalid format: %d", cfg.format );
 	}
 	else
 	{
-		return vulkan_staged_buffer_t < vulkan_index_buffer > ::make(
-			cfg, 
-			buffer_cfg);
+		return vulkan_staged_buffer_t< vulkan_index_buffer >::make(
+			cfg,
+			{
+				cfg.usage,
+				VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+				synchronization,
+			} );
 	}
 	return nullptr;
 }

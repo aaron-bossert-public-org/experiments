@@ -4,13 +4,13 @@
 //#include "framework/logging/log.h"
 //#include <unordered_map>
 //
-//using namespace igpu;
+// using namespace igpu;
 //
-//gl_parameter::gl_parameter()
+// gl_parameter::gl_parameter()
 //	: parameter({}, (size_t)-1)
 //{}
 //
-//gl_parameter::gl_parameter(
+// gl_parameter::gl_parameter(
 //	const config& cfg,
 //	size_t binding,
 //	int location,
@@ -21,12 +21,12 @@
 //{
 //}
 //
-//int gl_parameter::location() const
+// int gl_parameter::location() const
 //{
 //	return _location;
 //}
 //
-//unsigned gl_parameter::binding_index() const
+// unsigned gl_parameter::binding_index() const
 //{
 //	return _binding_index;
 //}

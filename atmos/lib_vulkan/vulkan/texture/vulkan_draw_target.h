@@ -13,7 +13,6 @@ namespace igpu
 	class vulkan_draw_target : public draw_target
 	{
 	public:
-
 		struct config : draw_target::config
 		{
 			struct vulkan
@@ -27,13 +26,10 @@ namespace igpu
 
 		const config& cfg() const override;
 
-		static std::unique_ptr<vulkan_draw_target> make(
-			const config&);
+		static std::unique_ptr< vulkan_draw_target > make( const config& );
 
 	private:
-
-		vulkan_draw_target(
-			const config&);
+		vulkan_draw_target( const config& );
 
 		const config _cfg;
 	};

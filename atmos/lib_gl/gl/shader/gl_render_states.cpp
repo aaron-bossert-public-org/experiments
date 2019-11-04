@@ -5,10 +5,10 @@
 //
 //#include "gl/defines/gl_includes.h"
 //
-//using namespace igpu;
+// using namespace igpu;
 //
-//namespace
-//{   
+// namespace
+//{
 //    uint16_t to_gl_format(cull cull, bool* success)
 //	{
 //		switch (cull)
@@ -95,7 +95,7 @@
 //		}
 //
 //		LOG_CRITICAL("unhandled compare value: %s", to_string(compare).data());
-//		
+//
 //		return GL_LESS;
 //	};
 //
@@ -135,7 +135,7 @@
 ////------------------------------------------------------------------------------
 ////
 ////
-//gl_cull_mode gl_cull_mode::make(const cull_mode& mode, bool* success)
+// gl_cull_mode gl_cull_mode::make(const cull_mode& mode, bool* success)
 //{
 //	return {
 //		mode.enable,
@@ -143,7 +143,7 @@
 //	};
 //}
 //
-//gl_blend_mode gl_blend_mode::make(const blend_mode& mode, bool* success)
+// gl_blend_mode gl_blend_mode::make(const blend_mode& mode, bool* success)
 //{
 //	return {
 //		mode.enable,
@@ -152,7 +152,7 @@
 //	};
 //}
 //
-//gl_depth_mode gl_depth_mode::make(const depth_mode& mode, bool* success)
+// gl_depth_mode gl_depth_mode::make(const depth_mode& mode, bool* success)
 //{
 //	return {
 //		mode.enable,
@@ -162,7 +162,8 @@
 //
 //}
 //
-//gl_stencil_mode gl_stencil_mode::make(const stencil_mode& mode, bool* success)
+// gl_stencil_mode gl_stencil_mode::make(const stencil_mode& mode, bool*
+// success)
 //{
 //	return {
 //		mode.enable,
@@ -176,7 +177,8 @@
 //	};
 //}
 //
-//gl_packed_states gl_packed_states::make(const render_states::config& cfg, bool* success)
+// gl_packed_states gl_packed_states::make(const render_states::config& cfg,
+// bool* success)
 //{
 //	return {
 //		cfg.color_write_mask,
@@ -186,24 +188,25 @@
 //		gl_stencil_mode::make(cfg.stencil, success),
 //	};
 //}
-// 
-//const gl_render_states::config& gl_render_states::cfg() const
+//
+// const gl_render_states::config& gl_render_states::cfg() const
 //{
 //	return _cfg;
 //}
 //
-//int gl_render_states::compare(const render_states* other)
+// int gl_render_states::compare(const render_states* other)
 //{
 //	auto* gl_other = ASSERT_CAST(const gl_render_states*, other);
 //	return memcmp(_packed, gl_other->_packed);
 //}
 //
-//const gl_packed_states& gl_render_states::packed() const
+// const gl_packed_states& gl_render_states::packed() const
 //{
 //	return _packed;
 //}
 //
-//std::unique_ptr < gl_render_states > gl_render_states::make(const config& cfg)
+// std::unique_ptr < gl_render_states > gl_render_states::make(const config&
+// cfg)
 //{
 //	bool success = true;
 //	auto packed = gl_packed_states::make(cfg, &success);
@@ -220,7 +223,7 @@
 //	return nullptr;
 //}
 //
-//gl_render_states::gl_render_states(
+// gl_render_states::gl_render_states(
 //	const config& cfg,
 //	const gl_packed_states& packed)
 //	: _cfg(cfg)

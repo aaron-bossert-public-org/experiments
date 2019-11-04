@@ -3,15 +3,15 @@
 
 #include "igpu/texture/depth_format.h"
 #include "igpu/texture/sampler.h"
+
 #include "glm/vec2.hpp"
 #include <string>
 
 namespace igpu
 {
-    class depth_buffer
-    {
-    public:
-		
+	class depth_buffer
+	{
+	public:
 		struct config
 		{
 			std::string name;
@@ -23,11 +23,12 @@ namespace igpu
 		virtual const config& cfg() const = 0;
 
 		virtual ~depth_buffer() = default;
-        
-    protected:
-		depth_buffer() {}
-        
-		depth_buffer(const depth_buffer&) = delete;
-		depth_buffer& operator= (const depth_buffer&) = delete;
-    };
+
+	protected:
+		depth_buffer()
+		{}
+
+		depth_buffer( const depth_buffer& ) = delete;
+		depth_buffer& operator=( const depth_buffer& ) = delete;
+	};
 }

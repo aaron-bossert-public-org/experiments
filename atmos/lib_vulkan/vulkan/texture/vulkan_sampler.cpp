@@ -3,9 +3,9 @@
 
 using namespace igpu;
 
-VkSamplerAddressMode igpu::to_vulkan_address(sampler::address address)
+VkSamplerAddressMode igpu::to_vulkan_address( sampler::address address )
 {
-	switch (address)
+	switch ( address )
 	{
 	case sampler::address::CLAMP:
 		return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
@@ -17,22 +17,24 @@ VkSamplerAddressMode igpu::to_vulkan_address(sampler::address address)
 		return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
 	};
 
-	if (sampler::is_valid(address))
+	if ( sampler::is_valid( address ) )
 	{
-		LOG_CRITICAL("unhandled format: %s", sampler::to_string(address).data());
+		LOG_CRITICAL(
+			"unhandled format: %s",
+			sampler::to_string( address ).data() );
 	}
 	else
 	{
-		LOG_CRITICAL("invalid format: %d", address);
+		LOG_CRITICAL( "invalid format: %d", address );
 	}
 
 	return VK_SAMPLER_ADDRESS_MODE_REPEAT;
 }
 
 
-VkFilter igpu::to_vulkan_filter(sampler::filter filter)
+VkFilter igpu::to_vulkan_filter( sampler::filter filter )
 {
-	switch (filter)
+	switch ( filter )
 	{
 	case sampler::filter::NEAREST:
 		return VK_FILTER_NEAREST;
@@ -41,13 +43,15 @@ VkFilter igpu::to_vulkan_filter(sampler::filter filter)
 		return VK_FILTER_LINEAR;
 	};
 
-	if (sampler::is_valid(filter))
+	if ( sampler::is_valid( filter ) )
 	{
-		LOG_CRITICAL("unhandled format: %s", sampler::to_string(filter).data());
+		LOG_CRITICAL(
+			"unhandled format: %s",
+			sampler::to_string( filter ).data() );
 	}
 	else
 	{
-		LOG_CRITICAL("invalid format: %d", filter);
+		LOG_CRITICAL( "invalid format: %d", filter );
 	}
 
 	return VK_FILTER_LINEAR;

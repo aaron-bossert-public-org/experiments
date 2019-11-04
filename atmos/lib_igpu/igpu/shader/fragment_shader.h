@@ -5,8 +5,6 @@
 
 namespace igpu
 {
-    class fragment_shader : public shader
-    {
-    };
+	class fragment_shader : public shader
+	{};
 }
-

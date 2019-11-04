@@ -5,7 +5,6 @@
 
 namespace igpu
 {
-    class shader
-    {
-    };
+	class shader
+	{};
 }

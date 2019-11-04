@@ -6,10 +6,9 @@
 
 namespace igpu
 {
-    class index_buffer : public buffer
-    {
-    public:
-
+	class index_buffer : public buffer
+	{
+	public:
 		struct config : buffer::config
 		{
 			index_format format;
@@ -19,7 +18,7 @@ namespace igpu
 
 		size_t element_count() const
 		{
-			return byte_capacity() / bytes_per_index(cfg().format);
+			return byte_capacity() / bytes_per_index( cfg().format );
 		}
-    };   
+	};
 }

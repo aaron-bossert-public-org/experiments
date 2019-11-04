@@ -7,12 +7,11 @@
 
 namespace igpu
 {
-	VkFormat to_vulkan_format(components);
+	VkFormat to_vulkan_format( components );
 
 	class vulkan_vertex_parameter : public vertex_parameter
 	{
 	public:
-		
 		struct config : spirv::vertex_parameter
 		{
 			struct vulkan
@@ -25,10 +24,9 @@ namespace igpu
 
 		const config& cfg() const override;
 
-		vulkan_vertex_parameter(const spirv::vertex_parameter&);
+		vulkan_vertex_parameter( const spirv::vertex_parameter& );
 
 	private:
-		
 		const config _cfg;
 	};
 }

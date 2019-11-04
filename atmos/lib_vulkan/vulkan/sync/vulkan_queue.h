@@ -14,7 +14,6 @@ namespace igpu
 	class vulkan_queue
 	{
 	public:
-
 		struct config
 		{
 			VkDevice device;
@@ -22,7 +21,7 @@ namespace igpu
 			uint32_t index = ~0U;
 		};
 
-		static std::unique_ptr < vulkan_queue > make(const config&);
+		static std::unique_ptr< vulkan_queue > make( const config& );
 
 		const config& cfg() const;
 
@@ -30,24 +29,22 @@ namespace igpu
 
 		VkCommandPool command_pool();
 
-		std::list < vulkan_command_buffer >& pending_commands();
+		std::list< vulkan_command_buffer >& pending_commands();
 
 		void free_completed_commands();
 
 		~vulkan_queue();
-		
-	private:
 
+	private:
 		vulkan_queue(
 			const config&,
 			VkQueue queue,
-			VkCommandPool command_pool);
+			VkCommandPool command_pool );
 
 	private:
-
 		VkQueue _queue = nullptr;
 		VkCommandPool _command_pool = nullptr;
-		std::list < vulkan_command_buffer > _pending_commands;
+		std::list< vulkan_command_buffer > _pending_commands;
 
 		const config _cfg;
 	};

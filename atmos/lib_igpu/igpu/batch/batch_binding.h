@@ -6,9 +6,8 @@
 namespace igpu
 {
 	class batch_binding
-    {
-    public:
-        
+	{
+	public:
 		virtual ~batch_binding() = default;
 
 		virtual const instance_batch::config& cfg() const = 0;
@@ -17,11 +16,9 @@ namespace igpu
 
 		virtual const igpu::instance_batch& instance_batch() const = 0;
 
-    protected:
-
+	protected:
 		batch_binding() = default;
-		batch_binding(const batch_binding&) = delete;
-		batch_binding& operator= (const batch_binding&) = delete;
-    };
+		batch_binding( const batch_binding& ) = delete;
+		batch_binding& operator=( const batch_binding& ) = delete;
+	};
 }
-

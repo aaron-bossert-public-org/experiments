@@ -8,7 +8,6 @@ namespace igpu
 	class vulkan_fence
 	{
 	public:
-
 		struct config
 		{
 			VkDevice device = nullptr;
@@ -21,22 +20,21 @@ namespace igpu
 			};
 		};
 
-		static std::unique_ptr<vulkan_fence> make(const config&);
+		static std::unique_ptr< vulkan_fence > make( const config& );
 
 		const config& cfg() const;
 
 		VkFence get() const;
 
-		bool is_ready(uint64_t wait_nanosecnods = 0);
+		bool is_ready( uint64_t wait_nanosecnods = 0 );
 
-		void wait(uint64_t err_msg_nanosecnods = 1000 * 1000 * 1000);
+		void wait( uint64_t err_msg_nanosecnods = 1000 * 1000 * 1000 );
 
-		vulkan_fence(const config&);
+		vulkan_fence( const config& );
 
 		~vulkan_fence();
-	
-	private:
 
+	private:
 		const config _cfg;
 		const VkFence _fence;
 	};

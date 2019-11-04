@@ -16,11 +16,10 @@ namespace igpu
 		utility::frustum frustum;
 	};
 
-	template<typename CHILD_T, typename ITEM_T>
+	template < typename CHILD_T, typename ITEM_T >
 	class batch_api_t
 	{
 	public:
-
 		using child_t = typename CHILD_T;
 		using item_t = typename ITEM_T;
 
@@ -28,38 +27,35 @@ namespace igpu
 
 		virtual size_t child_count() const = 0;
 
-		virtual const child_t& child(size_t) const = 0;
+		virtual const child_t& child( size_t ) const = 0;
 
-		virtual child_t& child(size_t) = 0;
+		virtual child_t& child( size_t ) = 0;
 
 	protected:
 		virtual ~batch_api_t() = default;
 		batch_api_t() = default;
-		batch_api_t(const batch_api_t&) = default;
-		batch_api_t& operator= (const batch_api_t&) = default;
+		batch_api_t( const batch_api_t& ) = default;
+		batch_api_t& operator=( const batch_api_t& ) = default;
 	};
 
-	class geometry_batch : public batch_api_t<instance_batch, geometry>
-	{
-	};
+	class geometry_batch : public batch_api_t< instance_batch, geometry >
+	{};
 
-	class material_batch : public batch_api_t<geometry_batch, primitives>
-	{
-	};
+	class material_batch : public batch_api_t< geometry_batch, primitives >
+	{};
 
-	class graphics_pipeline_batch : public batch_api_t<material_batch, graphics_pipeline>
-	{
-	};
+	class graphics_pipeline_batch
+		: public batch_api_t< material_batch, graphics_pipeline >
+	{};
 
-	class program_batch : public batch_api_t<graphics_pipeline_batch, program>
-	{
-	};
+	class program_batch : public batch_api_t< graphics_pipeline_batch, program >
+	{};
 
-	class root_batch : public batch_api_t<program_batch, primitives>
+	class root_batch : public batch_api_t< program_batch, primitives >
 	{
 	protected:
 		root_batch() = default;
-		root_batch(const root_batch&) = delete;
-		root_batch& operator= (const root_batch&) = delete;
+		root_batch( const root_batch& ) = delete;
+		root_batch& operator=( const root_batch& ) = delete;
 	};
 }

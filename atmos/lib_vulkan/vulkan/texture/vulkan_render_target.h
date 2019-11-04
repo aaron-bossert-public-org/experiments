@@ -10,7 +10,6 @@ namespace igpu
 	class vulkan_render_target
 	{
 	public:
-
 		struct vulkan
 		{
 			VkPhysicalDevice physical_device = nullptr;
@@ -24,4 +23,3 @@ namespace igpu
 		virtual const vulkan_image& gpu_resource() const = 0;
 	};
 }
-

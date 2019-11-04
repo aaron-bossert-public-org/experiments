@@ -3,14 +3,14 @@
 
 #include "igpu/texture/color_format.h"
 #include "igpu/texture/sampler.h"
+
 #include "glm/vec2.hpp"
 
 namespace igpu
 {
-    class render_buffer
-    {
+	class render_buffer
+	{
 	public:
-
 		struct config
 		{
 			std::string name;
@@ -22,10 +22,10 @@ namespace igpu
 		virtual const config& cfg() const = 0;
 
 		virtual ~render_buffer() = default;
-        
-    protected:
+
+	protected:
 		render_buffer() = default;
-		render_buffer(const render_buffer&) = delete;
-		render_buffer& operator= (const render_buffer&) = delete;
-    };
+		render_buffer( const render_buffer& ) = delete;
+		render_buffer& operator=( const render_buffer& ) = delete;
+	};
 }

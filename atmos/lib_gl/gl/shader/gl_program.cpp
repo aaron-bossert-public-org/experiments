@@ -20,9 +20,9 @@
 //
 //#include <algorithm>
 //
-//using namespace igpu;
+// using namespace igpu;
 //
-//namespace
+// namespace
 //{
 //	std::vector<gl_parameter> discover_parameters(GLuint program)
 //    {
@@ -36,10 +36,12 @@
 //		{
 //			GLint len;
 //			GLint binding_index;
-//			//(GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint *params)
-//			glGetActiveUniformBlockiv(program, index, GL_UNIFORM_BLOCK_NAME_LENGTH, &len);
-//			glGetActiveUniformBlockiv(program, index, GL_UNIFORM_BLOCK_BINDING, &binding_index);
-//			
+//			//(GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint
+//*params) 			glGetActiveUniformBlockiv(program, index,
+// GL_UNIFORM_BLOCK_NAME_LENGTH, &len);
+// glGetActiveUniformBlockiv(program, index, GL_UNIFORM_BLOCK_BINDING,
+// &binding_index);
+//
 //			std::vector<GLchar> name(len);
 //			glGetActiveUniformBlockName(program, index, len, NULL, &name[0]);
 //
@@ -61,32 +63,33 @@
 //        GLenum    gl_type = 0;
 //        GLint   location = 0;
 //		GLenum   binding = 0;
-//        
+//
 //        glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &uniform_count);
-//		        
+//
 //        for(GLint i = 0; i < uniform_count; ++i)
 //        {
-//            glGetActiveUniform( program, i, name_max_size, &name_len, &size, &gl_type, name_raw );
-//            location = glGetUniformLocation( program, name_raw );
-//            
+//            glGetActiveUniform( program, i, name_max_size, &name_len, &size,
+//            &gl_type, name_raw ); location = glGetUniformLocation( program,
+//            name_raw );
+//
 //            std::string name = name_raw;
-//            
+//
 //            // gl likes to return array element names instead of array names,
 //            // eg: "things[0]" instead of "things"
 //            // lets strip off that array stuff here:
 //            name = name.substr(0, name.find('['));
 //
-//			// if parameter is a texture, set its texture stage to a non zero value
-//			GLenum binding_index = 0;
-//			
+//			// if parameter is a texture, set its texture stage to a non zero
+// value 			GLenum binding_index = 0;
+//
 //			if (gl_type == GL_SAMPLER_2D)
 //			{
 //				binding_index = binding + GL_TEXTURE0;
 //				ASSERT_CONTEXT(
 //					binding_index <= GL_TEXTURE7,
-//					"sample count overflow: binding_index(%d) <= GL_TEXTURE7(%d)",
-//					binding_index, GL_TEXTURE7);
-//				glUniform1i(location, binding);
+//					"sample count overflow: binding_index(%d) <=
+// GL_TEXTURE7(%d)", 					binding_index, GL_TEXTURE7);
+// glUniform1i(location, binding);
 //
 //				++binding;
 //			}
@@ -117,16 +120,19 @@
 //				CASE_NOT_IMPLEMENTED(GL_FLOAT_MAT2);
 //				CASE_NOT_IMPLEMENTED(GL_FLOAT_MAT3);
 //				CASE_NOT_IMPLEMENTED(GL_FLOAT_MAT4);
-//				default: LOG_CRITICAL("unrecognized gl_type(%d)", gl_type); continue;
+//				default: LOG_CRITICAL("unrecognized gl_type(%d)", gl_type);
+// continue;
 //				}
 //#undef CASE_NOT_IMPLEMENTED
 //			}
 //			else
 //			{
-//				LOG_CRITICAL("arrays not implemented, ignorning uniform:%s", name.c_str());
-//				continue;
+//				LOG_CRITICAL("arrays not implemented, ignorning uniform:%s",
+// name.c_str()); 				continue;
 //			}
-//			parameters.emplace_back(parameter::config{ name, type }, (size_t)-1, location, binding_index);
+//			parameters.emplace_back(parameter::config{ name, type, },
+//(size_t)-1,
+// location, binding_index);
 //        }
 //
 //		return parameters;
@@ -138,7 +144,7 @@
 //        glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &attribute_count);
 //		std::vector<gl_vertex_parameter> vertex_parameters;
 //		vertex_parameters.reserve(attribute_count);
-//        
+//
 //        for(GLint i = 0; i < attribute_count; ++i)
 //        {
 //            const int name_max_size = 100;
@@ -146,8 +152,9 @@
 //            GLsizei name_len = 0;
 //            GLint size = 0;
 //            GLenum type = 0;
-//            
-//            glGetActiveAttrib( program, i, name_max_size, &name_len, &size, &type, name_raw );
+//
+//            glGetActiveAttrib( program, i, name_max_size, &name_len, &size,
+//            &type, name_raw );
 //
 //			igpu::components components;
 //			switch (type)
@@ -168,9 +175,9 @@
 //				components = igpu::components::FLOAT4;
 //				break;
 //			default:
-//				LOG_CRITICAL("Unhandled vertex attrib gl type used in program: %d", type);
-//				components = igpu::components::FLOAT4;
-//				break;
+//				LOG_CRITICAL("Unhandled vertex attrib gl type used in program:
+//%d", type); 				components = igpu::components::FLOAT4;
+// break;
 //			}
 //            int attrib_location = glGetAttribLocation( program, name_raw );
 //
@@ -189,17 +196,17 @@
 ////------------------------------------------------------------------------------
 ////
 ////
-//const gl_program::config& gl_program::cfg() const
+// const gl_program::config& gl_program::cfg() const
 //{
 //	return _cfg;
 //}
 //
-//gl_program::~gl_program()
+// gl_program::~gl_program()
 //{
 //    glDeleteProgram(_gl_handle);
 //}
 //
-//void gl_program::update(size_t batch_drawpass_id, const batch* batch)
+// void gl_program::update(size_t batch_drawpass_id, const batch* batch)
 //{
 //	// apppears to be up to date with batch parameters, nothing to do here
 //	if (_batch_drawpass_id == batch_drawpass_id)
@@ -210,13 +217,15 @@
 //	const auto& cfg_constraints = _cfg.context->batch_constraints().cfg();
 //	const auto& batch_parameters = batch->parameters();
 //
-//	for (size_t param_index = 0; param_index < _batch_parameters.size(); ++param_index)
+//	for (size_t param_index = 0; param_index < _batch_parameters.size();
+//++param_index)
 //	{
 //		const auto& parameter = _batch_parameters[param_index];
 //		size_t binding = parameter.binding();
 //		if (binding < cfg_constraints.parameters.size())
 //		{
-//			if (const primitives::element* element = batch_parameters.find(binding))
+//			if (const primitives::element* element =
+// batch_parameters.find(binding))
 //			{
 //				update(parameter, element->primitive);
 //			}
@@ -225,7 +234,7 @@
 //				// use fallback value
 //				update(parameter, cfg_constraints.parameters[binding].second);
 //			}
-//		} 
+//		}
 //		else
 //		{
 //			LOG_CRITICAL(
@@ -236,15 +245,15 @@
 //	}
 //}
 //
-//void gl_program::update(const material* material)
+// void gl_program::update(const material* material)
 //{
 //	const auto& material_primitives = material->primitives();
 //	if (material_primitives.size() != _material_parameters.size())
 //	{
 //		LOG_CRITICAL(
-//			"material primitive count: %d does not match count expected by program: %d",
-//			material_primitives.size(),
-//			_material_parameters.size());
+//			"material primitive count: %d does not match count expected by
+// program: %d", 			material_primitives.size(),
+//_material_parameters.size());
 //	}
 //	else
 //	{
@@ -256,11 +265,12 @@
 //	}
 //}
 //
-//void gl_program::update(const batch_binding* binding)
+// void gl_program::update(const batch_binding* binding)
 //{
 //	const auto& primitives = binding->primitives();
 //
-//	for (size_t param_index = 0; param_index < _instance_parameters.size(); ++param_index)
+//	for (size_t param_index = 0; param_index < _instance_parameters.size();
+//++param_index)
 //	{
 //		const auto& parameter = _instance_parameters[param_index];
 //		if (const primitives::element* element = primitives.find(param_index))
@@ -268,13 +278,14 @@
 //			update(parameter, element->primitive);
 //		}
 //		else
-//		{	
+//		{
 //			update(parameter, default_instance_primitive(param_index));
 //		}
 //	}
 //}
 //
-//void gl_program::update(const gl_parameter& parameter, const primitive& primitive) const
+// void gl_program::update(const gl_parameter& parameter, const primitive&
+// primitive) const
 //{
 //#if ATMOS_PERFORMANCE_TRACKING
 //	if (primitive.type()  == parameter::type::TEXTURE2D)
@@ -298,8 +309,9 @@
 //		GLuint gl_handle = compute_buffer
 //			? compute_buffer->gl_handle()
 //			: 0;
-//			
-//		glBindBufferBase(GL_UNIFORM_BUFFER, parameter.binding_index(), gl_handle);
+//
+//		glBindBufferBase(GL_UNIFORM_BUFFER, parameter.binding_index(),
+// gl_handle);
 //	}
 //	case parameter::type::TEXTURE2D:
 //	{
@@ -310,12 +322,13 @@
 //			const auto* texture2d = (const gl_texture2d*)
 //				std::get<std::shared_ptr<igpu::texture2d>>(
 //					primitive.variant()).get();
-//			
+//
 //			gl_handle = texture2d
 //				? texture2d->gl_handle()
 //				: 0;
 //		}
-//		else if (std::holds_alternative<std::shared_ptr<depth_texture2d>>(variant))
+//		else if
+//(std::holds_alternative<std::shared_ptr<depth_texture2d>>(variant))
 //		{
 //			const auto* depth_texture2d = (const gl_depth_texture2d*)
 //				std::get<std::shared_ptr<igpu::depth_texture2d>>(
@@ -325,7 +338,8 @@
 //				? depth_texture2d->gl_handle()
 //				: 0;
 //		}
-//		else if (std::holds_alternative<std::shared_ptr<render_texture2d>>(variant))
+//		else if
+//(std::holds_alternative<std::shared_ptr<render_texture2d>>(variant))
 //		{
 //			const auto* render_texture2d = (const gl_render_texture2d*)
 //				std::get<std::shared_ptr<igpu::render_texture2d>>(
@@ -337,52 +351,55 @@
 //		}
 //		else
 //		{
-//			LOG_CRITICAL("unhandled variant index: %d", primitive.variant().index());
+//			LOG_CRITICAL("unhandled variant index: %d",
+// primitive.variant().index());
 //		}
 //
 //		_cfg.context->active_texture(parameter.binding_index(), gl_handle);
 //	}
 //	default:
-//		LOG_CRITICAL("unhandled type %s", parameter::to_string(primitive.type()).data());
+//		LOG_CRITICAL("unhandled type %s",
+// parameter::to_string(primitive.type()).data());
 //	}
 //}
 //
-//GLuint gl_program::gl_handle() const
+// GLuint gl_program::gl_handle() const
 //{
 //    return _gl_handle;
 //}
 //
-//size_t gl_program::batch_parameter_count() const
+// size_t gl_program::batch_parameter_count() const
 //{
 //	return _batch_parameters.size();
 //}
 //
-//const parameter& gl_program::batch_parameter(size_t i) const
+// const parameter& gl_program::batch_parameter(size_t i) const
 //{
 //	return _batch_parameters[i];
 //}
 //
-//size_t gl_program::material_parameter_count() const
+// size_t gl_program::material_parameter_count() const
 //{
 //	return _material_parameters.size();
 //}
 //
-//const parameter& gl_program::material_parameter(size_t i) const
+// const parameter& gl_program::material_parameter(size_t i) const
 //{
 //	return _material_parameters[i];
 //}
 //
-//size_t gl_program::instance_parameter_count() const
+// size_t gl_program::instance_parameter_count() const
 //{
 //	return _instance_parameters.size();
 //}
 //
-//const parameter& gl_program::instance_parameter(size_t i) const
+// const parameter& gl_program::instance_parameter(size_t i) const
 //{
 //	return _instance_parameters[i];
 //}
 //
-//size_t gl_program::index_of_instance_parameter(const std::string_view& name) const
+// size_t gl_program::index_of_instance_parameter(const std::string_view& name)
+// const
 //{
 //	auto find = _instance_parameter_lookup.find(name);
 //	if (find != _instance_parameter_lookup.end())
@@ -393,30 +410,33 @@
 //	return (size_t)-1;
 //}
 //
-//const primitive& gl_program::default_instance_primitive(size_t instance_parameter_index) const
+// const primitive& gl_program::default_instance_primitive(size_t
+// instance_parameter_index) const
 //{
-//	static primitive default_compute = (primitive::variant_t)std::shared_ptr<compute_buffer>();
-//	static primitive default_texture = (primitive::variant_t)std::shared_ptr<texture2d>();
+//	static primitive default_compute =
+//(primitive::variant_t)std::shared_ptr<compute_buffer>(); 	static primitive
+// default_texture = (primitive::variant_t)std::shared_ptr<texture2d>();
 //
 //	if (instance_parameter_index < _instance_parameters.size())
 //	{
-//		const parameter& instance_parameter = _instance_parameters[instance_parameter_index];
-//		parameter::type type = instance_parameter.cfg().type;
-//		switch (type)
+//		const parameter& instance_parameter =
+//_instance_parameters[instance_parameter_index]; 		parameter::type type =
+// instance_parameter.cfg().type; 		switch (type)
 //		{
 //		case parameter::type::COMPUTE_BUFFER:
 //			return default_compute;
 //		case parameter::type::TEXTURE2D:
 //			return default_texture;
 //		default:
-//			LOG_CRITICAL( "unhandled type %s, value will not be reset before the next draw call", parameter::to_string(type).data());
+//			LOG_CRITICAL( "unhandled type %s, value will not be reset before the
+// next draw call", parameter::to_string(type).data());
 //		}
 //	}
 //
 //	return default_texture;
 //}
 //
-//std::unique_ptr<gl_program> gl_program::make(
+// std::unique_ptr<gl_program> gl_program::make(
 //	const config& cfg)
 //{
 //    GLuint gl_handle = gl_compile(cfg);
@@ -473,12 +493,13 @@
 //			parameter.location(),
 //			parameter.binding_index()));
 //	}
-//	
+//
 //	for (const auto& instance_parameter : instance_parameters)
 //	{
 //		const std::string& name = instance_parameter.cfg().name;
-//		ASSERT_CONTEXT(instance_parameter_lookup.find(name) == instance_parameter_lookup.end());
-//		instance_parameter_lookup[name] = instance_parameter.binding();
+//		ASSERT_CONTEXT(instance_parameter_lookup.find(name) ==
+// instance_parameter_lookup.end()); 		instance_parameter_lookup[name] =
+// instance_parameter.binding();
 //	}
 //
 //	return std::unique_ptr<gl_program>(
@@ -491,7 +512,7 @@
 //			std::move(instance_parameter_lookup)));
 //}
 //
-//gl_program::gl_program(
+// gl_program::gl_program(
 //	const config& cfg,
 //	GLuint gl_handle,
 //	std::vector<gl_parameter> batch_parameters,
@@ -504,7 +525,8 @@
 //	, _material_parameters(std::move(material_parameters))
 //	, _instance_parameters(std::move(instance_parameters))
 //	, _instance_parameter_lookup(instance_parameter_lookup)
-//	, _texture_switch_metric(perf::category::SWITCH_TEXTURES, "Shader Texture Switches")
-//	, _parameter_switch_metric(perf::category::SWITCH_PARAMETERS, "Shader parameter Switches")
+//	, _texture_switch_metric(perf::category::SWITCH_TEXTURES, "Shader Texture
+// Switches") 	, _parameter_switch_metric(perf::category::SWITCH_PARAMETERS,
+//"Shader parameter Switches")
 //{}
 //

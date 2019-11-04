@@ -2,52 +2,46 @@
 #pragma once
 
 #include "igpu/buffer/buffer.h"
+
 #include "framework/perf/metrics.h"
 
 namespace igpu
 {
-    class gl_buffer : public buffer
-    {
-    public:
+	class gl_buffer : public buffer
+	{
+	public:
+		gl_buffer( const config&, unsigned gl_target );
 
-		gl_buffer(
-			const config&,
-			unsigned gl_target);
+		~gl_buffer();
 
-        ~gl_buffer();
-        
 		const config& cfg() const override;
 
-		void map(
-			size_t byte_size,
-			buffer_view_base*) override;
+		void map( size_t byte_size, buffer_view_base* ) override;
 
 		void unmap() override;
-		
+
 		size_t byte_capacity() const override;
 
 		unsigned gl_handle() const;
 
 		void release();
-        
-    private:
 
+	private:
 		const config _cfg;
 		const unsigned _gl_target;
 		const unsigned _gl_handle;
 		const unsigned _gl_usage;
 		const unsigned _gl_access;
-		
+
 		size_t _byte_capacity;
 		void* _mapped;
-        perf::metric _gpu_mem_metric;
-    };
+		perf::metric _gpu_mem_metric;
+	};
 
 	template < typename T >
 	class gl_buffer_t : public T
 	{
 	public:
-
 		using config = typename T::config;
 
 		const config& cfg() const override
@@ -55,9 +49,9 @@ namespace igpu
 			return _cfg;
 		}
 
-		void map(size_t byte_size, buffer_view_base* out_buffer_view) override
+		void map( size_t byte_size, buffer_view_base* out_buffer_view ) override
 		{
-			_gl_buffer.map(byte_size, out_buffer_view);
+			_gl_buffer.map( byte_size, out_buffer_view );
 		}
 
 		void unmap() override
@@ -72,45 +66,37 @@ namespace igpu
 
 		unsigned gl_handle() const override;
 
-		template <typename... ARGS>
-		static std::unique_ptr < gl_buffer_t > make(
+		template < typename... ARGS >
+		static std::unique_ptr< gl_buffer_t > make(
 			const config& cfg,
 			unsigned gl_target,
-			const ARGS& ... args)
+			const ARGS&... args )
 		{
-			if (!is_valid(cfg.usage))
+			if ( !is_valid( cfg.usage ) )
 			{
-				LOG_CRITICAL("invalid usage:%d", (int)cfg.usage);
+				LOG_CRITICAL( "invalid usage:%d", (int)cfg.usage );
 			}
 			else
 			{
-				return std::unique_ptr<gl_buffer_t>(
-					new gl_buffer_t(
-						cfg,
-						gl_target,
-						args...));
+				return std::unique_ptr< gl_buffer_t >(
+					new gl_buffer_t( cfg, gl_target, args... ) );
 			}
 
 			return nullptr;
 		}
 
 	protected:
-
-		template <typename... ARGS>
+		template < typename... ARGS >
 		gl_buffer_t(
 			const config& cfg,
 			unsigned gl_target,
-			const ARGS& ... args)
-			: T(args...)
-			, _cfg(cfg)
-			, _gl_buffer(
-				_cfg,
-				gl_target)
-		{
-		}
+			const ARGS&... args )
+			: T( args... )
+			, _cfg( cfg )
+			, _gl_buffer( _cfg, gl_target )
+		{}
 
 	private:
-
 		const config _cfg;
 		gl_buffer _gl_buffer;
 	};

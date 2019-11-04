@@ -14,7 +14,7 @@
 //#include "vulkan/defines/vulkan_includes.h"
 //
 //
-//namespace vks
+// namespace vks
 //{
 //	namespace initializers
 //	{
@@ -39,7 +39,8 @@
 //			uint32_t buffer_count)
 //		{
 //			VkCommandBufferAllocateInfo command_buffer_allocate_info{};
-//			command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+//			command_buffer_allocate_info.sType =
+// VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 //			command_buffer_allocate_info.commandPool = command_pool;
 //			command_buffer_allocate_info.level = level;
 //			command_buffer_allocate_info.commandBufferCount = buffer_count;
@@ -49,40 +50,45 @@
 //		inline VkCommandPoolCreateInfo command_pool_create_info()
 //		{
 //			VkCommandPoolCreateInfo cmd_pool_create_info{};
-//			cmd_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-//			return cmd_pool_create_info;
+//			cmd_pool_create_info.sType =
+// VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO; 			return
+// cmd_pool_create_info;
 //		}
 //
 //		inline VkCommandBufferBeginInfo command_buffer_begin_info()
 //		{
 //			VkCommandBufferBeginInfo cmd_buffer_begin_info{};
-//			cmd_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-//			return cmd_buffer_begin_info;
+//			cmd_buffer_begin_info.sType =
+// VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO; 			return
+// cmd_buffer_begin_info;
 //		}
 //
 //		inline VkCommandBufferInheritanceInfo command_buffer_inheritance_info()
 //		{
 //			VkCommandBufferInheritanceInfo cmd_buffer_inheritance_info{};
-//			cmd_buffer_inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-//			return cmd_buffer_inheritance_info;
+//			cmd_buffer_inheritance_info.sType =
+// VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO; 			return
+// cmd_buffer_inheritance_info;
 //		}
 //
 //		inline VkRenderPassBeginInfo render_pass_begin_info()
 //		{
 //			VkRenderPassBeginInfo render_pass_begin_info{};
-//			render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-//			return render_pass_begin_info;
+//			render_pass_begin_info.sType =
+// VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO; 			return
+// render_pass_begin_info;
 //		}
 //
 //		inline VkRenderPassCreateInfo render_pass_create_info()
 //		{
 //			VkRenderPassCreateInfo render_pass_create_info{};
-//			render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-//			return render_pass_create_info;
+//			render_pass_create_info.sType =
+// VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO; 			return
+// render_pass_create_info;
 //		}
 //
-//		/** @brief Initialize an image memory barrier with no image transfer ownership */
-//		inline VkImageMemoryBarrier image_memory_barrier()
+//		/** @brief Initialize an image memory barrier with no image transfer
+// ownership */ 		inline VkImageMemoryBarrier image_memory_barrier()
 //		{
 //			VkImageMemoryBarrier image_memory_barrier{};
 //			image_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -91,11 +97,12 @@
 //			return image_memory_barrier;
 //		}
 //
-//		/** @brief Initialize a buffer memory barrier with no image transfer ownership */
-//		inline VkBufferMemoryBarrier buffer_memory_barrier()
+//		/** @brief Initialize a buffer memory barrier with no image transfer
+// ownership */ 		inline VkBufferMemoryBarrier buffer_memory_barrier()
 //		{
 //			VkBufferMemoryBarrier buffer_memory_barrier{};
-//			buffer_memory_barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+//			buffer_memory_barrier.sType =
+// VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
 //			buffer_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 //			buffer_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 //			return buffer_memory_barrier;
@@ -126,22 +133,25 @@
 //		inline VkImageViewCreateInfo image_view_create_info()
 //		{
 //			VkImageViewCreateInfo image_view_create_info{};
-//			image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-//			return image_view_create_info;
+//			image_view_create_info.sType =
+// VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO; 			return
+// image_view_create_info;
 //		}
 //
 //		inline VkFramebufferCreateInfo framebuffer_create_info()
 //		{
 //			VkFramebufferCreateInfo framebuffer_create_info{};
-//			framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-//			return framebuffer_create_info;
+//			framebuffer_create_info.sType =
+// VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO; 			return
+// framebuffer_create_info;
 //		}
 //
 //		inline VkSemaphoreCreateInfo semaphore_create_info()
 //		{
 //			VkSemaphoreCreateInfo semaphore_create_info{};
-//			semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-//			return semaphore_create_info;
+//			semaphore_create_info.sType =
+// VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO; 			return
+// semaphore_create_info;
 //		}
 //
 //		inline VkFenceCreateInfo fence_create_info(VkFenceCreateFlags flags = 0)
@@ -218,7 +228,8 @@
 //			uint32_t max_sets)
 //		{
 //			VkDescriptorPoolCreateInfo descriptor_pool_info{};
-//			descriptor_pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+//			descriptor_pool_info.sType =
+// VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 //			descriptor_pool_info.poolSizeCount = pool_size_count;
 //			descriptor_pool_info.pPoolSizes = p_pool_sizes;
 //			descriptor_pool_info.maxSets = max_sets;
@@ -230,11 +241,12 @@
 //			uint32_t max_sets)
 //		{
 //			VkDescriptorPoolCreateInfo descriptor_pool_info{};
-//			descriptor_pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-//			descriptor_pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
-//			descriptor_pool_info.pPoolSizes = pool_sizes.data();
-//			descriptor_pool_info.maxSets = max_sets;
-//			return descriptor_pool_info;
+//			descriptor_pool_info.sType =
+// VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+//			descriptor_pool_info.poolSizeCount =
+// static_cast<uint32_t>(pool_sizes.size());
+// descriptor_pool_info.pPoolSizes = pool_sizes.data();
+// descriptor_pool_info.maxSets = max_sets; return descriptor_pool_info;
 //		}
 //
 //		inline VkDescriptorPoolSize descriptor_pool_size(
@@ -261,25 +273,29 @@
 //			return set_layout_binding;
 //		}
 //
-//		inline VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info(
-//			const VkDescriptorSetLayoutBinding* p_bindings,
-//			uint32_t binding_count)
+//		inline VkDescriptorSetLayoutCreateInfo
+// descriptor_set_layout_create_info( 			const
+// VkDescriptorSetLayoutBinding* p_bindings, 			uint32_t binding_count)
 //		{
 //			VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
-//			descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+//			descriptor_set_layout_create_info.sType =
+// VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 //			descriptor_set_layout_create_info.pBindings = p_bindings;
 //			descriptor_set_layout_create_info.bindingCount = binding_count;
 //			return descriptor_set_layout_create_info;
 //		}
 //
-//		inline VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info(
-//			const std::vector<VkDescriptorSetLayoutBinding>& bindings)
+//		inline VkDescriptorSetLayoutCreateInfo
+// descriptor_set_layout_create_info( 			const
+// std::vector<VkDescriptorSetLayoutBinding>& bindings)
 //		{
 //			VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
-//			descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+//			descriptor_set_layout_create_info.sType =
+// VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 //			descriptor_set_layout_create_info.pBindings = bindings.data();
-//			descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t>(bindings.size());
-//			return descriptor_set_layout_create_info;
+//			descriptor_set_layout_create_info.bindingCount =
+// static_cast<uint32_t>(bindings.size()); 			return
+// descriptor_set_layout_create_info;
 //		}
 //
 //		inline VkPipelineLayoutCreateInfo pipeline_layout_create_info(
@@ -287,7 +303,8 @@
 //			uint32_t set_layout_count = 1)
 //		{
 //			VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
-//			pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+//			pipeline_layout_create_info.sType =
+// VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 //			pipeline_layout_create_info.setLayoutCount = set_layout_count;
 //			pipeline_layout_create_info.pSetLayouts = p_set_layouts;
 //			return pipeline_layout_create_info;
@@ -297,7 +314,8 @@
 //			uint32_t set_layout_count = 1)
 //		{
 //			VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
-//			pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+//			pipeline_layout_create_info.sType =
+// VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 //			pipeline_layout_create_info.setLayoutCount = set_layout_count;
 //			return pipeline_layout_create_info;
 //		}
@@ -308,14 +326,16 @@
 //			uint32_t descriptor_set_count)
 //		{
 //			VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
-//			descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+//			descriptor_set_allocate_info.sType =
+// VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 //			descriptor_set_allocate_info.descriptorPool = descriptor_pool;
 //			descriptor_set_allocate_info.pSetLayouts = p_set_layouts;
-//			descriptor_set_allocate_info.descriptorSetCount = descriptor_set_count;
-//			return descriptor_set_allocate_info;
+//			descriptor_set_allocate_info.descriptorSetCount =
+// descriptor_set_count; 			return descriptor_set_allocate_info;
 //		}
 //
-//		inline VkDescriptorImageInfo descriptor_image_info(VkSampler sampler, VkImageView image_view, VkImageLayout image_layout)
+//		inline VkDescriptorImageInfo descriptor_image_info(VkSampler sampler,
+// VkImageView image_view, VkImageLayout image_layout)
 //		{
 //			VkDescriptorImageInfo descriptor_image_info{};
 //			descriptor_image_info.sampler = sampler;
@@ -370,11 +390,9 @@
 //			return v_input_bind_description;
 //		}
 //
-//		inline VkVertexInputAttributeDescription vertex_input_attribute_description(
-//			uint32_t binding,
-//			uint32_t location,
-//			VkFormat format,
-//			uint32_t offset)
+//		inline VkVertexInputAttributeDescription
+// vertex_input_attribute_description( 			uint32_t binding,
+// uint32_t location, 			VkFormat format, 			uint32_t offset)
 //		{
 //			VkVertexInputAttributeDescription v_input_attrib_description{};
 //			v_input_attrib_description.location = location;
@@ -384,134 +402,169 @@
 //			return v_input_attrib_description;
 //		}
 //
-//		inline VkPipelineVertexInputStateCreateInfo pipeline_vertex_input_state_create_info()
+//		inline VkPipelineVertexInputStateCreateInfo
+// pipeline_vertex_input_state_create_info()
 //		{
-//			VkPipelineVertexInputStateCreateInfo pipeline_vertex_input_state_create_info{};
-//			pipeline_vertex_input_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-//			return pipeline_vertex_input_state_create_info;
+//			VkPipelineVertexInputStateCreateInfo
+// pipeline_vertex_input_state_create_info{};
+//			pipeline_vertex_input_state_create_info.sType =
+// VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO; 			return
+// pipeline_vertex_input_state_create_info;
 //		}
 //
-//		inline VkPipelineInputAssemblyStateCreateInfo pipeline_input_assembly_state_create_info(
-//			VkPrimitiveTopology topology,
-//			VkPipelineInputAssemblyStateCreateFlags flags,
-//			VkBool32 primitive_restart_enable)
+//		inline VkPipelineInputAssemblyStateCreateInfo
+// pipeline_input_assembly_state_create_info( 			VkPrimitiveTopology
+// topology, 			VkPipelineInputAssemblyStateCreateFlags flags,
+// VkBool32
+// primitive_restart_enable)
 //		{
-//			VkPipelineInputAssemblyStateCreateInfo pipeline_input_assembly_state_create_info{};
-//			pipeline_input_assembly_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+//			VkPipelineInputAssemblyStateCreateInfo
+// pipeline_input_assembly_state_create_info{};
+//			pipeline_input_assembly_state_create_info.sType =
+// VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 //			pipeline_input_assembly_state_create_info.topology = topology;
 //			pipeline_input_assembly_state_create_info.flags = flags;
-//			pipeline_input_assembly_state_create_info.primitiveRestartEnable = primitive_restart_enable;
-//			return pipeline_input_assembly_state_create_info;
+//			pipeline_input_assembly_state_create_info.primitiveRestartEnable =
+// primitive_restart_enable; 			return
+// pipeline_input_assembly_state_create_info;
 //		}
 //
-//		inline VkPipelineRasterizationStateCreateInfo pipeline_rasterization_state_create_info(
-//			VkPolygonMode polygon_mode,
-//			VkCullModeFlags cull_mode,
-//			VkFrontFace front_face,
+//		inline VkPipelineRasterizationStateCreateInfo
+// pipeline_rasterization_state_create_info( 			VkPolygonMode
+// polygon_mode, 			VkCullModeFlags cull_mode, 			VkFrontFace
+// front_face,
 //			VkPipelineRasterizationStateCreateFlags flags = 0)
 //		{
-//			VkPipelineRasterizationStateCreateInfo pipeline_rasterization_state_create_info{};
-//			pipeline_rasterization_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+//			VkPipelineRasterizationStateCreateInfo
+// pipeline_rasterization_state_create_info{};
+//			pipeline_rasterization_state_create_info.sType =
+// VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 //			pipeline_rasterization_state_create_info.polygonMode = polygon_mode;
 //			pipeline_rasterization_state_create_info.cullMode = cull_mode;
 //			pipeline_rasterization_state_create_info.frontFace = front_face;
 //			pipeline_rasterization_state_create_info.flags = flags;
-//			pipeline_rasterization_state_create_info.depthClampEnable = VK_FALSE;
-//			pipeline_rasterization_state_create_info.lineWidth = 1.0f;
-//			return pipeline_rasterization_state_create_info;
+//			pipeline_rasterization_state_create_info.depthClampEnable =
+// VK_FALSE; 			pipeline_rasterization_state_create_info.lineWidth
+// = 1.0f; return pipeline_rasterization_state_create_info;
 //		}
 //
-//		inline VkPipelineColorBlendAttachmentState pipeline_color_blend_attachment_state(
-//			VkColorComponentFlags color_write_mask,
-//			VkBool32 blend_enable)
+//		inline VkPipelineColorBlendAttachmentState
+// pipeline_color_blend_attachment_state( 			VkColorComponentFlags
+// color_write_mask, 			VkBool32 blend_enable)
 //		{
-//			VkPipelineColorBlendAttachmentState pipeline_color_blend_attachment_state{};
-//			pipeline_color_blend_attachment_state.colorWriteMask = color_write_mask;
-//			pipeline_color_blend_attachment_state.blendEnable = blend_enable;
-//			return pipeline_color_blend_attachment_state;
+//			VkPipelineColorBlendAttachmentState
+// pipeline_color_blend_attachment_state{};
+//			pipeline_color_blend_attachment_state.colorWriteMask =
+// color_write_mask; pipeline_color_blend_attachment_state.blendEnable =
+// blend_enable; 			return pipeline_color_blend_attachment_state;
 //		}
 //
-//		inline VkPipelineColorBlendStateCreateInfo pipeline_color_blend_state_create_info(
-//			uint32_t attachment_count,
-//			const VkPipelineColorBlendAttachmentState * p_attachments)
+//		inline VkPipelineColorBlendStateCreateInfo
+// pipeline_color_blend_state_create_info( 			uint32_t attachment_count,
+// const VkPipelineColorBlendAttachmentState * p_attachments)
 //		{
-//			VkPipelineColorBlendStateCreateInfo pipeline_color_blend_state_create_info{};
-//			pipeline_color_blend_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-//			pipeline_color_blend_state_create_info.attachmentCount = attachment_count;
-//			pipeline_color_blend_state_create_info.pAttachments = p_attachments;
-//			return pipeline_color_blend_state_create_info;
+//			VkPipelineColorBlendStateCreateInfo
+// pipeline_color_blend_state_create_info{};
+//			pipeline_color_blend_state_create_info.sType =
+// VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+//			pipeline_color_blend_state_create_info.attachmentCount =
+// attachment_count; pipeline_color_blend_state_create_info.pAttachments =
+// p_attachments; 			return pipeline_color_blend_state_create_info;
 //		}
 //
-//		inline VkPipelineDepthStencilStateCreateInfo pipeline_depth_stencil_state_create_info(
-//			VkBool32 depth_test_enable,
-//			VkBool32 depth_write_enable,
-//			VkCompareOp depth_compare_op)
+//		inline VkPipelineDepthStencilStateCreateInfo
+// pipeline_depth_stencil_state_create_info( 			VkBool32
+// depth_test_enable, VkBool32 depth_write_enable, 			VkCompareOp
+// depth_compare_op)
 //		{
-//			VkPipelineDepthStencilStateCreateInfo pipeline_depth_stencil_state_create_info{};
-//			pipeline_depth_stencil_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-//			pipeline_depth_stencil_state_create_info.depthTestEnable = depth_test_enable;
-//			pipeline_depth_stencil_state_create_info.depthWriteEnable = depth_write_enable;
-//			pipeline_depth_stencil_state_create_info.depthCompareOp = depth_compare_op;
-//			pipeline_depth_stencil_state_create_info.front = pipeline_depth_stencil_state_create_info.back;
-//			pipeline_depth_stencil_state_create_info.back.compareOp = VK_COMPARE_OP_ALWAYS;
-//			return pipeline_depth_stencil_state_create_info;
+//			VkPipelineDepthStencilStateCreateInfo
+// pipeline_depth_stencil_state_create_info{};
+//			pipeline_depth_stencil_state_create_info.sType =
+// VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+//			pipeline_depth_stencil_state_create_info.depthTestEnable =
+// depth_test_enable;
+// pipeline_depth_stencil_state_create_info.depthWriteEnable =
+// depth_write_enable;
+// pipeline_depth_stencil_state_create_info.depthCompareOp = depth_compare_op;
+// pipeline_depth_stencil_state_create_info.front =
+// pipeline_depth_stencil_state_create_info.back;
+//			pipeline_depth_stencil_state_create_info.back.compareOp =
+// VK_COMPARE_OP_ALWAYS; 			return
+// pipeline_depth_stencil_state_create_info;
 //		}
 //
-//		inline VkPipelineViewportStateCreateInfo pipeline_viewport_state_create_info(
-//			uint32_t viewport_count,
-//			uint32_t scissor_count,
-//			VkPipelineViewportStateCreateFlags flags = 0)
+//		inline VkPipelineViewportStateCreateInfo
+// pipeline_viewport_state_create_info( 			uint32_t viewport_count,
+// uint32_t scissor_count, 			VkPipelineViewportStateCreateFlags flags =
+// 0)
 //		{
-//			VkPipelineViewportStateCreateInfo pipeline_viewport_state_create_info{};
-//			pipeline_viewport_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+//			VkPipelineViewportStateCreateInfo
+// pipeline_viewport_state_create_info{};
+//			pipeline_viewport_state_create_info.sType =
+// VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 //			pipeline_viewport_state_create_info.viewportCount = viewport_count;
 //			pipeline_viewport_state_create_info.scissorCount = scissor_count;
 //			pipeline_viewport_state_create_info.flags = flags;
 //			return pipeline_viewport_state_create_info;
 //		}
 //
-//		inline VkPipelineMultisampleStateCreateInfo pipeline_multisample_state_create_info(
-//			VkSampleCountFlagBits rasterization_samples,
-//			VkPipelineMultisampleStateCreateFlags flags = 0)
+//		inline VkPipelineMultisampleStateCreateInfo
+// pipeline_multisample_state_create_info( 			VkSampleCountFlagBits
+// rasterization_samples, 			VkPipelineMultisampleStateCreateFlags flags
+// = 0)
 //		{
-//			VkPipelineMultisampleStateCreateInfo pipeline_multisample_state_create_info{};
-//			pipeline_multisample_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-//			pipeline_multisample_state_create_info.rasterizationSamples = rasterization_samples;
-//			pipeline_multisample_state_create_info.flags = flags;
-//			return pipeline_multisample_state_create_info;
+//			VkPipelineMultisampleStateCreateInfo
+// pipeline_multisample_state_create_info{};
+//			pipeline_multisample_state_create_info.sType =
+// VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+//			pipeline_multisample_state_create_info.rasterizationSamples =
+// rasterization_samples; 			pipeline_multisample_state_create_info.flags
+// = flags; 			return pipeline_multisample_state_create_info;
 //		}
 //
-//		inline VkPipelineDynamicStateCreateInfo pipeline_dynamic_state_create_info(
-//			const VkDynamicState * p_dynamic_states,
-//			uint32_t dynamic_state_count,
+//		inline VkPipelineDynamicStateCreateInfo
+// pipeline_dynamic_state_create_info( 			const VkDynamicState *
+// p_dynamic_states, 			uint32_t dynamic_state_count,
 //			VkPipelineDynamicStateCreateFlags flags = 0)
 //		{
-//			VkPipelineDynamicStateCreateInfo pipeline_dynamic_state_create_info{};
-//			pipeline_dynamic_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-//			pipeline_dynamic_state_create_info.pDynamicStates = p_dynamic_states;
-//			pipeline_dynamic_state_create_info.dynamicStateCount = dynamic_state_count;
+//			VkPipelineDynamicStateCreateInfo
+// pipeline_dynamic_state_create_info{};
+// pipeline_dynamic_state_create_info.sType =
+// VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+//			pipeline_dynamic_state_create_info.pDynamicStates =
+// p_dynamic_states;
+// pipeline_dynamic_state_create_info.dynamicStateCount = dynamic_state_count;
+// pipeline_dynamic_state_create_info.flags = flags; 			return
+// pipeline_dynamic_state_create_info;
+//		}
+//
+//		inline VkPipelineDynamicStateCreateInfo
+// pipeline_dynamic_state_create_info( 			const
+// std::vector<VkDynamicState>& p_dynamic_states,
+// VkPipelineDynamicStateCreateFlags flags = 0)
+//		{
+//			VkPipelineDynamicStateCreateInfo
+// pipeline_dynamic_state_create_info{};
+// pipeline_dynamic_state_create_info.sType =
+// VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+//			pipeline_dynamic_state_create_info.pDynamicStates =
+// p_dynamic_states.data();
+// pipeline_dynamic_state_create_info.dynamicStateCount =
+// static_cast<uint32_t>(p_dynamic_states.size());
 //			pipeline_dynamic_state_create_info.flags = flags;
 //			return pipeline_dynamic_state_create_info;
 //		}
 //
-//		inline VkPipelineDynamicStateCreateInfo pipeline_dynamic_state_create_info(
-//			const std::vector<VkDynamicState>& p_dynamic_states,
-//			VkPipelineDynamicStateCreateFlags flags = 0)
+//		inline VkPipelineTessellationStateCreateInfo
+// pipeline_tessellation_state_create_info(uint32_t patch_control_points)
 //		{
-//			VkPipelineDynamicStateCreateInfo pipeline_dynamic_state_create_info{};
-//			pipeline_dynamic_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-//			pipeline_dynamic_state_create_info.pDynamicStates = p_dynamic_states.data();
-//			pipeline_dynamic_state_create_info.dynamicStateCount = static_cast<uint32_t>(p_dynamic_states.size());
-//			pipeline_dynamic_state_create_info.flags = flags;
-//			return pipeline_dynamic_state_create_info;
-//		}
-//
-//		inline VkPipelineTessellationStateCreateInfo pipeline_tessellation_state_create_info(uint32_t patch_control_points)
-//		{
-//			VkPipelineTessellationStateCreateInfo pipeline_tessellation_state_create_info{};
-//			pipeline_tessellation_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
-//			pipeline_tessellation_state_create_info.patchControlPoints = patch_control_points;
-//			return pipeline_tessellation_state_create_info;
+//			VkPipelineTessellationStateCreateInfo
+// pipeline_tessellation_state_create_info{};
+//			pipeline_tessellation_state_create_info.sType =
+// VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+//			pipeline_tessellation_state_create_info.patchControlPoints =
+// patch_control_points; 			return
+// pipeline_tessellation_state_create_info;
 //		}
 //
 //		inline VkGraphicsPipelineCreateInfo pipeline_create_info(
@@ -520,11 +573,13 @@
 //			VkPipelineCreateFlags flags = 0)
 //		{
 //			VkGraphicsPipelineCreateInfo pipeline_create_info{};
-//			pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-//			pipeline_create_info.layout = layout;
-//			pipeline_create_info.renderPass = render_pass;
-//			pipeline_create_info.flags = flags;
-//			pipeline_create_info.basePipelineIndex = -1;
+//			pipeline_create_info.sType =
+// VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+// pipeline_create_info.layout = layout;
+// pipeline_create_info.renderPass = render_pass;
+// pipeline_create_info.flags
+// =
+// flags; 			pipeline_create_info.basePipelineIndex = -1;
 //			pipeline_create_info.basePipelineHandle = VK_NULL_HANDLE;
 //			return pipeline_create_info;
 //		}
@@ -532,7 +587,8 @@
 //		inline VkGraphicsPipelineCreateInfo pipeline_create_info()
 //		{
 //			VkGraphicsPipelineCreateInfo pipeline_create_info{};
-//			pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+//			pipeline_create_info.sType =
+// VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 //			pipeline_create_info.basePipelineIndex = -1;
 //			pipeline_create_info.basePipelineHandle = VK_NULL_HANDLE;
 //			return pipeline_create_info;
@@ -543,7 +599,8 @@
 //			VkPipelineCreateFlags flags = 0)
 //		{
 //			VkComputePipelineCreateInfo compute_pipeline_create_info{};
-//			compute_pipeline_create_info.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+//			compute_pipeline_create_info.sType =
+// VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
 //			compute_pipeline_create_info.layout = layout;
 //			compute_pipeline_create_info.flags = flags;
 //			return compute_pipeline_create_info;
@@ -568,8 +625,9 @@
 //			return bind_sparse_info;
 //		}
 //
-//		/** @brief Initialize a map entry for a shader specialization constant */
-//		inline VkSpecializationMapEntry specialization_map_entry(uint32_t constant_i_d, uint32_t offset, size_t size)
+//		/** @brief Initialize a map entry for a shader specialization constant
+//*/ 		inline VkSpecializationMapEntry specialization_map_entry(uint32_t
+// constant_i_d, uint32_t offset, size_t size)
 //		{
 //			VkSpecializationMapEntry specialization_map_entry{};
 //			specialization_map_entry.constantID = constant_i_d;
@@ -578,8 +636,10 @@
 //			return specialization_map_entry;
 //		}
 //
-//		/** @brief Initialize a specialization constant info structure to pass to a shader stage */
-//		inline VkSpecializationInfo specialization_info(uint32_t map_entry_count, const VkSpecializationMapEntry* map_entries, size_t data_size, const void* data)
+//		/** @brief Initialize a specialization constant info structure to pass
+// to a shader stage */ 		inline VkSpecializationInfo
+// specialization_info(uint32_t map_entry_count, const VkSpecializationMapEntry*
+// map_entries, size_t data_size, const void* data)
 //		{
 //			VkSpecializationInfo specialization_info{};
 //			specialization_info.mapEntryCount = map_entry_count;
@@ -591,7 +651,7 @@
 //	}
 //}
 //
-//namespace tools
+// namespace tools
 //{
 //	bool error_mode_silent = false;
 //
@@ -643,9 +703,11 @@
 //		}
 //	}
 //
-//	VkBool32 get_supported_depth_format(VkPhysicalDevice physical_device, VkFormat *depth_format)
+//	VkBool32 get_supported_depth_format(VkPhysicalDevice physical_device,
+// VkFormat *depth_format)
 //	{
-//		// Since all depth formats may be optional, we need to find a suitable depth format to use
+//		// Since all depth formats may be optional, we need to find a suitable
+// depth format to use
 //		// Start with the highest precision packed format
 //		std::vector<VkFormat> depth_formats = {
 //			VK_FORMAT_D32_SFLOAT_S8_UINT,
@@ -658,9 +720,11 @@
 //		for (auto& format : depth_formats)
 //		{
 //			VkFormatProperties format_props;
-//			vkGetPhysicalDeviceFormatProperties(physical_device, format, &format_props);
+//			vkGetPhysicalDeviceFormatProperties(physical_device, format,
+//&format_props);
 //			// Format must support depth stencil attachment for optimal tiling
-//			if (format_props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
+//			if (format_props.optimalTilingFeatures &
+// VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
 //			{
 //				*depth_format = format;
 //				return true;
@@ -680,18 +744,20 @@
 //		VkImageLayout old_image_layout,
 //		VkImageLayout new_image_layout,
 //		VkImageSubresourceRange subresource_range,
-//		VkPipelineStageFlags src_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-//		VkPipelineStageFlags dst_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT)
+//		VkPipelineStageFlags src_stage_mask =
+// VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 		VkPipelineStageFlags dst_stage_mask
+// = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT)
 //	{
 //		// Create an image barrier object
-//		VkImageMemoryBarrier image_memory_barrier = vks::initializers::image_memory_barrier();
-//		image_memory_barrier.oldLayout = old_image_layout;
-//		image_memory_barrier.newLayout = new_image_layout;
+//		VkImageMemoryBarrier image_memory_barrier =
+// vks::initializers::image_memory_barrier(); image_memory_barrier.oldLayout =
+// old_image_layout; 		image_memory_barrier.newLayout = new_image_layout;
 //		image_memory_barrier.image = image;
 //		image_memory_barrier.subresourceRange = subresource_range;
 //
 //		// Source layouts (old)
-//		// Source access mask controls actions that have to be finished on the old layout
+//		// Source access mask controls actions that have to be finished on the
+// old layout
 //		// before it will be transitioned to the new layout
 //		switch (old_image_layout)
 //		{
@@ -704,7 +770,8 @@
 //
 //		case VK_IMAGE_LAYOUT_PREINITIALIZED:
 //			// Image is preinitialized
-//			// Only valid as initial layout for linear images, preserves memory contents
+//			// Only valid as initial layout for linear images, preserves memory
+// contents
 //			// Make sure host writes have been finished
 //			image_memory_barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
 //			break;
@@ -712,17 +779,17 @@
 //		case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
 //			// Image is a color attachment
 //			// Make sure any writes to the color buffer have been finished
-//			image_memory_barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-//			break;
+//			image_memory_barrier.srcAccessMask =
+// VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; 			break;
 //
 //		case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
 //			// Image is a depth/stencil attachment
-//			// Make sure any writes to the depth/stencil buffer have been finished
-//			image_memory_barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-//			break;
+//			// Make sure any writes to the depth/stencil buffer have been
+// finished 			image_memory_barrier.srcAccessMask =
+// VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT; 			break;
 //
 //		case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
-//			// Image is a transfer source 
+//			// Image is a transfer source
 //			// Make sure any reads from the image have been finished
 //			image_memory_barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 //			break;
@@ -744,8 +811,8 @@
 //		}
 //
 //		// Target layouts (new)
-//		// Destination access mask controls the dependency for the new image layout
-//		switch (new_image_layout)
+//		// Destination access mask controls the dependency for the new image
+// layout 		switch (new_image_layout)
 //		{
 //		case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
 //			// Image will be used as a transfer destination
@@ -762,21 +829,23 @@
 //		case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
 //			// Image will be used as a color attachment
 //			// Make sure any writes to the color buffer have been finished
-//			image_memory_barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-//			break;
+//			image_memory_barrier.dstAccessMask =
+// VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; 			break;
 //
 //		case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
 //			// Image layout will be used as a depth/stencil attachment
 //			// Make sure any writes to depth/stencil buffer have been finished
-//			image_memory_barrier.dstAccessMask = image_memory_barrier.dstAccessMask | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-//			break;
+//			image_memory_barrier.dstAccessMask =
+// image_memory_barrier.dstAccessMask |
+// VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT; 			break;
 //
 //		case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
 //			// Image will be read in a shader (sampler, input attachment)
 //			// Make sure any writes to the image have been finished
 //			if (image_memory_barrier.srcAccessMask == 0)
 //			{
-//				image_memory_barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
+//				image_memory_barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT |
+// VK_ACCESS_TRANSFER_WRITE_BIT;
 //			}
 //			image_memory_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 //			break;
@@ -803,15 +872,17 @@
 //		VkImageAspectFlags aspect_mask,
 //		VkImageLayout old_image_layout,
 //		VkImageLayout new_image_layout,
-//		VkPipelineStageFlags src_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-//		VkPipelineStageFlags dst_stage_mask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT)
+//		VkPipelineStageFlags src_stage_mask =
+// VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 		VkPipelineStageFlags dst_stage_mask
+// = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT)
 //	{
 //		VkImageSubresourceRange subresource_range = {};
 //		subresource_range.aspectMask = aspect_mask;
 //		subresource_range.baseMipLevel = 0;
 //		subresource_range.levelCount = 1;
 //		subresource_range.layerCount = 1;
-//		set_image_layout(cmd_buffer, image, old_image_layout, new_image_layout, subresource_range, src_stage_mask, dst_stage_mask);
+//		set_image_layout(cmd_buffer, image, old_image_layout, new_image_layout,
+// subresource_range, src_stage_mask, dst_stage_mask);
 //	}
 //
 //	void insert_image_memory_barrier(
@@ -825,9 +896,10 @@
 //		VkPipelineStageFlags dst_stage_mask,
 //		VkImageSubresourceRange subresource_range)
 //	{
-//		VkImageMemoryBarrier image_memory_barrier = vks::initializers::image_memory_barrier();
-//		image_memory_barrier.srcAccessMask = src_access_mask;
-//		image_memory_barrier.dstAccessMask = dst_access_mask;
+//		VkImageMemoryBarrier image_memory_barrier =
+// vks::initializers::image_memory_barrier();
+// image_memory_barrier.srcAccessMask = src_access_mask;
+// image_memory_barrier.dstAccessMask = dst_access_mask;
 //		image_memory_barrier.oldLayout = old_image_layout;
 //		image_memory_barrier.newLayout = new_image_layout;
 //		image_memory_barrier.image = image;
@@ -873,7 +945,8 @@
 //
 //	VkShaderModule load_shader(const char *file_name, VkDevice device)
 //	{
-//		std::ifstream is(file_name, std::ios::binary | std::ios::in | std::ios::ate);
+//		std::ifstream is(file_name, std::ios::binary | std::ios::in |
+// std::ios::ate);
 //
 //		if (is.is_open())
 //		{
@@ -887,11 +960,13 @@
 //
 //			VkShaderModule shader_module;
 //			VkShaderModuleCreateInfo module_create_info{};
-//			module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-//			module_create_info.codeSize = size;
-//			module_create_info.pCode = (uint32_t*)shader_code;
+//			module_create_info.sType =
+// VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+// module_create_info.codeSize = size; 			module_create_info.pCode =
+// (uint32_t*)shader_code;
 //
-//			vkCreateShaderModule(device, &module_create_info, NULL, &shader_module);
+//			vkCreateShaderModule(device, &module_create_info, NULL,
+//&shader_module);
 //
 //			delete[] shader_code;
 //
@@ -899,12 +974,14 @@
 //		}
 //		else
 //		{
-//			std::cerr << "Error: Could not open shader file \"" << file_name << "\"" << std::endl;
-//			return VK_NULL_HANDLE;
+//			std::cerr << "Error: Could not open shader file \"" << file_name <<
+//"\""
+//<< std::endl; 			return VK_NULL_HANDLE;
 //		}
 //	}
 //
-//	VkShaderModule load_shader_g_l_s_l(const char *file_name, VkDevice device, VkShaderStageFlagBits stage)
+//	VkShaderModule load_shader_g_l_s_l(const char *file_name, VkDevice device,
+// VkShaderStageFlagBits stage)
 //	{
 //		std::string shader_src = read_text_file(file_name);
 //		const char *shader_code = shader_src.c_str();
@@ -916,14 +993,16 @@
 //		module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 //		module_create_info.pNext = NULL;
 //		module_create_info.codeSize = 3 * sizeof(uint32_t) + size + 1;
-//		module_create_info.pCode = (uint32_t*)malloc(module_create_info.codeSize);
-//		module_create_info.flags = 0;
+//		module_create_info.pCode =
+//(uint32_t*)malloc(module_create_info.codeSize); 		module_create_info.flags
+//= 0;
 //
 //		// Magic SPV number
 //		((uint32_t *)module_create_info.pCode)[0] = 0x07230203;
 //		((uint32_t *)module_create_info.pCode)[1] = 0;
 //		((uint32_t *)module_create_info.pCode)[2] = stage;
-//		memcpy(((uint32_t *)module_create_info.pCode + 3), shader_code, size + 1);
+//		memcpy(((uint32_t *)module_create_info.pCode + 3), shader_code, size +
+// 1);
 //
 //		vkCreateShaderModule(device, &module_create_info, NULL, &shader_module);
 //
@@ -937,9 +1016,9 @@
 //	}
 //}
 //
-//class Camera
+// class Camera
 //{
-//private:
+// private:
 //	float _fov;
 //	float _znear, _zfar;
 //
@@ -948,9 +1027,10 @@
 //		glm::mat4 rot_m = glm::mat4(1.0f);
 //		glm::mat4 trans_m;
 //
-//		rotM = glm::rotate(rotM, glm::radians(_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-//		rotM = glm::rotate(rotM, glm::radians(_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-//		rotM = glm::rotate(rotM, glm::radians(_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+//		rotM = glm::rotate(rotM, glm::radians(_rotation.x), glm::vec3(1.0f,
+// 0.0f, 0.0f)); 		rotM = glm::rotate(rotM, glm::radians(_rotation.y),
+// glm::vec3(0.0f, 1.0f, 0.0f)); 		rotM = glm::rotate(rotM,
+// glm::radians(_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 //
 //		transM = glm::translate(glm::mat4(1.0f), _position);
 //
@@ -965,8 +1045,8 @@
 //
 //		_updated = true;
 //	};
-//public:
-//	enum CameraType { lookat, firstperson };
+// public:
+//	enum CameraType { lookat, firstperson, };
 //	CameraType _type = CameraType::lookat;
 //
 //	glm::vec3 _rotation = glm::vec3();
@@ -1009,12 +1089,14 @@
 //		_fov = fov;
 //		_znear = znear;
 //		_zfar = zfar;
-//		_matrices._perspective = glm::perspective(glm::radians(fov), aspect, znear, zfar);
+//		_matrices._perspective = glm::perspective(glm::radians(fov), aspect,
+// znear, zfar);
 //	};
 //
 //	void update_aspect_ratio(float aspect)
 //	{
-//		_matrices._perspective = glm::perspective(glm::radians(_fov), aspect, _znear, _zfar);
+//		_matrices._perspective = glm::perspective(glm::radians(_fov), aspect,
+//_znear, _zfar);
 //	}
 //
 //	void set_position(glm::vec3 position)
@@ -1055,10 +1137,11 @@
 //			if (moving())
 //			{
 //				glm::vec3 cam_front;
-//				camFront.x = -cos(glm::radians(_rotation.x)) * sin(glm::radians(_rotation.y));
-//				camFront.y = sin(glm::radians(_rotation.x));
-//				camFront.z = cos(glm::radians(_rotation.x)) * cos(glm::radians(_rotation.y));
-//				camFront = glm::normalize(camFront);
+//				camFront.x = -cos(glm::radians(_rotation.x)) *
+// sin(glm::radians(_rotation.y)); 				camFront.y =
+// sin(glm::radians(_rotation.x)); 				camFront.z =
+// cos(glm::radians(_rotation.x)) * cos(glm::radians(_rotation.y));
+// camFront = glm::normalize(camFront);
 //
 //				float move_speed = delta_time * _movement_speed;
 //
@@ -1067,9 +1150,11 @@
 //				if (_keys._down)
 //					_position -= cam_front * move_speed;
 //				if (_keys._left)
-//					_position -= glm::normalize(glm::cross(camFront, glm::vec3(0.0f, 1.0f, 0.0f))) * move_speed;
-//				if (_keys._right)
-//					_position += glm::normalize(glm::cross(camFront, glm::vec3(0.0f, 1.0f, 0.0f))) * move_speed;
+//					_position -= glm::normalize(glm::cross(camFront,
+// glm::vec3(0.0f, 1.0f, 0.0f))) * move_speed; 				if (_keys._right)
+// _position += glm::normalize(glm::cross(camFront, glm::vec3(0.0f, 1.0f,
+// 0.0f)))
+// * move_speed;
 //
 //				updateViewMatrix();
 //			}
@@ -1077,7 +1162,7 @@
 //	};
 //};
 //
-//namespace vks
+// namespace vks
 //{
 //	class Benchmark {
 //	private:
@@ -1094,10 +1179,9 @@
 //		double _runtime = 0.0;
 //		uint32_t _frame_count = 0;
 //
-//		void run(std::function<void()> render_func, VkPhysicalDeviceProperties device_props) {
-//			_active = true;
-//			_device_props = device_props;
-//			std::cout << std::fixed << std::setprecision(3);
+//		void run(std::function<void()> render_func, VkPhysicalDeviceProperties
+// device_props) { 			_active = true; 			_device_props =
+// device_props; std::cout << std::fixed << std::setprecision(3);
 //
 //			// Warm up phase to get more stable frame rates
 //			{
@@ -1105,7 +1189,8 @@
 //				while (tMeasured < (_warmup * 1000)) {
 //					auto t_start = std::chrono::high_resolution_clock::now();
 //					renderFunc();
-//					auto t_diff = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - t_start).count();
+//					auto t_diff = std::chrono::duration<double,
+// std::milli>(std::chrono::high_resolution_clock::now() - t_start).count();
 //					tMeasured += t_diff;
 //				};
 //			}
@@ -1115,16 +1200,22 @@
 //				while (_runtime < (_duration * 1000.0)) {
 //					auto t_start = std::chrono::high_resolution_clock::now();
 //					renderFunc();
-//					auto t_diff = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - t_start).count();
+//					auto t_diff = std::chrono::duration<double,
+// std::milli>(std::chrono::high_resolution_clock::now() - t_start).count();
 //					_runtime += t_diff;
 //					_frame_times.push_back(tDiff);
 //					_frame_count++;
 //				};
 //				std::cout << "Benchmark finished" << std::endl;
-//				std::cout << "device : " << device_props.deviceName << " (driver version: " << device_props.driverVersion << ")" << std::endl;
-//				std::cout << "runtime: " << (_runtime / 1000.0) << std::endl;
-//				std::cout << "frames : " << _frame_count << std::endl;
-//				std::cout << "fps    : " << _frame_count / (_runtime / 1000.0) << std::endl;
+//				std::cout << "device : " << device_props.deviceName << " (driver
+// version: " << device_props.driverVersion << ")" << std::endl;
+// std::cout
+// << "runtime: " << (_runtime / 1000.0) << std::endl; 				std::cout <<
+//"frames : " <<
+//_frame_count << std::endl; 				std::cout << "fps    : " <<
+//_frame_count
+///
+//(_runtime / 1000.0) << std::endl;
 //			}
 //		}
 //
@@ -1133,21 +1224,29 @@
 //			if (result.is_open()) {
 //				result << std::fixed << std::setprecision(4);
 //
-//				result << "device,driverversion,duration (ms),frames,fps" << std::endl;
-//				result << _device_props.deviceName << "," << _device_props.driverVersion << "," << _runtime << "," << _frame_count << "," << _frame_count / (_runtime / 1000.0) << std::endl;
+//				result << "device,driverversion,duration (ms),frames,fps" <<
+// std::endl; 				result << _device_props.deviceName << "," <<
+//_device_props.driverVersion << "," << _runtime << "," << _frame_count << ","
+//<< _frame_count / (_runtime / 1000.0) << std::endl;
 //
 //				if (_output_frame_times) {
 //					result << std::endl << "frame,ms" << std::endl;
 //					for (size_t i = 0; i < _frame_times.size(); i++) {
 //						result << i << "," << _frame_times[i] << std::endl;
 //					}
-//					double t_min = *std::min_element(_frame_times.begin(), _frame_times.end());
-//					double t_max = *std::max_element(_frame_times.begin(), _frame_times.end());
-//					double t_avg = std::accumulate(_frame_times.begin(), _frame_times.end(), 0.0) / (double)_frame_times.size();
-//					std::cout << "best   : " << (1000.0 / t_min) << " fps (" << t_min << " ms)" << std::endl;
-//					std::cout << "worst  : " << (1000.0 / t_max) << " fps (" << t_max << " ms)" << std::endl;
-//					std::cout << "avg    : " << (1000.0 / t_avg) << " fps (" << t_avg << " ms)" << std::endl;
-//					std::cout << std::endl;
+//					double t_min = *std::min_element(_frame_times.begin(),
+//_frame_times.end()); 					double t_max =
+//*std::max_element(_frame_times.begin(),
+//_frame_times.end()); 					double t_avg =
+// std::accumulate(_frame_times.begin(), _frame_times.end(), 0.0) /
+//(double)_frame_times.size(); 					std::cout << "best   : " <<
+//(1000.0 / t_min) << " fps (" << t_min << " ms)" << std::endl;
+// std::cout
+//<< "worst  : " << (1000.0 / t_max) << " fps (" << t_max << " ms)" <<
+// std::endl; 					std::cout << "avg    : " << (1000.0 / t_avg) << " fps
+// ("
+// << t_avg
+//<< " ms)" << std::endl; 					std::cout << std::endl;
 //				}
 //
 //				result.flush();
@@ -1159,11 +1258,13 @@
 ///*
 //* Class wrapping access to the swap chain
 //*
-//* A swap chain is a collection of framebuffers used for rendering and presentation to the windowing system
+//* A swap chain is a collection of framebuffers used for rendering and
+// presentation to the windowing system
 //*
 //* Copyright (C) 2016-2017 by Sascha Willems - www.saschawillems.de
 //*
-//* This code is licensed under the MIT license (MIT) (http://opensource.org/licenses/MIT)
+//* This code is licensed under the MIT license (MIT)
+//(http://opensource.org/licenses/MIT)
 //*/
 //
 //
@@ -1178,21 +1279,21 @@
 //#define ASSET_PATH "./../data/"
 //#endif
 //
-//typedef struct _SwapChainBuffers {
+// typedef struct _SwapChainBuffers {
 //	VkImage _image;
 //	VkImageView _view;
 //} SwapChainBuffer;
 //
 //
-//class VulkanSwapChain
+// class VulkanSwapChain
 //{
-//private:
+// private:
 //	VkInstance _instance;
 //	VkDevice _device;
 //	VkPhysicalDevice _physical_device;
 //	VkSurfaceKHR _surface;
-//	
-//public:
+//
+// public:
 //	VkFormat _color_format;
 //	VkColorSpaceKHR _color_space;
 //	/** @brief Handle to the current swap chain, required for recreation */
@@ -1200,20 +1301,23 @@
 //	uint32_t _image_count;
 //	std::vector<VkImage> _images;
 //	std::vector<SwapChainBuffer> _buffers;
-//	/** @brief Queue family index of the detected graphics and presenting device queue */
-//	uint32_t _queue_node_index = UINT32_MAX;
+//	/** @brief Queue family index of the detected graphics and presenting device
+// queue */ 	uint32_t _queue_node_index = UINT32_MAX;
 //
-//	/** @brief Creates the platform specific surface abstraction of the native platform window used for presentation */
-//	void init_surface(void* platform_handle, void* platform_window)
+//	/** @brief Creates the platform specific surface abstraction of the native
+// platform window used for presentation */ 	void init_surface(void*
+// platform_handle, void* platform_window)
 //	{
 //		VkResult err = VK_SUCCESS;
 //
 //		// Create the os-specific surface
 //		VkWin32SurfaceCreateInfoKHR surface_create_info = {};
-//		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-//		surfaceCreateInfo.hinstance = (HINSTANCE)platformHandle;
-//		surfaceCreateInfo.hwnd = (HWND)platformWindow;
-//		err = vk_create_win_32_surface_k_h_r(_instance, &surfaceCreateInfo, nullptr, &_surface);
+//		surfaceCreateInfo.sType =
+// VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+// surfaceCreateInfo.hinstance = (HINSTANCE)platformHandle;
+// surfaceCreateInfo.hwnd = (HWND)platformWindow; 		err =
+// vk_create_win_32_surface_k_h_r(_instance, &surfaceCreateInfo, nullptr,
+//&_surface);
 //
 //		if (err != VK_SUCCESS) {
 //			tools::exitFatal("Could not create surface!", err);
@@ -1221,11 +1325,12 @@
 //
 //		// Get available queue family properties
 //		uint32_t queue_count;
-//		vkGetPhysicalDeviceQueueFamilyProperties(_physical_device, &queueCount, NULL);
-//		assert(queueCount >= 1);
+//		vkGetPhysicalDeviceQueueFamilyProperties(_physical_device, &queueCount,
+// NULL); 		assert(queueCount >= 1);
 //
 //		std::vector<VkQueueFamilyProperties> queue_props(queueCount);
-//		vkGetPhysicalDeviceQueueFamilyProperties(_physical_device, &queueCount, queue_props.data());
+//		vkGetPhysicalDeviceQueueFamilyProperties(_physical_device, &queueCount,
+// queue_props.data());
 //
 //		// Iterate over each queue to learn whether it supports presenting:
 //		// Find a queue with present support
@@ -1233,7 +1338,8 @@
 //		std::vector<VkBool32> supports_present(queueCount);
 //		for (uint32_t i = 0; i < queue_count; i++)
 //		{
-//			vkGetPhysicalDeviceSurfaceSupportKHR(_physical_device, i, _surface, &supportsPresent[i]);
+//			vkGetPhysicalDeviceSurfaceSupportKHR(_physical_device, i, _surface,
+//&supportsPresent[i]);
 //		}
 //
 //		// Search for a graphics and a present queue in the array of queue
@@ -1272,30 +1378,36 @@
 //		}
 //
 //		// Exit if either a graphics or a presenting queue hasn't been found
-//		if (graphicsQueueNodeIndex == UINT32_MAX || present_queue_node_index == UINT32_MAX)
+//		if (graphicsQueueNodeIndex == UINT32_MAX || present_queue_node_index ==
+// UINT32_MAX)
 //		{
-//			tools::exitFatal("Could not find a graphics and/or presenting queue!", -1);
+//			tools::exitFatal("Could not find a graphics and/or presenting
+// queue!", -1);
 //		}
 //
 //		// todo : Add support for separate graphics and presenting queue
 //		if (graphicsQueueNodeIndex != present_queue_node_index)
 //		{
-//			tools::exitFatal("Separate graphics and presenting queues are not supported yet!", -1);
+//			tools::exitFatal("Separate graphics and presenting queues are not
+// supported yet!", -1);
 //		}
 //
 //		_queue_node_index = graphics_queue_node_index;
 //
 //		// Get list of supported surface formats
 //		uint32_t format_count;
-//		vkGetPhysicalDeviceSurfaceFormatsKHR(_physical_device, _surface, &formatCount, NULL);
-//		assert(formatCount > 0);
+//		vkGetPhysicalDeviceSurfaceFormatsKHR(_physical_device, _surface,
+//&formatCount, NULL); 		assert(formatCount > 0);
 //
 //		std::vector<VkSurfaceFormatKHR> surface_formats(formatCount);
-//		vkGetPhysicalDeviceSurfaceFormatsKHR(_physical_device, _surface, &formatCount, surface_formats.data());
+//		vkGetPhysicalDeviceSurfaceFormatsKHR(_physical_device, _surface,
+//&formatCount, surface_formats.data());
 //
-//		// If the surface format list only includes one entry with VK_FORMAT_UNDEFINED,
+//		// If the surface format list only includes one entry with
+// VK_FORMAT_UNDEFINED,
 //		// there is no preferered format, so we assume VK_FORMAT_B8G8R8A8_UNORM
-//		if ((formatCount == 1) && (surfaceFormats[0].format == VK_FORMAT_UNDEFINED))
+//		if ((formatCount == 1) && (surfaceFormats[0].format ==
+// VK_FORMAT_UNDEFINED))
 //		{
 //			_color_format = VK_FORMAT_B8G8R8A8_UNORM;
 //			_color_space = surface_formats[0].colorSpace;
@@ -1328,14 +1440,18 @@
 //	}
 //
 //	/**
-//	* Set instance, physical and logical device to use for the swapchain and get all required function pointers
+//	* Set instance, physical and logical device to use for the swapchain and get
+// all required function pointers
 //	*
 //	* @param instance Vulkan instance to use
-//	* @param physical_device Physical device used to query properties and formats relevant to the swapchain
-//	* @param device Logical representation of the device to create the swapchain for
+//	* @param physical_device Physical device used to query properties and
+// formats relevant to the swapchain
+//	* @param device Logical representation of the device to create the swapchain
+// for
 //	*
 //	*/
-//	void connect(VkInstance instance, VkPhysicalDevice physical_device, VkDevice device)
+//	void connect(VkInstance instance, VkPhysicalDevice physical_device, VkDevice
+// device)
 //	{
 //		_instance = instance;
 //		_physical_device = physical_device;
@@ -1345,9 +1461,12 @@
 //	/**
 //	* Create the swapchain and get it's images with given width and height
 //	*
-//	* @param width Pointer to the width of the swapchain (may be adjusted to fit the requirements of the swapchain)
-//	* @param height Pointer to the height of the swapchain (may be adjusted to fit the requirements of the swapchain)
-//	* @param vsync (Optional) Can be used to force vsync'd rendering (by using VK_PRESENT_MODE_FIFO_KHR as presentation mode)
+//	* @param width Pointer to the width of the swapchain (may be adjusted to fit
+// the requirements of the swapchain)
+//	* @param height Pointer to the height of the swapchain (may be adjusted to
+// fit the requirements of the swapchain)
+//	* @param vsync (Optional) Can be used to force vsync'd rendering (by using
+// VK_PRESENT_MODE_FIFO_KHR as presentation mode)
 //	*/
 //	void create(uint32_t *width, uint_32_t *height, bool vsync = false)
 //	{
@@ -1355,19 +1474,22 @@
 //
 //		// Get physical device surface properties and formats
 //		VkSurfaceCapabilitiesKHR surf_caps;
-//		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_physical_device, _surface, &surfCaps);
+//		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_physical_device, _surface,
+//&surfCaps);
 //
 //		// Get available present modes
 //		uint32_t present_mode_count;
-//		vkGetPhysicalDeviceSurfacePresentModesKHR(_physical_device, _surface, &presentModeCount, NULL);
-//		assert(presentModeCount > 0);
+//		vkGetPhysicalDeviceSurfacePresentModesKHR(_physical_device, _surface,
+//&presentModeCount, NULL); 		assert(presentModeCount > 0);
 //
 //		std::vector<VkPresentModeKHR> present_modes(presentModeCount);
-//		vkGetPhysicalDeviceSurfacePresentModesKHR(_physical_device, _surface, &presentModeCount, present_modes.data());
+//		vkGetPhysicalDeviceSurfacePresentModesKHR(_physical_device, _surface,
+//&presentModeCount, present_modes.data());
 //
 //		VkExtent2D swapchain_extent = {};
-//		// If width (and height) equals the special value 0xFFFFFFFF, the size of the surface will be set by the swapchain
-//		if (surfCaps.currentExtent.width == (uint32_t)-1)
+//		// If width (and height) equals the special value 0xFFFFFFFF, the size
+// of the surface will be set by the swapchain 		if
+// (surfCaps.currentExtent.width == (uint32_t)-1)
 //		{
 //			// If the surface size is undefined, the size is set to
 //			// the size of the images requested.
@@ -1400,7 +1522,8 @@
 //					swapchainPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
 //					break;
 //				}
-//				if ((swapchainPresentMode != VK_PRESENT_MODE_MAILBOX_KHR) && (presentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR))
+//				if ((swapchainPresentMode != VK_PRESENT_MODE_MAILBOX_KHR) &&
+//(presentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR))
 //				{
 //					swapchainPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
 //				}
@@ -1408,15 +1531,17 @@
 //		}
 //
 //		// Determine the number of images
-//		uint32_t desired_number_of_swapchain_images = surf_caps.minImageCount + 1;
-//		if ((surfCaps.maxImageCount > 0) && (desiredNumberOfSwapchainImages > surf_caps.maxImageCount))
+//		uint32_t desired_number_of_swapchain_images = surf_caps.minImageCount +
+// 1; 		if ((surfCaps.maxImageCount > 0) && (desiredNumberOfSwapchainImages
+// > surf_caps.maxImageCount))
 //		{
 //			desiredNumberOfSwapchainImages = surf_caps.maxImageCount;
 //		}
 //
 //		// Find the transformation of the surface
 //		VkSurfaceTransformFlagsKHR pre_transform;
-//		if (surfCaps.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
+//		if (surfCaps.supportedTransforms &
+// VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
 //		{
 //			// We prefer a non-rotated transform
 //			preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
@@ -1426,8 +1551,9 @@
 //			preTransform = surf_caps.currentTransform;
 //		}
 //
-//		// Find a supported composite alpha format (not all devices support alpha opaque)
-//		VkCompositeAlphaFlagBitsKHR composite_alpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+//		// Find a supported composite alpha format (not all devices support
+// alpha opaque) 		VkCompositeAlphaFlagBitsKHR composite_alpha =
+// VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 //		// Simply select the first composite alpha format available
 //		std::vector<VkCompositeAlphaFlagBitsKHR> composite_alpha_flags = {
 //			VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
@@ -1449,17 +1575,17 @@
 //		swapchainCI.minImageCount = desired_number_of_swapchain_images;
 //		swapchainCI.imageFormat = _color_format;
 //		swapchainCI.imageColorSpace = _color_space;
-//		swapchainCI.imageExtent = { swapchain_extent.width, swapchain_extent.height };
-//		swapchainCI.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-//		swapchainCI.preTransform = (VkSurfaceTransformFlagBitsKHR)preTransform;
-//		swapchainCI.imageArrayLayers = 1;
-//		swapchainCI.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+//		swapchainCI.imageExtent = { swapchain_extent.width,
+// swapchain_extent.height }; 		swapchainCI.imageUsage =
+// VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT; 		swapchainCI.preTransform =
+//(VkSurfaceTransformFlagBitsKHR)preTransform; 		swapchainCI.imageArrayLayers
+//= 1; 		swapchainCI.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 //		swapchainCI.queueFamilyIndexCount = 0;
 //		swapchainCI.pQueueFamilyIndices = NULL;
 //		swapchainCI.presentMode = swapchain_present_mode;
 //		swapchainCI.oldSwapchain = old_swapchain;
-//		// Setting clipped to VK_TRUE allows the implementation to discard rendering outside of the surface area
-//		swapchainCI.clipped = VK_TRUE;
+//		// Setting clipped to VK_TRUE allows the implementation to discard
+// rendering outside of the surface area 		swapchainCI.clipped = VK_TRUE;
 //		swapchainCI.compositeAlpha = composite_alpha;
 //
 //		// Enable transfer source on swap chain images if supported
@@ -1488,25 +1614,27 @@
 //
 //		// Get the swap chain images
 //		_images.resize(_image_count);
-//		vkGetSwapchainImagesKHR(_device, _swap_chain, &_image_count, _images.data());
+//		vkGetSwapchainImagesKHR(_device, _swap_chain, &_image_count,
+//_images.data());
 //
 //		// Get the swap chain buffers containing the image and imageview
 //		_buffers.resize(_image_count);
 //		for (uint32_t i = 0; i < _image_count; i++)
 //		{
 //			VkImageViewCreateInfo color_attachment_view = {};
-//			colorAttachmentView.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-//			colorAttachmentView.pNext = NULL;
-//			colorAttachmentView.format = _color_format;
+//			colorAttachmentView.sType =
+// VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO; colorAttachmentView.pNext = NULL;
+// colorAttachmentView.format = _color_format;
 //			colorAttachmentView.components = {
 //				VK_COMPONENT_SWIZZLE_R,
 //				VK_COMPONENT_SWIZZLE_G,
 //				VK_COMPONENT_SWIZZLE_B,
 //				VK_COMPONENT_SWIZZLE_A
 //			};
-//			colorAttachmentView.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-//			colorAttachmentView.subresourceRange.baseMipLevel = 0;
-//			colorAttachmentView.subresourceRange.levelCount = 1;
+//			colorAttachmentView.subresourceRange.aspectMask =
+// VK_IMAGE_ASPECT_COLOR_BIT;
+// colorAttachmentView.subresourceRange.baseMipLevel = 0;
+// colorAttachmentView.subresourceRange.levelCount = 1;
 //			colorAttachmentView.subresourceRange.baseArrayLayer = 0;
 //			colorAttachmentView.subresourceRange.layerCount = 1;
 //			colorAttachmentView.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -1516,25 +1644,32 @@
 //
 //			colorAttachmentView.image = _buffers[i]._image;
 //
-//			vkCreateImageView(_device, &colorAttachmentView, nullptr, &_buffers[i]._view);
+//			vkCreateImageView(_device, &colorAttachmentView, nullptr,
+//&_buffers[i]._view);
 //		}
 //	}
 //
 //	/**
 //	* Acquires the next image in the swap chain
 //	*
-//	* @param present_complete_semaphore (Optional) Semaphore that is signaled when the image is ready for use
-//	* @param image_index Pointer to the image index that will be increased if the next image could be acquired
+//	* @param present_complete_semaphore (Optional) Semaphore that is signaled
+// when the image is ready for use
+//	* @param image_index Pointer to the image index that will be increased if
+// the next image could be acquired
 //	*
-//	* @note The function will always wait until the next image has been acquired by setting timeout to UINT64_MAX
+//	* @note The function will always wait until the next image has been acquired
+// by setting timeout to UINT64_MAX
 //	*
 //	* @return VkResult of the image acquisition
 //	*/
-//	VkResult acquire_next_image(VkSemaphore present_complete_semaphore, uint_32_t *imageIndex)
+//	VkResult acquire_next_image(VkSemaphore present_complete_semaphore,
+// uint_32_t *imageIndex)
 //	{
-//		// By setting timeout to UINT64_MAX we will always wait until the next image has been acquired or an actual error is thrown
+//		// By setting timeout to UINT64_MAX we will always wait until the next
+// image has been acquired or an actual error is thrown
 //		// With that we don't have to handle VK_NOT_READY
-//		return vk_acquire_next_image_k_h_r(_device, _swap_chain, UINT64_MAX, present_complete_semaphore, (VkFence)nullptr, image_index);
+//		return vk_acquire_next_image_k_h_r(_device, _swap_chain, UINT64_MAX,
+// present_complete_semaphore, (VkFence)nullptr, image_index);
 //	}
 //
 //	/**
@@ -1542,11 +1677,13 @@
 //	*
 //	* @param queue Presentation queue for presenting the image
 //	* @param image_index Index of the swapchain image to queue for presentation
-//	* @param wait_semaphore (Optional) Semaphore that is waited on before the image is presented (only used if != VK_NULL_HANDLE)
+//	* @param wait_semaphore (Optional) Semaphore that is waited on before the
+// image is presented (only used if != VK_NULL_HANDLE)
 //	*
 //	* @return VkResult of the queue presentation
 //	*/
-//	VkResult queue_present(VkQueue queue, uint_32_t image_index, VkSemaphore wait_semaphore = VK_NULL_HANDLE)
+//	VkResult queue_present(VkQueue queue, uint_32_t image_index, VkSemaphore
+// wait_semaphore = VK_NULL_HANDLE)
 //	{
 //		VkPresentInfoKHR present_info = {};
 //		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -1554,8 +1691,8 @@
 //		presentInfo.swapchainCount = 1;
 //		presentInfo.pSwapchains = &_swap_chain;
 //		presentInfo.pImageIndices = &imageIndex;
-//		// Check if a wait semaphore has been specified to wait for before presenting the image
-//		if (waitSemaphore != VK_NULL_HANDLE)
+//		// Check if a wait semaphore has been specified to wait for before
+// presenting the image 		if (waitSemaphore != VK_NULL_HANDLE)
 //		{
 //			presentInfo.pWaitSemaphores = &waitSemaphore;
 //			presentInfo.waitSemaphoreCount = 1;
@@ -1586,7 +1723,7 @@
 //	}
 //};
 //
-//namespace vks
+// namespace vks
 //{
 //	/**
 //	* @brief Encapsulates access to a Vulkan buffer backed up by device memory
@@ -1602,15 +1739,19 @@
 //		VkDeviceSize _alignment = 0;
 //		void* _mapped = nullptr;
 //
-//		/** @brief Usage flags to be filled by external source at buffer creation (to query at some later point) */
-//		VkBufferUsageFlags _usage_flags;
-//		/** @brief Memory propertys flags to be filled by external source at buffer creation (to query at some later point) */
-//		VkMemoryPropertyFlags _memory_property_flags;
+//		/** @brief Usage flags to be filled by external source at buffer
+// creation (to query at some later point) */ 		VkBufferUsageFlags
+//_usage_flags;
+//		/** @brief Memory propertys flags to be filled by external source at
+// buffer creation (to query at some later point) */ VkMemoryPropertyFlags
+//_memory_property_flags;
 //
 //		/**
-//		* Map a memory range of this buffer. If successful, mapped points to the specified buffer range.
+//		* Map a memory range of this buffer. If successful, mapped points to the
+// specified buffer range.
 //		*
-//		* @param size (Optional) Size of the memory range to map. Pass VK_WHOLE_SIZE to map the complete buffer range.
+//		* @param size (Optional) Size of the memory range to map. Pass
+// VK_WHOLE_SIZE to map the complete buffer range.
 //		* @param offset (Optional) Byte offset from beginning
 //		*
 //		* @return VkResult of the buffer mapping call
@@ -1637,7 +1778,8 @@
 //		/**
 //		* Attach the allocated memory block to the buffer
 //		*
-//		* @param offset (Optional) Byte offset (from the beginning) for the memory region to bind
+//		* @param offset (Optional) Byte offset (from the beginning) for the
+// memory region to bind
 //		*
 //		* @return VkResult of the bind_buffer_memory call
 //		*/
@@ -1653,7 +1795,8 @@
 //		* @param offset (Optional) Byte offset from beginning
 //		*
 //		*/
-//		void setup_descriptor(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0)
+//		void setup_descriptor(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize
+// offset = 0)
 //		{
 //			_descriptor.offset = offset;
 //			_descriptor.buffer = _buffer;
@@ -1678,12 +1821,14 @@
 //		*
 //		* @note Only required for non-coherent memory
 //		*
-//		* @param size (Optional) Size of the memory range to flush. Pass VK_WHOLE_SIZE to flush the complete buffer range.
+//		* @param size (Optional) Size of the memory range to flush. Pass
+// VK_WHOLE_SIZE to flush the complete buffer range.
 //		* @param offset (Optional) Byte offset from beginning
 //		*
 //		* @return VkResult of the flush call
 //		*/
-//		VkResult flush(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0)
+//		VkResult flush(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset =
+// 0)
 //		{
 //			VkMappedMemoryRange mapped_range = {};
 //			mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
@@ -1698,12 +1843,14 @@
 //		*
 //		* @note Only required for non-coherent memory
 //		*
-//		* @param size (Optional) Size of the memory range to invalidate. Pass VK_WHOLE_SIZE to invalidate the complete buffer range.
+//		* @param size (Optional) Size of the memory range to invalidate. Pass
+// VK_WHOLE_SIZE to invalidate the complete buffer range.
 //		* @param offset (Optional) Byte offset from beginning
 //		*
 //		* @return VkResult of the invalidate call
 //		*/
-//		VkResult invalidate(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0)
+//		VkResult invalidate(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize
+// offset = 0)
 //		{
 //			VkMappedMemoryRange mapped_range = {};
 //			mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
@@ -1731,20 +1878,23 @@
 //	};
 //}
 //
-//namespace vks
+// namespace vks
 //{
 //	struct VulkanDevice
 //	{
 //		/** @brief Physical device representation */
 //		VkPhysicalDevice _physical_device;
-//		/** @brief Logical device representation (application's view of the device) */
-//		VkDevice _logical_device;
-//		/** @brief Properties of the physical device including limits that the application can check against */
-//		VkPhysicalDeviceProperties _properties;
-//		/** @brief Features of the physical device that an application can use to check if a feature is supported */
-//		VkPhysicalDeviceFeatures _features;
-//		/** @brief Features that have been enabled for use on the physical device */
-//		VkPhysicalDeviceFeatures _enabled_features;
+//		/** @brief Logical device representation (application's view of the
+// device) */ 		VkDevice _logical_device;
+//		/** @brief Properties of the physical device including limits that the
+// application can check against */ 		VkPhysicalDeviceProperties
+// _properties;
+//		/** @brief Features of the physical device that an application can use
+// to check if a feature is supported */ 		VkPhysicalDeviceFeatures
+// _features;
+//		/** @brief Features that have been enabled for use on the physical
+// device
+//*/ 		VkPhysicalDeviceFeatures _enabled_features;
 //		/** @brief Memory types and heaps of the physical device */
 //		VkPhysicalDeviceMemoryProperties _memory_properties;
 //		/** @brief Queue family properties of the physical device */
@@ -1776,27 +1926,31 @@
 //			assert(physicalDevice);
 //			_physical_device = physical_device;
 //
-//			// Store Properties features, limits and properties of the physical device for later use
+//			// Store Properties features, limits and properties of the physical
+// device for later use
 //			// Device properties also contain limits and sparse properties
 //			vkGetPhysicalDeviceProperties(physicalDevice, &_properties);
 //			// Features should be checked by the examples before using them
 //			vkGetPhysicalDeviceFeatures(physicalDevice, &_features);
-//			// Memory properties are used regularly for creating all kinds of buffers
-//			vkGetPhysicalDeviceMemoryProperties(physicalDevice, &_memory_properties);
-//			// Queue family properties, used for setting up requested queues upon device creation
-//			uint32_t queue_family_count;
-//			vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
-//			assert(queueFamilyCount > 0);
+//			// Memory properties are used regularly for creating all kinds of
+// buffers 			vkGetPhysicalDeviceMemoryProperties(physicalDevice,
+//&_memory_properties);
+//			// Queue family properties, used for setting up requested queues
+// upon device creation 			uint32_t queue_family_count;
+//			vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice,
+//&queueFamilyCount, nullptr); 			assert(queueFamilyCount > 0);
 //			_queue_family_properties.resize(queueFamilyCount);
-//			vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, _queue_family_properties.data());
+//			vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice,
+//&queueFamilyCount, _queue_family_properties.data());
 //
 //			// Get list of supported extensions
 //			uint32_t ext_count = 0;
-//			vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extCount, nullptr);
-//			if (extCount > 0)
+//			vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr,
+//&extCount, nullptr); 			if (extCount > 0)
 //			{
 //				std::vector<VkExtensionProperties> extensions(extCount);
-//				if (vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extCount, &extensions.front()) == VK_SUCCESS)
+//				if (vkEnumerateDeviceExtensionProperties(physicalDevice,
+// nullptr, &extCount, &extensions.front()) == VK_SUCCESS)
 //				{
 //					for (auto ext : extensions)
 //					{
@@ -1824,23 +1978,30 @@
 //		}
 //
 //		/**
-//		* Get the index of a memory type that has all the requested property bits set
+//		* Get the index of a memory type that has all the requested property
+// bits set
 //		*
-//		* @param type_bits Bitmask with bits set for each memory type supported by the resource to request for (from VkMemoryRequirements)
+//		* @param type_bits Bitmask with bits set for each memory type supported
+// by the resource to request for (from VkMemoryRequirements)
 //		* @param properties Bitmask of properties for the memory type to request
-//		* @param (Optional) mem_type_found Pointer to a bool that is set to true if a matching memory type has been found
+//		* @param (Optional) mem_type_found Pointer to a bool that is set to true
+// if a matching memory type has been found
 //		*
 //		* @return Index of the requested memory type
 //		*
-//		* @throw Throws an exception if mem_type_found is null and no memory type could be found that supports the requested properties
+//		* @throw Throws an exception if mem_type_found is null and no memory
+// type could be found that supports the requested properties
 //		*/
-//		uint32_t get_memory_type(uint32_t type_bits, VkMemoryPropertyFlags properties, VkBool32 *memTypeFound = nullptr)
+//		uint32_t get_memory_type(uint32_t type_bits, VkMemoryPropertyFlags
+// properties, VkBool32 *memTypeFound = nullptr)
 //		{
 //			for (uint32_t i = 0; i < _memory_properties.memoryTypeCount; i++)
 //			{
 //				if ((typeBits & 1) == 1)
 //				{
-//					if ((_memory_properties.memoryTypes[i].propertyFlags & properties) == properties)
+//					if ((_memory_properties.memoryTypes[i].propertyFlags &
+// properties)
+//== properties)
 //					{
 //						if (memTypeFound)
 //						{
@@ -1859,28 +2020,34 @@
 //			}
 //			else
 //			{
-//				throw std::runtime_error("Could not find a matching memory type");
+//				throw std::runtime_error("Could not find a matching memory
+// type");
 //			}
 //		}
 //
 //		/**
-//		* Get the index of a queue family that supports the requested queue flags
+//		* Get the index of a queue family that supports the requested queue
+// flags
 //		*
 //		* @param queue_flags Queue flags to find a queue family index for
 //		*
 //		* @return Index of the queue family index that matches the flags
 //		*
-//		* @throw Throws an exception if no queue family index could be found that supports the requested flags
+//		* @throw Throws an exception if no queue family index could be found
+// that supports the requested flags
 //		*/
 //		uint32_t get_queue_family_index(VkQueueFlagBits queue_flags)
 //		{
 //			// Dedicated queue for compute
-//			// Try to find a queue family index that supports compute but not graphics
-//			if (queueFlags & VK_QUEUE_COMPUTE_BIT)
+//			// Try to find a queue family index that supports compute but not
+// graphics 			if (queueFlags & VK_QUEUE_COMPUTE_BIT)
 //			{
-//				for (uint32_t i = 0; i < static_cast<uint32_t>(_queue_family_properties.size()); i++)
+//				for (uint32_t i = 0; i <
+// static_cast<uint32_t>(_queue_family_properties.size()); i++)
 //				{
-//					if ((_queue_family_properties[i].queueFlags & queue_flags) && ((_queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0))
+//					if ((_queue_family_properties[i].queueFlags & queue_flags)
+//&&
+//((_queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0))
 //					{
 //						return i;
 //						break;
@@ -1889,12 +2056,16 @@
 //			}
 //
 //			// Dedicated queue for transfer
-//			// Try to find a queue family index that supports transfer but not graphics and compute
-//			if (queueFlags & VK_QUEUE_TRANSFER_BIT)
+//			// Try to find a queue family index that supports transfer but not
+// graphics and compute 			if (queueFlags & VK_QUEUE_TRANSFER_BIT)
 //			{
-//				for (uint32_t i = 0; i < static_cast<uint32_t>(_queue_family_properties.size()); i++)
+//				for (uint32_t i = 0; i <
+// static_cast<uint32_t>(_queue_family_properties.size()); i++)
 //				{
-//					if ((_queue_family_properties[i].queueFlags & queue_flags) && ((_queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0) && ((_queue_family_properties[i].queueFlags & VK_QUEUE_COMPUTE_BIT) == 0))
+//					if ((_queue_family_properties[i].queueFlags & queue_flags)
+//&&
+//((_queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0) &&
+//((_queue_family_properties[i].queueFlags & VK_QUEUE_COMPUTE_BIT) == 0))
 //					{
 //						return i;
 //						break;
@@ -1902,8 +2073,9 @@
 //				}
 //			}
 //
-//			// For other queue types or if no separate compute queue is present, return the first one to support the requested flags
-//			for (uint32_t i = 0; i < static_cast<uint32_t>(_queue_family_properties.size()); i++)
+//			// For other queue types or if no separate compute queue is present,
+// return the first one to support the requested flags 			for (uint32_t i =
+// 0; i < static_cast<uint32_t>(_queue_family_properties.size()); i++)
 //			{
 //				if (_queue_family_properties[i].queueFlags & queue_flags)
 //				{
@@ -1912,22 +2084,31 @@
 //				}
 //			}
 //
-//			throw std::runtime_error("Could not find a matching queue family index");
+//			throw std::runtime_error("Could not find a matching queue family
+// index");
 //		}
 //
 //		/**
-//		* Create the logical device based on the assigned physical device, also gets default queue family indices
+//		* Create the logical device based on the assigned physical device, also
+// gets default queue family indices
 //		*
-//		* @param enabled_features Can be used to enable certain features upon device creation
-//		* @param use_swap_chain Set to false for headless rendering to omit the swapchain device extensions
-//		* @param requested_queue_types Bit flags specifying the queue types to be requested from the device
+//		* @param enabled_features Can be used to enable certain features upon
+// device creation
+//		* @param use_swap_chain Set to false for headless rendering to omit the
+// swapchain device extensions
+//		* @param requested_queue_types Bit flags specifying the queue types to
+// be requested from the device
 //		*
 //		* @return VkResult of the device creation call
 //		*/
-//		VkResult create_logical_device(VkPhysicalDeviceFeatures enabled_features, std::vector<const char*> enabled_extensions, bool use_swap_chain = true, VkQueueFlags requested_queue_types = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)
+//		VkResult create_logical_device(VkPhysicalDeviceFeatures
+// enabled_features, std::vector<const char*> enabled_extensions, bool
+// use_swap_chain = true, VkQueueFlags requested_queue_types =
+// VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)
 //		{
 //			// Desired queues need to be requested upon logical device creation
-//			// Due to differing queue family configurations of Vulkan implementations this can be a bit tricky, especially if the application
+//			// Due to differing queue family configurations of Vulkan
+// implementations this can be a bit tricky, especially if the application
 //			// requests different queue types
 //
 //			std::vector<VkDeviceQueueCreateInfo> queue_create_infos{};
@@ -1940,11 +2121,13 @@
 //			// Graphics queue
 //			if (requestedQueueTypes & VK_QUEUE_GRAPHICS_BIT)
 //			{
-//				_queue_family_indices._graphics = get_queue_family_index(VK_QUEUE_GRAPHICS_BIT);
-//				VkDeviceQueueCreateInfo queue_info{};
-//				queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-//				queueInfo.queueFamilyIndex = _queue_family_indices._graphics;
-//				queueInfo.queueCount = 1;
+//				_queue_family_indices._graphics =
+// get_queue_family_index(VK_QUEUE_GRAPHICS_BIT);
+// VkDeviceQueueCreateInfo queue_info{}; 				queueInfo.sType =
+// VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+// queueInfo.queueFamilyIndex
+// =
+//_queue_family_indices._graphics; 				queueInfo.queueCount = 1;
 //				queueInfo.pQueuePriorities = &defaultQueuePriority;
 //				queueCreateInfos.push_back(queueInfo);
 //			}
@@ -1956,71 +2139,83 @@
 //			// Dedicated compute queue
 //			if (requestedQueueTypes & VK_QUEUE_COMPUTE_BIT)
 //			{
-//				_queue_family_indices._compute = get_queue_family_index(VK_QUEUE_COMPUTE_BIT);
-//				if (_queue_family_indices._compute != _queue_family_indices._graphics)
+//				_queue_family_indices._compute =
+// get_queue_family_index(VK_QUEUE_COMPUTE_BIT); 				if
+//(_queue_family_indices._compute != _queue_family_indices._graphics)
 //				{
-//					// If compute family index differs, we need an additional queue create info for the compute queue
-//					VkDeviceQueueCreateInfo queue_info{};
-//					queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-//					queueInfo.queueFamilyIndex = _queue_family_indices._compute;
-//					queueInfo.queueCount = 1;
-//					queueInfo.pQueuePriorities = &defaultQueuePriority;
+//					// If compute family index differs, we need an additional
+// queue create info for the compute queue VkDeviceQueueCreateInfo queue_info{};
+//					queueInfo.sType =
+// VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+// queueInfo.queueFamilyIndex = _queue_family_indices._compute;
+// queueInfo.queueCount =
+// 1; 					queueInfo.pQueuePriorities = &defaultQueuePriority;
 //					queueCreateInfos.push_back(queueInfo);
 //				}
 //			}
 //			else
 //			{
 //				// Else we use the same queue
-//				_queue_family_indices._compute = _queue_family_indices._graphics;
+//				_queue_family_indices._compute =
+//_queue_family_indices._graphics;
 //			}
 //
 //			// Dedicated transfer queue
 //			if (requestedQueueTypes & VK_QUEUE_TRANSFER_BIT)
 //			{
-//				_queue_family_indices._transfer = get_queue_family_index(VK_QUEUE_TRANSFER_BIT);
-//				if ((_queue_family_indices._transfer != _queue_family_indices._graphics) && (_queue_family_indices._transfer != _queue_family_indices._compute))
+//				_queue_family_indices._transfer =
+// get_queue_family_index(VK_QUEUE_TRANSFER_BIT); 				if
+//((_queue_family_indices._transfer != _queue_family_indices._graphics) &&
+//(_queue_family_indices._transfer != _queue_family_indices._compute))
 //				{
-//					// If compute family index differs, we need an additional queue create info for the compute queue
-//					VkDeviceQueueCreateInfo queue_info{};
-//					queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-//					queueInfo.queueFamilyIndex = _queue_family_indices._transfer;
-//					queueInfo.queueCount = 1;
-//					queueInfo.pQueuePriorities = &defaultQueuePriority;
+//					// If compute family index differs, we need an additional
+// queue create info for the compute queue VkDeviceQueueCreateInfo queue_info{};
+//					queueInfo.sType =
+// VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+// queueInfo.queueFamilyIndex = _queue_family_indices._transfer;
+// queueInfo.queueCount =
+// 1; 					queueInfo.pQueuePriorities = &defaultQueuePriority;
 //					queueCreateInfos.push_back(queueInfo);
 //				}
 //			}
 //			else
 //			{
 //				// Else we use the same queue
-//				_queue_family_indices._transfer = _queue_family_indices._graphics;
+//				_queue_family_indices._transfer =
+//_queue_family_indices._graphics;
 //			}
 //
 //			// Create the logical device representation
 //			std::vector<const char*> device_extensions(enabledExtensions);
 //			if (useSwapChain)
 //			{
-//				// If the device will be used for presenting to a display via a swapchain we need to request the swapchain extension
+//				// If the device will be used for presenting to a display via a
+// swapchain we need to request the swapchain extension
 //				deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 //			}
 //
 //			VkDeviceCreateInfo device_create_info = {};
 //			deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-//			deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());;
+//			deviceCreateInfo.queueCreateInfoCount =
+// static_cast<uint32_t>(queueCreateInfos.size());;
 //			deviceCreateInfo.pQueueCreateInfos = queue_create_infos.data();
 //			deviceCreateInfo.pEnabledFeatures = &enabledFeatures;
 //
 //			if (deviceExtensions.size() > 0)
 //			{
-//				deviceCreateInfo.enabledExtensionCount = (uint32_t)deviceExtensions.size();
-//				deviceCreateInfo.ppEnabledExtensionNames = device_extensions.data();
+//				deviceCreateInfo.enabledExtensionCount =
+//(uint32_t)deviceExtensions.size();
+// deviceCreateInfo.ppEnabledExtensionNames = device_extensions.data();
 //			}
 //
-//			VkResult result = vk_create_device(_physical_device, &deviceCreateInfo, nullptr, &_logical_device);
+//			VkResult result = vk_create_device(_physical_device,
+//&deviceCreateInfo, nullptr, &_logical_device);
 //
 //			if (result == VK_SUCCESS)
 //			{
 //				// Create a default command pool for graphics command buffers
-//				_command_pool = create_command_pool(_queue_family_indices._graphics);
+//				_command_pool =
+// create_command_pool(_queue_family_indices._graphics);
 //			}
 //
 //			_enabled_features = enabled_features;
@@ -2031,44 +2226,54 @@
 //		/**
 //		* Create a buffer on the device
 //		*
-//		* @param usage_flags Usage flag bitmask for the buffer (i.e. index, vertex, uniform buffer)
-//		* @param memory_property_flags Memory properties for this buffer (i.e. device local, host visible, coherent)
+//		* @param usage_flags Usage flag bitmask for the buffer (i.e. index,
+// vertex, uniform buffer)
+//		* @param memory_property_flags Memory properties for this buffer (i.e.
+// device local, host visible, coherent)
 //		* @param size Size of the buffer in byes
 //		* @param buffer Pointer to the buffer handle acquired by the function
 //		* @param memory Pointer to the memory handle acquired by the function
-//		* @param data Pointer to the data that should be copied to the buffer after creation (optional, if not set, no data is copied over)
+//		* @param data Pointer to the data that should be copied to the buffer
+// after creation (optional, if not set, no data is copied over)
 //		*
-//		* @return VK_SUCCESS if buffer handle and memory have been created and (optionally passed) data has been copied
+//		* @return VK_SUCCESS if buffer handle and memory have been created and
+//(optionally passed) data has been copied
 //		*/
-//		VkResult create_buffer(VkBufferUsageFlags usage_flags, VkMemoryPropertyFlags memory_property_flags, VkDeviceSize size, VkBuffer *buffer, VkDeviceMemory *memory, void *data = nullptr)
+//		VkResult create_buffer(VkBufferUsageFlags usage_flags,
+// VkMemoryPropertyFlags memory_property_flags, VkDeviceSize size, VkBuffer
+//*buffer, VkDeviceMemory *memory, void *data = nullptr)
 //		{
 //			// Create the buffer handle
-//			VkBufferCreateInfo buffer_create_info = vks::initializers::bufferCreateInfo(usageFlags, size);
+//			VkBufferCreateInfo buffer_create_info =
+// vks::initializers::bufferCreateInfo(usageFlags, size);
 //			bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 //			vkCreateBuffer(_logical_device, &bufferCreateInfo, nullptr, buffer);
 //
 //			// Create the memory backing up the buffer handle
 //			VkMemoryRequirements mem_reqs;
-//			VkMemoryAllocateInfo mem_alloc = vks::initializers::memoryAllocateInfo();
+//			VkMemoryAllocateInfo mem_alloc =
+// vks::initializers::memoryAllocateInfo();
 //			vkGetBufferMemoryRequirements(_logical_device, *buffer, &memReqs);
 //			memAlloc.allocationSize = mem_reqs.size;
 //			// Find a memory type index that fits the properties of the buffer
-//			memAlloc.memoryTypeIndex = get_memory_type(memReqs.memoryTypeBits, memory_property_flags);
-//			vkAllocateMemory(_logical_device, &memAlloc, nullptr, memory);
+//			memAlloc.memoryTypeIndex = get_memory_type(memReqs.memoryTypeBits,
+// memory_property_flags); 			vkAllocateMemory(_logical_device, &memAlloc,
+// nullptr, memory);
 //
-//			// If a pointer to the buffer data has been passed, map the buffer and copy over the data
-//			if (data != nullptr)
+//			// If a pointer to the buffer data has been passed, map the buffer
+// and copy over the data 			if (data != nullptr)
 //			{
 //				void *mapped;
 //				vkMapMemory(_logical_device, *memory, 0, size, 0, &mapped);
 //				memcpy(mapped, data, (size_t)size);
-//				// If host coherency hasn't been requested, do a manual flush to make writes visible
-//				if ((memoryPropertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) == 0)
+//				// If host coherency hasn't been requested, do a manual flush to
+// make writes visible 				if ((memoryPropertyFlags &
+// VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) == 0)
 //				{
-//					VkMappedMemoryRange mapped_range = vks::initializers::mappedMemoryRange();
-//					mappedRange.memory = *memory;
-//					mappedRange.offset = 0;
-//					mappedRange.size = size;
+//					VkMappedMemoryRange mapped_range =
+// vks::initializers::mappedMemoryRange(); 					mappedRange.memory =
+// *memory; 					mappedRange.offset = 0; 					mappedRange.size
+// = size;
 //					vkFlushMappedMemoryRanges(_logical_device, 1, &mappedRange);
 //				}
 //				vkUnmapMemory(_logical_device, *memory);
@@ -2083,43 +2288,53 @@
 //		/**
 //		* Create a buffer on the device
 //		*
-//		* @param usage_flags Usage flag bitmask for the buffer (i.e. index, vertex, uniform buffer)
-//		* @param memory_property_flags Memory properties for this buffer (i.e. device local, host visible, coherent)
+//		* @param usage_flags Usage flag bitmask for the buffer (i.e. index,
+// vertex, uniform buffer)
+//		* @param memory_property_flags Memory properties for this buffer (i.e.
+// device local, host visible, coherent)
 //		* @param buffer Pointer to a vk::Vulkan buffer object
 //		* @param size Size of the buffer in byes
-//		* @param data Pointer to the data that should be copied to the buffer after creation (optional, if not set, no data is copied over)
+//		* @param data Pointer to the data that should be copied to the buffer
+// after creation (optional, if not set, no data is copied over)
 //		*
-//		* @return VK_SUCCESS if buffer handle and memory have been created and (optionally passed) data has been copied
+//		* @return VK_SUCCESS if buffer handle and memory have been created and
+//(optionally passed) data has been copied
 //		*/
-//		VkResult create_buffer(VkBufferUsageFlags usage_flags, VkMemoryPropertyFlags memory_property_flags, vks::Buffer *buffer, VkDeviceSize size, void *data = nullptr)
+//		VkResult create_buffer(VkBufferUsageFlags usage_flags,
+// VkMemoryPropertyFlags memory_property_flags, vks::Buffer *buffer,
+// VkDeviceSize size, void *data = nullptr)
 //		{
 //			buffer->_device = _logical_device;
 //
 //			// Create the buffer handle
-//			VkBufferCreateInfo buffer_create_info = vks::initializers::bufferCreateInfo(usageFlags, size);
-//			vkCreateBuffer(_logical_device, &bufferCreateInfo, nullptr, &buffer->_buffer);
+//			VkBufferCreateInfo buffer_create_info =
+// vks::initializers::bufferCreateInfo(usageFlags, size);
+//			vkCreateBuffer(_logical_device, &bufferCreateInfo, nullptr,
+//&buffer->_buffer);
 //
 //			// Create the memory backing up the buffer handle
 //			VkMemoryRequirements mem_reqs;
-//			VkMemoryAllocateInfo mem_alloc = vks::initializers::memoryAllocateInfo();
-//			vkGetBufferMemoryRequirements(_logical_device, buffer->_buffer, &memReqs);
-//			memAlloc.allocationSize = mem_reqs.size;
+//			VkMemoryAllocateInfo mem_alloc =
+// vks::initializers::memoryAllocateInfo();
+//			vkGetBufferMemoryRequirements(_logical_device, buffer->_buffer,
+//&memReqs); 			memAlloc.allocationSize = mem_reqs.size;
 //			// Find a memory type index that fits the properties of the buffer
-//			memAlloc.memoryTypeIndex = get_memory_type(memReqs.memoryTypeBits, memory_property_flags);
-//			vkAllocateMemory(_logical_device, &memAlloc, nullptr, &buffer->_memory);
+//			memAlloc.memoryTypeIndex = get_memory_type(memReqs.memoryTypeBits,
+// memory_property_flags); 			vkAllocateMemory(_logical_device, &memAlloc,
+// nullptr, &buffer->_memory);
 //
 //			buffer->_alignment = mem_reqs.alignment;
 //			buffer->_size = mem_alloc.allocationSize;
 //			buffer->_usage_flags = usage_flags;
 //			buffer->_memory_property_flags = memory_property_flags;
 //
-//			// If a pointer to the buffer data has been passed, map the buffer and copy over the data
-//			if (data != nullptr)
+//			// If a pointer to the buffer data has been passed, map the buffer
+// and copy over the data 			if (data != nullptr)
 //			{
 //				buffer->map();
 //				memcpy(buffer->_mapped, data, (size_t)size);
-//				if ((memoryPropertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) == 0)
-//					buffer->flush();
+//				if ((memoryPropertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+//== 0) 					buffer->flush();
 //
 //				buffer->unmap();
 //			}
@@ -2137,17 +2352,20 @@
 //		* @param src Pointer to the source buffer to copy from
 //		* @param dst Pointer to the destination buffer to copy tp
 //		* @param queue Pointer
-//		* @param copy_region (Optional) Pointer to a copy region, if NULL, the whole buffer is copied
+//		* @param copy_region (Optional) Pointer to a copy region, if NULL, the
+// whole buffer is copied
 //		*
-//		* @note Source and destionation pointers must have the approriate transfer usage flags set (TRANSFER_SRC / TRANSFER_DST)
+//		* @note Source and destionation pointers must have the approriate
+// transfer usage flags set (TRANSFER_SRC / TRANSFER_DST)
 //		*/
-//		void copy_buffer(vks::Buffer *src, vks::Buffer *dst, VkQueue queue, VkBufferCopy *copyRegion = nullptr)
+//		void copy_buffer(vks::Buffer *src, vks::Buffer *dst, VkQueue queue,
+// VkBufferCopy *copyRegion = nullptr)
 //		{
 //			assert(dst->_size <= src->_size);
 //			assert(src->_buffer);
-//			VkCommandBuffer copy_cmd = create_command_buffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, true);
-//			VkBufferCopy buffer_copy{};
-//			if (copyRegion == nullptr)
+//			VkCommandBuffer copy_cmd =
+// create_command_buffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, true);
+// VkBufferCopy buffer_copy{}; 			if (copyRegion == nullptr)
 //			{
 //				bufferCopy.size = src->_size;
 //			}
@@ -2156,7 +2374,8 @@
 //				bufferCopy = *copyRegion;
 //			}
 //
-//			vkCmdCopyBuffer(copyCmd, src->_buffer, dst->_buffer, 1, &bufferCopy);
+//			vkCmdCopyBuffer(copyCmd, src->_buffer, dst->_buffer, 1,
+//&bufferCopy);
 //
 //			flushCommandBuffer(copyCmd, queue);
 //		}
@@ -2164,44 +2383,54 @@
 //		/**
 //		* Create a command pool for allocation command buffers from
 //		*
-//		* @param queue_family_index Family index of the queue to create the command pool for
-//		* @param create_flags (Optional) Command pool creation flags (Defaults to VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
+//		* @param queue_family_index Family index of the queue to create the
+// command pool for
+//		* @param create_flags (Optional) Command pool creation flags (Defaults
+// to VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
 //		*
-//		* @note Command buffers allocated from the created pool can only be submitted to a queue with the same family index
+//		* @note Command buffers allocated from the created pool can only be
+// submitted to a queue with the same family index
 //		*
 //		* @return A handle to the created command buffer
 //		*/
-//		VkCommandPool create_command_pool(uint32_t queue_family_index, VkCommandPoolCreateFlags create_flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
+//		VkCommandPool create_command_pool(uint32_t queue_family_index,
+// VkCommandPoolCreateFlags create_flags =
+// VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
 //		{
 //			VkCommandPoolCreateInfo cmd_pool_info = {};
 //			cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 //			cmdPoolInfo.queueFamilyIndex = queue_family_index;
 //			cmdPoolInfo.flags = create_flags;
 //			VkCommandPool cmd_pool;
-//			vkCreateCommandPool(_logical_device, &cmdPoolInfo, nullptr, &cmdPool);
-//			return cmd_pool;
+//			vkCreateCommandPool(_logical_device, &cmdPoolInfo, nullptr,
+//&cmdPool); 			return cmd_pool;
 //		}
 //
 //		/**
 //		* Allocate a command buffer from the command pool
 //		*
 //		* @param level Level of the new command buffer (primary or secondary)
-//		* @param (Optional) begin If true, recording on the new command buffer will be started (vkBeginCommandBuffer) (Defaults to false)
+//		* @param (Optional) begin If true, recording on the new command buffer
+// will be started (vkBeginCommandBuffer) (Defaults to false)
 //		*
 //		* @return A handle to the allocated command buffer
 //		*/
-//		VkCommandBuffer create_command_buffer(VkCommandBufferLevel level, bool begin = false)
+//		VkCommandBuffer create_command_buffer(VkCommandBufferLevel level, bool
+// begin = false)
 //		{
-//			VkCommandBufferAllocateInfo cmd_buf_allocate_info = vks::initializers::command_buffer_allocate_info(_command_pool, level, 1);
+//			VkCommandBufferAllocateInfo cmd_buf_allocate_info =
+// vks::initializers::command_buffer_allocate_info(_command_pool, level, 1);
 //
 //			VkCommandBuffer cmd_buffer;
-//			vkAllocateCommandBuffers(_logical_device, &cmdBufAllocateInfo, &cmdBuffer);
+//			vkAllocateCommandBuffers(_logical_device, &cmdBufAllocateInfo,
+//&cmdBuffer);
 //
 //			// If requested, also start recording for the new command buffer
 //			if (begin)
 //			{
-//				VkCommandBufferBeginInfo cmd_buf_info = vks::initializers::commandBufferBeginInfo();
-//				vkBeginCommandBuffer(cmdBuffer, &cmdBufInfo);
+//				VkCommandBufferBeginInfo cmd_buf_info =
+// vks::initializers::commandBufferBeginInfo();
+// vkBeginCommandBuffer(cmdBuffer, &cmdBufInfo);
 //			}
 //
 //			return cmd_buffer;
@@ -2212,12 +2441,15 @@
 //		*
 //		* @param command_buffer Command buffer to flush
 //		* @param queue Queue to submit the command buffer to
-//		* @param free (Optional) Free the command buffer once it has been submitted (Defaults to true)
+//		* @param free (Optional) Free the command buffer once it has been
+// submitted (Defaults to true)
 //		*
-//		* @note The queue that the command buffer is submitted to must be from the same family index as the pool it was allocated from
+//		* @note The queue that the command buffer is submitted to must be from
+// the same family index as the pool it was allocated from
 //		* @note Uses a fence to ensure command buffer has finished executing
 //		*/
-//		void flush_command_buffer(VkCommandBuffer command_buffer, VkQueue queue, bool free = true)
+//		void flush_command_buffer(VkCommandBuffer command_buffer, VkQueue queue,
+// bool free = true)
 //		{
 //			if (commandBuffer == VK_NULL_HANDLE)
 //			{
@@ -2230,21 +2462,23 @@
 //			submitInfo.commandBufferCount = 1;
 //			submitInfo.pCommandBuffers = &commandBuffer;
 //
-//			// Create fence to ensure that the command buffer has finished executing
-//			VkFenceCreateInfo fence_info = vks::initializers::fenceCreateInfo(VK_FLAGS_NONE);
-//			VkFence fence;
+//			// Create fence to ensure that the command buffer has finished
+// executing 			VkFenceCreateInfo fence_info =
+// vks::initializers::fenceCreateInfo(VK_FLAGS_NONE); 			VkFence fence;
 //			vkCreateFence(_logical_device, &fenceInfo, nullptr, &fence);
 //
 //			// Submit to the queue
 //			vkQueueSubmit(queue, 1, &submitInfo, fence);
-//			// Wait for the fence to signal that command buffer has finished executing
-//			vkWaitForFences(_logical_device, 1, &fence, VK_TRUE, DEFAULT_FENCE_TIMEOUT);
+//			// Wait for the fence to signal that command buffer has finished
+// executing 			vkWaitForFences(_logical_device, 1, &fence, VK_TRUE,
+// DEFAULT_FENCE_TIMEOUT);
 //
 //			vkDestroyFence(_logical_device, fence, nullptr);
 //
 //			if (free)
 //			{
-//				vkFreeCommandBuffers(_logical_device, _command_pool, 1, &commandBuffer);
+//				vkFreeCommandBuffers(_logical_device, _command_pool, 1,
+//&commandBuffer);
 //			}
 //		}
 //
@@ -2253,28 +2487,31 @@
 //		*
 //		* @param extension Name of the extension to check
 //		*
-//		* @return True if the extension is supported (present in the list read at device creation time)
+//		* @return True if the extension is supported (present in the list read
+// at device creation time)
 //		*/
 //		bool extension_supported(std::string extension)
 //		{
-//			return (std::find(_supported_extensions.begin(), _supported_extensions.end(), extension) != _supported_extensions.end());
+//			return (std::find(_supported_extensions.begin(),
+//_supported_extensions.end(), extension) != _supported_extensions.end());
 //		}
 //
 //	};
 //}
 //
-//class VulkanExamplePortBase
+// class VulkanExamplePortBase
 //{
-//private:
+// private:
 //	// Get window title with example name, device, et.
 //	std::string get_window_title();
-//	/** brief Indicates that the view (position, rotation) has changed and buffers containing camera matrices need to be updated */
-//	bool _view_updated = false;
+//	/** brief Indicates that the view (position, rotation) has changed and
+// buffers containing camera matrices need to be updated */ 	bool
+// _view_updated = false;
 //	// Destination dimensions for resizing the window
 //	uint32_t _dest_width;
 //	uint32_t _dest_height;
 //	bool _resizing = false;
-//protected:
+// protected:
 //	// Frame counter to display fps
 //	uint32_t _frame_counter = 0;
 //	uint32_t _last_f_p_s = 0;
@@ -2285,20 +2522,24 @@
 //	VkPhysicalDevice _physical_device;
 //	// Stores physical device properties (for e.g. checking device limits)
 //	VkPhysicalDeviceProperties _device_properties;
-//	// Stores the features available on the selected physical device (for e.g. checking if a feature is available)
-//	VkPhysicalDeviceFeatures _device_features;
+//	// Stores the features available on the selected physical device (for e.g.
+// checking if a feature is available) 	VkPhysicalDeviceFeatures
+// _device_features;
 //	// Stores all available memory (type) properties for the physical device
 //	VkPhysicalDeviceMemoryProperties _device_memory_properties;
 //	/**
-//	* Set of physical device features to be enabled for this example (must be set in the derived constructor)
+//	* Set of physical device features to be enabled for this example (must be
+// set in the derived constructor)
 //	*
 //	* @note By default no phyiscal device features are enabled
 //	*/
 //	VkPhysicalDeviceFeatures _enabled_features{};
-//	/** @brief Set of device extensions to be enabled for this example (must be set in the derived constructor) */
-//	std::vector<const char*> _enabled_device_extensions;
-//	std::vector<const char*> _enabled_instance_extensions;
-//	/** @brief Logical device, application's view of the physical device (GPU) */
+//	/** @brief Set of device extensions to be enabled for this example (must be
+// set in the derived constructor) */ 	std::vector<const char*>
+//_enabled_device_extensions; 	std::vector<const char*>
+//_enabled_instance_extensions;
+//	/** @brief Logical device, application's view of the physical device (GPU)
+//*/
 //	// todo: getter? should always point to VulkanDevice->device
 //	VkDevice _device;
 //	// Handle to the device graphics queue that command buffers are submitted to
@@ -2308,7 +2549,8 @@
 //	// Command buffer pool
 //	VkCommandPool _cmd_pool;
 //	/** @brief Pipeline stages used to wait at for graphics queue submissions */
-//	VkPipelineStageFlags _submit_pipeline_stages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+//	VkPipelineStageFlags _submit_pipeline_stages =
+// VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 //	// Contains command buffers and semaphores to be presented to the queue
 //	VkSubmitInfo _submit_info;
 //	// Command buffers used for rendering
@@ -2325,8 +2567,8 @@
 //	std::vector<VkShaderModule> _shader_modules;
 //	// Pipeline cache object
 //	VkPipelineCache _pipeline_cache;
-//	// Wraps the swap chain to present images (framebuffers) to the windowing system
-//	VulkanSwapChain _swap_chain;
+//	// Wraps the swap chain to present images (framebuffers) to the windowing
+// system 	VulkanSwapChain _swap_chain;
 //	// Synchronization semaphores
 //	struct {
 //		// Swap chain image presentation
@@ -2335,33 +2577,34 @@
 //		VkSemaphore _render_complete;
 //	} _semaphores;
 //	std::vector<VkFence> _wait_fences;
-//public:
+// public:
 //	bool _prepared = false;
 //	uint32_t _width = 1280;
 //	uint32_t _height = 720;
 //
 //
-//	/** @brief Last frame time measured using a high performance timer (if available) */
-//	float _frame_timer = 1.0f;
-//	/** @brief Returns os specific base asset path (for shaders, models, textures) */
-//	const std::string get_asset_path();
+//	/** @brief Last frame time measured using a high performance timer (if
+// available) */ 	float _frame_timer = 1.0f;
+//	/** @brief Returns os specific base asset path (for shaders, models,
+// textures) */ 	const std::string get_asset_path();
 //
 //	vks::Benchmark _benchmark;
 //
 //	/** @brief Encapsulated physical and logical vulkan device */
 //	vks::VulkanDevice *_vulkan_device;
 //
-//	/** @brief Example settings that can be changed e.g. by command line arguments */
-//	struct Settings {
-//		/** @brief Activates validation layers (and message output) when set to true */
-//		bool _validation = false;
-//		/** @brief Set to true if fullscreen mode has been requested via command line */
-//		bool _fullscreen = false;
+//	/** @brief Example settings that can be changed e.g. by command line
+// arguments */ 	struct Settings {
+//		/** @brief Activates validation layers (and message output) when set to
+// true */ 		bool _validation = false;
+//		/** @brief Set to true if fullscreen mode has been requested via command
+// line */ 		bool _fullscreen = false;
 //		/** @brief Set to true if v-sync will be forced for the swapchain */
 //		bool _vsync = false;
 //	} _settings;
 //
-//	VkClearColorValue _default_clear_color = { { 0.025f, 0.025f, 0.025f, 1.0f } };
+//	VkClearColorValue _default_clear_color = { { 0.025f, 0.025f, 0.025f, 1.0f }
+//};
 //
 //	// Defines a frame rate independent timer value clamped from -1.0...1.0
 //	// For use in animations, rotations, etc.
@@ -2401,16 +2644,18 @@
 //	// dtor
 //	virtual ~VulkanExamplePortBase();
 //
-//	// Setup the vulkan instance, enable required extensions and connect to the physical device (GPU)
-//	bool init_vulkan();
+//	// Setup the vulkan instance, enable required extensions and connect to the
+// physical device (GPU) 	bool init_vulkan();
 //
 //	HWND setup_window(HINSTANCE hinstance, WNDPROC wndproc);
-//	void handle_messages(HWND h_wnd, UINT u_msg, WPARAM w_param, LPARAM l_param);
+//	void handle_messages(HWND h_wnd, UINT u_msg, WPARAM w_param, LPARAM
+// l_param);
 //
 //	/**
 //	* Create the application wide Vulkan instance
 //	*
-//	* @note Virtual, can be overriden by derived example class for custom instance creation
+//	* @note Virtual, can be overriden by derived example class for custom
+// instance creation
 //	*/
 //	virtual VkResult create_instance(bool enable_validation);
 //
@@ -2424,14 +2669,15 @@
 //	// Setup default depth and stencil views
 //	virtual void setup_depth_stencil();
 //	// Create framebuffers for all requested swap chain images
-//	// Can be overriden in derived class to setup a custom framebuffer (e.g. for MSAA)
-//	virtual void setup_frame_buffer();
+//	// Can be overriden in derived class to setup a custom framebuffer (e.g. for
+// MSAA) 	virtual void setup_frame_buffer();
 //	// Setup a default render pass
-//	// Can be overriden in derived class to setup a custom render pass (e.g. for MSAA)
-//	virtual void setup_render_pass();
+//	// Can be overriden in derived class to setup a custom render pass (e.g. for
+// MSAA) 	virtual void setup_render_pass();
 //
-//	/** @brief (Virtual) Called after the physical device features have been read, can be used to set features to enable on the device */
-//	virtual void get_enabled_features();
+//	/** @brief (Virtual) Called after the physical device features have been
+// read, can be used to set features to enable on the device */ 	virtual void
+// get_enabled_features();
 //
 //	// Connect and prepare the swap chain
 //	void init_swapchain();
@@ -2441,15 +2687,17 @@
 //	// Create command buffers for drawing commands
 //	void create_command_buffers();
 //	// Destroy all command buffers and set their handles to VK_NULL_HANDLE
-//	// May be necessary during runtime if options are toggled 
+//	// May be necessary during runtime if options are toggled
 //	void destroy_command_buffers();
 //
 //	// Command buffer creation
 //	// Creates and returns a new command buffer
-//	VkCommandBuffer create_command_buffer(VkCommandBufferLevel level, bool begin);
+//	VkCommandBuffer create_command_buffer(VkCommandBufferLevel level, bool
+// begin);
 //	// End the command buffer, submit it to the queue and free (if requested)
 //	// Note : Waits for the queue to become idle
-//	void flush_command_buffer(VkCommandBuffer command_buffer, VkQueue queue, bool free);
+//	void flush_command_buffer(VkCommandBuffer command_buffer, VkQueue queue,
+// bool free);
 //
 //	// Create a cache pool for rendering pipelines
 //	void create_pipeline_cache();
@@ -2458,7 +2706,8 @@
 //	virtual void prepare();
 //
 //	// Load a SPIR-V shader
-//	VkPipelineShaderStageCreateInfo load_shader(std::string file_name, VkShaderStageFlagBits stage);
+//	VkPipelineShaderStageCreateInfo load_shader(std::string file_name,
+// VkShaderStageFlagBits stage);
 //
 //	// Start the main render loop
 //	void render_loop();
@@ -2467,11 +2716,11 @@
 //	void render_frame();
 //
 //	// Prepare the frame for workload submission
-//	// - Acquires the next image from the swap chain 
+//	// - Acquires the next image from the swap chain
 //	// - Sets the default wait and signal semaphores
 //	void prepare_frame();
 //
-//	// Submit the frames' workload 
+//	// Submit the frames' workload
 //	void submit_frame();
 //
 //};
@@ -2482,7 +2731,7 @@
 //#define PARTICLE_COUNT 256 * 1024
 //
 //
-//namespace vks
+// namespace vks
 //{
 //	/** @brief Vulkan texture base class */
 //	class Texture {
@@ -2500,8 +2749,8 @@
 //		/** @brief Optional sampler to use with this texture */
 //		VkSampler _sampler;
 //
-//		/** @brief Update image descriptor from current sampler, view and image layout */
-//		void update_descriptor()
+//		/** @brief Update image descriptor from current sampler, view and image
+// layout */ 		void update_descriptor()
 //		{
 //			_descriptor.sampler = _sampler;
 //			_descriptor.imageView = _view;
@@ -2530,10 +2779,14 @@
 //		* @param file_name File to load (supports .ktx and .dds)
 //		* @param format Vulkan format of the image data stored in the file
 //		* @param device Vulkan device to create the texture on
-//		* @param copy_queue Queue used for the texture staging copy commands (must support transfer)
-//		* @param (Optional) image_usage_flags Usage flags for the texture's image (defaults to VK_IMAGE_USAGE_SAMPLED_BIT)
-//		* @param (Optional) image_layout Usage layout for the texture (defaults VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-//		* @param (Optional) force_linear Force linear tiling (not advised, defaults to false)
+//		* @param copy_queue Queue used for the texture staging copy commands
+//(must support transfer)
+//		* @param (Optional) image_usage_flags Usage flags for the texture's
+// image (defaults to VK_IMAGE_USAGE_SAMPLED_BIT)
+//		* @param (Optional) image_layout Usage layout for the texture (defaults
+// VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+//		* @param (Optional) force_linear Force linear tiling (not advised,
+// defaults to false)
 //		*
 //		*/
 //		void load_from_file(
@@ -2542,11 +2795,15 @@
 //			vks::VulkanDevice *device,
 //			VkQueue copy_queue,
 //			VkImageUsageFlags image_usage_flags = VK_IMAGE_USAGE_SAMPLED_BIT,
-//			VkImageLayout image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-//			bool force_linear = false)
+//			VkImageLayout image_layout =
+// VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 			bool force_linear =
+// false)
 //		{
 //			if (!tools::fileExists(file_name)) {
-//				tools::exitFatal("Could not load texture from " + file_name + "\n\nThe file may be part of the additional asset pack.\n\nRun \"download_assets.py\" in the repository root to download the latest version.", -1);
+//				tools::exitFatal("Could not load texture from " + file_name +
+//"\n\nThe file may be part of the additional asset pack.\n\nRun
+// \"download_assets.py\" in the repository root to download the latest
+// version.", -1);
 //			}
 //			gli::texture2d tex_2_d(gli::load(file_name.c_str()));
 //			assert(!tex2D.empty());
@@ -2558,50 +2815,62 @@
 //
 //			// Get device properites for the requested texture format
 //			VkFormatProperties format_properties;
-//			vkGetPhysicalDeviceFormatProperties(device->_physical_device, format, &formatProperties);
+//			vkGetPhysicalDeviceFormatProperties(device->_physical_device,
+// format, &formatProperties);
 //
 //			// Only use linear tiling if requested (and supported by the device)
 //			// Support for linear tiling is mostly limited, so prefer to use
 //			// optimal tiling instead
 //			// On most implementations linear tiling will only support a very
-//			// limited amount of formats and features (mip maps, cubemaps, arrays, etc.)
-//			VkBool32 use_staging = !forceLinear;
+//			// limited amount of formats and features (mip maps, cubemaps,
+// arrays, etc.) 			VkBool32 use_staging = !forceLinear;
 //
-//			VkMemoryAllocateInfo mem_alloc_info = vks::initializers::memoryAllocateInfo();
-//			VkMemoryRequirements mem_reqs;
+//			VkMemoryAllocateInfo mem_alloc_info =
+// vks::initializers::memoryAllocateInfo(); 			VkMemoryRequirements
+// mem_reqs;
 //
 //			// Use a separate command buffer for texture loading
-//			VkCommandBuffer copy_cmd = device->createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, true);
+//			VkCommandBuffer copy_cmd =
+// device->createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, true);
 //
 //			if (useStaging)
 //			{
-//				// Create a host-visible staging buffer that contains the raw image data
-//				VkBuffer staging_buffer;
-//				VkDeviceMemory staging_memory;
+//				// Create a host-visible staging buffer that contains the raw
+// image data 				VkBuffer staging_buffer; VkDeviceMemory
+// staging_memory;
 //
-//				VkBufferCreateInfo buffer_create_info = vks::initializers::bufferCreateInfo();
-//				bufferCreateInfo.size = tex_2_d.size();
+//				VkBufferCreateInfo buffer_create_info =
+// vks::initializers::bufferCreateInfo(); 				bufferCreateInfo.size =
+// tex_2_d.size();
 //				// This buffer is used as a transfer source for the buffer copy
 //				bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 //				bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 //
-//				vkCreateBuffer(device->_logical_device, &bufferCreateInfo, nullptr, &stagingBuffer);
+//				vkCreateBuffer(device->_logical_device, &bufferCreateInfo,
+// nullptr, &stagingBuffer);
 //
-//				// Get memory requirements for the staging buffer (alignment, memory type bits)
-//				vkGetBufferMemoryRequirements(device->_logical_device, staging_buffer, &memReqs);
+//				// Get memory requirements for the staging buffer (alignment,
+// memory type bits)
+// vkGetBufferMemoryRequirements(device->_logical_device, staging_buffer,
+// &memReqs);
 //
 //				memAllocInfo.allocationSize = mem_reqs.size;
 //				// Get memory type index for a host visible buffer
-//				memAllocInfo.memoryTypeIndex = device->getMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+//				memAllocInfo.memoryTypeIndex =
+// device->getMemoryType(memReqs.memoryTypeBits,
+// VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 //
-//				vkAllocateMemory(device->_logical_device, &memAllocInfo, nullptr, &stagingMemory);
-//				vkBindBufferMemory(device->_logical_device, staging_buffer, staging_memory, 0);
+//				vkAllocateMemory(device->_logical_device, &memAllocInfo,
+// nullptr,
+//&stagingMemory); 				vkBindBufferMemory(device->_logical_device,
+// staging_buffer, staging_memory, 0);
 //
 //				// Copy texture data into staging buffer
 //				uint8_t *data;
-//				vkMapMemory(device->_logical_device, staging_memory, 0, mem_reqs.size, 0, (void **)&data);
-//				memcpy(data, tex_2_d.data(), tex_2_d.size());
-//				vkUnmapMemory(device->_logical_device, staging_memory);
+//				vkMapMemory(device->_logical_device, staging_memory, 0,
+// mem_reqs.size, 0, (void **)&data); 				memcpy(data, tex_2_d.data(),
+// tex_2_d.size()); 				vkUnmapMemory(device->_logical_device,
+// staging_memory);
 //
 //				// Setup buffer copy regions for each mip level
 //				std::vector<VkBufferImageCopy> buffer_copy_regions;
@@ -2610,14 +2879,17 @@
 //				for (uint32_t i = 0; i < _mip_levels; i++)
 //				{
 //					VkBufferImageCopy buffer_copy_region = {};
-//					bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-//					bufferCopyRegion.imageSubresource.mipLevel = i;
-//					bufferCopyRegion.imageSubresource.baseArrayLayer = 0;
+//					bufferCopyRegion.imageSubresource.aspectMask =
+// VK_IMAGE_ASPECT_COLOR_BIT;
+// bufferCopyRegion.imageSubresource.mipLevel = i;
+// bufferCopyRegion.imageSubresource.baseArrayLayer = 0;
 //					bufferCopyRegion.imageSubresource.layerCount = 1;
-//					bufferCopyRegion.imageExtent.width = static_cast<uint32_t>(tex2D[i].extent().x);
-//					bufferCopyRegion.imageExtent.height = static_cast<uint32_t>(tex2D[i].extent().y);
-//					bufferCopyRegion.imageExtent.depth = 1;
-//					bufferCopyRegion.bufferOffset = offset;
+//					bufferCopyRegion.imageExtent.width =
+// static_cast<uint32_t>(tex2D[i].extent().x);
+//					bufferCopyRegion.imageExtent.height =
+// static_cast<uint32_t>(tex2D[i].extent().y);
+// bufferCopyRegion.imageExtent.depth = 1;
+// bufferCopyRegion.bufferOffset = offset;
 //
 //					bufferCopyRegions.push_back(bufferCopyRegion);
 //
@@ -2625,9 +2897,9 @@
 //				}
 //
 //				// Create optimal tiled target image
-//				VkImageCreateInfo image_create_info = vks::initializers::image_create_info();
-//				image_create_info.imageType = VK_IMAGE_TYPE_2D;
-//				image_create_info.format = format;
+//				VkImageCreateInfo image_create_info =
+// vks::initializers::image_create_info(); image_create_info.imageType =
+// VK_IMAGE_TYPE_2D; 				image_create_info.format = format;
 //				image_create_info.mipLevels = _mip_levels;
 //				image_create_info.arrayLayers = 1;
 //				image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -2637,19 +2909,27 @@
 //				image_create_info.extent = { _width, _height, 1 };
 //				image_create_info.usage = image_usage_flags;
 //				// Ensure that the TRANSFER_DST bit is set for staging
-//				if (!(image_create_info.usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT))
+//				if (!(image_create_info.usage &
+// VK_IMAGE_USAGE_TRANSFER_DST_BIT))
 //				{
 //					image_create_info.usage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 //				}
-//				vkCreateImage(device->_logical_device, &image_create_info, nullptr, &_image);
+//				vkCreateImage(device->_logical_device, &image_create_info,
+// nullptr,
+//&_image);
 //
-//				vkGetImageMemoryRequirements(device->_logical_device, _image, &memReqs);
+//				vkGetImageMemoryRequirements(device->_logical_device, _image,
+//&memReqs);
 //
 //				memAllocInfo.allocationSize = mem_reqs.size;
 //
-//				memAllocInfo.memoryTypeIndex = device->getMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-//				vkAllocateMemory(device->_logical_device, &memAllocInfo, nullptr, &_device_memory);
-//				vkBindImageMemory(device->_logical_device, _image, _device_memory, 0);
+//				memAllocInfo.memoryTypeIndex =
+// device->getMemoryType(memReqs.memoryTypeBits,
+// VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+//				vkAllocateMemory(device->_logical_device, &memAllocInfo,
+// nullptr,
+//&_device_memory); 				vkBindImageMemory(device->_logical_device,
+//_image, _device_memory, 0);
 //
 //				VkImageSubresourceRange subresource_range = {};
 //				subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -2676,11 +2956,9 @@
 //					bufferCopyRegions.data()
 //				);
 //
-//				// Change texture image layout to shader read after all mip levels have been copied
-//				_image_layout = image_layout;
-//				tools::set_image_layout(
-//					copyCmd,
-//					_image,
+//				// Change texture image layout to shader read after all mip
+// levels have been copied 				_image_layout = image_layout;
+// tools::set_image_layout( 					copyCmd, _image,
 //					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 //					imageLayout,
 //					subresource_range);
@@ -2689,49 +2967,57 @@
 //
 //				// Clean up staging resources
 //				vkFreeMemory(device->_logical_device, staging_memory, nullptr);
-//				vkDestroyBuffer(device->_logical_device, staging_buffer, nullptr);
+//				vkDestroyBuffer(device->_logical_device, staging_buffer,
+// nullptr);
 //			}
 //			else
 //			{
-//				// Prefer using optimal tiling, as linear tiling 
-//				// may support only a small set of features 
-//				// depending on implementation (e.g. no mip maps, only one layer, etc.)
+//				// Prefer using optimal tiling, as linear tiling
+//				// may support only a small set of features
+//				// depending on implementation (e.g. no mip maps, only one
+// layer, etc.)
 //
 //				// Check if this support is supported for linear tiling
-//				assert(formatProperties.linearTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT);
+//				assert(formatProperties.linearTilingFeatures &
+// VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT);
 //
 //				VkImage mappable_image;
 //				VkDeviceMemory mappable_memory;
 //
-//				VkImageCreateInfo image_create_info = vks::initializers::image_create_info();
-//				image_create_info.imageType = VK_IMAGE_TYPE_2D;
-//				image_create_info.format = format;
-//				image_create_info.extent = { _width, _height, 1 };
-//				image_create_info.mipLevels = 1;
-//				image_create_info.arrayLayers = 1;
-//				image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
-//				image_create_info.tiling = VK_IMAGE_TILING_LINEAR;
-//				image_create_info.usage = image_usage_flags;
-//				image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+//				VkImageCreateInfo image_create_info =
+// vks::initializers::image_create_info(); image_create_info.imageType =
+// VK_IMAGE_TYPE_2D; 				image_create_info.format = format;
+// image_create_info.extent = { _width, _height, 1 };
+// image_create_info.mipLevels = 1; 				image_create_info.arrayLayers
+// = 1; 				image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+// image_create_info.tiling
+//= VK_IMAGE_TILING_LINEAR; 				image_create_info.usage =
+//image_usage_flags; 				image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 //				image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 //
 //				// Load mip map level 0 to linear tiling image
-//				vkCreateImage(device->_logical_device, &image_create_info, nullptr, &mappableImage);
+//				vkCreateImage(device->_logical_device, &image_create_info,
+// nullptr, &mappableImage);
 //
-//				// Get memory requirements for this image 
+//				// Get memory requirements for this image
 //				// like size and alignment
-//				vkGetImageMemoryRequirements(device->_logical_device, mappable_image, &memReqs);
+//				vkGetImageMemoryRequirements(device->_logical_device,
+// mappable_image, &memReqs);
 //				// Set memory allocation size to required memory size
 //				memAllocInfo.allocationSize = mem_reqs.size;
 //
 //				// Get memory type that can be mapped to host memory
-//				memAllocInfo.memoryTypeIndex = device->getMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+//				memAllocInfo.memoryTypeIndex =
+// device->getMemoryType(memReqs.memoryTypeBits,
+// VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 //
 //				// Allocate host memory
-//				vkAllocateMemory(device->_logical_device, &memAllocInfo, nullptr, &mappableMemory);
+//				vkAllocateMemory(device->_logical_device, &memAllocInfo,
+// nullptr, &mappableMemory);
 //
 //				// Bind allocated image for use
-//				vkBindImageMemory(device->_logical_device, mappable_image, mappable_memory, 0);
+//				vkBindImageMemory(device->_logical_device, mappable_image,
+// mappable_memory, 0);
 //
 //				// Get sub resource layout
 //				// Mip map count, array layer, etc.
@@ -2742,15 +3028,18 @@
 //				VkSubresourceLayout sub_res_layout;
 //				void *data;
 //
-//				// Get sub resources layout 
+//				// Get sub resources layout
 //				// Includes row pitch, size offsets, etc.
-//				vkGetImageSubresourceLayout(device->_logical_device, mappable_image, &subRes, &subResLayout);
+//				vkGetImageSubresourceLayout(device->_logical_device,
+// mappable_image, &subRes, &subResLayout);
 //
 //				// Map image memory
-//				vkMapMemory(device->_logical_device, mappable_memory, 0, mem_reqs.size, 0, &data);
+//				vkMapMemory(device->_logical_device, mappable_memory, 0,
+// mem_reqs.size, 0, &data);
 //
 //				// Copy image data into memory
-//				memcpy(data, tex_2_d[subRes.mipLevel].data(), tex_2_d[subRes.mipLevel].size());
+//				memcpy(data, tex_2_d[subRes.mipLevel].data(),
+// tex_2_d[subRes.mipLevel].size());
 //
 //				vkUnmapMemory(device->_logical_device, mappable_memory);
 //
@@ -2761,7 +3050,8 @@
 //				_image_layout = image_layout;
 //
 //				// Setup image memory barrier
-//				tools::set_image_layout(copyCmd, _image, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_UNDEFINED, image_layout);
+//				tools::set_image_layout(copyCmd, _image,
+// VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_UNDEFINED, image_layout);
 //
 //				device->flushCommandBuffer(copyCmd, copy_queue);
 //			}
@@ -2781,10 +3071,14 @@
 //			// Max level-of-detail should match mip level count
 //			samplerCreateInfo.maxLod = (useStaging) ? (float)_mip_levels : 0.0f;
 //			// Only enable anisotropic filtering if enabled on the devicec
-//			samplerCreateInfo.maxAnisotropy = device->_enabled_features.samplerAnisotropy ? device->_properties.limits.maxSamplerAnisotropy : 1.0f;
-//			samplerCreateInfo.anisotropyEnable = device->_enabled_features.samplerAnisotropy;
-//			samplerCreateInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-//			vkCreateSampler(device->_logical_device, &samplerCreateInfo, nullptr, &_sampler);
+//			samplerCreateInfo.maxAnisotropy =
+// device->_enabled_features.samplerAnisotropy ?
+// device->_properties.limits.maxSamplerAnisotropy : 1.0f;
+//			samplerCreateInfo.anisotropyEnable =
+// device->_enabled_features.samplerAnisotropy;
+// samplerCreateInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+// vkCreateSampler(device->_logical_device, &samplerCreateInfo, nullptr,
+//&_sampler);
 //
 //			// Create image view
 //			// Textures are not directly accessed by the shaders and
@@ -2794,26 +3088,28 @@
 //			viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 //			viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 //			viewCreateInfo.format = format;
-//			viewCreateInfo.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
-//			viewCreateInfo.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+//			viewCreateInfo.components = { VK_COMPONENT_SWIZZLE_R,
+// VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
+//			viewCreateInfo.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1,
+// 0, 1 };
 //			// Linear tiling usually won't support mip maps
 //			// Only set mip map count if optimal tiling is used
-//			viewCreateInfo.subresourceRange.levelCount = (useStaging) ? _mip_levels : 1;
-//			viewCreateInfo.image = _image;
-//			vkCreateImageView(device->_logical_device, &viewCreateInfo, nullptr, &_view);
+//			viewCreateInfo.subresourceRange.levelCount = (useStaging) ?
+//_mip_levels : 1; 			viewCreateInfo.image = _image;
+// vkCreateImageView(device->_logical_device, &viewCreateInfo, nullptr, &_view);
 //
-//			// Update descriptor image info member that can be used for setting up descriptor sets
-//			updateDescriptor();
+//			// Update descriptor image info member that can be used for setting
+// up descriptor sets 			updateDescriptor();
 //		}
 //	};
 //}
 //
-//class VulkanExample : public VulkanExamplePortBase
+// class VulkanExample : public VulkanExamplePortBase
 //{
-//public:
+// public:
 //	float _timer = 0.0f;
 //	float _anim_start = 20.0f;
-//	
+//
 //	struct {
 //		vks::Texture2D _particle;
 //		vks::Texture2D _gradient;
@@ -2827,37 +3123,49 @@
 //
 //	// Resources for the graphics part of the example
 //	struct {
-//		VkDescriptorSetLayout _descriptor_set_layout;	// Particle system rendering shader binding layout
-//		VkDescriptorSet _descriptor_set;				// Particle system rendering shader bindings
-//		VkPipelineLayout _pipeline_layout;			// Layout of the graphics pipeline
-//		VkPipeline _pipeline;						// Particle rendering pipeline
-//	} _graphics;
+//		VkDescriptorSetLayout _descriptor_set_layout;	// Particle system
+// rendering shader binding layout
+//		VkDescriptorSet _descriptor_set;				// Particle system
+// rendering shader bindings 		VkPipelineLayout _pipeline_layout;
+// // Layout of the
+// graphics pipeline 		VkPipeline _pipeline;						//
+// Particle rendering pipeline 	} _graphics;
 //
 //	// Resources for the compute part of the example
 //	struct {
-//		vks::Buffer _storage_buffer;					// (Shader) storage buffer object containing the particles
-//		vks::Buffer _uniform_buffer;					// Uniform buffer object containing particle system parameters
-//		VkQueue _queue;								// Separate queue for compute commands (queue family may differ from the one used for graphics)
-//		VkCommandPool _command_pool;					// Use a separate command pool (queue family may differ from the one used for graphics)
-//		VkCommandBuffer _command_buffer;				// Command buffer storing the dispatch commands and barriers
-//		VkFence _fence;								// Synchronization fence to avoid rewriting compute CB if still in use
-//		VkDescriptorSetLayout _descriptor_set_layout;	// Compute shader binding layout
-//		VkDescriptorSet _descriptor_set;				// Compute shader bindings
-//		VkPipelineLayout _pipeline_layout;			// Layout of the compute pipeline
-//		VkPipeline _pipeline;						// Compute pipeline for updating particle positions
-//		struct compute_u_b_o {							// Compute shader uniform block object
+//		vks::Buffer _storage_buffer;					// (Shader) storage
+// buffer object containing the particles 		vks::Buffer _uniform_buffer;
+//// Uniform buffer object containing particle system parameters 		VkQueue
+// _queue;
+//// Separate queue for compute commands (queue family may differ from the one
+// used for graphics) 		VkCommandPool
+//_command_pool;					// Use a separate command pool (queue family
+// may differ from the one used for graphics) 		VkCommandBuffer
+// _command_buffer;
+//// Command buffer storing the dispatch commands and barriers 		VkFence
+///_fence; / Synchronization fence to avoid rewriting compute CB if still in use
+//		VkDescriptorSetLayout _descriptor_set_layout;	// Compute shader
+// binding
+// layout 		VkDescriptorSet _descriptor_set;				// Compute
+// shader bindings 		VkPipelineLayout _pipeline_layout;			// Layout of
+// the compute pipeline
+//		VkPipeline _pipeline;						// Compute pipeline for
+// updating particle
+// positions 		struct compute_u_b_o {							// Compute
+// shader uniform block object
 //			float _delta_t;							//		Frame delta time
-//			float _dest_x;							//		x position of the attractor
-//			float _dest_y;							//		y position of the attractor
-//			int32_t _particle_count = PARTICLE_COUNT;
-//		} _ubo;
-//	} _compute;
+//			float _dest_x;							//		x position of the
+// attractor 			float _dest_y;							//		y
+// position of the
+// attractor 			int32_t _particle_count = PARTICLE_COUNT; 		} _ubo;
+// } _compute;
 //
 //	// SSBO particle declaration
 //	struct Particle {
 //		glm::vec2 _pos;								// Particle position
 //		glm::vec2 _vel;								// Particle velocity
-//		glm::vec4 _gradient_pos;						// Texture coordiantes for the gradient ramp map
+//		glm::vec4 _gradient_pos;						// Texture coordiantes
+// for the gradient ramp map
 //	};
 //
 //	VulkanExample() : VulkanExamplePortBase(ENABLE_VALIDATION)
@@ -2870,14 +3178,15 @@
 //		// Graphics
 //		vkDestroyPipeline(_device, _graphics._pipeline, nullptr);
 //		vkDestroyPipelineLayout(_device, _graphics._pipeline_layout, nullptr);
-//		vkDestroyDescriptorSetLayout(_device, _graphics._descriptor_set_layout, nullptr);
+//		vkDestroyDescriptorSetLayout(_device, _graphics._descriptor_set_layout,
+// nullptr);
 //
 //		// Compute
 //		_compute._storage_buffer.destroy();
 //		_compute._uniform_buffer.destroy();
 //		vkDestroyPipelineLayout(_device, _compute._pipeline_layout, nullptr);
-//		vkDestroyDescriptorSetLayout(_device, _compute._descriptor_set_layout, nullptr);
-//		vkDestroyPipeline(_device, _compute._pipeline, nullptr);
+//		vkDestroyDescriptorSetLayout(_device, _compute._descriptor_set_layout,
+// nullptr); 		vkDestroyPipeline(_device, _compute._pipeline, nullptr);
 //		vkDestroyFence(_device, _compute._fence, nullptr);
 //		vkDestroyCommandPool(_device, _compute._command_pool, nullptr);
 //
@@ -2887,8 +3196,11 @@
 //
 //	void load_assets()
 //	{
-//		textures._particle.loadFromFile(getAssetPath() + "textures/particle01_rgba.ktx", VK_FORMAT_R8G8B8A8_UNORM, _vulkan_device, _queue);
-//		textures._gradient.loadFromFile(getAssetPath() + "textures/particle_gradient_rgba.ktx", VK_FORMAT_R8G8B8A8_UNORM, _vulkan_device, _queue);
+//		textures._particle.loadFromFile(getAssetPath() +
+//"textures/particle01_rgba.ktx", VK_FORMAT_R8G8B8A8_UNORM, _vulkan_device,
+//_queue); 		textures._gradient.loadFromFile(getAssetPath() +
+//"textures/particle_gradient_rgba.ktx", VK_FORMAT_R8G8B8A8_UNORM,
+//_vulkan_device, _queue);
 //	}
 //
 //	void build_command_buffers()
@@ -2903,15 +3215,16 @@
 //			}
 //		}
 //
-//		VkCommandBufferBeginInfo cmd_buf_info = vks::initializers::commandBufferBeginInfo();
+//		VkCommandBufferBeginInfo cmd_buf_info =
+// vks::initializers::commandBufferBeginInfo();
 //
 //		VkClearValue clear_values[2];
 //		clearValues[0].color = _default_clear_color;
 //		clearValues[1].depthStencil = { 1.0f, 0 };
 //
-//		VkRenderPassBeginInfo render_pass_begin_info = vks::initializers::renderPassBeginInfo();
-//		renderPassBeginInfo.renderPass = _render_pass;
-//		renderPassBeginInfo.renderArea.offset.x = 0;
+//		VkRenderPassBeginInfo render_pass_begin_info =
+// vks::initializers::renderPassBeginInfo(); renderPassBeginInfo.renderPass =
+// _render_pass; 		renderPassBeginInfo.renderArea.offset.x = 0;
 //		renderPassBeginInfo.renderArea.offset.y = 0;
 //		renderPassBeginInfo.renderArea.extent.width = _width;
 //		renderPassBeginInfo.renderArea.extent.height = _height;
@@ -2929,20 +3242,28 @@
 //
 //			// Draw the particle system using the update vertex buffer
 //
-//			vkCmdBeginRenderPass(_draw_cmd_buffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+//			vkCmdBeginRenderPass(_draw_cmd_buffers[i], &renderPassBeginInfo,
+// VK_SUBPASS_CONTENTS_INLINE);
 //
-//			VkViewport viewport = vks::initializers::viewport((float)_width, (float)_height, 0.0f, 1.0f);
-//			vkCmdSetViewport(_draw_cmd_buffers[i], 0, 1, &viewport);
+//			VkViewport viewport = vks::initializers::viewport((float)_width,
+//(float)_height, 0.0f, 1.0f); 			vkCmdSetViewport(_draw_cmd_buffers[i],
+// 0, 1, &viewport);
 //
 //			VkRect2D scissor = vks::initializers::rect2D(_width, _height, 0, 0);
 //			vkCmdSetScissor(_draw_cmd_buffers[i], 0, 1, &scissor);
 //
-//			vkCmdBindPipeline(_draw_cmd_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, _graphics._pipeline);
-//			vkCmdBindDescriptorSets(_draw_cmd_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, _graphics._pipeline_layout, 0, 1, &_graphics._descriptor_set, 0, NULL);
+//			vkCmdBindPipeline(_draw_cmd_buffers[i],
+// VK_PIPELINE_BIND_POINT_GRAPHICS, _graphics._pipeline);
+// vkCmdBindDescriptorSets(_draw_cmd_buffers[i],
+// VK_PIPELINE_BIND_POINT_GRAPHICS,
+// _graphics._pipeline_layout, 0, 1,
+//&_graphics._descriptor_set, 0, NULL);
 //
 //			VkDeviceSize offsets[1] = { 0 };
-//			vkCmdBindVertexBuffers(_draw_cmd_buffers[i], VERTEX_BUFFER_BIND_ID, 1, &_compute._storage_buffer._buffer, offsets);
-//			vkCmdDraw(_draw_cmd_buffers[i], PARTICLE_COUNT, 1, 0, 0);
+//			vkCmdBindVertexBuffers(_draw_cmd_buffers[i], VERTEX_BUFFER_BIND_ID,
+// 1,
+//&_compute._storage_buffer._buffer, offsets);
+// vkCmdDraw(_draw_cmd_buffers[i], PARTICLE_COUNT, 1, 0, 0);
 //
 //			vkCmdEndRenderPass(_draw_cmd_buffers[i]);
 //
@@ -2953,22 +3274,32 @@
 //
 //	void build_compute_command_buffer()
 //	{
-//		VkCommandBufferBeginInfo cmd_buf_info = vks::initializers::commandBufferBeginInfo();
+//		VkCommandBufferBeginInfo cmd_buf_info =
+// vks::initializers::commandBufferBeginInfo();
 //
 //		vkBeginCommandBuffer(_compute._command_buffer, &cmdBufInfo);
 //
 //		// Compute particle movement
 //
-//		// Add memory barrier to ensure that the (graphics) vertex shader has fetched attributes before compute starts to write to the buffer
-//		VkBufferMemoryBarrier buffer_barrier = vks::initializers::buffer_memory_barrier();
-//		bufferBarrier.buffer = _compute._storage_buffer._buffer;
-//		bufferBarrier.size = _compute._storage_buffer._descriptor.range;
-//		bufferBarrier.srcAccessMask = VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;						// Vertex shader invocations have finished reading from the buffer
-//		bufferBarrier.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT;								// Compute shader wants to write to the buffer
-//		// Compute and graphics queue may have different queue families (see VulkanDevice::createLogicalDevice)
-//		// For the barrier to work across different queues, we need to set their family indices
-//		bufferBarrier.srcQueueFamilyIndex = _vulkan_device->_queue_family_indices._graphics;			// Required as compute and graphics queue may have different families
-//		bufferBarrier.dstQueueFamilyIndex = _vulkan_device->_queue_family_indices._compute;			// Required as compute and graphics queue may have different families
+//		// Add memory barrier to ensure that the (graphics) vertex shader has
+// fetched attributes before compute starts to write to the buffer
+//		VkBufferMemoryBarrier buffer_barrier =
+// vks::initializers::buffer_memory_barrier(); 		bufferBarrier.buffer =
+//_compute._storage_buffer._buffer; 		bufferBarrier.size =
+//_compute._storage_buffer._descriptor.range; 		bufferBarrier.srcAccessMask
+//= VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;						// Vertex shader
+// invocations have finished reading from the buffer
+// bufferBarrier.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+// // Compute shader wants to write to the buffer
+//		// Compute and graphics queue may have different queue families (see
+// VulkanDevice::createLogicalDevice)
+//		// For the barrier to work across different queues, we need to set their
+// family indices 		bufferBarrier.srcQueueFamilyIndex =
+//_vulkan_device->_queue_family_indices._graphics;			// Required as
+// compute and graphics queue may have different families
+//		bufferBarrier.dstQueueFamilyIndex =
+//_vulkan_device->_queue_family_indices._compute;			// Required as
+// compute and graphics queue may have different families
 //
 //		vkCmdPipelineBarrier(
 //			_compute._command_buffer,
@@ -2979,22 +3310,34 @@
 //			1, &bufferBarrier,
 //			0, nullptr);
 //
-//		vkCmdBindPipeline(_compute._command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, _compute._pipeline);
-//		vkCmdBindDescriptorSets(_compute._command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, _compute._pipeline_layout, 0, 1, &_compute._descriptor_set, 0, 0);
+//		vkCmdBindPipeline(_compute._command_buffer,
+// VK_PIPELINE_BIND_POINT_COMPUTE, _compute._pipeline);
+//		vkCmdBindDescriptorSets(_compute._command_buffer,
+// VK_PIPELINE_BIND_POINT_COMPUTE, _compute._pipeline_layout, 0, 1,
+//&_compute._descriptor_set, 0, 0);
 //
 //		// Dispatch the compute job
 //		vkCmdDispatch(_compute._command_buffer, PARTICLE_COUNT / 256, 1, 1);
 //
-//		// Add memory barrier to ensure that compute shader has finished writing to the buffer
-//		// Without this the (rendering) vertex shader may display incomplete results (partial data from last frame) 
-//		bufferBarrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;								// Compute shader has finished writes to the buffer
-//		bufferBarrier.dstAccessMask = VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;						// Vertex shader invocations want to read from the buffer
-//		bufferBarrier.buffer = _compute._storage_buffer._buffer;
-//		bufferBarrier.size = _compute._storage_buffer._descriptor.range;
-//		// Compute and graphics queue may have different queue families (see VulkanDevice::createLogicalDevice)
-//		// For the barrier to work across different queues, we need to set their family indices
-//		bufferBarrier.srcQueueFamilyIndex = _vulkan_device->_queue_family_indices._compute;			// Required as compute and graphics queue may have different families
-//		bufferBarrier.dstQueueFamilyIndex = _vulkan_device->_queue_family_indices._graphics;			// Required as compute and graphics queue may have different families
+//		// Add memory barrier to ensure that compute shader has finished writing
+// to the buffer
+//		// Without this the (rendering) vertex shader may display incomplete
+// results (partial data from last frame) 		bufferBarrier.srcAccessMask =
+// VK_ACCESS_SHADER_WRITE_BIT;								// Compute shader
+// has finished writes to the buffer 		bufferBarrier.dstAccessMask =
+// VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;						// Vertex shader
+// invocations want to read from the buffer 		bufferBarrier.buffer =
+//_compute._storage_buffer._buffer; 		bufferBarrier.size =
+//_compute._storage_buffer._descriptor.range;
+//		// Compute and graphics queue may have different queue families (see
+// VulkanDevice::createLogicalDevice)
+//		// For the barrier to work across different queues, we need to set their
+// family indices 		bufferBarrier.srcQueueFamilyIndex =
+//_vulkan_device->_queue_family_indices._compute;			// Required as
+// compute and graphics queue may have different families
+//		bufferBarrier.dstQueueFamilyIndex =
+//_vulkan_device->_queue_family_indices._graphics;			// Required as
+// compute and graphics queue may have different families
 //
 //		vkCmdPipelineBarrier(
 //			_compute._command_buffer,
@@ -3008,11 +3351,12 @@
 //		vkEndCommandBuffer(_compute._command_buffer);
 //	}
 //
-//	// Setup and fill the compute shader storage buffers containing the particles
-//	void prepare_storage_buffers()
+//	// Setup and fill the compute shader storage buffers containing the
+// particles 	void prepare_storage_buffers()
 //	{
-//		std::default_random_engine rnd_engine(_benchmark._active ? 0 : (unsigned)time(nullptr));
-//		std::uniform_real_distribution<float> rnd_dist(-1.0f, 1.0f);
+//		std::default_random_engine rnd_engine(_benchmark._active ? 0 :
+//(unsigned)time(nullptr)); 		std::uniform_real_distribution<float>
+// rnd_dist(-1.0f, 1.0f);
 //
 //		// Initial particle positions
 //		std::vector<Particle> particle_buffer(PARTICLE_COUNT);
@@ -3022,32 +3366,36 @@
 //			particle._gradient_pos.x = particle._pos.x / 2.0f;
 //		}
 //
-//		VkDeviceSize storage_buffer_size = particle_buffer.size() * sizeof(Particle);
+//		VkDeviceSize storage_buffer_size = particle_buffer.size() *
+// sizeof(Particle);
 //
 //		// Staging
-//		// SSBO won't be changed on the host after upload so copy to device local memory 
+//		// SSBO won't be changed on the host after upload so copy to device
+// local memory
 //
 //		vks::Buffer staging_buffer;
 //
 //		_vulkan_device->createBuffer(
 //			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-//			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-//			&stagingBuffer,
-//			storageBufferSize,
-//			particleBuffer.data());
+//			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+// VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 			&stagingBuffer,
+// storageBufferSize, 			particleBuffer.data());
 //
 //		_vulkan_device->createBuffer(
-//			// The SSBO will be used as a storage buffer for the compute pipeline and as a vertex buffer in the graphics pipeline
-//			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-//			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+//			// The SSBO will be used as a storage buffer for the compute
+// pipeline and as a vertex buffer in the graphics pipeline
+//			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+// VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+// VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 //			&_compute._storage_buffer,
 //			storageBufferSize);
 //
 //		// Copy to staging buffer
-//		VkCommandBuffer copy_cmd = VulkanExamplePortBase::createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, true);
-//		VkBufferCopy copy_region = {};
-//		copyRegion.size = storage_buffer_size;
-//		vkCmdCopyBuffer(copyCmd, staging_buffer._buffer, _compute._storage_buffer._buffer, 1, &copyRegion);
+//		VkCommandBuffer copy_cmd =
+// VulkanExamplePortBase::createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+// true); 		VkBufferCopy copy_region = {}; 		copyRegion.size =
+// storage_buffer_size; 		vkCmdCopyBuffer(copyCmd, staging_buffer._buffer,
+//_compute._storage_buffer._buffer, 1, &copyRegion);
 //		VulkanExamplePortBase::flushCommandBuffer(copyCmd, _queue, true);
 //
 //		stagingBuffer.destroy();
@@ -3079,20 +3427,27 @@
 //				offsetof(Particle, _gradient_pos));
 //
 //		// Assign to vertex buffer
-//		vertices._input_state = vks::initializers::pipeline_vertex_input_state_create_info();
-//		vertices._input_state.vertexBindingDescriptionCount = static_cast<uint32_t>(vertices._binding_descriptions.size());
-//		vertices._input_state.pVertexBindingDescriptions = vertices._binding_descriptions.data();
-//		vertices._input_state.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertices._attribute_descriptions.size());
-//		vertices._input_state.pVertexAttributeDescriptions = vertices._attribute_descriptions.data();
+//		vertices._input_state =
+// vks::initializers::pipeline_vertex_input_state_create_info();
+//		vertices._input_state.vertexBindingDescriptionCount =
+// static_cast<uint32_t>(vertices._binding_descriptions.size());
+//		vertices._input_state.pVertexBindingDescriptions =
+// vertices._binding_descriptions.data();
+//		vertices._input_state.vertexAttributeDescriptionCount =
+// static_cast<uint32_t>(vertices._attribute_descriptions.size());
+//		vertices._input_state.pVertexAttributeDescriptions =
+// vertices._attribute_descriptions.data();
 //	}
 //
 //	void setup_descriptor_pool()
 //	{
 //		std::vector<Vkdescriptor_pool_size> pool_sizes =
 //		{
-//			vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1),
-//			vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1),
-//			vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2)
+//			vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+// 1),
+// vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1),
+//			vks::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+// 2)
 //		};
 //
 //		VkDescriptorPoolCreateInfo descriptor_pool_info =
@@ -3101,7 +3456,8 @@
 //				poolSizes.data(),
 //				2);
 //
-//		vkCreateDescriptorPool(_device, &descriptor_pool_info, nullptr, &_descriptor_pool);
+//		vkCreateDescriptorPool(_device, &descriptor_pool_info, nullptr,
+//&_descriptor_pool);
 //	}
 //
 //	void setup_descriptor_set_layout()
@@ -3123,14 +3479,16 @@
 //				set_layout_bindings.data(),
 //				static_cast<uint32_t>(set_layout_bindings.size()));
 //
-//		vkCreateDescriptorSetLayout(_device, &descriptorLayout, nullptr, &_graphics._descriptor_set_layout);
+//		vkCreateDescriptorSetLayout(_device, &descriptorLayout, nullptr,
+//&_graphics._descriptor_set_layout);
 //
 //		VkPipelineLayoutCreateInfo pipeline_layout_create_info =
 //			vks::initializers::pipeline_layout_create_info(
 //				&_graphics._descriptor_set_layout,
 //				1);
 //
-//		vkCreatePipelineLayout(_device, &pipeline_layout_create_info, nullptr, &_graphics._pipeline_layout);
+//		vkCreatePipelineLayout(_device, &pipeline_layout_create_info, nullptr,
+//&_graphics._pipeline_layout);
 //	}
 //
 //	void setup_descriptor_set()
@@ -3141,7 +3499,8 @@
 //				&_graphics._descriptor_set_layout,
 //				1);
 //
-//		vkAllocateDescriptorSets(_device, &allocInfo, &_graphics._descriptor_set);
+//		vkAllocateDescriptorSets(_device, &allocInfo,
+//&_graphics._descriptor_set);
 //
 //		std::vector<VkWriteDescriptorSet> write_descriptor_sets;
 //		// Binding 0 : Particle color map
@@ -3157,7 +3516,9 @@
 //			1,
 //			&textures._gradient._descriptor));
 //
-//		vkUpdateDescriptorSets(_device, static_cast<uint32_t>(write_descriptor_sets.size()), write_descriptor_sets.data(), 0, NULL);
+//		vkUpdateDescriptorSets(_device,
+// static_cast<uint32_t>(write_descriptor_sets.size()),
+// write_descriptor_sets.data(), 0, NULL);
 //	}
 //
 //	void prepare_pipelines()
@@ -3213,8 +3574,10 @@
 //		// Load shaders
 //		std::array<VkPipelineShaderStageCreateInfo, 2> shader_stages;
 //
-//		shaderStages[0] = load_shader(getAssetPath() + "shaders/computeparticles/particle.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
-//		shaderStages[1] = load_shader(getAssetPath() + "shaders/computeparticles/particle.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
+//		shaderStages[0] = load_shader(getAssetPath() +
+//"shaders/computeparticles/particle.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
+//		shaderStages[1] = load_shader(getAssetPath() +
+//"shaders/computeparticles/particle.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
 //
 //		VkGraphicsPipelineCreateInfo pipeline_create_info =
 //			vks::initializers::pipeline_create_info(
@@ -3230,9 +3593,9 @@
 //		pipeline_create_info.pViewportState = &viewportState;
 //		pipeline_create_info.pDepthStencilState = &depthStencilState;
 //		pipeline_create_info.pDynamicState = &dynamicState;
-//		pipeline_create_info.stageCount = static_cast<uint32_t>(shaderStages.size());
-//		pipeline_create_info.pStages = shader_stages.data();
-//		pipeline_create_info.renderPass = _render_pass;
+//		pipeline_create_info.stageCount =
+// static_cast<uint32_t>(shaderStages.size()); 		pipeline_create_info.pStages
+// = shader_stages.data(); 		pipeline_create_info.renderPass = _render_pass;
 //
 //		// Additive blending
 //		blendAttachmentState.colorWriteMask = 0xF;
@@ -3244,19 +3607,24 @@
 //		blendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
 //		blendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_DST_ALPHA;
 //
-//		vkCreateGraphicsPipelines(_device, _pipeline_cache, 1, &pipeline_create_info, nullptr, &_graphics._pipeline);
+//		vkCreateGraphicsPipelines(_device, _pipeline_cache, 1,
+//&pipeline_create_info, nullptr, &_graphics._pipeline);
 //	}
 //
 //	void prepare_compute()
 //	{
 //		// Create a compute capable device queue
-//		// The VulkanDevice::createLogicalDevice functions finds a compute capable queue and prefers queue families that only support compute
-//		// Depending on the implementation this may result in different queue family indices for graphics and computes,
-//		// requiring proper synchronization (see the memory barriers in build_compute_command_buffer)
-//		vkGetDeviceQueue(_device, _vulkan_device->_queue_family_indices._compute, 0, &_compute._queue);
+//		// The VulkanDevice::createLogicalDevice functions finds a compute
+// capable queue and prefers queue families that only support compute
+//		// Depending on the implementation this may result in different queue
+// family indices for graphics and computes,
+//		// requiring proper synchronization (see the memory barriers in
+// build_compute_command_buffer) 		vkGetDeviceQueue(_device,
+//_vulkan_device->_queue_family_indices._compute, 0, &_compute._queue);
 //
 //		// Create compute pipeline
-//		// Compute pipelines are created separate from graphics pipelines even if they use the same queue (family index)
+//		// Compute pipelines are created separate from graphics pipelines even
+// if they use the same queue (family index)
 //
 //		std::vector<VkDescriptorSetLayoutBinding> set_layout_bindings = {
 //			// Binding 0 : Particle position storage buffer
@@ -3276,14 +3644,16 @@
 //				set_layout_bindings.data(),
 //				static_cast<uint32_t>(set_layout_bindings.size()));
 //
-//		vkCreateDescriptorSetLayout(_device, &descriptorLayout, nullptr, &_compute._descriptor_set_layout);
+//		vkCreateDescriptorSetLayout(_device, &descriptorLayout, nullptr,
+//&_compute._descriptor_set_layout);
 //
 //		VkPipelineLayoutCreateInfo p_pipeline_layout_create_info =
 //			vks::initializers::pipeline_layout_create_info(
 //				&_compute._descriptor_set_layout,
 //				1);
 //
-//		vkCreatePipelineLayout(_device, &p_pipeline_layout_create_info, nullptr, &_compute._pipeline_layout);
+//		vkCreatePipelineLayout(_device, &p_pipeline_layout_create_info, nullptr,
+//&_compute._pipeline_layout);
 //
 //		VkDescriptorSetAllocateInfo alloc_info =
 //			vks::initializers::descriptor_set_allocate_info(
@@ -3291,7 +3661,8 @@
 //				&_compute._descriptor_set_layout,
 //				1);
 //
-//		vkAllocateDescriptorSets(_device, &allocInfo, &_compute._descriptor_set);
+//		vkAllocateDescriptorSets(_device, &allocInfo,
+//&_compute._descriptor_set);
 //
 //		std::vector<VkWriteDescriptorSet> compute_write_descriptor_sets =
 //		{
@@ -3309,19 +3680,25 @@
 //				&_compute._uniform_buffer._descriptor)
 //		};
 //
-//		vkUpdateDescriptorSets(_device, static_cast<uint32_t>(computeWriteDescriptorSets.size()), compute_write_descriptor_sets.data(), 0, NULL);
+//		vkUpdateDescriptorSets(_device,
+// static_cast<uint32_t>(computeWriteDescriptorSets.size()),
+// compute_write_descriptor_sets.data(), 0, NULL);
 //
-//		// Create pipeline		
-//		VkComputePipelineCreateInfo compute_pipeline_create_info = vks::initializers::compute_pipeline_create_info(_compute._pipeline_layout, 0);
-//		compute_pipeline_create_info.stage = load_shader(getAssetPath() + "shaders/computeparticles/particle.comp.spv", VK_SHADER_STAGE_COMPUTE_BIT);
-//		vkCreateComputePipelines(_device, _pipeline_cache, 1, &compute_pipeline_create_info, nullptr, &_compute._pipeline);
+//		// Create pipeline
+//		VkComputePipelineCreateInfo compute_pipeline_create_info =
+// vks::initializers::compute_pipeline_create_info(_compute._pipeline_layout,
+// 0); 		compute_pipeline_create_info.stage = load_shader(getAssetPath() +
+//"shaders/computeparticles/particle.comp.spv", VK_SHADER_STAGE_COMPUTE_BIT);
+//		vkCreateComputePipelines(_device, _pipeline_cache, 1,
+//&compute_pipeline_create_info, nullptr, &_compute._pipeline);
 //
-//		// Separate command pool as queue family for compute may be different than graphics
-//		VkCommandPoolCreateInfo cmd_pool_info = {};
-//		cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-//		cmdPoolInfo.queueFamilyIndex = _vulkan_device->_queue_family_indices._compute;
-//		cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-//		vkCreateCommandPool(_device, &cmdPoolInfo, nullptr, &_compute._command_pool);
+//		// Separate command pool as queue family for compute may be different
+// than graphics 		VkCommandPoolCreateInfo cmd_pool_info = {};
+// cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+// cmdPoolInfo.queueFamilyIndex =
+// _vulkan_device->_queue_family_indices._compute;
+// cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+// vkCreateCommandPool(_device, &cmdPoolInfo, nullptr, &_compute._command_pool);
 //
 //		// Create a command buffer for compute operations
 //		VkCommandBufferAllocateInfo cmd_buf_allocate_info =
@@ -3330,14 +3707,16 @@
 //				VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 //				1);
 //
-//		vkAllocateCommandBuffers(_device, &cmdBufAllocateInfo, &_compute._command_buffer);
+//		vkAllocateCommandBuffers(_device, &cmdBufAllocateInfo,
+//&_compute._command_buffer);
 //
 //		// Fence for compute CB sync
-//		VkFenceCreateInfo fence_create_info = vks::initializers::fenceCreateInfo(VK_FENCE_CREATE_SIGNALED_BIT);
+//		VkFenceCreateInfo fence_create_info =
+// vks::initializers::fenceCreateInfo(VK_FENCE_CREATE_SIGNALED_BIT);
 //		vkCreateFence(_device, &fenceCreateInfo, nullptr, &_compute._fence);
 //
-//		// Build a single command buffer containing the compute dispatch commands
-//		buildComputeCommandBuffer();
+//		// Build a single command buffer containing the compute dispatch
+// commands 		buildComputeCommandBuffer();
 //	}
 //
 //	// Prepare and initialize uniform buffer containing shader uniforms
@@ -3346,7 +3725,8 @@
 //		// Compute shader uniform buffer block
 //		_vulkan_device->createBuffer(
 //			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-//			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+//			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+// VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 //			&_compute._uniform_buffer,
 //			sizeof(_compute._ubo));
 //
@@ -3361,8 +3741,9 @@
 //		_compute._ubo._delta_t = _frame_timer * 2.5f;
 //		_compute._ubo._dest_x = sin(glm::radians(_timer * 360.0f)) * 0.75f;
 //		_compute._ubo._dest_y = 0.0f;
-//		
-//		memcpy(_compute._uniform_buffer._mapped, &_compute._ubo, sizeof(_compute._ubo));
+//
+//		memcpy(_compute._uniform_buffer._mapped, &_compute._ubo,
+// sizeof(_compute._ubo));
 //	}
 //
 //	void draw()
@@ -3424,18 +3805,19 @@
 //
 //};
 //
-//VulkanExample *vulkanExample;
-//LRESULT CALLBACK WndProc(HWND h_wnd, UINT u_msg, WPARAM w_param, LPARAM l_param)
+// VulkanExample *vulkanExample;
+// LRESULT CALLBACK WndProc(HWND h_wnd, UINT u_msg, WPARAM w_param, LPARAM
+// l_param)
 //{
 //	if (vulkanExample != NULL)
 //	{
 //		vulkanExample->handleMessages(hWnd, u_msg, w_param, l_param);
 //	}
-//	return (DefWindowProc(hWnd, u_msg, w_param, l_param)); 
+//	return (DefWindowProc(hWnd, u_msg, w_param, l_param));
 //}
 //
 //
-//void port_example()
+// void port_example()
 //{
 //	HINSTANCE h_instance = GetModuleHandle(NULL);
 //	vulkanExample = new VulkanExample();
@@ -3446,14 +3828,14 @@
 //	delete(vulkanExample);
 //}
 //
-//VkResult VulkanExamplePortBase::createInstance(bool enable_validation)
+// VkResult VulkanExamplePortBase::createInstance(bool enable_validation)
 //{
 //	_settings._validation = enable_validation;
 //
 //	// Validation can also be forced via a define
 //#if defined(_VALIDATION)
 //	_settings._validation = true;
-//#endif	
+//#endif
 //
 //	VkApplicationInfo app_info = {};
 //	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -3461,7 +3843,8 @@
 //	appInfo.pEngineName = _name.c_str();
 //	appInfo.apiVersion = _api_version;
 //
-//	std::vector<const char*> instance_extensions = { VK_KHR_SURFACE_EXTENSION_NAME };
+//	std::vector<const char*> instance_extensions = {
+// VK_KHR_SURFACE_EXTENSION_NAME };
 //
 //	// Enable surface extensions depending on os
 //#if defined(_WIN32)
@@ -3496,14 +3879,15 @@
 //		{
 //			instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 //		}
-//		instanceCreateInfo.enabledExtensionCount = (uint32_t)instanceExtensions.size();
+//		instanceCreateInfo.enabledExtensionCount =
+//(uint32_t)instanceExtensions.size();
 //		instanceCreateInfo.ppEnabledExtensionNames = instance_extensions.data();
 //	}
 //
 //	return vk_create_instance(&instanceCreateInfo, nullptr, &_instance);
 //}
 //
-//std::string VulkanExamplePortBase::getWindowTitle()
+// std::string VulkanExamplePortBase::getWindowTitle()
 //{
 //	std::string device(_device_properties.deviceName);
 //	std::string window_title;
@@ -3512,8 +3896,9 @@
 //}
 //
 //#if !(defined(VK_USE_PLATFORM_IOS_MVK) || defined(VK_USE_PLATFORM_MACOS_MVK))
-//// i_o_s & mac_o_s: VulkanExamplePortBase::getAssetPath() implemented externally to allow access to Objective-C components
-//const std::string VulkanExamplePortBase::getAssetPath()
+//// i_o_s & mac_o_s: VulkanExamplePortBase::getAssetPath() implemented
+/// externally to allow access to Objective-C components
+// const std::string VulkanExamplePortBase::getAssetPath()
 //{
 //#if defined(VK_USE_PLATFORM_ANDROID_KHR)
 //	return "";
@@ -3525,10 +3910,10 @@
 //}
 //#endif
 //
-//void VulkanExamplePortBase::createCommandBuffers()
+// void VulkanExamplePortBase::createCommandBuffers()
 //{
-//	// Create one command buffer for each swap chain image and reuse for rendering
-//	_draw_cmd_buffers.resize(_swap_chain._image_count);
+//	// Create one command buffer for each swap chain image and reuse for
+// rendering 	_draw_cmd_buffers.resize(_swap_chain._image_count);
 //
 //	VkCommandBufferAllocateInfo cmd_buf_allocate_info =
 //		vks::initializers::command_buffer_allocate_info(
@@ -3536,15 +3921,19 @@
 //			VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 //			static_cast<uint32_t>(_draw_cmd_buffers.size()));
 //
-//	vkAllocateCommandBuffers(_device, &cmdBufAllocateInfo, _draw_cmd_buffers.data());
+//	vkAllocateCommandBuffers(_device, &cmdBufAllocateInfo,
+//_draw_cmd_buffers.data());
 //}
 //
-//void VulkanExamplePortBase::destroyCommandBuffers()
+// void VulkanExamplePortBase::destroyCommandBuffers()
 //{
-//	vkFreeCommandBuffers(_device, _cmd_pool, static_cast<uint32_t>(_draw_cmd_buffers.size()), _draw_cmd_buffers.data());
+//	vkFreeCommandBuffers(_device, _cmd_pool,
+// static_cast<uint32_t>(_draw_cmd_buffers.size()), _draw_cmd_buffers.data());
 //}
 //
-//VkCommandBuffer VulkanExamplePortBase::createCommandBuffer(VkCommandBufferLevel level, bool begin)
+// VkCommandBuffer
+// VulkanExamplePortBase::createCommandBuffer(VkCommandBufferLevel level, bool
+// begin)
 //{
 //	VkCommandBuffer cmd_buffer;
 //
@@ -3559,14 +3948,16 @@
 //	// If requested, also start the new command buffer
 //	if (begin)
 //	{
-//		VkCommandBufferBeginInfo cmd_buf_info = vks::initializers::commandBufferBeginInfo();
-//		vkBeginCommandBuffer(cmdBuffer, &cmdBufInfo);
+//		VkCommandBufferBeginInfo cmd_buf_info =
+// vks::initializers::commandBufferBeginInfo();
+// vkBeginCommandBuffer(cmdBuffer, &cmdBufInfo);
 //	}
 //
 //	return cmd_buffer;
 //}
 //
-//void VulkanExamplePortBase::flushCommandBuffer(VkCommandBuffer command_buffer, VkQueue queue, bool free)
+// void VulkanExamplePortBase::flushCommandBuffer(VkCommandBuffer
+// command_buffer, VkQueue queue, bool free)
 //{
 //	if (commandBuffer == VK_NULL_HANDLE)
 //	{
@@ -3589,14 +3980,16 @@
 //	}
 //}
 //
-//void VulkanExamplePortBase::createPipelineCache()
+// void VulkanExamplePortBase::createPipelineCache()
 //{
 //	VkPipelineCacheCreateInfo pipeline_cache_create_info = {};
-//	pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-//	vkCreatePipelineCache(_device, &pipelineCacheCreateInfo, nullptr, &_pipeline_cache);
+//	pipelineCacheCreateInfo.sType =
+// VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+// vkCreatePipelineCache(_device, &pipelineCacheCreateInfo, nullptr,
+//&_pipeline_cache);
 //}
 //
-//void VulkanExamplePortBase::prepare()
+// void VulkanExamplePortBase::prepare()
 //{
 //	initSwapchain();
 //	createCommandPool();
@@ -3609,7 +4002,8 @@
 //	setupFrameBuffer();
 //}
 //
-//VkPipelineShaderStageCreateInfo VulkanExamplePortBase::loadShader(std::string file_name, VkShaderStageFlagBits stage)
+// VkPipelineShaderStageCreateInfo VulkanExamplePortBase::loadShader(std::string
+// file_name, VkShaderStageFlagBits stage)
 //{
 //	VkPipelineShaderStageCreateInfo shader_stage = {};
 //	shaderStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -3622,15 +4016,15 @@
 //	return shader_stage;
 //}
 //
-//void VulkanExamplePortBase::renderFrame()
+// void VulkanExamplePortBase::renderFrame()
 //{
 //	auto t_start = std::chrono::high_resolution_clock::now();
 //
 //	render();
 //	_frame_counter++;
 //	auto t_end = std::chrono::high_resolution_clock::now();
-//	auto t_diff = std::chrono::duration<double, std::milli>(tEnd - t_start).count();
-//	_frame_timer = (float)tDiff / 1000.0f;
+//	auto t_diff = std::chrono::duration<double, std::milli>(tEnd -
+// t_start).count(); 	_frame_timer = (float)tDiff / 1000.0f;
 //	_camera.update(_frame_timer);
 //	if (_camera.moving())
 //	{
@@ -3645,16 +4039,15 @@
 //			_timer -= 1.0f;
 //		}
 //	}
-//	float fps_timer = (float)std::chrono::duration<double, std::milli>(tEnd - _last_timestamp).count();
-//	if (fpsTimer > 1000.0f)
+//	float fps_timer = (float)std::chrono::duration<double, std::milli>(tEnd -
+//_last_timestamp).count(); 	if (fpsTimer > 1000.0f)
 //	{
-//		_last_f_p_s = static_cast<uint32_t>((float)_frame_counter * (1000.0f / fps_timer));
-//		_frame_counter = 0;
-//		_last_timestamp = t_end;
+//		_last_f_p_s = static_cast<uint32_t>((float)_frame_counter * (1000.0f /
+// fps_timer)); 		_frame_counter = 0; 		_last_timestamp = t_end;
 //	}
 //}
 //
-//void VulkanExamplePortBase::renderLoop()
+// void VulkanExamplePortBase::renderLoop()
 //{
 //	if (_benchmark._active) {
 //		_benchmark.run([=] { render(); }, _vulkan_device->_properties);
@@ -3690,34 +4083,37 @@
 //	}
 //}
 //
-//void VulkanExamplePortBase::prepareFrame()
+// void VulkanExamplePortBase::prepareFrame()
 //{
 //	// Acquire the next image from the swap chain
-//	_swap_chain.acquireNextImage(_semaphores._present_complete, &_current_buffer);
+//	_swap_chain.acquireNextImage(_semaphores._present_complete,
+//&_current_buffer);
 //
 //}
 //
-//void VulkanExamplePortBase::submitFrame()
+// void VulkanExamplePortBase::submitFrame()
 //{
-//	_swap_chain.queuePresent(_queue, _current_buffer, _semaphores._render_complete);
-//	
+//	_swap_chain.queuePresent(_queue, _current_buffer,
+//_semaphores._render_complete);
+//
 //	vkQueueWaitIdle(_queue);
 //}
 //
-//VulkanExamplePortBase::VulkanExamplePortBase(bool enable_validation)
+// VulkanExamplePortBase::VulkanExamplePortBase(bool enable_validation)
 //{
 //	// Check for a valid asset path
 //	struct stat info;
 //	if (stat(getAssetPath().c_str(), &info) != 0)
 //	{
-//		std::string msg = "Could not locate asset path in \"" + get_asset_path() + "\" !";
-//		exit(-1);
+//		std::string msg = "Could not locate asset path in \"" + get_asset_path()
+//+
+//"\" !"; 		exit(-1);
 //	}
 //
 //	_settings._validation = enable_validation;
 //}
 //
-//VulkanExamplePortBase::~VulkanExamplePortBase()
+// VulkanExamplePortBase::~VulkanExamplePortBase()
 //{
 //	// Clean up Vulkan resources
 //	_swap_chain.cleanup();
@@ -3755,15 +4151,15 @@
 //	vkDestroyInstance(_instance, nullptr);
 //}
 //
-//bool VulkanExamplePortBase::initVulkan()
+// bool VulkanExamplePortBase::initVulkan()
 //{
 //	VkResult err;
 //
 //	// Vulkan instance
 //	err = create_instance(_settings._validation);
 //	if (err) {
-//		tools::exitFatal("Could not create Vulkan instance : \n" + tools::errorString(err), err);
-//		return false;
+//		tools::exitFatal("Could not create Vulkan instance : \n" +
+// tools::errorString(err), err); 		return false;
 //	}
 //
 //#if defined(VK_USE_PLATFORM_ANDROID_KHR)
@@ -3777,10 +4173,10 @@
 //	assert(gpuCount > 0);
 //	// Enumerate devices
 //	std::vector<VkPhysicalDevice> physical_devices(gpuCount);
-//	err = vk_enumerate_physical_devices(_instance, &gpuCount, physical_devices.data());
-//	if (err) {
-//		tools::exitFatal("Could not enumerate physical devices : \n" + tools::errorString(err), err);
-//		return false;
+//	err = vk_enumerate_physical_devices(_instance, &gpuCount,
+// physical_devices.data()); 	if (err) { 		tools::exitFatal("Could not
+// enumerate physical devices : \n" + tools::errorString(err), err); return
+// false;
 //	}
 //
 //	// GPU selection
@@ -3790,42 +4186,51 @@
 //
 //	_physical_device = physical_devices[0];
 //
-//	// Store properties (including limits), features and memory properties of the phyiscal device (so that examples can check against them)
+//	// Store properties (including limits), features and memory properties of
+// the phyiscal device (so that examples can check against them)
 //	vkGetPhysicalDeviceProperties(_physical_device, &_device_properties);
 //	vkGetPhysicalDeviceFeatures(_physical_device, &_device_features);
-//	vkGetPhysicalDeviceMemoryProperties(_physical_device, &_device_memory_properties);
+//	vkGetPhysicalDeviceMemoryProperties(_physical_device,
+//&_device_memory_properties);
 //
-//	// Derived examples can override this to set actual features (based on above readings) to enable for logical device creation
-//	getEnabledFeatures();
+//	// Derived examples can override this to set actual features (based on above
+// readings) to enable for logical device creation 	getEnabledFeatures();
 //
 //	// Vulkan device creation
-//	// This is handled by a separate class that gets a logical device representation
+//	// This is handled by a separate class that gets a logical device
+// representation
 //	// and encapsulates functions related to a device
 //	_vulkan_device = new vks::VulkanDevice(_physical_device);
-//	VkResult res = _vulkan_device->createLogicalDevice(_enabled_features, _enabled_device_extensions);
-//	if (res != VK_SUCCESS) {
-//		tools::exitFatal("Could not create Vulkan device: \n" + tools::errorString(res), res);
-//		return false;
+//	VkResult res = _vulkan_device->createLogicalDevice(_enabled_features,
+//_enabled_device_extensions); 	if (res != VK_SUCCESS) {
+// tools::exitFatal("Could not create Vulkan device: \n" +
+// tools::errorString(res), res); 		return false;
 //	}
 //	_device = _vulkan_device->_logical_device;
 //
 //	// Get a graphics queue from the device
-//	vkGetDeviceQueue(_device, _vulkan_device->_queue_family_indices._graphics, 0, &_queue);
+//	vkGetDeviceQueue(_device, _vulkan_device->_queue_family_indices._graphics,
+// 0, &_queue);
 //
 //	// Find a suitable depth format
-//	VkBool32 valid_depth_format = tools::getSupportedDepthFormat(_physical_device, &_depth_format);
+//	VkBool32 valid_depth_format =
+// tools::getSupportedDepthFormat(_physical_device, &_depth_format);
 //	assert(validDepthFormat);
 //
 //	_swap_chain.connect(_instance, _physical_device, _device);
 //
 //	// Create synchronization objects
-//	VkSemaphoreCreateInfo semaphore_create_info = vks::initializers::semaphoreCreateInfo();
+//	VkSemaphoreCreateInfo semaphore_create_info =
+// vks::initializers::semaphoreCreateInfo();
 //	// Create a semaphore used to synchronize image presentation
-//	// Ensures that the image is displayed before we start submitting new commands to the queu
-//	vkCreateSemaphore(_device, &semaphoreCreateInfo, nullptr, &_semaphores._present_complete);
+//	// Ensures that the image is displayed before we start submitting new
+// commands to the queu 	vkCreateSemaphore(_device, &semaphoreCreateInfo,
+// nullptr,
+//&_semaphores._present_complete);
 //	// Create a semaphore used to synchronize command submission
-//	// Ensures that the image is not presented until all commands have been sumbitted and executed
-//	vkCreateSemaphore(_device, &semaphoreCreateInfo, nullptr, &_semaphores._render_complete);
+//	// Ensures that the image is not presented until all commands have been
+// sumbitted and executed 	vkCreateSemaphore(_device, &semaphoreCreateInfo,
+// nullptr, &_semaphores._render_complete);
 //
 //	// Set up submit info structure
 //	// Semaphores will stay the same during application lifetime
@@ -3844,7 +4249,7 @@
 //#if defined(_WIN32)
 //
 //#include <strsafe.h>
-//HWND VulkanExamplePortBase::setupWindow(HINSTANCE hinstance, WNDPROC wndproc)
+// HWND VulkanExamplePortBase::setupWindow(HINSTANCE hinstance, WNDPROC wndproc)
 //{
 //	_window_instance = hinstance;
 //
@@ -3881,11 +4286,14 @@
 //		dmScreenSettings.dmPelsWidth = screen_width;
 //		dmScreenSettings.dmPelsHeight = screen_height;
 //		dmScreenSettings.dmBitsPerPel = 32;
-//		dmScreenSettings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
+//		dmScreenSettings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH |
+// DM_PELSHEIGHT;
 //
-//		if ((_width != (uint32_t)screenWidth) && (_height != (uint32_t)screenHeight))
+//		if ((_width != (uint32_t)screenWidth) && (_height !=
+//(uint32_t)screenHeight))
 //		{
-//			if (ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN) != DISP_CHANGE_SUCCESSFUL)
+//			if (ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN) !=
+// DISP_CHANGE_SUCCESSFUL)
 //			{
 //				_settings._fullscreen = false;
 //			}
@@ -3911,7 +4319,8 @@
 //	windowRect.left = 0L;
 //	windowRect.top = 0L;
 //	windowRect.right = _settings._fullscreen ? (long)screenWidth : (long)_width;
-//	windowRect.bottom = _settings._fullscreen ? (long)screenHeight : (long)_height;
+//	windowRect.bottom = _settings._fullscreen ? (long)screenHeight :
+//(long)_height;
 //
 //	AdjustWindowRectEx(&windowRect, dw_style, FALSE, dw_ex_style);
 //
@@ -3934,11 +4343,16 @@
 //		LPVOID lp_msg_buf;
 //		LPVOID lp_display_buf;
 //		DWORD dw = GetLastError();
-//		FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, dw, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL);
-//		lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT, (lstrlen((LPCTSTR)lpMsgBuf) + 120 + 40) * sizeof(TCHAR));
-//		StringCchPrintf((LPTSTR)lpDisplayBuf, LocalSize(lpDisplayBuf) / sizeof(TCHAR), TEXT("%s failed with error %d: %s"), 0, dw, lp_msg_buf);
-//		auto message = (LPCTSTR)lpDisplayBuf;
-//		std::cout << message << std::endl;
+//		FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+// FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, dw,
+// MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL);
+// lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT, (lstrlen((LPCTSTR)lpMsgBuf)
+// +
+// 120 + 40) * sizeof(TCHAR)); 		StringCchPrintf((LPTSTR)lpDisplayBuf,
+// LocalSize(lpDisplayBuf)
+/// sizeof(TCHAR), TEXT("%s failed with error %d: %s"), 0, dw, lp_msg_buf);
+/// auto
+// message = (LPCTSTR)lpDisplayBuf; 		std::cout << message << std::endl;
 //		LocalFree(lpMsgBuf);
 //		LocalFree(lpDisplayBuf);
 //
@@ -3964,7 +4378,8 @@
 //	return _window;
 //}
 //
-//void VulkanExamplePortBase::handleMessages(HWND h_wnd, UINT u_msg, WPARAM w_param, LPARAM l_param)
+// void VulkanExamplePortBase::handleMessages(HWND h_wnd, UINT u_msg, WPARAM
+// w_param, LPARAM l_param)
 //{
 //	switch (uMsg)
 //	{
@@ -3981,7 +4396,8 @@
 //	case WM_SIZE:
 //		if ((_prepared) && (wParam != SIZE_MINIMIZED))
 //		{
-//			if ((_resizing) || ((wParam == SIZE_MAXIMIZED) || (wParam == SIZE_RESTORED)))
+//			if ((_resizing) || ((wParam == SIZE_MAXIMIZED) || (wParam ==
+// SIZE_RESTORED)))
 //			{
 //				_dest_width = LOWORD(lParam);
 //				_dest_height = HIWORD(lParam);
@@ -3998,17 +4414,18 @@
 //}
 //#endif
 //
-//void VulkanExamplePortBase::createSynchronizationPrimitives()
+// void VulkanExamplePortBase::createSynchronizationPrimitives()
 //{
 //	// Wait fences to sync command buffer access
-//	VkFenceCreateInfo fence_create_info = vks::initializers::fenceCreateInfo(VK_FENCE_CREATE_SIGNALED_BIT);
+//	VkFenceCreateInfo fence_create_info =
+// vks::initializers::fenceCreateInfo(VK_FENCE_CREATE_SIGNALED_BIT);
 //	_wait_fences.resize(_draw_cmd_buffers.size());
 //	for (auto& fence : _wait_fences) {
 //		vkCreateFence(_device, &fenceCreateInfo, nullptr, &fence);
 //	}
 //}
 //
-//void VulkanExamplePortBase::createCommandPool()
+// void VulkanExamplePortBase::createCommandPool()
 //{
 //	VkCommandPoolCreateInfo cmd_pool_info = {};
 //	cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -4017,7 +4434,7 @@
 //	vkCreateCommandPool(_device, &cmdPoolInfo, nullptr, &_cmd_pool);
 //}
 //
-//void VulkanExamplePortBase::setupDepthStencil()
+// void VulkanExamplePortBase::setupDepthStencil()
 //{
 //	VkImageCreateInfo image_create_info{};
 //	image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -4028,7 +4445,8 @@
 //	image_create_info.arrayLayers = 1;
 //	image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
 //	image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-//	image_create_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+//	image_create_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT |
+// VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 //
 //	vkCreateImage(_device, &image_create_info, nullptr, &_depth_stencil._image);
 //	VkMemoryRequirements mem_reqs{};
@@ -4037,9 +4455,11 @@
 //	VkMemoryAllocateInfo mem_allloc{};
 //	memAllloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 //	memAllloc.allocationSize = mem_reqs.size;
-//	memAllloc.memoryTypeIndex = _vulkan_device->getMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-//	vkAllocateMemory(_device, &memAllloc, nullptr, &_depth_stencil._mem);
-//	vkBindImageMemory(_device, _depth_stencil._image, _depth_stencil._mem, 0);
+//	memAllloc.memoryTypeIndex =
+//_vulkan_device->getMemoryType(memReqs.memoryTypeBits,
+// VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT); 	vkAllocateMemory(_device,
+// &memAllloc, nullptr, &_depth_stencil._mem); 	vkBindImageMemory(_device,
+//_depth_stencil._image, _depth_stencil._mem, 0);
 //
 //	VkImageViewCreateInfo image_view_c_i{};
 //	imageViewCI.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -4051,14 +4471,17 @@
 //	imageViewCI.subresourceRange.baseArrayLayer = 0;
 //	imageViewCI.subresourceRange.layerCount = 1;
 //	imageViewCI.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-//	// Stencil aspect should only be set on depth + stencil formats (VK_FORMAT_D16_UNORM_S8_UINT..VK_FORMAT_D32_SFLOAT_S8_UINT
-//	if (_depth_format >= VK_FORMAT_D16_UNORM_S8_UINT) {
-//		imageViewCI.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+//	// Stencil aspect should only be set on depth + stencil formats
+//(VK_FORMAT_D16_UNORM_S8_UINT..VK_FORMAT_D32_SFLOAT_S8_UINT 	if
+//(_depth_format
+//>= VK_FORMAT_D16_UNORM_S8_UINT) {
+// imageViewCI.subresourceRange.aspectMask
+//|= VK_IMAGE_ASPECT_STENCIL_BIT;
 //	}
 //	vkCreateImageView(_device, &imageViewCI, nullptr, &_depth_stencil._view);
 //}
 //
-//void VulkanExamplePortBase::setupFrameBuffer()
+// void VulkanExamplePortBase::setupFrameBuffer()
 //{
 //	VkImageView attachments[2];
 //
@@ -4080,11 +4503,12 @@
 //	for (uint32_t i = 0; i < _frame_buffers.size(); i++)
 //	{
 //		attachments[0] = _swap_chain._buffers[i]._view;
-//		vkCreateFramebuffer(_device, &frameBufferCreateInfo, nullptr, &_frame_buffers[i]);
+//		vkCreateFramebuffer(_device, &frameBufferCreateInfo, nullptr,
+//&_frame_buffers[i]);
 //	}
 //}
 //
-//void VulkanExamplePortBase::setupRenderPass()
+// void VulkanExamplePortBase::setupRenderPass()
 //{
 //	std::array<VkAttachmentDescription, 2> attachments = {};
 //	// Color attachment
@@ -4104,7 +4528,8 @@
 //	attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 //	attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 //	attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-//	attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+//	attachments[1].finalLayout =
+// VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 //
 //	VkAttachmentReference color_reference = {};
 //	colorReference.attachment = 0;
@@ -4131,16 +4556,18 @@
 //	dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
 //	dependencies[0].dstSubpass = 0;
 //	dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-//	dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-//	dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-//	dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+//	dependencies[0].dstStageMask =
+// VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; dependencies[0].srcAccessMask
+// = VK_ACCESS_MEMORY_READ_BIT; 	dependencies[0].dstAccessMask =
+// VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 //	dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 //
 //	dependencies[1].srcSubpass = 0;
 //	dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-//	dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-//	dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-//	dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+//	dependencies[1].srcStageMask =
+// VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; 	dependencies[1].dstStageMask
+// = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT; 	dependencies[1].srcAccessMask =
+// VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 //	dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
 //	dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 //
@@ -4156,17 +4583,17 @@
 //	vkCreateRenderPass(_device, &renderPassInfo, nullptr, &_render_pass);
 //}
 //
-//void VulkanExamplePortBase::getEnabledFeatures()
+// void VulkanExamplePortBase::getEnabledFeatures()
 //{
 //	// Can be overriden in derived class
 //}
 //
-//void VulkanExamplePortBase::initSwapchain()
+// void VulkanExamplePortBase::initSwapchain()
 //{
 //	_swap_chain.initSurface(_window_instance, _window);
 //}
 //
-//void VulkanExamplePortBase::setupSwapChain()
+// void VulkanExamplePortBase::setupSwapChain()
 //{
 //	_swap_chain.create(&_width, &_height, _settings._vsync);
 //}

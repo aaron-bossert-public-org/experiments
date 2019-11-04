@@ -6,10 +6,7 @@
 
 using namespace igpu;
 
-std::unique_ptr<gl_vertex_buffer> gl_vertex_buffer::make(const config& cfg)
+std::unique_ptr< gl_vertex_buffer > gl_vertex_buffer::make( const config& cfg )
 {
-	return gl_buffer_t<gl_vertex_buffer>::make(
-		cfg,
-		GL_ARRAY_BUFFER);
+	return gl_buffer_t< gl_vertex_buffer >::make( cfg, GL_ARRAY_BUFFER );
 }
-

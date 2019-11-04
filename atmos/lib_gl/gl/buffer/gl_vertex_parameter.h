@@ -5,18 +5,16 @@
 
 namespace igpu
 {
-    class gl_vertex_parameter : public vertex_parameter
-    {
-    public:
-		
-		gl_vertex_parameter(std::string, components, int location);
-        
-        int location() const;
-        
+	class gl_vertex_parameter : public vertex_parameter
+	{
+	public:
+		gl_vertex_parameter( std::string, components, int location );
+
+		int location() const;
+
 		const vertex_parameter& parameter() const;
 
-    private:
-        
+	private:
 		int _location = -1;
-    };
+	};
 }

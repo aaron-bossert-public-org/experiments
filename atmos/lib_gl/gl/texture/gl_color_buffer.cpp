@@ -3,24 +3,25 @@
 //#include "gl/defines/gl_includes.h"
 //
 //
-//using namespace igpu;
+// using namespace igpu;
 //
-//const gl_render_buffer::config& gl_render_buffer::cfg() const
+// const gl_render_buffer::config& gl_render_buffer::cfg() const
 //{
 //	return _cfg;
 //}
 //
-//void gl_render_buffer::attach() const
+// void gl_render_buffer::attach() const
 //{
-//    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, _gl_handle);
+//    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+//    GL_RENDERBUFFER, _gl_handle);
 //}
 //
-//void gl_render_buffer::gl_handle(int gl_handle)
+// void gl_render_buffer::gl_handle(int gl_handle)
 //{
 //    _gl_handle = gl_handle;
 //}
 //
-//gl_render_buffer::~gl_render_buffer()
+// gl_render_buffer::~gl_render_buffer()
 //{
 //    if(_gl_handle)
 //    {
@@ -28,12 +29,12 @@
 //    }
 //}
 //
-//std::unique_ptr<gl_render_buffer> gl_render_buffer::make_empty()
+// std::unique_ptr<gl_render_buffer> gl_render_buffer::make_empty()
 //{
 //    return std::unique_ptr<gl_render_buffer>(new gl_render_buffer({}, 0));
 //}
 //
-//std::unique_ptr<gl_render_buffer> gl_render_buffer::make(const config& cfg)
+// std::unique_ptr<gl_render_buffer> gl_render_buffer::make(const config& cfg)
 //{
 //	GLenum format;
 //
@@ -69,11 +70,12 @@
 //    glBindRenderbuffer(GL_RENDERBUFFER, gl_handle);
 //    glRenderbufferStorage(GL_RENDERBUFFER, format, cfg.res.x, cfg.res.y);
 //    glBindRenderbuffer(GL_RENDERBUFFER, active_handle);
-//    
-//    return std::unique_ptr<gl_render_buffer>(new gl_render_buffer(cfg, gl_handle));
+//
+//    return std::unique_ptr<gl_render_buffer>(new gl_render_buffer(cfg,
+//    gl_handle));
 //}
 //
-//gl_render_buffer::gl_render_buffer(const config& cfg, int gl_handle)
+// gl_render_buffer::gl_render_buffer(const config& cfg, int gl_handle)
 //: _cfg(cfg)
 //, _gl_handle(gl_handle)
 //, _gpu_mem_metric(perf::category::GPU_MEM_USAGE, "GPU Color Buffer Mem")

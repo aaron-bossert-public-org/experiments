@@ -7,11 +7,10 @@
 namespace igpu
 {
 	class vulkan_fence;
-	
+
 	class vulkan_resource
 	{
 	public:
-
 		class state
 		{
 		public:
@@ -20,13 +19,12 @@ namespace igpu
 			~state();
 
 		private:
-
-			std::vector<std::shared_ptr<vulkan_fence>> fences;
+			std::vector< std::shared_ptr< vulkan_fence > > fences;
 		};
 
 		virtual state& resource_state() = 0;
 
-		void add_fence(const std::shared_ptr<vulkan_fence>&);
+		void add_fence( const std::shared_ptr< vulkan_fence >& );
 
 		void wait_on_fences();
 	};

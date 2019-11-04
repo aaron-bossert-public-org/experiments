@@ -6,6 +6,5 @@
 namespace igpu
 {
 	class transparent_batch : public batch
-	{
-	};
+	{};
 }

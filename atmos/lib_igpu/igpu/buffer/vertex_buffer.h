@@ -22,7 +22,8 @@
 //	}
 //};
 //
-// vertex_format format = IGPU_VERT_CFG_OF(buffer_usage::DYNAMIC, Vertex, pos, col, uv0);
+// vertex_format format = IGPU_VERT_CFG_OF(buffer_usage::DYNAMIC, Vertex, pos,
+// col, uv0);
 
 namespace igpu
 {
@@ -46,10 +47,15 @@ namespace igpu
 }	 // namespace igpu
 
 #define IGPU_VERT_CFG_OF_( U, V, ... ) \
-	igpu::vertex_buffer::config( { U, sizeof( V ), { IGPU_VERT_CFG_OF_ATTRIBS( V, __VA_ARGS__ ) } } )
+	igpu::vertex_buffer::config(       \
+		{ U, sizeof( V ), { IGPU_VERT_CFG_OF_ATTRIBS( V, __VA_ARGS__ ) } } )
 
-#define IGPU_VERT_CFG_OF_ATTRIBS( V, ... ) \
-	VA_DISTRIBUTE_OP_ARGS_( IGPU_VERT_CFG_OF_ATTRIB__ARGS_EXPAND, ( V ), __VA_ARGS__ )
+#define IGPU_VERT_CFG_OF_ATTRIBS( V, ... )    \
+	VA_DISTRIBUTE_OP_ARGS_(                   \
+		IGPU_VERT_CFG_OF_ATTRIB__ARGS_EXPAND, \
+		( V ),                                \
+		__VA_ARGS__ )
 
 #define IGPU_VERT_CFG_OF_ATTRIB__ARGS_EXPAND( V, A ) \
-	{ { #A, to_components( ( *( (V*)0 ) ).A ) }, ( ( size_t ) & ( ( (V*)0 )->A ) ) },
+	{ { #A, to_components( ( *( (V*)0 ) ).A ) },     \
+	  ( ( size_t ) & ( ( (V*)0 )->A ) ) },

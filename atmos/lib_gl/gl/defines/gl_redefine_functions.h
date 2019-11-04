@@ -1,4 +1,6 @@
 #pragma once
+
+// clang-format off
 #define glAreProgramsResidentNV(...)         RedefineGLFunc( glAreProgramsResidentNV         ,  __VA_ARGS__)
 #define glAreTexturesResident(...)           RedefineGLFunc( glAreTexturesResident           ,  __VA_ARGS__)
 #define glAreTexturesResidentEXT(...)        RedefineGLFunc( glAreTexturesResidentEXT        ,  __VA_ARGS__)
@@ -1612,3 +1614,4 @@
 #define gluTessNormal(...)                   RedefineGLFuncVoidReturn( gluTessNormal                   ,  __VA_ARGS__)
 #define gluTessProperty(...)                 RedefineGLFuncVoidReturn( gluTessProperty                 ,  __VA_ARGS__)
 #define gluTessVertex(...)                   RedefineGLFuncVoidReturn( gluTessVertex                   ,  __VA_ARGS__)
+// clang-format on

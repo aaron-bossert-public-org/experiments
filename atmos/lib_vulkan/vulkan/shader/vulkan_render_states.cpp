@@ -5,14 +5,14 @@
 
 using namespace igpu;
 
-VkCullModeFlagBits igpu::to_vulkan_cull_mode(const cull_mode& mode)
+VkCullModeFlagBits igpu::to_vulkan_cull_mode( const cull_mode& mode )
 {
-	if (!mode.enable)
+	if ( !mode.enable )
 	{
 		return VK_CULL_MODE_NONE;
 	}
 
-	switch (mode.mode)
+	switch ( mode.mode )
 	{
 	case cull::BACK:
 		return VK_CULL_MODE_BACK_BIT;
@@ -22,21 +22,21 @@ VkCullModeFlagBits igpu::to_vulkan_cull_mode(const cull_mode& mode)
 		return VK_CULL_MODE_FRONT_AND_BACK;
 	};
 
-	if (is_valid(mode.mode))
+	if ( is_valid( mode.mode ) )
 	{
-		LOG_CRITICAL("unhandled format: %s", to_string(mode.mode).data());
+		LOG_CRITICAL( "unhandled format: %s", to_string( mode.mode ).data() );
 	}
 	else
 	{
-		LOG_CRITICAL("invalid format: %d", mode.mode);
+		LOG_CRITICAL( "invalid format: %d", mode.mode );
 	}
 
 	return VK_CULL_MODE_BACK_BIT;
 }
 
-VkBlendFactor igpu::to_vulkan_blend(blend blend)
+VkBlendFactor igpu::to_vulkan_blend( blend blend )
 {
-	switch (blend)
+	switch ( blend )
 	{
 	case blend::ZERO:
 		return VK_BLEND_FACTOR_ZERO;
@@ -60,21 +60,21 @@ VkBlendFactor igpu::to_vulkan_blend(blend blend)
 		return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
 	};
 
-	if (is_valid(blend))
+	if ( is_valid( blend ) )
 	{
-		LOG_CRITICAL("unhandled blend: %s", to_string(blend).data());
+		LOG_CRITICAL( "unhandled blend: %s", to_string( blend ).data() );
 	}
 	else
 	{
-		LOG_CRITICAL("invalid blend: %d", blend);
+		LOG_CRITICAL( "invalid blend: %d", blend );
 	}
 
 	return VK_BLEND_FACTOR_ONE;
 };
 
-VkCompareOp igpu::to_vulkan_compare(compare compare)
+VkCompareOp igpu::to_vulkan_compare( compare compare )
 {
-	switch (compare)
+	switch ( compare )
 	{
 	case compare::NEVER:
 		return VK_COMPARE_OP_NEVER;
@@ -94,23 +94,23 @@ VkCompareOp igpu::to_vulkan_compare(compare compare)
 		return VK_COMPARE_OP_ALWAYS;
 	};
 
-	if (is_valid(compare))
+	if ( is_valid( compare ) )
 	{
-		LOG_CRITICAL("unhandled compare: %s", to_string(compare).data());
+		LOG_CRITICAL( "unhandled compare: %s", to_string( compare ).data() );
 	}
 	else
 	{
-		LOG_CRITICAL("invalid compare: %d", compare);
+		LOG_CRITICAL( "invalid compare: %d", compare );
 	}
 
-	LOG_CRITICAL("unhandled compare value: %s", to_string(compare).data());
+	LOG_CRITICAL( "unhandled compare value: %s", to_string( compare ).data() );
 
 	return VK_COMPARE_OP_LESS;
 };
 
-VkStencilOp igpu::to_vulkan_stencil(stencil stencil)
+VkStencilOp igpu::to_vulkan_stencil( stencil stencil )
 {
-	switch (stencil)
+	switch ( stencil )
 	{
 	case stencil::KEEP:
 		return VK_STENCIL_OP_KEEP;
@@ -129,59 +129,59 @@ VkStencilOp igpu::to_vulkan_stencil(stencil stencil)
 	case stencil::INVERT:
 		return VK_STENCIL_OP_DECREMENT_AND_WRAP;
 	};
-	LOG_CRITICAL("unhandled stencil value: %s", to_string(stencil).data());
+	LOG_CRITICAL( "unhandled stencil value: %s", to_string( stencil ).data() );
 
-	if (is_valid(stencil))
+	if ( is_valid( stencil ) )
 	{
-		LOG_CRITICAL("unhandled stencil: %s", to_string(stencil).data());
+		LOG_CRITICAL( "unhandled stencil: %s", to_string( stencil ).data() );
 	}
 	else
 	{
-		LOG_CRITICAL("invalid stencil: %d", stencil);
+		LOG_CRITICAL( "invalid stencil: %d", stencil );
 	}
 
 	return VK_STENCIL_OP_KEEP;
 };
 
-VkPipelineColorBlendAttachmentState igpu::to_vulkan_color_blend(const blend_mode& mode, uint8_t color_write_mask)
+VkPipelineColorBlendAttachmentState igpu::to_vulkan_color_blend(
+	const blend_mode& mode,
+	uint8_t color_write_mask )
 {
 	VkPipelineColorBlendAttachmentState vulkan = {};
 
 	vulkan.blendEnable = mode.enable;
 	vulkan.colorWriteMask = color_write_mask;
 
-	vulkan.srcColorBlendFactor =
-		vulkan.srcAlphaBlendFactor =
-		to_vulkan_blend(mode.src);
+	vulkan.srcColorBlendFactor = vulkan.srcAlphaBlendFactor =
+		to_vulkan_blend( mode.src );
 
-	vulkan.dstColorBlendFactor =
-		vulkan.dstAlphaBlendFactor =
-		to_vulkan_blend(mode.dst);
+	vulkan.dstColorBlendFactor = vulkan.dstAlphaBlendFactor =
+		to_vulkan_blend( mode.dst );
 
-	vulkan.colorBlendOp =
-		vulkan.alphaBlendOp =
-		VK_BLEND_OP_ADD;
+	vulkan.colorBlendOp = vulkan.alphaBlendOp = VK_BLEND_OP_ADD;
 
 	return vulkan;
 }
 
-VkPipelineDepthStencilStateCreateInfo igpu::to_vulkan_depth_stencil(const depth_mode& depth_mode, const stencil_mode& stencil_mode)
+VkPipelineDepthStencilStateCreateInfo igpu::to_vulkan_depth_stencil(
+	const depth_mode& depth_mode,
+	const stencil_mode& stencil_mode )
 {
 	VkPipelineDepthStencilStateCreateInfo vulkan = {
-		VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO
+		VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
 	};
 
 	vulkan.depthTestEnable = depth_mode.enable;
 	vulkan.depthWriteEnable = depth_mode.write;
-	vulkan.depthCompareOp = to_vulkan_compare(depth_mode.compare);
+	vulkan.depthCompareOp = to_vulkan_compare( depth_mode.compare );
 	vulkan.depthBoundsTestEnable = VK_FALSE;
 
 	vulkan.stencilTestEnable = stencil_mode.enable;
 
-	vulkan.front.failOp = to_vulkan_stencil(stencil_mode.fail);
-	vulkan.front.passOp = to_vulkan_stencil(stencil_mode.pass);
-	vulkan.front.depthFailOp = to_vulkan_stencil(stencil_mode.depth_fail);
-	vulkan.front.compareOp = to_vulkan_compare(stencil_mode.compare);
+	vulkan.front.failOp = to_vulkan_stencil( stencil_mode.fail );
+	vulkan.front.passOp = to_vulkan_stencil( stencil_mode.pass );
+	vulkan.front.depthFailOp = to_vulkan_stencil( stencil_mode.depth_fail );
+	vulkan.front.compareOp = to_vulkan_compare( stencil_mode.compare );
 	vulkan.front.compareMask = stencil_mode.read_mask;
 	vulkan.front.writeMask = stencil_mode.write_mask;
 	vulkan.front.reference = stencil_mode.ref;
@@ -191,19 +191,19 @@ VkPipelineDepthStencilStateCreateInfo igpu::to_vulkan_depth_stencil(const depth_
 	return vulkan;
 }
 
-vulkan_render_states::config::vulkan igpu::to_vulkan_render_states(const render_states::config& cfg)
+vulkan_render_states::config::vulkan igpu::to_vulkan_render_states(
+	const render_states::config& cfg )
 {
-	return 	{
-		to_vulkan_cull_mode(cfg.cull),
-		to_vulkan_color_blend(cfg.blend, cfg.color_write_mask),
-		to_vulkan_depth_stencil(cfg.depth, cfg.stencil),
+	return {
+		to_vulkan_cull_mode( cfg.cull ),
+		to_vulkan_color_blend( cfg.blend, cfg.color_write_mask ),
+		to_vulkan_depth_stencil( cfg.depth, cfg.stencil ),
 	};
 }
 
-vulkan_render_states::vulkan_render_states(const config& cfg)
-	: _cfg(cfg)
-{
-}
+vulkan_render_states::vulkan_render_states( const config& cfg )
+	: _cfg( cfg )
+{}
 
 const vulkan_render_states::config& vulkan_render_states::cfg() const
 {

@@ -10,7 +10,7 @@
 #elif ATMOS_BUILD_ANDROID
 #	include <GLES2/gl3.h>
 #elif ATMOS_BUILD_WINDOWS
-#	define GL_GLES_PROTOTYPES 1
+#	define GL_GLES_PROTOTYPES	1
 #	define GL_GLEXT_PROTOTYPES 1
 #	include <GLES3/gl3.h>
 #	include <GLES2/gl2ext.h>
@@ -21,8 +21,8 @@
 #	error No build platform defined ATMOS_BUILD_IOS/ ATMOS_BUILD_WINDOWS/ etc...
 #endif
 
-#if ATMOS_DEBUG 
+#if ATMOS_DEBUG
 #	include <gl/defines/gl_debug.h>
 #else
-#   define CheckGlErrorLeaks()
+#	define CheckGlErrorLeaks()
 #endif

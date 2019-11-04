@@ -8,7 +8,6 @@ namespace igpu
 	class vulkan_semaphore
 	{
 	public:
-
 		struct config
 		{
 			VkDevice device = nullptr;
@@ -21,17 +20,15 @@ namespace igpu
 
 		VkSemaphore get() const;
 
-		static std::unique_ptr<vulkan_semaphore> make(const config&);
+		static std::unique_ptr< vulkan_semaphore > make( const config& );
 
 		~vulkan_semaphore();
 
 	private:
-
-		vulkan_semaphore(const config&, VkSemaphore);
+		vulkan_semaphore( const config&, VkSemaphore );
 
 
 	private:
-
 		const config _cfg;
 		const VkSemaphore _semaphore;
 	};

@@ -7,10 +7,11 @@
 
 namespace concurrent
 {
-	// Helper view into concrete types of lock pointers, does not extend ownership.
-	template < typename T > class lock_ptr
+	// Helper view into concrete types of lock pointers, does not extend
+	// ownership.
+	template < typename T >
+	class lock_ptr
 	{
-
 	public:
 		T* operator->() const
 		{
@@ -33,17 +34,19 @@ namespace concurrent
 		}
 
 	protected:
-		lock_ptr( T* ptr ) : _ptr { ptr }
+		lock_ptr( T* ptr )
+			: _ptr( ptr )
 		{}
 
-		lock_ptr( lock_ptr&& other ) : _ptr { other._ptr }
+		lock_ptr( lock_ptr&& other )
+			: _ptr( other._ptr )
 		{
 			other._ptr = nullptr;
 		}
 
 		lock_ptr& operator=( lock_ptr&& other )
 		{
-			return *new ( this ) lock_ptr { other };
+			return *new ( this ) lock_ptr( other );
 		}
 
 	private:

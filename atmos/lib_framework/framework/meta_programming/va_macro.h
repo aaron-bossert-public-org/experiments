@@ -2,108 +2,137 @@
 #pragma once
 
 #include "framework/utility/string_utils.h"
+
 #include <string_view>
 
-#define ENUM_SERIALIZABLE(ENUM, DEF, VAL, ...)\
-ENUM_SERIALIZABLE_(ENUM, uint32_t, DEF, VAL, __VA_ARGS__)
+#define ENUM_SERIALIZABLE( ENUM, DEF, VAL, ... ) \
+	ENUM_SERIALIZABLE_( ENUM, uint32_t, DEF, VAL, __VA_ARGS__ )
 
-#define ENUM_SERIALIZABLE_TYPE(ENUM, TYPE, DEF, VAL, ...)\
-ENUM_SERIALIZABLE_(ENUM, TYPE, DEF, VAL, __VA_ARGS__)
+#define ENUM_SERIALIZABLE_TYPE( ENUM, TYPE, DEF, VAL, ... ) \
+	ENUM_SERIALIZABLE_( ENUM, TYPE, DEF, VAL, __VA_ARGS__ )
 
-#define ENUM_FLAGS_SERIALIZABLE(ENUM, DEF, VAL, ...)\
-ENUM_FLAGS_SERIALIZABLE_(ENUM, uint32_t, DEF, VAL, __VA_ARGS__)
+#define ENUM_FLAGS_SERIALIZABLE( ENUM, DEF, VAL, ... ) \
+	ENUM_FLAGS_SERIALIZABLE_( ENUM, uint32_t, DEF, VAL, __VA_ARGS__ )
 
-#define ENUM_FLAGS_SERIALIZABLE_TYPE(ENUM, TYPE, DEF, VAL, ...)\
-ENUM_FLAGS_SERIALIZABLE_(ENUM, TYPE, DEF, VAL, __VA_ARGS__)
+#define ENUM_FLAGS_SERIALIZABLE_TYPE( ENUM, TYPE, DEF, VAL, ... ) \
+	ENUM_FLAGS_SERIALIZABLE_( ENUM, TYPE, DEF, VAL, __VA_ARGS__ )
 
-#define ENUM_SERIALIZABLE_(ENUM, TYPE, DEF, ...) \
-ENUM_CLASS_DECL (ENUM, TYPE, DEF, __VA_ARGS__) \
-ENUM_IS_VALID 	(ENUM, __VA_ARGS__) \
-ENUM_TO_STR		(ENUM, __VA_ARGS__) \
-ENUM_FROM_STR	(ENUM, DEF, __VA_ARGS__)
+#define ENUM_SERIALIZABLE_( ENUM, TYPE, DEF, ... )  \
+	ENUM_CLASS_DECL( ENUM, TYPE, DEF, __VA_ARGS__ ) \
+	ENUM_IS_VALID( ENUM, __VA_ARGS__ )              \
+	ENUM_TO_STR( ENUM, __VA_ARGS__ )                \
+	ENUM_FROM_STR( ENUM, DEF, __VA_ARGS__ )
 
-#define ENUM_FLAGS_SERIALIZABLE_(ENUM, TYPE, DEF, ...) \
-ENUM_DECL		(ENUM, TYPE, DEF, __VA_ARGS__) \
-ENUM_FLAG_OPS   (ENUM, TYPE) \
-ENUM_IS_VALID 	(ENUM, __VA_ARGS__) \
-ENUM_TO_STR		(ENUM, __VA_ARGS__) \
-ENUM_FROM_STR	(ENUM, DEF, __VA_ARGS__)
+#define ENUM_FLAGS_SERIALIZABLE_( ENUM, TYPE, DEF, ... ) \
+	ENUM_DECL( ENUM, TYPE, DEF, __VA_ARGS__ )            \
+	ENUM_FLAG_OPS( ENUM, TYPE )                          \
+	ENUM_IS_VALID( ENUM, __VA_ARGS__ )                   \
+	ENUM_TO_STR( ENUM, __VA_ARGS__ )                     \
+	ENUM_FROM_STR( ENUM, DEF, __VA_ARGS__ )
 
-#define ENUM_DECL_DEFAULT(DEF) DEF
+#define ENUM_DECL_DEFAULT( DEF ) DEF
 
-#define ENUM_CLASS_DECL(NAME, TYPE, DEF, ...)\
-	enum class NAME : TYPE {\
-		ENUM_LIST(__VA_ARGS__)\
-		DEFAULT = NAME::ENUM_DECL_##DEF\
+#define ENUM_CLASS_DECL( NAME, TYPE, DEF, ... )                  \
+	enum class NAME : TYPE                                       \
+	{                                                            \
+		ENUM_LIST( __VA_ARGS__ ) DEFAULT = NAME::ENUM_DECL_##DEF \
 	};
 
-#define ENUM_DECL(NAME, TYPE, DEF, ...)\
-	enum NAME : TYPE {\
-		ENUM_LIST(__VA_ARGS__)\
-		DEFAULT = NAME::ENUM_DECL_##DEF\
+#define ENUM_DECL( NAME, TYPE, DEF, ... )                        \
+	enum NAME : TYPE                                             \
+	{                                                            \
+		ENUM_LIST( __VA_ARGS__ ) DEFAULT = NAME::ENUM_DECL_##DEF \
 	};
 
 
-#define ENUM_FLAG_OPS(NAME, TYPE)\
-ENUM_FLAG_BINARY_OP(NAME, TYPE, &)\
-ENUM_FLAG_BINARY_OP(NAME, TYPE, |)\
-ENUM_FLAG_BINARY_OP(NAME, TYPE, ^)\
-inline NAME operator ~(NAME val){ return (NAME)(~(TYPE)val); }\
-
-#define ENUM_FLAG_BINARY_OP(NAME, TYPE, OP)\
-inline NAME operator OP(NAME lhs, NAME rhs){ return (NAME)((TYPE)lhs OP (TYPE)rhs); }\
-inline NAME& operator OP=(NAME& lhs, NAME rhs){ return (NAME&)(*(TYPE*)&lhs OP= (TYPE)rhs); }
-
-#define ENUM_LIST(...) VA_DISTRIBUTE_PRE(ENUM_LIST_, __VA_ARGS__)
-#define ENUM_LIST_(x, y) x = y,
-
-#define ENUM_IS_VALID(ENUM, ...)\
-	constexpr static const bool is_valid(ENUM s)\
-	{\
-		using enum_t = ENUM;\
-		switch (s)\
-		{\
-			ENUM_IS_VALID_CASE(__VA_ARGS__)\
-		default: return false;\
-		}\
+#define ENUM_FLAG_OPS( NAME, TYPE )      \
+	ENUM_FLAG_BINARY_OP( NAME, TYPE, & ) \
+	ENUM_FLAG_BINARY_OP( NAME, TYPE, | ) \
+	ENUM_FLAG_BINARY_OP( NAME, TYPE, ^)  \
+	inline NAME operator~( NAME val )    \
+	{                                    \
+		return ( NAME )( ~(TYPE)val );   \
 	}
 
-#define ENUM_IS_VALID_CASE(...) VA_DISTRIBUTE_PRE(case enum_t::ENUM_IS_VALID_CASE_UNPACK, __VA_ARGS__)
-#define ENUM_IS_VALID_CASE_UNPACK(NAME,INIT) NAME: return true;
-
-#define ENUM_TO_STR(ENUM, ...)\
-	constexpr static std::string_view to_string(ENUM s)\
-	{\
-		using enum_t = ENUM;\
-		switch (s)\
-		{\
-			ENUM_TO_STR_CASE(__VA_ARGS__)\
-		default: return #ENUM"::<UNRECOGNIZED_VALUE>";\
-		}\
+#define ENUM_FLAG_BINARY_OP( NAME, TYPE, OP )          \
+	inline NAME operator OP( NAME lhs, NAME rhs )      \
+	{                                                  \
+		return ( NAME )( (TYPE)lhs OP( TYPE ) rhs );   \
+	}                                                  \
+	inline NAME& operator OP =( NAME& lhs, NAME rhs )  \
+	{                                                  \
+		return (NAME&)( *(TYPE*)&lhs OP = (TYPE)rhs ); \
 	}
 
-#define ENUM_TO_STR_CASE(...) VA_DISTRIBUTE_PRE(case enum_t::ENUM_TO_STR_CASE_UNPACK, __VA_ARGS__)
-#define ENUM_TO_STR_CASE_UNPACK(NAME,INIT) NAME: return #NAME;
+#define ENUM_LIST( ... )   VA_DISTRIBUTE_PRE( ENUM_LIST_, __VA_ARGS__ )
+#define ENUM_LIST_( x, y ) x = y,
 
-#define ENUM_FROM_STR(ENUM, DEF, ...)\
-	constexpr static ENUM ENUM_from_string(const std::string_view s, ENUM fallback = ENUM::ENUM_DECL_##DEF)\
-	{\
-		using enum_t = ENUM;\
-		switch (string_utils::c_hash_32(s.data()))\
-		{\
-			ENUM_FROM_STR_CASE(__VA_ARGS__)\
-		default: return fallback;\
-		}\
+#define ENUM_IS_VALID( ENUM, ... )                 \
+	constexpr static const bool is_valid( ENUM s ) \
+	{                                              \
+		using enum_t = ENUM;                       \
+		switch ( s )                               \
+		{                                          \
+			ENUM_IS_VALID_CASE( __VA_ARGS__ )      \
+		default:                                   \
+			return false;                          \
+		}                                          \
 	}
 
-#define ENUM_FROM_STR_CASE(...) VA_DISTRIBUTE_PRE(case string_utils::c_hash_32 ENUM_FROM_STR_CASE_UNPACK, __VA_ARGS__)
-#define ENUM_FROM_STR_CASE_UNPACK(NAME,INIT) (#NAME): return enum_t::NAME;
+#define ENUM_IS_VALID_CASE( ... ) \
+	VA_DISTRIBUTE_PRE( case enum_t::ENUM_IS_VALID_CASE_UNPACK, __VA_ARGS__ )
+#define ENUM_IS_VALID_CASE_UNPACK( NAME, INIT ) \
+NAME:                                           \
+	return true;
+
+#define ENUM_TO_STR( ENUM, ... )                          \
+	constexpr static std::string_view to_string( ENUM s ) \
+	{                                                     \
+		using enum_t = ENUM;                              \
+		switch ( s )                                      \
+		{                                                 \
+			ENUM_TO_STR_CASE( __VA_ARGS__ )               \
+		default:                                          \
+			return #ENUM "::<UNRECOGNIZED_VALUE>";        \
+		}                                                 \
+	}
+
+#define ENUM_TO_STR_CASE( ... ) \
+	VA_DISTRIBUTE_PRE( case enum_t::ENUM_TO_STR_CASE_UNPACK, __VA_ARGS__ )
+#define ENUM_TO_STR_CASE_UNPACK( NAME, INIT ) \
+NAME:                                         \
+	return #NAME;
+
+#define ENUM_FROM_STR( ENUM, DEF, ... )                \
+	constexpr static ENUM ENUM_from_string(            \
+		const std::string_view s,                      \
+		ENUM fallback = ENUM::ENUM_DECL_##DEF )        \
+	{                                                  \
+		using enum_t = ENUM;                           \
+		switch ( string_utils::c_hash_32( s.data() ) ) \
+		{                                              \
+			ENUM_FROM_STR_CASE( __VA_ARGS__ )          \
+		default:                                       \
+			return fallback;                           \
+		}                                              \
+	}
+
+#define ENUM_FROM_STR_CASE( ... )                               \
+	VA_DISTRIBUTE_PRE(                                          \
+		case string_utils::c_hash_32 ENUM_FROM_STR_CASE_UNPACK, \
+		__VA_ARGS__ )
+#define ENUM_FROM_STR_CASE_UNPACK( NAME, INIT ) \
+	( #NAME )                                   \
+		: return enum_t::NAME;
 
 
-#define VA_MACRO(base, ...) VA_MACRO_IMPL(base, GET_ARG_COUNT(__VA_ARGS__), (__VA_ARGS__))
-#define VA_MACRO_IMPL(base, count, args) VA_MACRO_IMPL_(base, count, args)
-#define VA_MACRO_IMPL_(base, count, args) base##count##args
+#define VA_MACRO( base, ... ) \
+	VA_MACRO_IMPL( base, GET_ARG_COUNT( __VA_ARGS__ ), ( __VA_ARGS__ ) )
+#define VA_MACRO_IMPL( base, count, args )	VA_MACRO_IMPL_( base, count, args )
+#define VA_MACRO_IMPL_( base, count, args ) base##count##args
 
+
+// clang-format off
 #ifdef _MSC_VER // microsoft compilers
 
 #   define GET_ARG_COUNT(...)  INTERNAL_EXPAND_ARGS_PRIVATE(INTERNAL_ARGS_AUGMENTER(__VA_ARGS__))
@@ -381,3 +410,5 @@ inline NAME& operator OP=(NAME& lhs, NAME rhs){ return (NAME&)(*(TYPE*)&lhs OP= 
 #define VA_DISTRIBUTE_OP_ARGS_62( OP, ARGS, X, ... ) OP(INTERNAL_EXPAND ARGS, X) INTERNAL_EXPAND(VA_DISTRIBUTE_OP_ARGS_61( OP, ARGS, __VA_ARGS__ ))
 #define VA_DISTRIBUTE_OP_ARGS_63( OP, ARGS, X, ... ) OP(INTERNAL_EXPAND ARGS, X) INTERNAL_EXPAND(VA_DISTRIBUTE_OP_ARGS_62( OP, ARGS, __VA_ARGS__ ))
 #define VA_DISTRIBUTE_OP_ARGS_64( OP, ARGS, X, ... ) OP(INTERNAL_EXPAND ARGS, X) INTERNAL_EXPAND(VA_DISTRIBUTE_OP_ARGS_63( OP, ARGS, __VA_ARGS__ ))
+
+// clang-format on

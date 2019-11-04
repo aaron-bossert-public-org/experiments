@@ -10,7 +10,6 @@ namespace igpu
 	class buffer
 	{
 	public:
-
 		struct config
 		{
 			buffer_usage usage;
@@ -20,7 +19,7 @@ namespace igpu
 
 		virtual ~buffer() = default;
 
-		virtual void map(buffer_view_base*) = 0;
+		virtual void map( buffer_view_base* ) = 0;
 
 		virtual void unmap() = 0;
 	};

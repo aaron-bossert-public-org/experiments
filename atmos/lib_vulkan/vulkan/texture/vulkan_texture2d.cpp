@@ -1,14 +1,14 @@
 
 #include "vulkan/texture/vulkan_texture2d.h"
 
-#include "vulkan/texture/vulkan_staged_texture2d.h"
 #include "vulkan/sync/vulkan_synchronization.h"
+#include "vulkan/texture/vulkan_staged_texture2d.h"
 
 using namespace igpu;
 
-VkFormat igpu::to_vulkan_format(texture_format format)
+VkFormat igpu::to_vulkan_format( texture_format format )
 {
-	switch (format)
+	switch ( format )
 	{
 	case texture_format::INT_R8:
 		return VK_FORMAT_R8_UNORM;
@@ -69,22 +69,22 @@ VkFormat igpu::to_vulkan_format(texture_format format)
 		return VK_FORMAT_BC3_UNORM_BLOCK;
 	};
 
-	if (is_valid(format))
+	if ( is_valid( format ) )
 	{
-		LOG_CRITICAL("unhandled format: %s", to_string(format).data());
+		LOG_CRITICAL( "unhandled format: %s", to_string( format ).data() );
 	}
 	else
 	{
-		LOG_CRITICAL("invalid format: %d", format);
+		LOG_CRITICAL( "invalid format: %d", format );
 	}
 
 	return VK_FORMAT_UNDEFINED;
 }
 
-std::unique_ptr<vulkan_texture2d> vulkan_texture2d::make(
+std::unique_ptr< vulkan_texture2d > vulkan_texture2d::make(
 	const config& cfg,
-	const scoped_ptr < vulkan_synchronization >& synchronization)
+	const scoped_ptr< vulkan_synchronization >& synchronization )
 {
-	return std::unique_ptr<vulkan_texture2d>(
-		new vulkan_staged_texture2d(cfg, synchronization));
+	return std::unique_ptr< vulkan_texture2d >(
+		new vulkan_staged_texture2d( cfg, synchronization ) );
 }

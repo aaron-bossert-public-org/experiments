@@ -11,7 +11,6 @@ namespace igpu
 	class vulkan_command_buffer
 	{
 	public:
-
 		struct config
 		{
 			VkDevice device = nullptr;
@@ -21,18 +20,19 @@ namespace igpu
 
 		VkCommandBuffer get();
 
-		const std::shared_ptr<vulkan_fence> & fence() const;
+		const std::shared_ptr< vulkan_fence >& fence() const;
 
 		~vulkan_command_buffer();
 
-		vulkan_command_buffer(const config&);
+		vulkan_command_buffer( const config& );
 
-		vulkan_command_buffer(const config&, const std::shared_ptr < vulkan_fence > &);
+		vulkan_command_buffer(
+			const config&,
+			const std::shared_ptr< vulkan_fence >& );
 
 	private:
-
 		const config _cfg;
 		VkCommandBuffer _command_buffer = nullptr;
-		std::shared_ptr < vulkan_fence > _fence;
+		std::shared_ptr< vulkan_fence > _fence;
 	};
 }

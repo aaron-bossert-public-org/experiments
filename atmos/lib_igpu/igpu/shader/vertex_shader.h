@@ -6,7 +6,5 @@
 namespace igpu
 {
 	class vertex_shader : public shader
-	{
-	};
+	{};
 }
-

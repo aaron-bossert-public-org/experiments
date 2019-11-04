@@ -6,9 +6,8 @@
 
 using namespace igpu;
 
-std::unique_ptr<gl_compute_buffer> gl_compute_buffer::make(const config& cfg)
+std::unique_ptr< gl_compute_buffer > gl_compute_buffer::make(
+	const config& cfg )
 {
-	return gl_buffer_t< gl_compute_buffer > ::make(
-		cfg,
-		GL_UNIFORM_BUFFER);
+	return gl_buffer_t< gl_compute_buffer >::make( cfg, GL_UNIFORM_BUFFER );
 }

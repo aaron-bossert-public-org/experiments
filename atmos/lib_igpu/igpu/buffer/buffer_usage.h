@@ -11,9 +11,9 @@ namespace igpu
 {
 	ENUM_SERIALIZABLE(
 
-		buffer_usage, DEFAULT(STATIC),
+		buffer_usage,
+		DEFAULT( STATIC ),
 
-		(STATIC, 0),
-		(DYNAMIC, 1)
-	);
+		( STATIC, 0 ),
+		( DYNAMIC, 1 ) );
 }

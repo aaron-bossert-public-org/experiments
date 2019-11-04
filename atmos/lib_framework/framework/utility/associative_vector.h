@@ -2,6 +2,7 @@
 #pragma once
 
 #include "framework/utility/scoped_ptr.h"
+
 #include <memory>
 #include <unordered_map>
 
@@ -9,19 +10,20 @@
 // that are searchable by key.
 // adds an extra layer of indirection to key lookup.
 // also provides support for weak_ptr style references to elements.
-template < typename KEY, typename VAL > class associative_vector
+template < typename KEY, typename VAL >
+class associative_vector
 {
 public:
 	class element_ref;
 
-	using key_t				= KEY;
-	using val_t				= VAL;
-	using vec_t				= std::vector< val_t >;
-	using shared_element_t	= std::shared_ptr< element_ref >;
+	using key_t = KEY;
+	using val_t = VAL;
+	using vec_t = std::vector< val_t >;
+	using shared_element_t = std::shared_ptr< element_ref >;
 	using vec_element_ptr_t = std::vector< shared_element_t >;
 	using map_element_ptr_t = std::unordered_map< key_t, element_ref* >;
-	using iter_t			= typename map_element_ptr_t::iterator;
-	using emplaced_t		= std::pair< iter_t, bool >;
+	using iter_t = typename map_element_ptr_t::iterator;
+	using emplaced_t = std::pair< iter_t, bool >;
 
 	class element_ref
 	{
@@ -41,7 +43,8 @@ public:
 	};
 
 	/// map interface
-	template < typename... ARGS > emplaced_t emplace( const key_t& key, ARGS&&... args );
+	template < typename... ARGS >
+	emplaced_t emplace( const key_t& key, ARGS&&... args );
 
 	iter_t find( const key_t& key );
 
@@ -73,15 +76,16 @@ private:
 
 template < typename KEY, typename VAL >
 template < typename... ARGS >
-typename associative_vector< KEY, VAL >::emplaced_t associative_vector< KEY, VAL >::emplace( const KEY& key,
-																							 ARGS&&... args )
+typename associative_vector< KEY, VAL >::emplaced_t associative_vector<
+	KEY,
+	VAL >::emplace( const KEY& key, ARGS&&... args )
 {
 	auto found = _key_to_element_ptrs.find( key );
 	if ( found == _key_to_element_ptrs.end() )
 	{
-		auto ref_ptr	= new element_ref();
+		auto ref_ptr = new element_ref();
 		ref_ptr->_owner = this;
-		ref_ptr->_key	= key;
+		ref_ptr->_key = key;
 		ref_ptr->_index = _element_ptrs.size();
 
 		_element_ptrs.emplace_back( ref_ptr );
@@ -93,16 +97,21 @@ typename associative_vector< KEY, VAL >::emplaced_t associative_vector< KEY, VAL
 		return emplaced;
 	}
 
-	return { found, false };
+	return {
+		found,
+		false,
+	};
 }
 
 template < typename KEY, typename VAL >
-typename associative_vector< KEY, VAL >::iter_t associative_vector< KEY, VAL >::find( const KEY& key )
+typename associative_vector< KEY, VAL >::iter_t associative_vector< KEY, VAL >::
+	find( const KEY& key )
 {
 	return _key_to_element_ptrs.find( key );
 }
 
-template < typename KEY, typename VAL > bool associative_vector< KEY, VAL >::erase( const iter_t& iter )
+template < typename KEY, typename VAL >
+bool associative_vector< KEY, VAL >::erase( const iter_t& iter )
 {
 	if ( iter != _key_to_element_ptrs.end() )
 	{
@@ -110,11 +119,11 @@ template < typename KEY, typename VAL > bool associative_vector< KEY, VAL >::era
 
 		_key_to_element_ptrs.erase( iter );
 
-		_element_ptrs[ index ]		   = std::move( _element_ptrs.back() );
-		_element_ptrs[ index ]->_index = index;
+		_element_ptrs[index] = std::move( _element_ptrs.back() );
+		_element_ptrs[index]->_index = index;
 		_element_ptrs.pop_back();
 
-		_elements[ index ] = std::move( _elements.back() );
+		_elements[index] = std::move( _elements.back() );
 		_elements.pop_back();
 
 		return true;
@@ -125,37 +134,44 @@ template < typename KEY, typename VAL > bool associative_vector< KEY, VAL >::era
 	return false;
 }
 
-template < typename KEY, typename VAL > size_t associative_vector< KEY, VAL >::size() const
+template < typename KEY, typename VAL >
+size_t associative_vector< KEY, VAL >::size() const
 {
 	return _elements.size();
 }
 
-template < typename KEY, typename VAL > const VAL& associative_vector< KEY, VAL >::operator[]( size_t i ) const
+template < typename KEY, typename VAL >
+const VAL& associative_vector< KEY, VAL >::operator[]( size_t i ) const
 {
-	return _elements[ i ];
+	return _elements[i];
 }
 
-template < typename KEY, typename VAL > VAL& associative_vector< KEY, VAL >::operator[]( size_t i )
+template < typename KEY, typename VAL >
+VAL& associative_vector< KEY, VAL >::operator[]( size_t i )
 {
-	return _elements[ i ];
+	return _elements[i];
 }
 
-template < typename KEY, typename VAL > const VAL* associative_vector< KEY, VAL >::begin() const
+template < typename KEY, typename VAL >
+const VAL* associative_vector< KEY, VAL >::begin() const
 {
 	return _elements.data();
 }
 
-template < typename KEY, typename VAL > const VAL* associative_vector< KEY, VAL >::end() const
+template < typename KEY, typename VAL >
+const VAL* associative_vector< KEY, VAL >::end() const
 {
 	return _elements.data() + _elements.size();
 }
 
-template < typename KEY, typename VAL > VAL* associative_vector< KEY, VAL >::begin()
+template < typename KEY, typename VAL >
+VAL* associative_vector< KEY, VAL >::begin()
 {
 	return _elements.data();
 }
 
-template < typename KEY, typename VAL > VAL* associative_vector< KEY, VAL >::end()
+template < typename KEY, typename VAL >
+VAL* associative_vector< KEY, VAL >::end()
 {
 	return _elements.data() + _elements.size();
 }
@@ -168,7 +184,7 @@ template < typename KEY, typename VAL >
 
 	if ( index < _elements.size() )
 	{
-		return _element_ptrs[ index ];
+		return _element_ptrs[index];
 	}
 
 	ASSERT_CONTEXT( "address of val is not within the vector's active data" );
@@ -176,17 +192,20 @@ template < typename KEY, typename VAL >
 	return nullptr;
 }
 
-template < typename KEY, typename VAL > const KEY& associative_vector< KEY, VAL >::element_ref::key() const noexcept
+template < typename KEY, typename VAL >
+const KEY& associative_vector< KEY, VAL >::element_ref::key() const noexcept
 {
 	return _key;
 }
 
-template < typename KEY, typename VAL > const VAL& associative_vector< KEY, VAL >::element_ref::val() const noexcept
+template < typename KEY, typename VAL >
+const VAL& associative_vector< KEY, VAL >::element_ref::val() const noexcept
 {
-	return ( *_owner )[ _index ];
+	return ( *_owner )[_index];
 }
 
-template < typename KEY, typename VAL > VAL& associative_vector< KEY, VAL >::element_ref::val() noexcept
+template < typename KEY, typename VAL >
+VAL& associative_vector< KEY, VAL >::element_ref::val() noexcept
 {
-	return ( *_owner )[ _index ];
+	return ( *_owner )[_index];
 }

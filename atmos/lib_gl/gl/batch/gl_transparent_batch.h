@@ -3,8 +3,8 @@
 
 #include "igpu/batch/transparent_batch.h"
 
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 namespace igpu
 {
@@ -13,60 +13,56 @@ namespace igpu
 	class gl_transparent_batch : public transparent_batch
 	{
 	public:
-        
-        struct binding : batch_binding
-        {
+		struct binding : batch_binding
+		{
 			const config& cfg() const override;
 
-            binding(
+			binding(
 				gl_transparent_batch*,
 				const instance_batch::config&,
-				const utility::sphere& visibility_sphere);
+				const utility::sphere& visibility_sphere );
 
-            ~binding();
+			~binding();
 
-            void unbind() override;
-            
+			void unbind() override;
+
 		private:
-
 			const config _cfg;
-            gl_transparent_batch * _gl_transparent_batch;
-        };
-        
-        using sortable_t = std::pair<float, const binding*>;
-        using sorted_t = std::vector<sortable_t>;
-        using binding_t = std::shared_ptr<const binding>;
-        using bindings_t = std::unordered_map<const binding*, binding_t>;
-        
-		std::unique_ptr<batch_binding> make_binding(
-			const instance_batch::config&,
-			const utility::sphere& visibility_sphere) override;
+			gl_transparent_batch* _gl_transparent_batch;
+		};
 
-        void render(const utility::frustum&) override;
+		using sortable_t = std::pair< float, const binding* >;
+		using sorted_t = std::vector< sortable_t >;
+		using binding_t = std::shared_ptr< const binding >;
+		using bindings_t = std::unordered_map< const binding*, binding_t >;
+
+		std::unique_ptr< batch_binding > make_binding(
+			const instance_batch::config&,
+			const utility::sphere& visibility_sphere ) override;
+
+		void render( const utility::frustum& ) override;
 
 		bool empty() const override;
-        
-        ~gl_transparent_batch() override;
 
-        void unbind(const binding*);
+		~gl_transparent_batch() override;
 
-		static std::unique_ptr<gl_transparent_batch> make(
-			std::shared_ptr<batch_parameters> parameters, 
-			gl_context* gl_context);
+		void unbind( const binding* );
 
-    private:
-
-		gl_transparent_batch(
-			std::shared_ptr<batch_parameters> parameters, 
-			gl_context* gl_context);
+		static std::unique_ptr< gl_transparent_batch > make(
+			std::shared_ptr< batch_parameters > parameters,
+			gl_context* gl_context );
 
 	private:
-        
+		gl_transparent_batch(
+			std::shared_ptr< batch_parameters > parameters,
+			gl_context* gl_context );
+
+	private:
 		gl_context* _gl_context;
-        bindings_t _bindings;
-        
-        // retain set of sortable indices so that they do not need to
-        // be re allocated each frame.
-        sorted_t _sorted_visible_bindings;
+		bindings_t _bindings;
+
+		// retain set of sortable indices so that they do not need to
+		// be re allocated each frame.
+		sorted_t _sorted_visible_bindings;
 	};
 }

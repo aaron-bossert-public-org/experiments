@@ -11,7 +11,6 @@ namespace igpu
 	class window
 	{
 	public:
-
 		struct config
 		{
 			std::string name;
@@ -24,9 +23,8 @@ namespace igpu
 		virtual ~window() = default;
 
 	protected:
-
 		window() = default;
-		window(const window&) = delete;
-		window& operator= (const window&) = delete;
+		window( const window& ) = delete;
+		window& operator=( const window& ) = delete;
 	};
 }

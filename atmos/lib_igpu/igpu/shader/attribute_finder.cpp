@@ -9,24 +9,28 @@ using namespace igpu;
 
 bool attribute_finder::find_all_attributes(
 	const program& program,
-	const geometry& geometry)
-{	
-	static_assert(sizeof attribute_source == 1);
-	static_assert(sizeof attribute_finder == 16);
-	
+	const geometry& geometry )
+{
+	static_assert( sizeof attribute_source == 1 );
+	static_assert( sizeof attribute_finder == 16 );
+
 	bool success = true;
 	size_t buff = 0;
 	size_t attr = 0;
 	uint32_t attribute_count = 0;
 
-	for (size_t pram = 0; pram < program.vertex_parameter_count(); ++pram)
+	for ( size_t pram = 0; pram < program.vertex_parameter_count(); ++pram )
 	{
-		const igpu::vertex_parameter& shader_param = program.vertex_parameter(pram);
+		const igpu::vertex_parameter& shader_param =
+			program.vertex_parameter( pram );
 
 		// buff and attr should contain the indices we expect of the attribute
-		// usually the order of attributes in shaders is the same as the order of attributes in vertex buffers,
-		// making this exceptionally fast
-		if (!geometry.find_expected_vertex_param(shader_param.cfg().name, &buff, &attr))
+		// usually the order of attributes in shaders is the same as the order
+		// of attributes in vertex buffers, making this exceptionally fast
+		if ( !geometry.find_expected_vertex_param(
+				 shader_param.cfg().name,
+				 &buff,
+				 &attr ) )
 		{
 			LOG_CRITICAL(
 				"program (%s) "
@@ -34,20 +38,22 @@ bool attribute_finder::find_all_attributes(
 				"to contain attribute named (%s) but could not find it",
 				program.cfg().name.c_str(),
 				geometry.cfg().name.c_str(),
-				shader_param.cfg().name.c_str());
+				shader_param.cfg().name.c_str() );
 			success = false;
 			continue;
 		}
 
-		const vertex_buffer& vertex_buffer = geometry.vertex_buffer(buff);
-		const vertex_buffer::attribute& attribute = vertex_buffer.cfg().attributes[attr];
+		const vertex_buffer& vertex_buffer = geometry.vertex_buffer( buff );
+		const vertex_buffer::attribute& attribute =
+			vertex_buffer.cfg().attributes[attr];
 
 		_attribute_sources[attribute_count].buffer_index = buff;
 		_attribute_sources[attribute_count].attribute_index = attr;
 		++attribute_count;
-		++attr; // increase attr index of where we expect the next attribute to be
+		++attr;	   // increase attr index of where we expect the next attribute
+				   // to be
 
-		if (shader_param.cfg().components != attribute.parameter.components)
+		if ( shader_param.cfg().components != attribute.parameter.components )
 		{
 			LOG_CRITICAL(
 				"program (%s) "
@@ -58,8 +64,8 @@ bool attribute_finder::find_all_attributes(
 				program.cfg().name.c_str(),
 				geometry.cfg().name.c_str(),
 				shader_param.cfg().name.c_str(),
-				to_string(shader_param.cfg().components).data(),
-				to_string(attribute.parameter.components).data());
+				to_string( shader_param.cfg().components ).data(),
+				to_string( attribute.parameter.components ).data() );
 			success = false;
 		}
 	}
@@ -67,7 +73,8 @@ bool attribute_finder::find_all_attributes(
 	return success;
 }
 
-const std::array< attribute_finder::attribute_source, 16 >&  attribute_finder::attribute_sources() const
+const std::array< attribute_finder::attribute_source, 16 >& attribute_finder::
+	attribute_sources() const
 {
 	return _attribute_sources;
 }

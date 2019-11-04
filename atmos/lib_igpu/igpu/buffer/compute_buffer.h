@@ -8,6 +8,5 @@ namespace igpu
 	class compute_buffer : public buffer
 	{
 	public:
-
 	};
 }

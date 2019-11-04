@@ -1,15 +1,15 @@
 
 #pragma once
 
-#include "framework/utility/scoped_ptr.h"
+#include "vulkan/defines/vulkan_includes.h"
 
 #include "igpu/texture/texture2d.h"
 
-#include "vulkan/defines/vulkan_includes.h"
+#include "framework/utility/scoped_ptr.h"
 
 namespace igpu
 {
-	VkFormat to_vulkan_format(texture_format);
+	VkFormat to_vulkan_format( texture_format );
 
 	class vulkan_synchronization;
 	class vulkan_image;
@@ -17,7 +17,6 @@ namespace igpu
 	class vulkan_texture2d : public texture2d
 	{
 	public:
-
 		struct config : texture2d::config
 		{
 			struct vulkan
@@ -32,8 +31,8 @@ namespace igpu
 
 		virtual const vulkan_image& gpu_resource() const = 0;
 
-		static std::unique_ptr<vulkan_texture2d> make(
+		static std::unique_ptr< vulkan_texture2d > make(
 			const config&,
-			const scoped_ptr < vulkan_synchronization >&);
+			const scoped_ptr< vulkan_synchronization >& );
 	};
 }

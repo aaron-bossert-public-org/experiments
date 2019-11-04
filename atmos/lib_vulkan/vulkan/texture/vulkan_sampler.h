@@ -1,15 +1,14 @@
 
 #pragma once
 
-#include "igpu/texture/sampler.h"
-
-#include "igpu/texture/texture2d.h"
-
 #include "vulkan/defines/vulkan_includes.h"
+
+#include "igpu/texture/sampler.h"
+#include "igpu/texture/texture2d.h"
 
 namespace igpu
 {
-	VkSamplerAddressMode to_vulkan_address(sampler::address);
+	VkSamplerAddressMode to_vulkan_address( sampler::address );
 
-	VkFilter to_vulkan_filter(sampler::filter);
+	VkFilter to_vulkan_filter( sampler::filter );
 }

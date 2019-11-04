@@ -9,17 +9,15 @@ using namespace igpu;
 
 namespace igpu
 {
-	size_t bytes_per_index(index_format format)
+	size_t bytes_per_index( index_format format )
 	{
-		if (!is_valid(format))
+		if ( !is_valid( format ) )
 		{
-			LOG_CRITICAL(
-				"invalid format:%d",
-				(int)format);
+			LOG_CRITICAL( "invalid format:%d", (int)format );
 		}
 		else
 		{
-			switch (format)
+			switch ( format )
 			{
 			case index_format::UNSIGNED_INT:
 				return 4;
@@ -27,9 +25,7 @@ namespace igpu
 				return 2;
 			}
 
-			LOG_CRITICAL(
-				"unhandled format(%s)",
-				to_string(format).data());
+			LOG_CRITICAL( "unhandled format(%s)", to_string( format ).data() );
 		}
 
 		return 1;
