@@ -9,7 +9,7 @@
 // gl_shader::gl_shader( const config& cfg )
 //	: _cfg( cfg )
 //	, _buffer( {
-//		  cfg.usage,
+//		  cfg.mapping,
 //	  } )
 //	, _gl_shader( glCreateShader( cfg.type ) )
 //{}

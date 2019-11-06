@@ -19,7 +19,6 @@ namespace igpu
 		static std::unique_ptr< gl_index_buffer > make( const config& );
 
 	protected:
-
 		gl_index_buffer( unsigned gl_format );
 
 	private:
