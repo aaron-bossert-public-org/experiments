@@ -10,6 +10,12 @@
 #include <iostream>
 
 
+bool test_init_vulkan_context(
+	const scoped_ptr< igpu::vulkan_context >& context );
+bool test_loop_vulkan_context();
+void test_cleanup_vulkan_context();
+
+
 std::unique_ptr< dcs_test > dcs_test::make( const config& cfg )
 {
 	auto results = tests::run();
@@ -19,15 +25,14 @@ std::unique_ptr< dcs_test > dcs_test::make( const config& cfg )
 	}
 	else
 	{
-		std::cout << results.failures() << std::endl;
-		throw std::runtime_error( results.failures() );
+		LOG_CRITICAL( results.failures().c_str() );
 	}
 
 	if ( !cfg.context )
 	{
 		LOG_CRITICAL( "context is null" );
 	}
-	else
+	else if ( test_init_vulkan_context( cfg.context ) )
 	{
 		return std::unique_ptr< dcs_test >( new dcs_test( cfg ) );
 	}
@@ -35,16 +40,9 @@ std::unique_ptr< dcs_test > dcs_test::make( const config& cfg )
 	return nullptr;
 }
 
-void test_init_vulkan_context(
-	const scoped_ptr< igpu::vulkan_context >& context );
-bool test_loop_vulkan_context();
-void test_cleanup_vulkan_context();
-
 dcs_test::dcs_test( const config& cfg )
 	: _cfg( cfg )
-{
-	test_init_vulkan_context( _cfg.context );
-}
+{}
 
 dcs_test::~dcs_test()
 {

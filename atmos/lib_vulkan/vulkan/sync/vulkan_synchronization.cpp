@@ -727,10 +727,10 @@ vulkan_synchronization::vulkan_synchronization(
 #include <unordered_map>
 #include <vector>
 
-
 const std::string MODEL_PATH = "cooked_assets/models/chalet.obj";
 const std::string TEXTURE_PATH = "cooked_assets/textures/chalet.jpg";
-
+const std::string VERTEX_PATH = "cooked_assets/shaders/shader.vert.spv";
+const std::string FRAGMENT_PATH = "cooked_assets/shaders/shader.frag.spv";
 
 struct Vertex
 {
@@ -789,21 +789,22 @@ private:
 		std::unique_ptr< texture2d > texture;
 		VkSampler _texture_sampler;
 
-		void create()
+		[[nodiscard]] bool create()
 		{
-			texture2d::config texture_cfg = {};
-			texture_cfg.name = TEXTURE_PATH;
-			texture_cfg.usage = buffer_usage::STATIC;
-			texture_cfg.can_auto_generate_mips = true;
-			texture_cfg.sampler = {
+			texture2d::config texture_cfg = {
+				TEXTURE_PATH,
 				sampler::filter::LINEAR,
 				sampler::filter::LINEAR,
 				sampler::address::WRAP,
 				sampler::address::WRAP,
 			};
+			texture_cfg.can_auto_generate_mips = true;
 			texture = app->_context->make_texture( texture_cfg );
 
-			app->load_buffer( TEXTURE_PATH, texture.get() );
+			if ( false == app->load_buffer( TEXTURE_PATH, texture.get() ) )
+			{
+				return false;
+			}
 
 			// transition layout for use by graphics pipeline
 			auto* vulkan = (vulkan_texture2d*)texture.get();
@@ -816,6 +817,8 @@ private:
 					VK_ACCESS_SHADER_READ_BIT,
 					VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT |
 						VK_PIPELINE_STAGE_VERTEX_SHADER_BIT ) );
+
+			return true;
 		}
 
 		VkDescriptorImageInfo descriptor_info()
@@ -837,38 +840,55 @@ private:
 
 	struct new_geo_impl
 	{
-		void create(
+		[[nodiscard]] bool create(
 			const std::vector< Vertex >& vertices,
 			const std::vector< uint32_t >& indices )
 		{
 			auto index_buffer = std::shared_ptr< igpu::index_buffer >(
 				app->_context->make_index_buffer( {
-					buffer_usage::STATIC,
 					index_format::UNSIGNED_INT,
 				} ) );
 
-			auto vertex_buffer = std::shared_ptr<
-				igpu::vertex_buffer >( app->_context->make_vertex_buffer( {
-				IGPU_VERT_CFG_OF( buffer_usage::STATIC, Vertex, pos, col, uv0 ),
-			} ) );
+			auto vertex_buffer = std::shared_ptr< igpu::vertex_buffer >(
+				app->_context->make_vertex_buffer( {
+					IGPU_VERT_CFG_OF( Vertex, pos, col, uv0 ),
+				} ) );
 
+			buffer_view< char >
+				indices_view( sizeof( indices[0] ) * indices.size(), nullptr );
+
+			buffer_view< char > vertices_view(
+				sizeof( vertices[0] ) * vertices.size(),
+				nullptr );
+
+			index_buffer->map( &indices_view );
+			vertex_buffer->map( &vertices_view );
+
+			if ( !indices_view.data() )
 			{
-				buffer_view< char >
-					view( sizeof( indices[0] ) * indices.size(), nullptr );
-
-				index_buffer->map(&view );
-				memcpy( view.data(), indices.data(), view.byte_size());
-				index_buffer->unmap();
+				LOG_CRITICAL(
+					"failed to obtain mapped memory from index buffer" );
+				return false;
 			}
 
+			if ( !vertices_view.data() )
 			{
-				buffer_view< char >
-					view( sizeof( vertices[0] ) * vertices.size(), nullptr );
-
-				vertex_buffer->map( &view );
-				memcpy( view.data(), vertices.data(), view.size());
-				vertex_buffer->unmap();
+				LOG_CRITICAL(
+					"failed to obtain mapped memory from vertex buffer" );
+				return false;
 			}
+
+			memcpy(
+				indices_view.data(),
+				indices.data(),
+				indices_view.byte_size() );
+			memcpy(
+				vertices_view.data(),
+				vertices.data(),
+				vertices_view.byte_size() );
+
+			index_buffer->unmap();
+			vertex_buffer->unmap();
 
 			geometry = app->_context->make_geometry( {
 				MODEL_PATH,
@@ -878,6 +898,8 @@ private:
 					vertex_buffer,
 				},
 			} );
+
+			return (bool)geometry;
 		}
 
 		void draw( VkCommandBuffer command_buffer )
@@ -934,17 +956,22 @@ private:
 	{
 		HelloTriangleApplication* app;
 
-		void create()
+		[[nodiscard]] bool create()
 		{
 			_compute_buffers.resize( app->_swap_image_count );
 
 			for ( uint32_t i = 0; i < app->_swap_image_count; i++ )
 			{
-				_compute_buffers[i] = app->_context->make_compute_buffer( {
-					buffer_usage::DYNAMIC,
-				} );
+				_compute_buffers[i] = app->_context->make_compute_buffer( {} );
+
+				if ( !_compute_buffers[i] )
+				{
+					return false;
+				}
 				update( i );
 			}
+
+			return true;
 		}
 
 		VkDescriptorBufferInfo descriptor_info( size_t swap_index )
@@ -968,7 +995,7 @@ private:
 				std::chrono::duration< float, std::chrono::seconds::period >(
 					current_time - start_time )
 					.count();
-			
+
 			auto view = buffer_view<
 				UniformBufferObject >( sizeof( UniformBufferObject ), nullptr );
 			_compute_buffers[current_image]->map( &view );
@@ -1014,18 +1041,18 @@ private:
 	{
 		void create()
 		{
-			//auto vertex_file_data = app->_context->make_raw_buffer( {} ),
+			// auto vertex_file_data = app->_context->make_raw_buffer( {} ),
 			//	 auto fragment_file_data = app->_context->make_raw_buffer( {} ),
 
 			//	 app->load_buffer(
 			//		 "cooked_assets/shaders/shader.vert.spv",
 			//		 vertex_file_data );
 
-			//app->load_buffer(
+			// app->load_buffer(
 			//	"cooked_assets/shaders/shader.frag.spv",
 			//	fragment_file_data );
 
-			//program::config program_cfg = {
+			// program::config program_cfg = {
 			//	"test program",
 			//	app->_context->make_vertex_shader(
 			//		std::move( vertex_file_data ) ),
@@ -1033,18 +1060,18 @@ private:
 			//		std::move( fragment_file_data ) ),
 			//};
 
-			//program = app->_context->make_program( program_cfg );
-			//vulkan_program* vulkan =
+			// program = app->_context->make_program( program_cfg );
+			// vulkan_program* vulkan =
 			//	ASSERT_CAST( vulkan_program*, program.get() );
 
-			//shader_stages = {
+			// shader_stages = {
 			//	vulkan->cfg().vk.vertex->stage_info(),
 			//	vulkan->cfg().vk.fragment->stage_info(),
 			//};
 
-			//auto vulkan = ASSERT_CAST( vulkan_program*, program.get() );
-			//descriptor_set_layouts = vulkan->descriptor_set_layouts();
-			//pipeline_layout = vulkan->pipeline_layout();
+			// auto vulkan = ASSERT_CAST( vulkan_program*, program.get() );
+			// descriptor_set_layouts = vulkan->descriptor_set_layouts();
+			// pipeline_layout = vulkan->pipeline_layout();
 		}
 
 		const std::vector< VkPipelineShaderStageCreateInfo >& get_shader_stages()
@@ -1068,38 +1095,38 @@ private:
 
 	struct new_program_impl
 	{
-		void create()
+		[[nodiscard]] bool create()
 		{
-			program::config program_cfg = {
+			std::shared_ptr< vertex_shader > vertex =
+				app->_context->make_vertex_shader();
+			std::shared_ptr< fragment_shader > fragment =
+				app->_context->make_fragment_shader();
+
+
+			if ( !app->load_buffer( VERTEX_PATH, vertex.get() ) )
+			{
+				return false;
+			}
+
+			if ( !app->load_buffer( FRAGMENT_PATH, fragment.get() ) )
+			{
+				return false;
+			}
+			program = app->_context->make_program( {
 				"test program",
-				//app->_context->make_vertex_shader( {} ),
-				//app->_context->make_fragment_shader( {} ),
-			};
-
-			auto* vulkan_vertex =
-				ASSERT_CAST( vulkan_vertex_shader*, program_cfg.vertex.get() );
-			auto* vulkan_fragment = ASSERT_CAST(
-				vulkan_fragment_shader*,
-				program_cfg.fragment.get() );
-
-			//app->load_buffer(
-			//	"cooked_assets/shaders/shader.vert.spv",
-			//	vulkan_vertex );
-
-			//app->load_buffer(
-			//	"cooked_assets/shaders/shader.frag.spv",
-			//	vulkan_fragment );
-
-			program = app->_context->make_program( program_cfg );
-
-			shader_stages = {
-				vulkan_vertex->stage_info(),
-				vulkan_fragment->stage_info(),
-			};
+				vertex,
+				fragment,
+			} );
 
 			auto vulkan = ASSERT_CAST( vulkan_program*, program.get() );
 			descriptor_set_layouts = vulkan->descriptor_set_layouts();
 			pipeline_layout = vulkan->pipeline_layout();
+			shader_stages = {
+				vulkan->cfg().vk.vertex->stage_info(),
+				vulkan->cfg().vk.fragment->stage_info(),
+			};
+
+			return true;
 		}
 
 		const std::vector< VkPipelineShaderStageCreateInfo >& get_shader_stages()
@@ -1117,7 +1144,6 @@ private:
 		std::unique_ptr< program > program;
 		std::array< VkDescriptorSetLayout, 3 > descriptor_set_layouts;
 		VkPipelineLayout pipeline_layout;
-
 		std::vector< VkPipelineShaderStageCreateInfo > shader_stages;
 	};
 
@@ -1127,7 +1153,7 @@ private:
 
 	struct new_render_states_impl
 	{
-		void create()
+		[[nodiscard]] bool create()
 		{
 			uint8_t color_write_mask = 0b1111;
 
@@ -1157,6 +1183,8 @@ private:
 				s,
 				d,
 			} );
+
+			return (bool)_render_states;
 		}
 
 		void destroy()
@@ -1219,7 +1247,7 @@ public:
 		_context = nullptr;
 	}
 
-	void init_vulkan( const scoped_ptr< vulkan_context >& context )
+	bool init_vulkan( const scoped_ptr< vulkan_context >& context )
 	{
 		_context = context;
 
@@ -1231,20 +1259,21 @@ public:
 		_graphics_queue = _context->synchronization().cfg().graphics_queue;
 		_swap_image_count = _context->back_buffer().framebuffers().size();
 		_msaa_samples = _context->back_buffer().cfg().vk.sample_count;
-		create_command_pool();
 
-		uniform_impl.create();
-		texture_impl.create();
-		program_impl.create();
-		render_states_impl.create();
+		if ( uniform_impl.create() && texture_impl.create() &&
+			 program_impl.create() && render_states_impl.create() &&
+			 load_model() )
+		{
+			create_command_pool();
+			create_graphics_pipeline();
+			create_descriptor_pool();
+			create_descriptor_sets();
+			create_command_buffers();
+			create_sync_objects();
+			return true;
+		}
 
-		load_model();
-
-		create_graphics_pipeline();
-		create_descriptor_pool();
-		create_descriptor_sets();
-		create_command_buffers();
-		create_sync_objects();
+		return false;
 	}
 
 	bool main_loop()
@@ -1324,15 +1353,7 @@ private:
 		pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		pool_info.queueFamilyIndex = _graphics_queue->cfg().family_index;
 
-		if ( vkCreateCommandPool(
-				 _device,
-				 &pool_info,
-				 nullptr,
-				 &_command_pool ) != VK_SUCCESS )
-		{
-			throw std::runtime_error(
-				"failed to create graphics command pool!" );
-		}
+		vkCreateCommandPool( _device, &pool_info, nullptr, &_command_pool );
 	}
 
 	void create_graphics_pipeline()
@@ -1489,28 +1510,52 @@ private:
 			&_graphics_pipeline );
 	}
 
-	void load_buffer( const std::string& path, buffer* buffer )
+	[[nodiscard]] bool load_buffer(
+		const std::string& path,
+		buffer* out_buffer )
 	{
-		// load file with read head at the end
+		const char* err = nullptr;
 		std::ifstream ifs( path.c_str(), std::ios::binary | std::ios::ate );
+
 		if ( !ifs )
 		{
-			throw std::runtime_error( EXCEPTION_CONTEXT(
-				"failed to load texture %s",
-				TEXTURE_PATH.c_str() ) );
+			err = "failed to find file";
+		}
+		else if ( !out_buffer )
+		{
+			err = "out buffer is null";
+		}
+		else
+		{
+			buffer_view< char > view( ifs.tellg(), nullptr );
+			out_buffer->map( &view );
+
+			if ( nullptr == view.data() )
+			{
+				err =
+					"could not obtain mapped memory from buffer to copy file "
+					"into";
+			}
+			else
+			{
+				ifs.seekg( 0, std::ios::beg );
+				ifs.read( view.data(), view.byte_size() );
+
+				out_buffer->unmap();
+			}
 		}
 
-		buffer_view< char > view( ifs.tellg(), nullptr );
-		buffer->map( &view );
+		if ( err )
+		{
+			LOG_CRITICAL( "%s : file '%s'", err, path.c_str() );
+		}
 
-		ifs.seekg( 0, std::ios::beg );
-		ifs.read( view.data(), view.byte_size() );
 		ifs.close();
 
-		buffer->unmap();
+		return true;
 	}
 
-	void load_model()
+	[[nodiscard]] bool load_model()
 	{
 		std::vector< Vertex > vertices;
 		std::vector< uint32_t > indices;
@@ -1528,7 +1573,16 @@ private:
 				 &err,
 				 MODEL_PATH.c_str() ) )
 		{
-			throw std::runtime_error( warn + err );
+			if ( !warn.empty() )
+			{
+				LOG_WARNING( "tinyobj :", warn.c_str() );
+			}
+			if ( !err.empty() )
+			{
+				LOG_CRITICAL( "tinyobj :", err.c_str() );
+			}
+
+			return false;
 		}
 
 		std::unordered_map< Vertex, size_t > unique_vertices = {};
@@ -1568,7 +1622,7 @@ private:
 			}
 		}
 
-		geo_impl.create( vertices, indices );
+		return geo_impl.create( vertices, indices );
 	}
 
 	void create_descriptor_pool()
@@ -1587,14 +1641,11 @@ private:
 		pool_info.pPoolSizes = pool_sizes.data();
 		pool_info.maxSets = static_cast< uint32_t >( _swap_image_count );
 
-		if ( vkCreateDescriptorPool(
-				 _device,
-				 &pool_info,
-				 nullptr,
-				 &_descriptor_pool ) != VK_SUCCESS )
-		{
-			throw std::runtime_error( "failed to create descriptor pool!" );
-		}
+		vkCreateDescriptorPool(
+			_device,
+			&pool_info,
+			nullptr,
+			&_descriptor_pool );
 	}
 
 	void create_descriptor_sets()
@@ -1662,13 +1713,10 @@ private:
 		alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		alloc_info.commandBufferCount = (uint32_t)_command_buffers.size();
 
-		if ( vkAllocateCommandBuffers(
-				 _device,
-				 &alloc_info,
-				 _command_buffers.data() ) != VK_SUCCESS )
-		{
-			throw std::runtime_error( "failed to allocate command buffers!" );
-		}
+		vkAllocateCommandBuffers(
+			_device,
+			&alloc_info,
+			_command_buffers.data() );
 
 		for ( size_t i = 0; i < _command_buffers.size(); i++ )
 		{
@@ -1676,12 +1724,7 @@ private:
 			begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 			begin_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
-			if ( vkBeginCommandBuffer( _command_buffers[i], &begin_info ) !=
-				 VK_SUCCESS )
-			{
-				throw std::runtime_error(
-					"failed to begin recording command buffer!" );
-			}
+			vkBeginCommandBuffer( _command_buffers[i], &begin_info );
 
 			VkRenderPassBeginInfo render_pass_info = {};
 			render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -1733,10 +1776,7 @@ private:
 
 			vkCmdEndRenderPass( _command_buffers[i] );
 
-			if ( vkEndCommandBuffer( _command_buffers[i] ) != VK_SUCCESS )
-			{
-				throw std::runtime_error( "failed to record command buffer!" );
-			}
+			vkEndCommandBuffer( _command_buffers[i] );
 		}
 	}
 
@@ -1755,25 +1795,21 @@ private:
 
 		for ( size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++ )
 		{
-			if ( vkCreateSemaphore(
-					 _device,
-					 &semaphore_info,
-					 nullptr,
-					 &_image_available_semaphores[i] ) != VK_SUCCESS ||
-				 vkCreateSemaphore(
-					 _device,
-					 &semaphore_info,
-					 nullptr,
-					 &_render_finished_semaphores[i] ) != VK_SUCCESS ||
-				 vkCreateFence(
-					 _device,
-					 &fence_info,
-					 nullptr,
-					 &_in_flight_fences[i] ) != VK_SUCCESS )
-			{
-				throw std::runtime_error(
-					"failed to create synchronization objects for a frame!" );
-			}
+			vkCreateSemaphore(
+				_device,
+				&semaphore_info,
+				nullptr,
+				&_image_available_semaphores[i] );
+			vkCreateSemaphore(
+				_device,
+				&semaphore_info,
+				nullptr,
+				&_render_finished_semaphores[i] );
+			vkCreateFence(
+				_device,
+				&fence_info,
+				nullptr,
+				&_in_flight_fences[i] );
 		}
 	}
 
@@ -1835,15 +1871,11 @@ private:
 
 		vkResetFences( _device, 1, &_in_flight_fences[_current_frame] );
 
-		if ( vkQueueSubmit(
-				 _graphics_queue->get(),
-				 1,
-				 &submit_info,
-				 _in_flight_fences[_current_frame] ) != VK_SUCCESS )
-		{
-			throw std::runtime_error(
-				EXCEPTION_CONTEXT( "failed to submit draw command buffer!" ) );
-		}
+		vkQueueSubmit(
+			_graphics_queue->get(),
+			1,
+			&submit_info,
+			_in_flight_fences[_current_frame] );
 
 		VkPresentInfoKHR present_info = {};
 		present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -1884,9 +1916,9 @@ HelloTriangleApplication hello_triangle_application;
 
 void port_example();
 
-void test_init_vulkan_context( const scoped_ptr< vulkan_context >& context )
+bool test_init_vulkan_context( const scoped_ptr< vulkan_context >& context )
 {
-	hello_triangle_application.init_vulkan( context );
+	return hello_triangle_application.init_vulkan( context );
 }
 
 bool test_loop_vulkan_context()

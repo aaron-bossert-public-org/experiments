@@ -24,9 +24,10 @@ namespace
 		return image_view;
 	}
 
-	uint32_t find_memory_type(
+	bool find_memory_type(
 		const vulkan_image::config& cfg,
-		uint32_t type_filter )
+		uint32_t type_filter,
+		uint32_t* out_memory_type )
 	{
 		VkFlags property_flags = (VkFlags)cfg.memory_properties;
 		VkPhysicalDeviceMemoryProperties mem_properties;
@@ -40,12 +41,12 @@ namespace
 				 ( mem_properties.memoryTypes[i].propertyFlags &
 				   property_flags ) == property_flags )
 			{
-				return i;
+				*out_memory_type = i;
+				return true;
 			}
 		}
 
-		throw std::runtime_error(
-			EXCEPTION_CONTEXT( "failed to find suitable memory type!" ) );
+		return false;
 	}
 
 	VkMemoryAllocateInfo create_alloc_info(
@@ -58,8 +59,16 @@ namespace
 		VkMemoryAllocateInfo alloc_info = {};
 		alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		alloc_info.allocationSize = mem_requirements.size;
-		alloc_info.memoryTypeIndex =
-			find_memory_type( cfg, mem_requirements.memoryTypeBits );
+
+
+		if ( !find_memory_type(
+				 cfg,
+				 mem_requirements.memoryTypeBits,
+				 &alloc_info.memoryTypeIndex ) )
+		{
+			LOG_CRITICAL( "failed to find suitable memory type!" );
+			return {};
+		}
 
 		return alloc_info;
 	}

@@ -212,7 +212,7 @@ void vulkan_staged_texture2d::upload(
 		}
 	}
 
-	if ( _cfg.usage == buffer_usage::STATIC )
+	if ( _cfg.mapping == buffer_mapping::WRITE_COMBINE )
 	{
 		_staging_buffer.release();
 	}

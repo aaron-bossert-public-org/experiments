@@ -25,10 +25,7 @@ std::unique_ptr< vulkan_window > vulkan_window::make(
 		&surface );
 	if ( result != VK_SUCCESS )
 	{
-#if ATMOS_DEBUG
-		throw std::runtime_error(
-			EXCEPTION_CONTEXT( debug::stringify_result( result ).c_str() ) );
-#endif
+		LOG_CRITICAL( debug::stringify_result( result ).c_str() );
 	}
 
 	auto w = std::unique_ptr< vulkan_window >(
