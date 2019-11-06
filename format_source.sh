@@ -11,22 +11,30 @@ VULKAN_DIR="${DIR}/atmos/lib_vulkan/vulkan"
 DCS_TEST_DIR="${DIR}/dcs_test"
 DCS_RAW_ASSETS="${DIR}/dcs_test/raw_assets"
 
-while getopts ":hsa" opt; do
+DRY_RUN=false
+DO_CODE=false
+DO_SHADERS=false
+
+
+
+
+while getopts ":dcs" opt; do
   case ${opt} in
-    h )
-      echo "Usage:"
-      echo "    -h                 Display this help message."
-      echo "    -s                 run on source files."
-      echo "    -a                 run on asset files."
-      exit 0
+   	d )
+		DRY_RUN=true
+      ;;
+    c )
+		DO_CODE=true
       ;;
     s )
-		FOLDERS=( ${FOLDERS[@]} "${FRAMEWORK_DIR}" "${FRAMEWORK_TESTS_DIR}" "${GFX_DIR}" "${GL_DIR}" "${IGPU_DIR}" "${VULKAN_DIR}" "${DCS_TEST_DIR}" )
-      ;;
-    a )
-		FOLDERS=( ${FOLDERS[@]} "${DCS_RAW_ASSETS}" )
+		DO_SHADERS=true
       ;;
     \? )
+      echo "Usage:"
+      echo "    -h                 Display this help message."
+      echo "    -d                 dry run."
+      echo "    -c                 run on source files."
+      echo "    -s                 run on shaders."
       echo "Invalid Option: -$OPTARG" 1>&2
       exit 1
       ;;
@@ -37,25 +45,42 @@ shift $((OPTIND -1))
 
 
 task(){
-	echo "Formatting file: $file ..."
-	${DIR}/clang-format.exe -style=file -i $file
+	if [ "$DRY_RUN" = true ] ; then
+		${DIR}/clang-format.exe -style=file --dry-run $file
+	else
+		${DIR}/clang-format.exe -style=file -i $file &
+	fi
 }
 
 N=16
 (
-	for FORMAT_TARGET in ${FOLDERS[@]}
-	do
-# "${FRAMEWORK_DIR}" "${FRAMEWORK_TESTS_DIR}" "${GFX_DIR}" "${GL_DIR}" "${IGPU_DIR}" "${VULKAN_DIR}" "${DCS_TEST_DIR}" "${DCS_RAW_ASSETS}"
-	
-		echo "switch directory ${FORMAT_TARGET} ..."
-		cd $"${FORMAT_TARGET}"
-		for file in **/*.{cpp,h,vert,frag} 
-		do 
-		   ((i=i%N)); 
-		   ((i++==0)) && wait
-	   		task "$file" & 
+	if [ "$DO_CODE" = true ] ; then
+		for FORMAT_TARGET in "${FRAMEWORK_DIR}" "${FRAMEWORK_TESTS_DIR}" "${GFX_DIR}" "${GL_DIR}" "${IGPU_DIR}" "${VULKAN_DIR}" "${DCS_TEST_DIR}"
+		do
+		
+			echo "Format code in directory: ${FORMAT_TARGET} ..."
+			cd $"${FORMAT_TARGET}"
+			for file in **/*.{cpp,h} 
+			do 
+			   ((i=i%N)); 
+			   ((i++==0)) && wait
+		   		task "$file" 
+			done
 		done
+	fi
 
-		wait
-	done
+	if [ "$DO_SHADERS" = true ] ; then
+		for FORMAT_TARGET in "${DCS_RAW_ASSETS}"
+		do
+		
+			echo "Format shaders in directory: ${FORMAT_TARGET} ..."
+			cd $"${FORMAT_TARGET}"
+			for file in **/*.{vert,frag} 
+			do 
+			   ((i=i%N)); 
+			   ((i++==0)) && wait
+		   		task "$file"
+			done
+		done
+	fi
 )
