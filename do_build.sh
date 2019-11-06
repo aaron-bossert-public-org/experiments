@@ -8,6 +8,6 @@ echo "remove/make ${BUILD_DIR}"
 rm -rf ${BUILD_DIR}
 mkdir ${BUILD_DIR}
 
-cmake -G "Visual Studio 15 2017 Win64" -S ${DIR} -B ${BUILD_DIR}
+cmake -G "Visual Studio 16 2019" -S ${DIR} -B ${BUILD_DIR}
 
 start "${BUILD_DIR}/experiments.sln"
