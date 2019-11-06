@@ -24,8 +24,6 @@ namespace igpu
 
 		vector_buffer& operator=( std::vector< T >&& other ) noexcept;
 
-		const config& cfg() const override;
-
 		void map( buffer_view_base* out_mapped_view ) override;
 
 		void unmap() override;
@@ -35,9 +33,7 @@ namespace igpu
 		std::vector< T > release();
 
 	private:
-		config _cfg = {
-			buffer_usage::DYNAMIC,
-		};
+		buffer_mapping _mapping = buffer_mapping::PRESERVE;
 
 		buffer_view< T > _view_unmapped = {};
 		std::vector< T > _memory;
@@ -79,12 +75,6 @@ namespace igpu
 		_memory = std::move( other );
 		_view_unmapped = other.view_unmapped;
 		return *this;
-	}
-
-	template < typename T >
-	const buffer::config& vector_buffer< T >::cfg() const
-	{
-		return _cfg;
 	}
 
 	template < typename T >

@@ -145,14 +145,15 @@ std::unique_ptr< vulkan_program > vulkan_program::make( const config& cfg )
 	std::array< std::array< uint8_t, 64 >, 3 > indices = {};
 	memset( &indices, -1, sizeof indices );
 
-	for ( vulkan_shader* shader : {
-			  (vulkan_shader*)cfg.vk.vertex.get(),
-			  (vulkan_shader*)cfg.vk.fragment.get(),
-		  } )
+	vulkan_shader* raw_shaders[] = {
+		cfg.vk.vertex.get(),
+		cfg.vk.fragment.get(),
+	};
+
+	for ( vulkan_shader* shader : raw_shaders )
 	{
 		merge_parameters( *shader, &indices, &descriptor_set_parameter_cfgs );
 	}
-
 
 	// create shader parameters, descriptor set layouts, and pipeline layout
 	std::array< std::vector< vulkan_parameter >, 3 > descriptor_set_parameters;

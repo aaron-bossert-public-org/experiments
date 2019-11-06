@@ -16,6 +16,7 @@ namespace igpu
 	{
 	public:
 		virtual vulkan_buffer& gpu_resource() = 0;
+		const config& cfg() const override;
 
 		virtual const vulkan_buffer& gpu_resource() const = 0;
 
@@ -24,5 +25,11 @@ namespace igpu
 		static std::unique_ptr< vulkan_vertex_buffer > make(
 			const config&,
 			const scoped_ptr< vulkan_synchronization >& );
+
+	protected:
+		vulkan_vertex_buffer( const config& );
+
+	private:
+		const config _cfg;
 	};
 }

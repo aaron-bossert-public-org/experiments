@@ -22,8 +22,7 @@
 //	}
 //};
 //
-// vertex_format format = IGPU_VERT_CFG_OF(buffer_usage::DYNAMIC, Vertex, pos,
-// col, uv0);
+// vertex_format format = IGPU_VERT_CFG_OF(Vertex, pos, col, uv0);
 
 namespace igpu
 {
@@ -36,19 +35,20 @@ namespace igpu
 			uint32_t offset = 0;
 		};
 
-		struct config : buffer::config
+		struct config
 		{
 			uint32_t stride = 0;
 			std::vector< attribute > attributes;
+			buffer_mapping mapping = buffer_mapping::WRITE_COMBINE;
 		};
 
 		virtual const config& cfg() const = 0;
 	};
 }	 // namespace igpu
 
-#define IGPU_VERT_CFG_OF_( U, V, ... ) \
-	igpu::vertex_buffer::config(       \
-		{ U, sizeof( V ), { IGPU_VERT_CFG_OF_ATTRIBS( V, __VA_ARGS__ ) } } )
+#define IGPU_VERT_CFG_OF_( V, ... ) \
+	igpu::vertex_buffer::config(    \
+		{ sizeof( V ), { IGPU_VERT_CFG_OF_ATTRIBS( V, __VA_ARGS__ ) } } )
 
 #define IGPU_VERT_CFG_OF_ATTRIBS( V, ... )    \
 	VA_DISTRIBUTE_OP_ARGS_(                   \

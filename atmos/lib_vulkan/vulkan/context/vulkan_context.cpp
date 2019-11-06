@@ -713,42 +713,28 @@ std::unique_ptr< program > vulkan_context::make_program(
 		std::dynamic_pointer_cast< vulkan_fragment_shader, fragment_shader >(
 			base_cfg.fragment );
 
-	vulkan_program::config cfg = {
+	return vulkan_program::make( {
 		base_cfg,
 		_state.device,
 		vertex,
 		fragment,
-	};
-
-	return vulkan_program::make( cfg );
+	} );
 }
 
 std::unique_ptr< vertex_shader > vulkan_context::make_vertex_shader()
 {
-	/*vulkan_vertex_shader::config cfg = {
-		base_cfg,
-		{
-			this->_state.device,
-			VK_SHADER_STAGE_VERTEX_BIT,
-		},
-	};
-
-	return vulkan_vertex_shader::make( cfg );*/
-	return nullptr;
+	return vulkan_vertex_shader::make( {
+		this->_state.device,
+		VK_SHADER_STAGE_VERTEX_BIT,
+	} );
 }
 
 std::unique_ptr< fragment_shader > vulkan_context::make_fragment_shader()
 {
-	//vulkan_fragment_shader::config cfg = {
-	//	base_cfg,
-	//	{
-	//		this->_state.device,
-	//		VK_SHADER_STAGE_FRAGMENT_BIT,
-	//	},
-	//};
-
-	//return vulkan_fragment_shader::make( cfg );
-	return nullptr;
+	return vulkan_fragment_shader::make( {
+		this->_state.device,
+		VK_SHADER_STAGE_FRAGMENT_BIT,
+	} );
 }
 
 std::unique_ptr< render_states > vulkan_context::make_render_states(

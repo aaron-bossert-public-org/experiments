@@ -1,22 +1,23 @@
 
 #pragma once
 
-#include "igpu/buffer/buffer_usage.h"
+#include "framework/meta_programming/va_macro.h"
 
 class buffer_view_base;
 
 namespace igpu
 {
+	ENUM_SERIALIZABLE(
+
+		buffer_mapping,
+		DEFAULT( WRITE_COMBINE ),
+
+		( WRITE_COMBINE, 1 ),	 // contents are undefined each map(...)
+		( PRESERVE, 2 ) );		 // contents are preserved each map(...)
+
 	class buffer
 	{
 	public:
-		struct config
-		{
-			buffer_usage usage;
-		};
-
-		virtual const config& cfg() const = 0;
-
 		virtual ~buffer() = default;
 
 		virtual void map( buffer_view_base* ) = 0;

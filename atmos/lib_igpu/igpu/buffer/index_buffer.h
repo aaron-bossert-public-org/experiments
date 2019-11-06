@@ -9,9 +9,10 @@ namespace igpu
 	class index_buffer : public buffer
 	{
 	public:
-		struct config : buffer::config
+		struct config
 		{
 			index_format format;
+			buffer_mapping mapping = buffer_mapping::WRITE_COMBINE;
 		};
 
 		virtual const config& cfg() const = 0;

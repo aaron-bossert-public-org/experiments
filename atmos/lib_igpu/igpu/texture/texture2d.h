@@ -12,11 +12,12 @@ namespace igpu
 	class texture2d : public buffer
 	{
 	public:
-		struct config : buffer::config
+		struct config
 		{
 			std::string name;
 			sampler sampler;
 			bool can_auto_generate_mips = false;
+			buffer_mapping mapping = buffer_mapping::WRITE_COMBINE;
 		};
 
 		struct state

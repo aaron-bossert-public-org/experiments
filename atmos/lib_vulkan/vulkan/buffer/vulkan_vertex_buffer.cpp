@@ -16,13 +16,20 @@ std::unique_ptr< vulkan_vertex_buffer > vulkan_vertex_buffer::make(
 	else
 	{
 		return vulkan_staged_buffer_t< vulkan_vertex_buffer >::make(
-			cfg,
 			{
-				cfg.usage,
 				VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 				synchronization,
-			} );
+				cfg.mapping,
+			},
+			cfg );
 	}
 
 	return nullptr;
 }
+const vulkan_vertex_buffer::config& vulkan_vertex_buffer::cfg() const
+{
+	return _cfg;
+}
+vulkan_vertex_buffer::vulkan_vertex_buffer( const config& cfg )
+	: _cfg( cfg )
+{}

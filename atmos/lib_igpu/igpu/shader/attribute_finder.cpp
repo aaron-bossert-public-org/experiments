@@ -5,6 +5,8 @@
 #include "igpu/buffer/vertex_parameter.h"
 #include "igpu/shader/program.h"
 
+#include "framework/logging/log.h"
+
 using namespace igpu;
 
 bool attribute_finder::find_all_attributes(

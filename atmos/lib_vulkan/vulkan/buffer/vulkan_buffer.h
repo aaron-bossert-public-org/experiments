@@ -8,6 +8,7 @@
 #include "igpu/buffer/buffer.h"
 
 #include "framework/perf/metrics.h"
+#include "framework/utility/buffer_view.h"
 #include "framework/utility/scoped_ptr.h"
 
 
@@ -17,7 +18,7 @@ namespace igpu
 
 	class vulkan_buffer
 		: public buffer
-		, public vulkan_resource
+		, public vulkan_gpu_object
 	{
 	public:
 		struct config : buffer::config
@@ -32,6 +33,7 @@ namespace igpu
 				VkSharingMode sharing_mode = VK_SHARING_MODE_EXCLUSIVE;
 			};
 
+			buffer_mapping _mapping;
 			vulkan vk;
 		};
 

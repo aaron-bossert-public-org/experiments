@@ -18,7 +18,7 @@ vulkan_staged_texture2d::vulkan_staged_texture2d(
 	: _cfg( cfg )
 	, _synchronization( synchronization )
 	, _staging_buffer( {
-		  cfg.usage,
+		  cfg.mapping,
 		  synchronization->vma(),
 		  VMA_MEMORY_USAGE_CPU_ONLY,
 		  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
