@@ -70,7 +70,7 @@ public:
 	const T* data() const;
 
 	T* data();
-	
+
 	class iter;
 
 	iter begin();

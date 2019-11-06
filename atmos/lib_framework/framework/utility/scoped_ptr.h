@@ -100,7 +100,11 @@ public:
 		ASSERT_CONTEXT(
 			!_ptr || !expired(),
 			"target has expired while scope_ptr was referencing it" );
+#if ATMOS_DEBUG
 		return lock().get();
+#else
+		return _ptr;
+#endif
 	}
 
 	T& operator*() const noexcept
@@ -108,7 +112,11 @@ public:
 		ASSERT_CONTEXT(
 			!_ptr || !expired(),
 			"target has expired while scope_ptr was referencing it" );
-		return *lock();
+#if ATMOS_DEBUG
+		return *lock().get();
+#else
+		return *_ptr;
+#endif
 	}
 
 	~scoped_ptr() noexcept
