@@ -4,8 +4,6 @@
 #include "vulkan/buffer/vulkan_buffer.h"
 #include "vulkan/defines/vulkan_includes.h"
 
-#include "igpu/buffer/buffer_usage.h"
-
 #include "framework/utility/scoped_ptr.h"
 
 namespace igpu
@@ -18,16 +16,14 @@ namespace igpu
 	public:
 		struct config
 		{
-			buffer_usage usage;
 			VkBufferUsageFlagBits vk_usage_flags = (VkBufferUsageFlagBits)0;
 			scoped_ptr< vulkan_synchronization > synchronization;
+			buffer_mapping mapping;
 		};
 
 		vulkan_staged_buffer( const config& );
 
 		~vulkan_staged_buffer();
-
-		const config& cfg() const;
 
 		void map( buffer_view_base* );
 
@@ -56,11 +52,6 @@ namespace igpu
 
 		~vulkan_staged_buffer_t() override{};
 
-		const config& cfg() const override
-		{
-			return _cfg;
-		}
-
 		void map( buffer_view_base* out_buffer_view ) override
 		{
 			_vulkan_staged_buffer.map( out_buffer_view );
@@ -76,42 +67,37 @@ namespace igpu
 			return _vulkan_staged_buffer.byte_size();
 		}
 
-		vulkan_buffer& gpu_resource() override
+		vulkan_buffer& gpu_object() override
 		{
 			return _vulkan_staged_buffer.gpu_buffer();
 		}
 
-		const vulkan_buffer& gpu_resource() const override
+		const vulkan_buffer& gpu_object() const override
 		{
 			return _vulkan_staged_buffer.gpu_buffer();
 		}
 
 		template < typename... ARGS >
 		static std::unique_ptr< vulkan_staged_buffer_t > make(
-			const config& cfg,
-			const vulkan_staged_buffer::config& res_cfg,
+			const vulkan_staged_buffer::config& cfg,
 			const ARGS&... args )
 		{
-			if ( !is_valid( cfg.usage ) )
+			if ( !is_valid( cfg.mapping ) )
 			{
-				LOG_CRITICAL( "invalid usage:%d", (int)cfg.usage );
+				LOG_CRITICAL( "invalid mapping:%d", (int)cfg.mapping );
 			}
-			else if ( !is_valid( res_cfg.usage ) )
-			{
-				LOG_CRITICAL( "invalid res_cfg usage:%d", (int)cfg.usage );
-			}
-			else if ( 0 == res_cfg.vk_usage_flags )
+			else if ( 0 == cfg.vk_usage_flags )
 			{
 				LOG_CRITICAL( "vk_usage_flags is 0" );
 			}
-			else if ( !res_cfg.synchronization )
+			else if ( !cfg.synchronization )
 			{
 				LOG_CRITICAL( "buffer mediator has expired" );
 			}
 			else
 			{
 				return std::unique_ptr< vulkan_staged_buffer_t >(
-					new vulkan_staged_buffer_t( cfg, res_cfg, args... ) );
+					new vulkan_staged_buffer_t( cfg, args... ) );
 			}
 
 			return nullptr;
@@ -120,16 +106,13 @@ namespace igpu
 	private:
 		template < typename... ARGS >
 		vulkan_staged_buffer_t(
-			const config& cfg,
-			const vulkan_staged_buffer::config& res_config,
+			const vulkan_staged_buffer::config& cfg,
 			const ARGS&... args )
 			: T( args... )
-			, _cfg( cfg )
-			, _vulkan_staged_buffer( res_config )
+			, _vulkan_staged_buffer( cfg )
 		{}
 
 	private:
-		const config _cfg;
 		vulkan_staged_buffer _vulkan_staged_buffer;
 	};
 }

@@ -21,9 +21,9 @@ const vulkan_graphics_pipeline::config& vulkan_graphics_pipeline::cfg() const
 	return _cfg;
 }
 
-vulkan_resource::state& vulkan_graphics_pipeline::resource_state()
+vulkan_gpu_object::state& vulkan_graphics_pipeline::object_state()
 {
-	return _resource_state;
+	return _object_state;
 }
 
 std::unique_ptr< vulkan_graphics_pipeline > vulkan_graphics_pipeline::make(
@@ -35,7 +35,7 @@ std::unique_ptr< vulkan_graphics_pipeline > vulkan_graphics_pipeline::make(
 
 vulkan_graphics_pipeline::~vulkan_graphics_pipeline()
 {
-	vulkan_resource::wait_on_fences();
+	vulkan_gpu_object::wait_on_fences();
 }
 
 vulkan_graphics_pipeline::vulkan_graphics_pipeline( const config& cfg )

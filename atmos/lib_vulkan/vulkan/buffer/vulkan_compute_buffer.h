@@ -15,9 +15,9 @@ namespace igpu
 	class vulkan_compute_buffer : public compute_buffer
 	{
 	public:
-		virtual vulkan_buffer& gpu_resource() = 0;
+		virtual vulkan_buffer& gpu_object() = 0;
 
-		virtual const vulkan_buffer& gpu_resource() const = 0;
+		virtual const vulkan_buffer& gpu_object() const = 0;
 
 		virtual size_t byte_size() const = 0;
 

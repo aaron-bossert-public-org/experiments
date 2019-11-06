@@ -5,9 +5,8 @@
 
 namespace igpu
 {
-	class shader
+	class shader : public buffer
 	{
 	public:
-		virtual ~shader() = default;
 	};
 }

@@ -134,7 +134,7 @@ void vulkan_buffer::reserve( size_t byte_size )
 	}
 	else
 	{
-		vulkan_resource::wait_on_fences();
+		vulkan_gpu_object::wait_on_fences();
 
 		if ( _mapped_view.size() < byte_size )
 		{
@@ -168,7 +168,7 @@ void vulkan_buffer::reserve( size_t byte_size )
 }
 void vulkan_buffer::release()
 {
-	vulkan_resource::wait_on_fences();
+	vulkan_gpu_object::wait_on_fences();
 
 	if ( _buffer )
 	{
@@ -201,7 +201,7 @@ void vulkan_buffer::owner( const ownership& owner )
 	_owner = owner;
 }
 
-vulkan_resource::state& vulkan_buffer::resource_state()
+vulkan_gpu_object::state& vulkan_buffer::object_state()
 {
-	return _resource_state;
+	return _object_state;
 }

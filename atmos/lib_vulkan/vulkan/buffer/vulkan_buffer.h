@@ -3,7 +3,7 @@
 
 
 #include "vulkan/defines/vulkan_includes.h"
-#include "vulkan/sync/vulkan_resource.h"
+#include "vulkan/sync/vulkan_gpu_object.h"
 
 #include "igpu/buffer/buffer.h"
 
@@ -21,15 +21,14 @@ namespace igpu
 		, public vulkan_gpu_object
 	{
 	public:
-		struct config : buffer::config
+		struct config
 		{
 			struct vulkan
 			{
 				VmaAllocator vma = nullptr;
 				VmaMemoryUsage vma_usage;
 				VkBufferUsageFlagBits usage;
-				VmaAllocationCreateFlagBits vma_flags =
-					(VmaAllocationCreateFlagBits)0;
+				VmaAllocationCreateFlagBits vma_flags = {};
 				VkSharingMode sharing_mode = VK_SHARING_MODE_EXCLUSIVE;
 			};
 
@@ -47,7 +46,7 @@ namespace igpu
 
 		vulkan_buffer( const config& );
 
-		const config& cfg() const override;
+		const config& cfg() const;
 
 		void map( buffer_view_base* ) override;
 
@@ -65,7 +64,7 @@ namespace igpu
 
 		void owner( const ownership& );
 
-		vulkan_resource::state& resource_state() override;
+		vulkan_gpu_object::state& object_state() override;
 
 		~vulkan_buffer();
 
@@ -75,7 +74,7 @@ namespace igpu
 		buffer_view< char > _mapped_view = {};
 		VkBuffer _buffer = nullptr;
 		VmaAllocation _vma_allocation = nullptr;
-		vulkan_resource::state _resource_state;
+		vulkan_gpu_object::state _object_state;
 
 		ownership _owner = {};
 

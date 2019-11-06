@@ -2,7 +2,7 @@
 #pragma once
 
 #include "vulkan/defines/vulkan_includes.h"
-#include "vulkan/sync/vulkan_resource.h"
+#include "vulkan/sync/vulkan_gpu_object.h"
 
 #include "framework/perf/metrics.h"
 #include "framework/utility/scoped_ptr.h"
@@ -13,7 +13,7 @@ namespace igpu
 {
 	class vulkan_queue;
 
-	class vulkan_image : public vulkan_resource
+	class vulkan_image : public vulkan_gpu_object
 	{
 	public:
 		struct config
@@ -53,7 +53,7 @@ namespace igpu
 
 		~vulkan_image();
 
-		vulkan_resource::state& resource_state() override;
+		vulkan_gpu_object::state& object_state() override;
 
 		static bool validate( const config& );
 
@@ -66,7 +66,7 @@ namespace igpu
 		VkDeviceMemory _device_memory = nullptr;
 		VkImageView _image_view = nullptr;
 		VkSampler _sampler = nullptr;
-		vulkan_resource::state _resource_state;
+		vulkan_gpu_object::state _object_state;
 
 		perf::metric _gpu_mem_metric;
 

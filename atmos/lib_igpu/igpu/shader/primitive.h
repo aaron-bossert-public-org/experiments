@@ -3,6 +3,7 @@
 
 #include "igpu/shader/parameter.h"
 
+#include <memory>
 #include <string>
 #include <variant>
 

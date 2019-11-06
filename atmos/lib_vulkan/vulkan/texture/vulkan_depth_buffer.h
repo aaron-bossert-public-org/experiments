@@ -24,9 +24,9 @@ namespace igpu
 
 		virtual const config& cfg() const = 0;
 
-		virtual vulkan_image& gpu_resource() = 0;
+		virtual vulkan_image& gpu_object() = 0;
 
-		virtual const vulkan_image& gpu_resource() const = 0;
+		virtual const vulkan_image& gpu_object() const = 0;
 
 		static std::unique_ptr< vulkan_depth_buffer > make( const config& );
 	};

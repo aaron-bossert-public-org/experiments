@@ -119,13 +119,13 @@ const vulkan_staged_texture2d::state& vulkan_staged_texture2d::current_state()
 	return _current_state;
 }
 
-vulkan_image& vulkan_staged_texture2d::gpu_resource()
+vulkan_image& vulkan_staged_texture2d::gpu_object()
 {
 	ASSERT_CONTEXT( (bool)_gpu_image );
 	return *_gpu_image;
 }
 
-const vulkan_image& vulkan_staged_texture2d::gpu_resource() const
+const vulkan_image& vulkan_staged_texture2d::gpu_object() const
 {
 	ASSERT_CONTEXT( (bool)_gpu_image );
 	return *_gpu_image;

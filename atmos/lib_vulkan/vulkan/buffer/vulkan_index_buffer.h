@@ -30,16 +30,22 @@ namespace igpu
 
 		size_t element_count() const override;
 
-		virtual const config& cfg() const = 0;
+		const config& cfg() const override;
 
-		virtual vulkan_buffer& gpu_resource() = 0;
+		virtual vulkan_buffer& gpu_object() = 0;
 
-		virtual const vulkan_buffer& gpu_resource() const = 0;
+		virtual const vulkan_buffer& gpu_object() const = 0;
 
 		virtual size_t byte_size() const = 0;
 
 		static std::unique_ptr< vulkan_index_buffer > make(
 			const config&,
 			const scoped_ptr< vulkan_synchronization >& );
+
+	protected:
+		vulkan_index_buffer( const config& );
+
+	private:
+		const config _cfg;
 	};
 }

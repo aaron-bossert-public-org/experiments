@@ -157,10 +157,10 @@ std::unique_ptr< vulkan_geometry > vulkan_geometry::make( const config& cfg )
 
 void vulkan_geometry::add_fence( const std::shared_ptr< vulkan_fence >& fence )
 {
-	_index_buffer->gpu_resource().add_fence( fence );
+	_index_buffer->gpu_object().add_fence( fence );
 	for ( auto* vertex_buffer : _vertex_buffers )
 	{
-		vertex_buffer->gpu_resource().add_fence( fence );
+		vertex_buffer->gpu_object().add_fence( fence );
 	}
 }
 

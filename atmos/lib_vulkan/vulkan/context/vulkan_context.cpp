@@ -230,7 +230,7 @@ namespace
 					 nullptr,
 					 &debug_messenger ) != VK_SUCCESS )
 			{
-				throw std::runtime_error( "failed to set up debug messenger!" );
+				LOG_CRITICAL( "failed to set up debug messenger!" );
 			}
 		}
 
@@ -396,13 +396,14 @@ namespace
 
 		if ( physical_device_count == 0 )
 		{
-			throw std::runtime_error( EXCEPTION_CONTEXT(
-				"failed to find GPUs with Vulkan support" ) );
+			LOG_CRITICAL( "failed to find GPUs with Vulkan support" );
 		}
 
-		throw std::runtime_error(
-			EXCEPTION_CONTEXT( "failed to find GPU with queue families "
-							   "present/graphcis/compute/transfer" ) );
+		LOG_CRITICAL(
+			"failed to find GPU with queue families "
+			"present/graphcis/compute/transfer" );
+
+		return nullptr;
 	}
 
 	VkDevice create_device(
@@ -582,6 +583,11 @@ std::unique_ptr< vulkan_context > vulkan_context::make(
 	queue_families families;
 	VkPhysicalDevice physical_device =
 		pick_physical_device( &families, instance, window->surface() );
+	if ( !physical_device )
+	{
+		return nullptr;
+	}
+
 	VkDevice device = create_device( physical_device, families );
 	if ( !device )
 	{

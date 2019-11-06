@@ -267,14 +267,14 @@ VkDescriptorImageInfo vulkan_image::create_descriptor_info() const
 	return image_info;
 }
 
-vulkan_resource::state& vulkan_image::resource_state()
+vulkan_gpu_object::state& vulkan_image::object_state()
 {
-	return _resource_state;
+	return _object_state;
 }
 
 vulkan_image::~vulkan_image()
 {
-	vulkan_resource::wait_on_fences();
+	vulkan_gpu_object::wait_on_fences();
 
 	if ( _sampler )
 	{

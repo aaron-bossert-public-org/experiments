@@ -408,7 +408,7 @@ std::unique_ptr< vulkan_back_buffer > vulkan_back_buffer::make(
 		&surface_caps );
 
 	VkSurfaceFormatKHR surface_format = {
-		color->gpu_resource().cfg().image_info.format,
+		color->gpu_object().cfg().image_info.format,
 		cfg.vk.color_space,
 	};
 
@@ -431,15 +431,15 @@ std::unique_ptr< vulkan_back_buffer > vulkan_back_buffer::make(
 	auto image_views = create_image_views( cfg, images, surface_format.format );
 	VkRenderPass render_pass = create_render_pass(
 		cfg,
-		color->gpu_resource().cfg().image_info.format,
-		depth->gpu_resource().cfg().image_info.format );
+		color->gpu_object().cfg().image_info.format,
+		depth->gpu_object().cfg().image_info.format );
 
 	image_count = (uint32_t)images.size();
 
 	auto framebuffers = create_framebuffers(
 		cfg,
-		color->gpu_resource().image_view(),
-		depth->gpu_resource().image_view(),
+		color->gpu_object().image_view(),
+		depth->gpu_object().image_view(),
 		image_views,
 		render_pass );
 

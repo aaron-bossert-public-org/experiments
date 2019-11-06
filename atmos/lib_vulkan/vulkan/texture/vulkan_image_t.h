@@ -17,12 +17,12 @@ namespace igpu
 			return _cfg;
 		}
 
-		vulkan_image& gpu_resource() override
+		vulkan_image& gpu_object() override
 		{
 			return _gpu_image;
 		}
 
-		const vulkan_image& gpu_resource() const override
+		const vulkan_image& gpu_object() const override
 		{
 			return _gpu_image;
 		}

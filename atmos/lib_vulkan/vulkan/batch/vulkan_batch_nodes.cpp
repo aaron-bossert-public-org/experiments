@@ -118,7 +118,7 @@ void vulkan_geometry_batch::start_draw(
 	{
 		size_t active_buffer = _active_buffers[i];
 		vk_buffers[i] =
-			geometry.vertex_buffer( active_buffer ).gpu_resource().get();
+			geometry.vertex_buffer( active_buffer ).gpu_object().get();
 		vbuff_byte_offsets[i] =
 			i < geo_byte_offsets.size() ? geo_byte_offsets[i] : 0;
 	}
@@ -134,7 +134,7 @@ void vulkan_geometry_batch::start_draw(
 
 	vkCmdBindIndexBuffer(
 		draw_state.command_buffer,
-		index_buffer.gpu_resource().get(),
+		index_buffer.gpu_object().get(),
 		ibuff_byte_offset,
 		index_buffer.cfg().vk.format );
 }
@@ -158,9 +158,8 @@ vulkan_material_batch::~vulkan_material_batch()
 	auto fence = _root_batch->fence();
 	if ( fence )
 	{
-		item().visit( [&fence]( auto&& ptr ) {
-			ptr->gpu_resource().add_fence( fence );
-		} );
+		item().visit(
+			[&fence]( auto&& ptr ) { ptr->gpu_object().add_fence( fence ); } );
 	}
 }
 
@@ -300,8 +299,7 @@ vulkan_batch_binding::~vulkan_batch_binding()
 	auto fence = cfg.vk.root_batch->fence();
 	if ( fence )
 	{
-		cfg.vk.primitives->visit( [&fence]( auto&& ptr ) {
-			ptr->gpu_resource().add_fence( fence );
-		} );
+		cfg.vk.primitives->visit(
+			[&fence]( auto&& ptr ) { ptr->gpu_object().add_fence( fence ); } );
 	}
 }

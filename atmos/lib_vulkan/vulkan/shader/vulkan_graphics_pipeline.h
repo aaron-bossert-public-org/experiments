@@ -2,7 +2,7 @@
 #pragma once
 
 #include "vulkan/defines/vulkan_includes.h"
-#include "vulkan/sync/vulkan_resource.h"
+#include "vulkan/sync/vulkan_gpu_object.h"
 
 #include "igpu/shader/graphics_pipeline.h"
 
@@ -13,7 +13,7 @@ namespace igpu
 
 	class vulkan_graphics_pipeline
 		: public graphics_pipeline
-		, public vulkan_resource
+		, public vulkan_gpu_object
 	{
 	public:
 		struct config : graphics_pipeline::config
@@ -30,7 +30,7 @@ namespace igpu
 
 		const config& cfg() const override;
 
-		state& resource_state() override;
+		state& object_state() override;
 
 		static std::unique_ptr< vulkan_graphics_pipeline > make(
 			const config& );
@@ -42,6 +42,6 @@ namespace igpu
 
 	private:
 		const config _cfg;
-		state _resource_state;
+		state _object_state;
 	};
 }

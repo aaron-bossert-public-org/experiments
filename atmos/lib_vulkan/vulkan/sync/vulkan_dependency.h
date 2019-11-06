@@ -6,18 +6,11 @@
 
 namespace igpu
 {
-	class vulkan_fence;
-
-	class vulkan_resource
+	class vulkan_dependency
 	{
 	public:
-		void add_fence( const std::shared_ptr< vulkan_fence >& );
-
-		void wait_on_fences();
-
-		~vulkan_resource();
+		~vulkan_dependency();
 
 	private:
-		std::vector< std::shared_ptr< vulkan_fence > > _fences;
 	};
 }

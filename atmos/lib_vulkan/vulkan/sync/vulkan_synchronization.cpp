@@ -812,7 +812,7 @@ private:
 				app->_context->synchronization().cfg().graphics_queue,
 				[&]( VkCommandBuffer, VkImage ) {},
 				dependency(
-					vulkan->gpu_resource(),
+					vulkan->gpu_object(),
 					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 					VK_ACCESS_SHADER_READ_BIT,
 					VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT |
@@ -824,7 +824,7 @@ private:
 		VkDescriptorImageInfo descriptor_info()
 		{
 			auto* vulkan = (vulkan_texture2d*)texture.get();
-			vulkan_image& image = vulkan->gpu_resource();
+			vulkan_image& image = vulkan->gpu_object();
 			return image.create_descriptor_info();
 		}
 
@@ -916,12 +916,12 @@ private:
 			{
 				offsets[i] = 0;
 				vertex_buffers[i] =
-					vulkan->vertex_buffer( i ).gpu_resource().get();
+					vulkan->vertex_buffer( i ).gpu_object().get();
 			}
 
 			vkCmdBindIndexBuffer(
 				command_buffer,
-				index_buffer.gpu_resource().get(),
+				index_buffer.gpu_object().get(),
 				0,
 				index_buffer.cfg().vk.format );
 			vkCmdBindVertexBuffers(
@@ -978,7 +978,7 @@ private:
 		{
 			auto vulkan =
 				(vulkan_compute_buffer*)_compute_buffers[swap_index].get();
-			VkBuffer buffer = vulkan->gpu_resource().get();
+			VkBuffer buffer = vulkan->gpu_object().get();
 			VkDescriptorBufferInfo buffer_info = {};
 			buffer_info.buffer = buffer;
 			buffer_info.offset = 0;

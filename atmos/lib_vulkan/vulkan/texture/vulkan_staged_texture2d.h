@@ -31,9 +31,9 @@ namespace igpu
 
 		const texture2d::state& current_state() const override;
 
-		vulkan_image& gpu_resource() override;
+		vulkan_image& gpu_object() override;
 
-		const vulkan_image& gpu_resource() const override;
+		const vulkan_image& gpu_object() const override;
 
 	private:
 		void upload( const buffer_view< char >&, const texture2d::state& );
