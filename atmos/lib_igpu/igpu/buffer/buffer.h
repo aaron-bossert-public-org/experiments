@@ -9,11 +9,11 @@ namespace igpu
 {
 	ENUM_SERIALIZABLE(
 
-		buffer_mapping,
-		DEFAULT( WRITE_COMBINE ),
+		memory_type,
+		DEFAULT( WRITE_COMBINED ),
 
-		( WRITE_COMBINE, 1 ),	 // contents are undefined each map(...)
-		( PRESERVE, 2 ) );		 // contents are preserved each map(...)
+		( WRITE_COMBINED, 1 ),	  // contents are undefined each map(...)
+		( PRESERVED, 2 ) );		 // contents are preserved each map(...)
 
 	class buffer
 	{

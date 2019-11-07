@@ -17,7 +17,7 @@ namespace igpu
 			std::string name;
 			sampler sampler;
 			bool can_auto_generate_mips = false;
-			buffer_mapping mapping = buffer_mapping::WRITE_COMBINE;
+			memory_type memory = memory_type::WRITE_COMBINED;
 		};
 
 		struct state

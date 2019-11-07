@@ -9,17 +9,17 @@
 //
 // namespace
 //{
-//	GLenum gl_access( buffer_mapping mapping )
+//	GLenum gl_access( memory_type memory)
 //	{
-//		switch ( mapping )
+//		switch ( memory )
 //		{
-//		case buffer_mapping::WRITE_COMBINE:
+//		case memory_type::WRITE_COMBINED:
 //			return GL_MAP_WRITE_BIT;
-//		case buffer_mapping::PRESERVE:
+//		case memory_type::PRESERVED:
 //			return GL_MAP_WRITE_BIT | GL_MAP_READ_BIT;
 //		}
 //
-//		LOG_CRITICAL( "unhandled mapping:%s", to_string( mapping ).data() );
+//		LOG_CRITICAL( "unhandled memory type:%s", to_string( memory ).data() );
 //		return GL_FALSE;
 //	}
 //
@@ -93,9 +93,9 @@
 //	};
 //}
 //
-// gl_buffer::gl_buffer( buffer_mapping mapping, unsigned gl_target )
+// gl_buffer::gl_buffer( memory_type memory_type, unsigned gl_target )
 //	: _gpu_mem_metric( perf::category::GPU_MEM_USAGE, ::to_string( gl_target ) )
-//	, _mapping( mapping )
+//	, _memory_type( memory_type )
 //	, _gl_target( gl_target )
 //	, _gl_handle( gl_gen_buffer() )
 //	, _gl_usage( GL_DYNAMIC_DRAW )
@@ -120,7 +120,7 @@
 //	if ( _byte_capacity < out_buffer_view->byte_size() )
 //	{
 //		std::vector< char > temp;
-//		if ( 0 != _byte_capacity && _mapping == buffer_mapping::PRESERVE )
+//		if ( 0 != _byte_capacity && _memory_type == memory_type::PRESERVED )
 //		{
 //			char* temp_map = (char*)::map( _gl_target, _gl_access );
 //			temp.assign( temp_map, temp_map + _byte_size );

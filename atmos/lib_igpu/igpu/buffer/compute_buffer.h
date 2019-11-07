@@ -10,7 +10,7 @@ namespace igpu
 	public:
 		struct config
 		{
-			buffer_mapping mapping = buffer_mapping::WRITE_COMBINE;
+			memory_type memory = memory_type::WRITE_COMBINED;
 		};
 	};
 }

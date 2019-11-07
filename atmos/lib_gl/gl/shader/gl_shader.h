@@ -13,7 +13,6 @@
 //		struct config
 //		{
 //			GLenum type;
-//			buffer_mapping mapping;
 //		};
 //
 //		gl_shader( const config& );

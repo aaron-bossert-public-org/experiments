@@ -10,7 +10,7 @@
 //	class gl_buffer : public buffer
 //	{
 //	public:
-//		gl_buffer( buffer_mapping, unsigned gl_target );
+//		gl_buffer( memory_type, unsigned gl_target );
 //
 //		~gl_buffer();
 //
@@ -25,7 +25,7 @@
 //		size_t byte_size() const;
 //
 //	private:
-//		const buffer_mapping _mapping;
+//		const memory_type _memory_type;
 //		const unsigned _gl_target;
 //		const unsigned _gl_handle;
 //		const unsigned _gl_usage;

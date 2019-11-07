@@ -2,7 +2,7 @@
 #pragma once
 
 #include "igpu/buffer/buffer.h"
-#include "igpu/buffer/vertex_parameter.h"
+#include "igpu/shader/vertex_parameter.h"
 
 #include <vector>
 
@@ -39,7 +39,7 @@ namespace igpu
 		{
 			uint32_t stride = 0;
 			std::vector< attribute > attributes;
-			buffer_mapping mapping = buffer_mapping::WRITE_COMBINE;
+			memory_type memory = memory_type::WRITE_COMBINED;
 		};
 
 		virtual const config& cfg() const = 0;

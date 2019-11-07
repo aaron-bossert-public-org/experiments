@@ -18,7 +18,7 @@ namespace igpu
 		{
 			VkBufferUsageFlagBits vk_usage_flags = (VkBufferUsageFlagBits)0;
 			scoped_ptr< vulkan_synchronization > synchronization;
-			buffer_mapping mapping;
+			memory_type memory;
 		};
 
 		vulkan_staged_buffer( const config& );

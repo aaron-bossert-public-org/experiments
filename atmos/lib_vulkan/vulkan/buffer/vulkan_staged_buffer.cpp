@@ -11,13 +11,13 @@ using namespace igpu;
 vulkan_staged_buffer::vulkan_staged_buffer( const config& cfg )
 	: _cfg( cfg )
 	, _staging_buffer( {
-		  cfg.mapping,
+		  cfg.memory,
 		  cfg.synchronization->vma(),
 		  VMA_MEMORY_USAGE_CPU_ONLY,
 		  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 	  } )
 	, _gpu_buffer( {
-		  cfg.mapping,
+		  memory_type::WRITE_COMBINED,
 		  cfg.synchronization->vma(),
 		  VMA_MEMORY_USAGE_GPU_ONLY,
 		  VkBufferUsageFlagBits(
@@ -49,7 +49,7 @@ void vulkan_staged_buffer::unmap()
 		_cfg.synchronization
 			->copy( _staging_buffer, _gpu_buffer, (uint32_t)_byte_size );
 
-		if ( _cfg.mapping == buffer_mapping::WRITE_COMBINE )
+		if ( _cfg.memory == memory_type::WRITE_COMBINED )
 		{
 			_staging_buffer.release();
 		}

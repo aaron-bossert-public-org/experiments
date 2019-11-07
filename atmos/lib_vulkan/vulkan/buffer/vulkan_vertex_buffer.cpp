@@ -19,7 +19,7 @@ std::unique_ptr< vulkan_vertex_buffer > vulkan_vertex_buffer::make(
 			{
 				VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 				synchronization,
-				cfg.mapping,
+				cfg.memory,
 			},
 			cfg );
 	}

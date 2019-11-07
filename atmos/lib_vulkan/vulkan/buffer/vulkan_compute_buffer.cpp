@@ -10,8 +10,8 @@ std::unique_ptr< vulkan_compute_buffer > vulkan_compute_buffer::make(
 	const scoped_ptr< vulkan_synchronization >& synchronization )
 {
 	return vulkan_staged_buffer_t< vulkan_compute_buffer >::make( {
-		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 		synchronization,
-		cfg.mapping,
+		cfg.memory,
 	} );
 }

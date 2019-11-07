@@ -33,7 +33,6 @@ namespace igpu
 		std::vector< T > release();
 
 	private:
-		buffer_mapping _mapping = buffer_mapping::PRESERVE;
 
 		buffer_view< T > _view_unmapped = {};
 		std::vector< T > _memory;

@@ -51,7 +51,7 @@ std::unique_ptr< vulkan_index_buffer > vulkan_index_buffer::make(
 			{
 				VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 				synchronization,
-				cfg.mapping,
+				cfg.memory,
 			},
 			cfg );
 	}
