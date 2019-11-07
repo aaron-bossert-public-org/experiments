@@ -184,4 +184,4 @@ namespace concurrent
 			_read_idx %= 3;
 		}
 	}
-}	 // namespace concurrent
+}

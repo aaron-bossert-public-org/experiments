@@ -419,7 +419,7 @@ namespace
 
 		return buffer.get();
 	}
-}	 // namespace
+}
 
 const vulkan_synchronization::config& vulkan_synchronization::cfg() const
 {
@@ -757,7 +757,7 @@ namespace std
 				( hash< glm::vec2 >()( vertex.uv0 ) << 1 );
 		}
 	};
-}	 // namespace std
+}
 
 struct UniformBufferObject
 {

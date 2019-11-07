@@ -109,4 +109,4 @@ namespace concurrent
 
 		return read_lock_ptr{ ptr, std::move( lk ) };
 	}
-}	 // namespace concurrent
+}

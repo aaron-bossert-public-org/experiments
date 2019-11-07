@@ -136,4 +136,4 @@ namespace igpu
 		perf::metric _polycount_metric;
 #endif
 	};
-}	 // namespace igpu
+}

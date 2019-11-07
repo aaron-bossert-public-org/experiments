@@ -336,7 +336,7 @@ namespace
 			}
 		}
 	}
-}	 // namespace
+}
 
 void igpu::spirv::parse(
 	std::vector< uint32_t > spirv,

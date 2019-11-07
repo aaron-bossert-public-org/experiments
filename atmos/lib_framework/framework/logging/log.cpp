@@ -44,7 +44,7 @@ namespace
 			to_string( s ).data(),
 			func );
 	}
-}	 // namespace
+}
 
 void logging::log_context(
 	const char* file,

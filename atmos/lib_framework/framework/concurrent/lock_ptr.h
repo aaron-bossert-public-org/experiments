@@ -55,4 +55,4 @@ namespace concurrent
 		lock_ptr( const lock_ptr& ) = delete;
 		lock_ptr& operator=( const lock_ptr& ) = delete;
 	};
-}	 // namespace concurrent
+}

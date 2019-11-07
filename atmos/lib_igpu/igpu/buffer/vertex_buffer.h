@@ -44,7 +44,7 @@ namespace igpu
 
 		virtual const config& cfg() const = 0;
 	};
-}	 // namespace igpu
+}
 
 #define IGPU_VERT_CFG_OF_( V, ... ) \
 	igpu::vertex_buffer::config(    \
