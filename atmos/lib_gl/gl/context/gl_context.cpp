@@ -218,7 +218,7 @@
 //
 //// provided macro for testing if states have changed, and updating existing
 /// value
-//                          #define test_redundancy( mode, force ) \
+//                           #define test_redundancy( mode, force ) \
 //if( !force && !memcmp( _packed_states._gl_##mode, mode ) ) return;\
 //_packed_states._gl_##mode = mode;
 //

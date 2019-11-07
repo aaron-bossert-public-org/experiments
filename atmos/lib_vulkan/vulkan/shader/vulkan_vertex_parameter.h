@@ -3,6 +3,7 @@
 
 #include "vulkan/defines/vulkan_includes.h"
 
+#include "igpu/buffer/components.h"
 #include "igpu/shader/program_parsing.h"
 
 namespace igpu

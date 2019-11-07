@@ -27,6 +27,7 @@ namespace igpu
 			{
 				VmaAllocator vma = nullptr;
 				VmaMemoryUsage vma_usage;
+				VkBufferUsageFlagBits usage;
 				VmaAllocationCreateFlagBits vma_flags = {};
 				VkSharingMode sharing_mode = VK_SHARING_MODE_EXCLUSIVE;
 			};

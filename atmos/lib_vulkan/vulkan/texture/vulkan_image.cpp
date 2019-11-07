@@ -258,13 +258,9 @@ VkImageView vulkan_image::image_view() const
 	return _image_view;
 }
 
-VkDescriptorImageInfo vulkan_image::create_descriptor_info() const
+VkSampler vulkan_image::sampler() const
 {
-	VkDescriptorImageInfo image_info = {};
-	image_info.imageLayout = _owner.layout;
-	image_info.imageView = _image_view;
-	image_info.sampler = _sampler;
-	return image_info;
+	return _sampler;
 }
 
 vulkan_gpu_object::state& vulkan_image::object_state()

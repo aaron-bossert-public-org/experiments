@@ -7,7 +7,6 @@
 #include "vulkan/buffer/vulkan_compute_buffer.h"
 #include "vulkan/buffer/vulkan_index_buffer.h"
 #include "vulkan/context/vulkan_context.h"
-#include "vulkan/shader/vulkan_attribute_finder.h"
 #include "vulkan/sync/vulkan_fence.h"
 #include "vulkan/texture/vulkan_depth_texture2d.h"
 #include "vulkan/texture/vulkan_image.h"

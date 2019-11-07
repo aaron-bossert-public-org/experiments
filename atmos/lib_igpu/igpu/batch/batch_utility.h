@@ -81,7 +81,11 @@ namespace igpu
 					{
 						for ( auto& geometry_batch : material_batch )
 						{
-							geometry_batch.pre_draw( &draw_state );
+							if ( false ==
+								 geometry_batch.pre_draw( &draw_state ) )
+							{
+								continue;
+							}
 
 							for ( auto& instance_batch : geometry_batch )
 							{

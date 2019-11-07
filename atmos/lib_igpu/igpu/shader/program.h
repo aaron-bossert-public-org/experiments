@@ -8,8 +8,8 @@
 namespace igpu
 {
 	class fragment_shader;
-	class parameter;
-	class vertex_parameter;
+	class parameters;
+	class vertex_parameters;
 	class vertex_shader;
 
 	class program
@@ -26,13 +26,13 @@ namespace igpu
 
 		virtual ~program() = default;
 
-		virtual size_t parameter_count() const = 0;
+		virtual const parameters& batch_parameters() const = 0;
 
-		virtual const parameter& parameter( size_t ) const = 0;
+		virtual const parameters& material_parameters() const = 0;
 
-		virtual size_t vertex_parameter_count() const = 0;
+		virtual const parameters& instance_parameters() const = 0;
 
-		virtual const vertex_parameter& vertex_parameter( size_t ) const = 0;
+		virtual const igpu::vertex_parameters& vertex_parameters() const = 0;
 
 	protected:
 		program() = default;

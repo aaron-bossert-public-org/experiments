@@ -3,6 +3,7 @@
 
 #include "vulkan/batch/vulkan_instance_batch.h"
 #include "vulkan/buffer/vulkan_geometry.h"
+#include "vulkan/shader/vulkan_attribute_sequencer.h"
 #include "vulkan/shader/vulkan_graphics_pipeline.h"
 #include "vulkan/shader/vulkan_primitives.h"
 #include "vulkan/shader/vulkan_program.h"
@@ -56,7 +57,7 @@ namespace igpu
 		vulkan_geometry_batch( vulkan_geometry_batch&& ) = default;
 		vulkan_geometry_batch& operator=( vulkan_geometry_batch&& ) = default;
 
-		void pre_draw( vulkan_batch_draw_state* );
+		[[nodiscard]] bool pre_draw( vulkan_batch_draw_state* );
 
 		void start_draw( const vulkan_batch_draw_state& );
 
@@ -67,7 +68,8 @@ namespace igpu
 	private:
 		vulkan_root_batch* _root_batch;
 		uint32_t _active_buffer_count = 0;
-		std::array< uint8_t, 16 > _active_buffers = {};
+		std::array< uint8_t, attribute_indexer::MAX_PARAMETERS >
+			_active_buffers = {};
 	};
 
 	class vulkan_material_batch

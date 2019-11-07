@@ -705,14 +705,13 @@ vulkan_synchronization::vulkan_synchronization(
 #include "vulkan/buffer/vulkan_compute_buffer.h"
 #include "vulkan/buffer/vulkan_index_buffer.h"
 #include "vulkan/buffer/vulkan_vertex_buffer.h"
+#include "vulkan/shader/vulkan_attribute_sequencer.h"
 #include "vulkan/shader/vulkan_fragment_shader.h"
 #include "vulkan/shader/vulkan_program.h"
 #include "vulkan/shader/vulkan_render_states.h"
 #include "vulkan/shader/vulkan_vertex_shader.h"
 #include "vulkan/texture/vulkan_texture2d.h"
 #include "vulkan/window/vulkan_back_buffer.h"
-
-#include "igpu/shader/attribute_finder.h"
 
 #include <array>
 #include <chrono>
@@ -825,7 +824,12 @@ private:
 		{
 			auto* vulkan = (vulkan_texture2d*)texture.get();
 			vulkan_image& image = vulkan->gpu_object();
-			return image.create_descriptor_info();
+
+			VkDescriptorImageInfo info = {};
+			info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			info.imageView = image.image_view();
+			info.sampler = image.sampler();
+			return info;
 		}
 
 		void destroy()
@@ -907,7 +911,7 @@ private:
 			auto* vulkan = ASSERT_CAST( vulkan_geometry*, geometry.get() );
 			auto& index_buffer = vulkan->index_buffer();
 
-			const int MAX_BUFFERS = 16;
+			const int MAX_BUFFERS = attribute_indexer::MAX_PARAMETERS;
 			ASSERT_CONTEXT( vulkan->cfg().vertex_buffers.size() < MAX_BUFFERS )
 			VkBuffer vertex_buffers[MAX_BUFFERS];
 			VkDeviceSize offsets[MAX_BUFFERS];
@@ -1119,7 +1123,13 @@ private:
 			} );
 
 			auto vulkan = ASSERT_CAST( vulkan_program*, program.get() );
-			descriptor_set_layouts = vulkan->descriptor_set_layouts();
+			descriptor_set_layouts = {
+				vulkan->batch_parameters().cfg().vk.descriptor_set_layout,
+				vulkan->material_parameters().cfg().vk.descriptor_set_layout,
+				vulkan->instance_parameters().cfg().vk.descriptor_set_layout,
+			};
+
+
 			pipeline_layout = vulkan->pipeline_layout();
 			shader_stages = {
 				vulkan->cfg().vk.vertex->stage_info(),
@@ -1419,49 +1429,11 @@ private:
 		vulkan_geometry* geometry =
 			ASSERT_CAST( vulkan_geometry*, geo_impl.geometry.get() );
 
-		attribute_finder attr_finder;
-		if ( !attr_finder.find_all_attributes( *program, *geometry ) )
+
+		vulkan_attribute_sequencer sequencer;
+		if ( !sequencer.reset( program->vertex_parameters(), *geometry ) )
 		{
 			return;
-		}
-
-		uint32_t binding_description_count = 0;
-		std::array< VkVertexInputBindingDescription*, 16 > binding_table = {};
-		std::array< VkVertexInputBindingDescription, 16 > binding_descriptions =
-			{};
-		std::array< VkVertexInputAttributeDescription, 16 >
-			attribute_descriptions = {};
-
-		for ( uint32_t i = 0; i < program->vertex_parameter_count(); ++i )
-		{
-			const auto& param = program->vertex_parameter( i );
-			const auto& source = attr_finder.attribute_sources()[i];
-
-			const auto& buff_cfg =
-				geometry->cfg().vertex_buffers[source.buffer_index]->cfg();
-			const auto& attr_cfg = buff_cfg.attributes[source.attribute_index];
-			auto** pp_binding_description = &binding_table[source.buffer_index];
-
-			if ( !*pp_binding_description )
-			{
-				VkVertexInputBindingDescription* binding_description =
-					*pp_binding_description =
-						&binding_descriptions[binding_description_count];
-
-				binding_description->binding = binding_description_count;
-				binding_description->stride = sizeof( Vertex );
-				binding_description->inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-				binding_description_count++;
-			}
-
-			VkVertexInputAttributeDescription* attribute_description =
-				&attribute_descriptions[source.attribute_index];
-			attribute_description->binding =
-				( *pp_binding_description )->binding;
-			attribute_description->location = param.cfg().spv.location;
-			attribute_description->format = param.cfg().vk.format;
-			attribute_description->offset = attr_cfg.offset;
 		}
 
 		VkPipelineInputAssemblyStateCreateInfo input_assembly = {};
@@ -1475,14 +1447,14 @@ private:
 			VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
 		vertex_input_info.vertexBindingDescriptionCount =
-			binding_description_count;
+			sequencer.binding_description_count();
 		vertex_input_info.pVertexBindingDescriptions =
-			binding_descriptions.data();
+			sequencer.binding_descriptions();
 
 		vertex_input_info.vertexAttributeDescriptionCount =
-			(uint32_t)program->vertex_parameter_count();
+			(uint32_t)program->vertex_parameters().count();
 		vertex_input_info.pVertexAttributeDescriptions =
-			attribute_descriptions.data();
+			sequencer.attribute_descriptions();
 
 		VkGraphicsPipelineCreateInfo pipeline_info = {};
 		pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;

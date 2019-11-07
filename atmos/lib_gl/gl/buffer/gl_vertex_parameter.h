@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "igpu/buffer/vertex_parameter.h"
+#include "igpu/shader/vertex_parameter.h"
 
 namespace igpu
 {

@@ -80,7 +80,8 @@ void vulkan_shader_impl::unmap()
 		_parameters.clear();
 		_vertex_parameters.clear();
 
-		shader_stages stages = from_vulkan_stage_flags( _vk.stage_flags );
+		shader_stages stages =
+			from_vulkan_shader_stage_flags( _vk.stage_flags );
 
 		spirv::parse(
 			std::move( _memory ),

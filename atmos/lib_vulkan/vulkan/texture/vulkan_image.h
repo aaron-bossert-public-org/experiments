@@ -51,8 +51,6 @@ namespace igpu
 
 		VkSampler sampler() const;
 
-		VkDescriptorImageInfo create_descriptor_info() const;
-
 		~vulkan_image();
 
 		vulkan_gpu_object::state& object_state() override;

@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "vulkan/buffer/vulkan_vertex_parameter.h"
-#include "vulkan/shader/vulkan_parameter.h"
+#include "vulkan/shader/vulkan_parameters.h"
+#include "vulkan/shader/vulkan_vertex_parameters.h"
 
 #include "igpu/shader/program.h"
 
@@ -37,25 +37,13 @@ namespace igpu
 
 		const config& cfg() const override;
 
-		size_t parameter_count() const override;
+		const vulkan_parameters& batch_parameters() const override;
 
-		const vulkan_parameter& parameter( size_t ) const override;
+		const vulkan_parameters& material_parameters() const override;
 
-		size_t vertex_parameter_count() const override;
-		const vulkan_vertex_parameter& vertex_parameter(
-			size_t ) const override;
+		const vulkan_parameters& instance_parameters() const override;
 
-		size_t batch_parameter_count() const;
-		const vulkan_parameter& batch_parameter( size_t ) const;
-
-		size_t material_parameter_count() const;
-		const vulkan_parameter& material_parameter( size_t ) const;
-
-		size_t instance_parameter_count() const;
-		const vulkan_parameter& instance_parameter( size_t ) const;
-
-		const std::array< VkDescriptorSetLayout, 3 >& descriptor_set_layouts()
-			const;
+		const vulkan_vertex_parameters& vertex_parameters() const override;
 
 		VkPipelineLayout pipeline_layout() const;
 
@@ -66,24 +54,20 @@ namespace igpu
 	protected:
 		vulkan_program(
 			const config&,
-			std::vector< vulkan_parameter > batch_parameters,
-			std::vector< vulkan_parameter > material_parameters,
-			std::vector< vulkan_parameter > instance_parameters,
-			std::vector< vulkan_parameter* >,
-			std::vector< vulkan_vertex_parameter >,
-			std::array< VkDescriptorSetLayout, 3 > descriptor_set_layout,
-			VkPipelineLayout );
+			VkPipelineLayout,
+			std::vector< vulkan_vertex_parameter >&&,
+			vulkan_parameters::config&& batch_cfg,
+			vulkan_parameters::config&& material_cfg,
+			vulkan_parameters::config&& instance_cfg );
 
 	private:
 		const config _cfg;
-		const std::vector< vulkan_parameter > _batch_parameters;
-		const std::vector< vulkan_parameter > _material_parameters;
-		const std::vector< vulkan_parameter > _instance_parameters;
-		const std::vector< vulkan_parameter* > _parameters;
-		const std::vector< vulkan_vertex_parameter > _vertex_parameters;
 
-		std::array< VkDescriptorSetLayout, 3 > _descriptor_set_layouts;
 		VkPipelineLayout _pipeline_layout;
+		vulkan_vertex_parameters _vertex_parameters;
+		vulkan_parameters _batch_parameters;
+		vulkan_parameters _material_parameters;
+		vulkan_parameters _instance_parameters;
 
 		perf::metric _texture_switch_metric;
 		perf::metric _parameter_switch_metric;

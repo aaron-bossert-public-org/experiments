@@ -82,9 +82,9 @@ namespace igpu
 			const vulkan_staged_buffer::config& cfg,
 			const ARGS&... args )
 		{
-			if ( !is_valid( cfg.mapping ) )
+			if ( !is_valid( cfg.memory ) )
 			{
-				LOG_CRITICAL( "invalid mapping:%d", (int)cfg.mapping );
+				LOG_CRITICAL( "invalid memory:%d", (int)cfg.memory );
 			}
 			else if ( 0 == cfg.vk_usage_flags )
 			{

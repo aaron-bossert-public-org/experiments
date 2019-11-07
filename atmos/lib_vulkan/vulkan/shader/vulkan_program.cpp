@@ -75,61 +75,24 @@ const vulkan_program::config& vulkan_program::cfg() const
 	return _cfg;
 }
 
-size_t vulkan_program::parameter_count() const
+const vulkan_parameters& vulkan_program::batch_parameters() const
 {
-	return _parameters.size();
+	return _batch_parameters;
 }
 
-const vulkan_parameter& vulkan_program::parameter( size_t i ) const
+const vulkan_parameters& vulkan_program::material_parameters() const
 {
-	return *_parameters[i];
+	return _material_parameters;
 }
 
-size_t vulkan_program::batch_parameter_count() const
+const vulkan_parameters& vulkan_program::instance_parameters() const
 {
-	return _batch_parameters.size();
+	return _instance_parameters;
 }
 
-size_t vulkan_program::vertex_parameter_count() const
+const vulkan_vertex_parameters& vulkan_program::vertex_parameters() const
 {
-	return _vertex_parameters.size();
-}
-
-const vulkan_vertex_parameter& vulkan_program::vertex_parameter(
-	size_t i ) const
-{
-	return _vertex_parameters[i];
-}
-
-const vulkan_parameter& vulkan_program::batch_parameter( size_t i ) const
-{
-	return _batch_parameters[i];
-}
-
-size_t vulkan_program::material_parameter_count() const
-{
-	return _material_parameters.size();
-}
-
-const vulkan_parameter& vulkan_program::material_parameter( size_t i ) const
-{
-	return _material_parameters[i];
-}
-
-size_t vulkan_program::instance_parameter_count() const
-{
-	return _instance_parameters.size();
-}
-
-const vulkan_parameter& vulkan_program::instance_parameter( size_t i ) const
-{
-	return _instance_parameters[i];
-}
-
-const std::array< VkDescriptorSetLayout, 3 >& vulkan_program::
-	descriptor_set_layouts() const
-{
-	return _descriptor_set_layouts;
+	return _vertex_parameters;
 }
 
 VkPipelineLayout vulkan_program::pipeline_layout() const
@@ -156,39 +119,30 @@ std::unique_ptr< vulkan_program > vulkan_program::make( const config& cfg )
 	}
 
 	// create shader parameters, descriptor set layouts, and pipeline layout
-	std::array< std::vector< vulkan_parameter >, 3 > descriptor_set_parameters;
-	std::vector< vulkan_parameter* > parameters;
-	std::array< VkDescriptorSetLayout, 3 > descriptor_set_layouts = {};
+	std::array< vulkan_parameters::config, 3 > parameters_cfgs;
 	VkPipelineLayout pipeline_layout = nullptr;
 	std::vector< VkDescriptorSetLayoutBinding > scratch_bindings;
 
-
-	parameters.reserve(
-		descriptor_set_parameter_cfgs[0].size() +
-		descriptor_set_parameter_cfgs[1].size() +
-		descriptor_set_parameter_cfgs[2].size() );
-
-
 	for ( size_t d = 0; d < 3; ++d )
 	{
-		auto& set_parameters = descriptor_set_parameters[d];
+		auto& parameters_cfg = parameters_cfgs[d];
 		auto& configs = descriptor_set_parameter_cfgs[d];
-
-		set_parameters.reserve( configs.size() );
+		parameters_cfg.vk.device = cfg.vk.device;
+		parameters_cfg.vk.parameters.reserve( configs.size() );
 		scratch_bindings.resize( configs.size() );
 
 		for ( size_t i = 0; i < configs.size(); ++i )
 		{
 			spirv::parameter& parameter = configs[i];
-			set_parameters.emplace_back( parameter );
-			parameters.emplace_back( &set_parameters.back() );
+			parameters_cfg.vk.parameters.emplace_back( parameter );
 
 			auto& binding = scratch_bindings[i];
 			binding.binding = parameter.spv.binding;
 			binding.descriptorCount = (uint32_t)parameter.array_size;
 			binding.descriptorType = to_vulkan_type( parameter.type );
 			binding.pImmutableSamplers = nullptr;
-			binding.stageFlags = to_vulkan_stage_flags( parameter.spv.stages );
+			binding.stageFlags =
+				to_vulkan_shader_stage_flags( parameter.spv.stages );
 		}
 
 		VkDescriptorSetLayoutCreateInfo layout_info = {};
@@ -200,16 +154,21 @@ std::unique_ptr< vulkan_program > vulkan_program::make( const config& cfg )
 			cfg.vk.device,
 			&layout_info,
 			nullptr,
-			&descriptor_set_layouts[d] );
+			&parameters_cfg.vk.descriptor_set_layout );
 		scratch_bindings.clear();
 	}
 
 	// create pipeline layouts
 	VkPipelineLayoutCreateInfo pipeline_layout_info = {};
+	std::array< VkDescriptorSetLayout, 3 > descriptor_set_layouts = {
+		parameters_cfgs[0].vk.descriptor_set_layout,
+		parameters_cfgs[1].vk.descriptor_set_layout,
+		parameters_cfgs[2].vk.descriptor_set_layout,
+	};
+	ASSERT_CONTEXT( descriptor_set_layouts.size() == parameters_cfgs.size() );
 	pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipeline_layout_info.setLayoutCount =
-		(uint32_t)descriptor_set_layouts.size();
-	pipeline_layout_info.pSetLayouts = &descriptor_set_layouts[0];
+	pipeline_layout_info.setLayoutCount = (uint32_t)parameters_cfgs.size();
+	pipeline_layout_info.pSetLayouts = descriptor_set_layouts.data();
 
 	vkCreatePipelineLayout(
 		cfg.vk.device,
@@ -228,46 +187,31 @@ std::unique_ptr< vulkan_program > vulkan_program::make( const config& cfg )
 
 	return std::unique_ptr< vulkan_program >( new vulkan_program(
 		cfg,
-		std::move( descriptor_set_parameters[0] ),
-		std::move( descriptor_set_parameters[1] ),
-		std::move( descriptor_set_parameters[2] ),
-		std::move( parameters ),
+		pipeline_layout,
 		std::move( vertex_parameters ),
-		descriptor_set_layouts,
-		pipeline_layout ) );
+		std::move( parameters_cfgs[0] ),
+		std::move( parameters_cfgs[1] ),
+		std::move( parameters_cfgs[2] ) ) );
 }
 
 vulkan_program::~vulkan_program()
 {
 	vkDestroyPipelineLayout( _cfg.vk.device, _pipeline_layout, nullptr );
-
-	for ( VkDescriptorSetLayout descriptor_set_layout :
-		  _descriptor_set_layouts )
-	{
-		vkDestroyDescriptorSetLayout(
-			_cfg.vk.device,
-			descriptor_set_layout,
-			nullptr );
-	}
 }
 
 vulkan_program::vulkan_program(
 	const config& cfg,
-	std::vector< vulkan_parameter > batch_parameters,
-	std::vector< vulkan_parameter > material_parameters,
-	std::vector< vulkan_parameter > instance_parameters,
-	std::vector< vulkan_parameter* > parameters,
-	std::vector< vulkan_vertex_parameter > vertex_parameters,
-	std::array< VkDescriptorSetLayout, 3 > descriptor_set_layouts,
-	VkPipelineLayout pipeline_layout )
-	: _cfg( cfg )
-	, _batch_parameters( std::move( batch_parameters ) )
-	, _material_parameters( std::move( material_parameters ) )
-	, _instance_parameters( std::move( instance_parameters ) )
-	, _parameters( std::move( parameters ) )
-	, _vertex_parameters( std::move( vertex_parameters ) )
-	, _descriptor_set_layouts( descriptor_set_layouts )
+	VkPipelineLayout pipeline_layout,
+	std::vector< vulkan_vertex_parameter >&& vertex_parameters,
+	vulkan_parameters::config&& batch_cfg,
+	vulkan_parameters::config&& material_cfg,
+	vulkan_parameters::config&& instance_cfg )
+	: _cfg( std::move( cfg ) )
 	, _pipeline_layout( pipeline_layout )
+	, _vertex_parameters( std::move( vertex_parameters ) )
+	, _batch_parameters( std::move( batch_cfg ) )
+	, _material_parameters( std::move( material_cfg ) )
+	, _instance_parameters( std::move( instance_cfg ) )
 	, _texture_switch_metric(
 		  perf::category::SWITCH_TEXTURES,
 		  "Shader Texture Switches" )

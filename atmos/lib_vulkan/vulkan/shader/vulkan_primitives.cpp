@@ -2,6 +2,8 @@
 #include "vulkan/shader/vulkan_primitives.h"
 
 #include "vulkan/buffer/vulkan_compute_buffer.h"
+#include "vulkan/buffer/vulkan_index_buffer.h"
+#include "vulkan/buffer/vulkan_vertex_buffer.h"
 #include "vulkan/texture/vulkan_depth_texture2d.h"
 #include "vulkan/texture/vulkan_render_texture2d.h"
 #include "vulkan/texture/vulkan_texture2d.h"
@@ -16,6 +18,20 @@ namespace
 		return std::
 			dynamic_pointer_cast< vulkan_compute_buffer, compute_buffer >(
 				ptr );
+	}
+
+	vulkan_primitive::vulkan_variant_t to_vulkan_variant(
+		const std::shared_ptr< vertex_buffer > ptr )
+	{
+		return std::dynamic_pointer_cast< vulkan_vertex_buffer, vertex_buffer >(
+			ptr );
+	}
+
+	vulkan_primitive::vulkan_variant_t to_vulkan_variant(
+		const std::shared_ptr< index_buffer > ptr )
+	{
+		return std::dynamic_pointer_cast< vulkan_index_buffer, index_buffer >(
+			ptr );
 	}
 
 	vulkan_primitive::vulkan_variant_t to_vulkan_variant(
