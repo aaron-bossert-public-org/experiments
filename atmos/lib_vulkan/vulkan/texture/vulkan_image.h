@@ -49,6 +49,8 @@ namespace igpu
 
 		VkImageView image_view() const;
 
+		VkSampler sampler() const;
+
 		VkDescriptorImageInfo create_descriptor_info() const;
 
 		~vulkan_image();
