@@ -48,6 +48,7 @@
 //			parameter::config cfg;
 //			cfg.name.assign(name.begin(), name.end() - 1);
 //			cfg.type = parameter::type::COMPUTE_BUFFER;
+// add support for STORAGE_BUFFER
 //			parameters.push_back(gl_parameter(
 //				cfg,
 //				(size_t)-1,
@@ -313,7 +314,7 @@
 //		glBindBufferBase(GL_UNIFORM_BUFFER, parameter.binding_index(),
 // gl_handle);
 //	}
-//	case parameter::type::TEXTURE2D:
+//	case parameter::type::SAMPLER2D:
 //	{
 //		GLuint gl_handle = 0;
 //		const auto& variant = primitive.variant();
@@ -423,9 +424,9 @@
 //_instance_parameters[instance_parameter_index]; 		parameter::type type =
 // instance_parameter.cfg().type; 		switch (type)
 //		{
-//		case parameter::type::COMPUTE_BUFFER:
+//		case parameter::type::COMPIUTE_BUFFER:
 //			return default_compute;
-//		case parameter::type::TEXTURE2D:
+//		case parameter::type::SAMPLER2D:
 //			return default_texture;
 //		default:
 //			LOG_CRITICAL( "unhandled type %s, value will not be reset before the

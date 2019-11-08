@@ -10,9 +10,9 @@ namespace igpu
 		index_format,
 		DEFAULT( UNDEFINED ),
 
-		( UNSIGNED_SHORT, 0 ),
-		( UNSIGNED_INT, 1 ),
-		( UNDEFINED, (uint32_t)-1 ) );
+		( UNDEFINED, 0 ),
+		( UNSIGNED_SHORT, 1 ),
+		( UNSIGNED_INT, 2 ) );
 
 	size_t bytes_per_index( index_format );
 }

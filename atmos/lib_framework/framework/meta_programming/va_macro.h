@@ -17,7 +17,6 @@
 #define ENUM_FLAGS_SERIALIZABLE_TYPE( ENUM, TYPE, DEF, VAL, ... ) \
 	ENUM_FLAGS_SERIALIZABLE_( ENUM, TYPE, DEF, VAL, __VA_ARGS__ )
 
-// clang-format off
 #define ENUM_SERIALIZABLE_( ENUM, TYPE, DEF, ... )  \
 	ENUM_CLASS_DECL( ENUM, TYPE, DEF, __VA_ARGS__ ) \
 	ENUM_IS_VALID( ENUM, __VA_ARGS__ )              \
@@ -25,7 +24,7 @@
 	ENUM_FROM_STR( ENUM, DEF, __VA_ARGS__ )
 
 #define ENUM_FLAGS_SERIALIZABLE_( ENUM, TYPE, DEF, ... ) \
-	ENUM_DECL( ENUM, TYPE, DEF, __VA_ARGS__ )            \
+	ENUM_CLASS_DECL( ENUM, TYPE, DEF, __VA_ARGS__ )      \
 	ENUM_FLAG_OPS( ENUM, TYPE )                          \
 	ENUM_IS_VALID( ENUM, __VA_ARGS__ )                   \
 	ENUM_TO_STR( ENUM, __VA_ARGS__ )                     \
@@ -39,30 +38,51 @@
 		ENUM_LIST( __VA_ARGS__ ) DEFAULT = NAME::ENUM_DECL_##DEF \
 	};
 
-#define ENUM_DECL( NAME, TYPE, DEF, ... )                        \
-	enum NAME : TYPE                                             \
-	{                                                            \
-		ENUM_LIST( __VA_ARGS__ ) DEFAULT = NAME::ENUM_DECL_##DEF \
-	};
-
-
-#define ENUM_FLAG_OPS( NAME, TYPE )      \
-	ENUM_FLAG_BINARY_OP( NAME, TYPE, & ) \
-	ENUM_FLAG_BINARY_OP( NAME, TYPE, | ) \
-	ENUM_FLAG_BINARY_OP( NAME, TYPE, ^)  \
-	inline NAME operator~( NAME val )    \
-	{                                    \
-		return ( NAME )( ~(TYPE)val );   \
+#define ENUM_FLAG_OPS( NAME, TYPE )                 \
+	ENUM_FLAG_BINARY_OP( NAME, TYPE, &, = )         \
+	ENUM_FLAG_BINARY_OP( NAME, TYPE, |, = )         \
+	ENUM_FLAG_BINARY_OP( NAME, TYPE, ^, = )         \
+	constexpr bool operator!( NAME val )            \
+	{                                               \
+		return 0 == (TYPE)val;                      \
+	}                                               \
+	constexpr bool operator==( NAME val, size_t s ) \
+	{                                               \
+		return (TYPE)val == s;                      \
+	}                                               \
+	constexpr bool operator==( size_t s, NAME val ) \
+	{                                               \
+		return (TYPE)val == s;                      \
+	}                                               \
+	constexpr bool operator!=( NAME val, size_t s ) \
+	{                                               \
+		return (TYPE)val != s;                      \
+	}                                               \
+	constexpr bool operator!=( size_t s, NAME val ) \
+	{                                               \
+		return (TYPE)val != s;                      \
+	}                                               \
+	constexpr NAME operator~( NAME val )            \
+	{                                               \
+		return ( NAME )( ~(TYPE)val );              \
+	}                                               \
+	constexpr NAME operator<<( NAME val, size_t s ) \
+	{                                               \
+		return ( NAME )( (TYPE)val << s );          \
+	}                                               \
+	constexpr NAME operator>>( NAME val, size_t s ) \
+	{                                               \
+		return ( NAME )( (TYPE)val >> s );          \
 	}
 
-#define ENUM_FLAG_BINARY_OP( NAME, TYPE, OP )         \
-	inline NAME operator OP( NAME lhs, NAME rhs )     \
-	{                                                 \
-		return ( NAME )( (TYPE)lhs OP( TYPE ) rhs );  \
-	}                                                 \
-	inline NAME& operator OP=( NAME& lhs, NAME rhs )  \
-	{                                                 \
-		return (NAME&)( *(TYPE*)&lhs OP= (TYPE)rhs ); \
+#define ENUM_FLAG_BINARY_OP( NAME, TYPE, OP, E )          \
+	constexpr NAME operator OP( NAME lhs, NAME rhs )      \
+	{                                                     \
+		return ( NAME )( (TYPE)lhs OP( TYPE ) rhs );      \
+	}                                                     \
+	constexpr NAME& operator OP##E( NAME& lhs, NAME rhs ) \
+	{                                                     \
+		return (NAME&)( *(TYPE*)&lhs OP##E( TYPE ) rhs ); \
 	}
 
 #define ENUM_LIST( ... )   VA_DISTRIBUTE_PRE( ENUM_LIST_, __VA_ARGS__ )
@@ -105,7 +125,7 @@ NAME:                                         \
 	return #NAME;
 
 #define ENUM_FROM_STR( ENUM, DEF, ... )                \
-	constexpr static ENUM ENUM_from_string(            \
+	constexpr static ENUM ENUM##_from_string(          \
 		const std::string_view s,                      \
 		ENUM fallback = ENUM::ENUM_DECL_##DEF )        \
 	{                                                  \
@@ -122,10 +142,13 @@ NAME:                                         \
 	VA_DISTRIBUTE_PRE(                                          \
 		case string_utils::c_hash_32 ENUM_FROM_STR_CASE_UNPACK, \
 		__VA_ARGS__ )
+
 #define ENUM_FROM_STR_CASE_UNPACK( NAME, INIT ) \
 	( #NAME )                                   \
 		: return enum_t::NAME;
 
+
+// clang-format off
 
 #define VA_MACRO( base, ... ) \
 	VA_MACRO_IMPL( base, GET_ARG_COUNT( __VA_ARGS__ ), ( __VA_ARGS__ ) )

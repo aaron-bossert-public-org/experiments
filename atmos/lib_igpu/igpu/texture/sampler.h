@@ -13,17 +13,21 @@ namespace igpu
 		ENUM_SERIALIZABLE(
 
 			filter,
-			DEFAULT( NEAREST ),
-			( NEAREST, 0 ),
-			( LINEAR, 1 ) );
+			DEFAULT( UNDEFINED ),
+
+			( UNDEFINED, 0 ),
+			( NEAREST, 1 ),
+			( LINEAR, 2 ) );
 
 		ENUM_SERIALIZABLE(
 
 			address,
-			DEFAULT( CLAMP ),
-			( CLAMP, 0 ),
-			( WRAP, 1 ),
-			( MIRROR, 2 ) );
+			DEFAULT( UNDEFINED ),
+
+			( UNDEFINED, 0 ),
+			( CLAMP, 1 ),
+			( WRAP, 2 ),
+			( MIRROR, 3 ) );
 
 		filter min_filter;
 		filter mag_filter;

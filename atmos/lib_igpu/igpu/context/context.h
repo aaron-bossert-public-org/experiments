@@ -39,9 +39,8 @@ namespace igpu
 			std::string name;
 			batch_constraints::config batch_constraints;
 			material_constraints::config material_constraints;
-			color_format color_format;
-			depth_format depth_format;
-
+			color_format color_format = color_format::INT_R8G8B8A8;
+			depth_format depth_format = depth_format::D24S8;
 			bool enable_validation
 #if ATMOS_DEBUG
 				= true;

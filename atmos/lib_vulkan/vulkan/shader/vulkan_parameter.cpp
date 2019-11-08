@@ -7,10 +7,13 @@ VkDescriptorType igpu::to_vulkan_type( parameter::type type )
 {
 	switch ( type )
 	{
-	case parameter::type::COMPUTE_BUFFER:
+	case parameter::type::UNIFORM_BUFFER:
 		return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 
-	case parameter::type::TEXTURE2D:
+	case parameter::type::STORAGE_BUFFER:
+		return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+
+	case parameter::type::SAMPLER2D:
 		return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	};
 

@@ -10,13 +10,13 @@ namespace igpu
 	ENUM_SERIALIZABLE(
 
 		components,
-		DEFAULT( FLOAT4 ),
+		DEFAULT( UNDEFINED ),
 
-		( UNDEFINED, 0xFFFFFFFF ),
-		( FLOAT1, 0 ),
-		( FLOAT2, 1 ),
-		( FLOAT3, 2 ),
-		( FLOAT4, 3 ) );
+		( UNDEFINED, 0 ),
+		( FLOAT1, 1 ),
+		( FLOAT2, 2 ),
+		( FLOAT3, 3 ),
+		( FLOAT4, 4 ) );
 
 	constexpr components to_components( const glm::vec1& )
 	{

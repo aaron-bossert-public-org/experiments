@@ -16,13 +16,14 @@ parameter::type primitive::type() const
 				std::shared_ptr< igpu::T > > );                           \
 		return parameter::type::E;
 
-
 	switch ( cfg().value.index() )
 	{
-		CASE_STATIC_ASSERT( 0, compute_buffer, COMPUTE_BUFFER );
-		CASE_STATIC_ASSERT( 1, texture2d, TEXTURE2D );
-		CASE_STATIC_ASSERT( 2, depth_texture2d, TEXTURE2D );
-		CASE_STATIC_ASSERT( 3, render_texture2d, TEXTURE2D );
+		CASE_STATIC_ASSERT( 0, compute_buffer, UNIFORM_BUFFER );
+		CASE_STATIC_ASSERT( 1, vertex_buffer, STORAGE_BUFFER );
+		CASE_STATIC_ASSERT( 2, index_buffer, STORAGE_BUFFER );
+		CASE_STATIC_ASSERT( 3, texture2d, SAMPLER2D );
+		CASE_STATIC_ASSERT( 4, depth_texture2d, SAMPLER2D );
+		CASE_STATIC_ASSERT( 5, render_texture2d, SAMPLER2D );
 	};
 
 	return parameter::type::UNDEFINED;

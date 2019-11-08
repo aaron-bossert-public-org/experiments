@@ -17,7 +17,7 @@ namespace igpu
 			{
 				uint32_t descriptor_set = 0;
 				uint32_t binding = 0;
-				shader_stages stages = NONE;
+				shader_stages stages = shader_stages::NONE;
 			};
 
 			spirv spv;

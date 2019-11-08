@@ -10,8 +10,9 @@ namespace igpu
 	ENUM_SERIALIZABLE(
 
 		memory_type,
-		DEFAULT( WRITE_COMBINED ),
+		DEFAULT( UNDEFINED ),
 
+		( UNDEFINED, 0 ),		  // contents are undefined each map(...)
 		( WRITE_COMBINED, 1 ),	  // contents are undefined each map(...)
 		( PRESERVED, 2 ) );		  // contents are preserved each map(...)
 

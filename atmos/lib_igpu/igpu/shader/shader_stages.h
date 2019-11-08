@@ -5,10 +5,9 @@
 
 namespace igpu
 {
-	ENUM_FLAGS_SERIALIZABLE_TYPE(
+	ENUM_FLAGS_SERIALIZABLE(
 
 		shader_stages,
-		uint32_t,
 		DEFAULT( NONE ),
 
 		( NONE, 0 ),

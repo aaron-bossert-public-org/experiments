@@ -85,12 +85,13 @@ namespace logging
 	ENUM_SERIALIZABLE(
 
 		severity,
-		DEFAULT( CRITICAL ),
+		DEFAULT( UNDEFINED ),
 
-		( CRITICAL, 0 ),
-		( WARNING, 1 ),
-		( DEBUG, 2 ),
-		( VERBOSE, 3 ) );
+		( UNDEFINED, 0 ),
+		( CRITICAL, 1 ),
+		( WARNING, 2 ),
+		( DEBUG, 3 ),
+		( VERBOSE, 4 ) );
 
 	void log_context(
 		const char* file,

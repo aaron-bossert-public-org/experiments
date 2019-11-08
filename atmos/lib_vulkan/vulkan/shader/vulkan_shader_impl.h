@@ -1,15 +1,16 @@
 
 #pragma once
 
-#include <vulkan/buffer/vulkan_vertex_parameter.h>
-#include <vulkan/context/vulkan_context.h>
-#include <vulkan/defines/vulkan_includes.h>
-#include <vulkan/shader/vulkan_shader.h>
+#include "vulkan/context/vulkan_context.h"
+#include "vulkan/defines/vulkan_includes.h"
+#include "vulkan/shader/vulkan_shader.h"
+#include "vulkan/shader/vulkan_vertex_parameter.h"
 
-#include <igpu/buffer/buffer.h>
-#include <igpu/shader/program_parsing.h>
+#include "igpu/buffer/buffer.h"
+#include "igpu/shader/program_parsing.h"
 
-#include <framework/perf/metrics.h>
+#include "framework/perf/metrics.h"
+
 namespace igpu
 {
 	class vulkan_shader_impl : public buffer

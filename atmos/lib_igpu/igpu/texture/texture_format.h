@@ -10,6 +10,7 @@ namespace igpu
 		texture_format,
 		DEFAULT( UNDEFINED ),
 
+		( UNDEFINED, 0 ),
 		( INT_R8, 1 ),
 		( INT_R8G8, 2 ),
 		( INT_R8G8B8, 3 ),
@@ -27,7 +28,5 @@ namespace igpu
 		( ETC1_RGB, 15 ),
 		( DXT_1_RGBA, 16 ),
 		( DXT_3_RGBA, 17 ),
-		( DXT_5_RGBA, 18 ),
-
-		( UNDEFINED, 0 ) );
+		( DXT_5_RGBA, 18 ) );
 }

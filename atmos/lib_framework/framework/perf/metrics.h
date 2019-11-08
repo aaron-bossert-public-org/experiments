@@ -11,6 +11,8 @@ namespace perf
 
 		category,
 		DEFAULT( UNDEFINED ),
+
+		( UNDEFINED, 0 ),
 		( CLEAR_DRAW_TARGET, 1 ),
 		( DRAW_CALL_COUNT, 2 ),
 		( POLY_COUNT, 3 ),
@@ -23,9 +25,7 @@ namespace perf
 		( DISPATCH_TIME, 10 ),
 		( CPU_MEM_USAGE, 11 ),
 		( GPU_MEM_USAGE, 12 ),
-		( CPU_GPU_SHARED_MEM_USAGE, 13 ),
-
-		( UNDEFINED, 0 ) );
+		( CPU_GPU_SHARED_MEM_USAGE, 13 ) );
 
 	class metric
 	{

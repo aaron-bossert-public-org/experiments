@@ -538,8 +538,8 @@ namespace
 			&surface_caps );
 
 		sampler samp = {
-			sampler::filter::NEAREST,
-			sampler::filter::NEAREST,
+			sampler::filter::LINEAR,
+			sampler::filter::LINEAR,
 			sampler::address::MIRROR,
 			sampler::address::MIRROR,
 		};

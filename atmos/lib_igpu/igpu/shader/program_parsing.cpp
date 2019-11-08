@@ -1,4 +1,22 @@
 
+
+#include "framework/meta_programming/va_macro.h"
+
+#include <string>
+
+namespace igpu
+{
+	ENUM_FLAGS_SERIALIZABLE(
+
+		decorator_test,
+		DEFAULT( UNDEFINED ),
+
+		( UNDEFINED, 0xFFFFFFFF ),
+		( NONE, 0 ),
+		( READONLY, 1 << 0 ),
+		( WRITEONLY, 1 << 1 ) );
+
+}
 #include "igpu/shader/program_parsing.h"
 
 #include "framework/utility/buffer_view.h"
@@ -121,16 +139,20 @@ namespace
 	{
 		struct
 		{
-			igpu::parameter::type type;
+			const igpu::parameter::type type;
 			const spirv_cross::SmallVector< spirv_cross::Resource >*
-				p_resources = nullptr;
+				p_resources;
 		} resource_categories[] = {
 			{
-				igpu::parameter::type::COMPUTE_BUFFER,
+				igpu::parameter::type::STORAGE_BUFFER,
+				&resources.storage_buffers,
+			},
+			{
+				igpu::parameter::type::UNIFORM_BUFFER,
 				&resources.uniform_buffers,
 			},
 			{
-				igpu::parameter::type::TEXTURE2D,
+				igpu::parameter::type::SAMPLER2D,
 				&resources.sampled_images,
 			},
 		};
@@ -148,6 +170,27 @@ namespace
 				uint32_t binding =
 					compiler
 						.get_decoration( resource.id, spv::DecorationBinding );
+
+				igpu::decorator decorators = igpu::decorator::READABLE;
+
+				if ( resource_category.type ==
+					 igpu::parameter::type::STORAGE_BUFFER )
+				{
+					decorators =
+						igpu::decorator::READABLE | igpu::decorator::WRITABLE;
+
+					Bitset ssbo_mask =
+						compiler.get_buffer_block_flags( resource.id );
+
+					if ( ssbo_mask.get( spv::DecorationNonWritable ) )
+					{
+						decorators = decorators & ~igpu::decorator::WRITABLE;
+					}
+					if ( ssbo_mask.get( spv::DecorationNonReadable ) )
+					{
+						decorators = decorators & ~igpu::decorator::READABLE;
+					}
+				}
 
 				if ( spir_type.basetype != SPIRType::Struct &&
 					 spir_type.basetype != SPIRType::SampledImage )
@@ -185,6 +228,7 @@ namespace
 					out_parameters->push_back( {
 						resource.name,
 						resource_category.type,
+						decorators,
 						array_size,
 						descriptor_set,
 						binding,

@@ -8,9 +8,10 @@ namespace igpu
 	ENUM_SERIALIZABLE(
 
 		depth_format,
-		DEFAULT( D24S8 ),
+		DEFAULT( UNDEFINED ),
 
-		( D24S8, 0 ),
-		( D32, 1 ),
-		( D16, 2 ) );
+		( UNDEFINED, 0 ),
+		( D24S8, 1 ),
+		( D32, 2 ),
+		( D16, 3 ) );
 }
