@@ -11,12 +11,15 @@ bool vulkan_attribute_sequencer::reset(
 	const vulkan_vertex_parameters& vertex_parameters,
 	const vulkan_geometry& geometry )
 {
-	_binding_description_count = 0;
 	if ( !_indexer.reset( vertex_parameters, geometry ) )
 	{
 		memset( this, 0, sizeof *this );
 		return false;
 	}
+
+	_vertex_parameters = &vertex_parameters;
+	_geometry = &geometry;
+	_binding_description_count = 0;
 
 	std::array<
 		VkVertexInputBindingDescription*,

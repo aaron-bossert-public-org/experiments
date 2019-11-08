@@ -10,4 +10,9 @@ echo "COOKED_DIR: ${COOKED_DIR}"
 
 cd $RAW_DIR
 
-for i in *;do C:/VulkanSDK/1.1.106.0/Bin32/glslangValidator.exe -V "$i" -o "${COOKED_DIR}/${i}.spv";done
+for FILE in *;
+do
+	C:/VulkanSDK/1.1.106.0/Bin32/glslangValidator.exe -V "$FILE" -o "${COOKED_DIR}/${FILE}.spv"
+done
+
+./../../../format_source.sh -s;

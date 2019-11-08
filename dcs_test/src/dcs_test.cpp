@@ -1,9 +1,9 @@
 
-#include <igpu/context/context.h>
-#include <igpu/window/window.h>
+#include "igpu/context/context.h"
+#include "igpu/window/window.h"
 
-#include <framework/logging/log.h>
-#include <framework/utility/scoped_ptr.h>
+#include "framework/logging/log.h"
+#include "framework/utility/scoped_ptr.h"
 
 #include <dcs_test/include/dcs_test.h>
 #include <framework_tests/main/tests.h>

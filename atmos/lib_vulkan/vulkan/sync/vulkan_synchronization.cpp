@@ -707,6 +707,7 @@ vulkan_synchronization::vulkan_synchronization(
 #include "vulkan/buffer/vulkan_vertex_buffer.h"
 #include "vulkan/shader/vulkan_attribute_sequencer.h"
 #include "vulkan/shader/vulkan_fragment_shader.h"
+#include "vulkan/shader/vulkan_primitive_sequencer.h"
 #include "vulkan/shader/vulkan_program.h"
 #include "vulkan/shader/vulkan_render_states.h"
 #include "vulkan/shader/vulkan_vertex_shader.h"
@@ -844,26 +845,38 @@ private:
 
 	struct new_geo_impl
 	{
-		[[nodiscard]] bool create(
+		[[nodiscard]] bool create()
+		{
+			index_buffer = app->_context->make_index_buffer( {
+				index_format::UNSIGNED_INT,
+			} );
+
+			vertex_buffer = app->_context->make_vertex_buffer( {
+				IGPU_VERT_CFG_OF( Vertex, pos, col, uv0 ),
+			} );
+
+			geometry = app->_context->make_geometry( {
+				MODEL_PATH,
+				topology::TRIANGLE_LIST,
+				index_buffer,
+				{
+					vertex_buffer,
+				},
+			} );
+
+			return (bool)geometry;
+		}
+
+		[[nodiscard]] bool upload(
 			const std::vector< Vertex >& vertices,
 			const std::vector< uint32_t >& indices )
 		{
-			auto index_buffer = std::shared_ptr< igpu::index_buffer >(
-				app->_context->make_index_buffer( {
-					index_format::UNSIGNED_INT,
-				} ) );
-
-			auto vertex_buffer = std::shared_ptr< igpu::vertex_buffer >(
-				app->_context->make_vertex_buffer( {
-					IGPU_VERT_CFG_OF( Vertex, pos, col, uv0 ),
-				} ) );
-
-			buffer_view< char >
-				indices_view( sizeof( indices[0] ) * indices.size(), nullptr );
-
 			buffer_view< char > vertices_view(
 				sizeof( vertices[0] ) * vertices.size(),
 				nullptr );
+
+			buffer_view< char >
+				indices_view( sizeof( indices[0] ) * indices.size(), nullptr );
 
 			index_buffer->map( &indices_view );
 			vertex_buffer->map( &vertices_view );
@@ -894,22 +907,13 @@ private:
 			index_buffer->unmap();
 			vertex_buffer->unmap();
 
-			geometry = app->_context->make_geometry( {
-				MODEL_PATH,
-				topology::TRIANGLE_LIST,
-				index_buffer,
-				{
-					vertex_buffer,
-				},
-			} );
-
-			return (bool)geometry;
+			return true;
 		}
 
 		void draw( VkCommandBuffer command_buffer )
 		{
 			auto* vulkan = ASSERT_CAST( vulkan_geometry*, geometry.get() );
-			auto& index_buffer = vulkan->index_buffer();
+			auto& vulkan_indices = vulkan->index_buffer();
 
 			const int MAX_BUFFERS = attribute_indexer::MAX_PARAMETERS;
 			ASSERT_CONTEXT( vulkan->cfg().vertex_buffers.size() < MAX_BUFFERS )
@@ -925,9 +929,9 @@ private:
 
 			vkCmdBindIndexBuffer(
 				command_buffer,
-				index_buffer.gpu_object().get(),
+				vulkan_indices.gpu_object().get(),
 				0,
-				index_buffer.cfg().vk.format );
+				vulkan_indices.cfg().vk.format );
 			vkCmdBindVertexBuffers(
 				command_buffer,
 				0,
@@ -945,11 +949,15 @@ private:
 
 		void destroy()
 		{
+			index_buffer = nullptr;
+			vertex_buffer = nullptr;
 			geometry = nullptr;
 		}
 
 		HelloTriangleApplication* app;
 		std::unique_ptr< geometry > geometry;
+		std::shared_ptr< vertex_buffer > vertex_buffer;
+		std::shared_ptr< index_buffer > index_buffer;
 	};
 
 	new_geo_impl geo_impl = {
@@ -1244,7 +1252,7 @@ private:
 	std::vector< VkSemaphore > _render_finished_semaphores;
 	std::vector< VkFence > _in_flight_fences;
 	VkSampleCountFlagBits _msaa_samples;
-	size_t _swap_image_count = 0;
+	uint32_t _swap_image_count = 0;
 	size_t _current_frame = 0;
 
 	bool _framebuffer_resized = false;
@@ -1267,20 +1275,25 @@ public:
 		_device = _context->device();
 		_present_queue = _context->synchronization().cfg().present_queue;
 		_graphics_queue = _context->synchronization().cfg().graphics_queue;
-		_swap_image_count = _context->back_buffer().framebuffers().size();
+		_swap_image_count =
+			(uint32_t)_context->back_buffer().framebuffers().size();
 		_msaa_samples = _context->back_buffer().cfg().vk.sample_count;
 
 		if ( uniform_impl.create() && texture_impl.create() &&
 			 program_impl.create() && render_states_impl.create() &&
-			 load_model() )
+			 geo_impl.create() )
 		{
 			create_command_pool();
 			create_graphics_pipeline();
 			create_descriptor_pool();
 			create_descriptor_sets();
-			create_command_buffers();
-			create_sync_objects();
-			return true;
+
+			if ( load_model() )
+			{
+				create_command_buffers();
+				create_sync_objects();
+				return true;
+			}
 		}
 
 		return false;
@@ -1489,13 +1502,13 @@ private:
 		const char* err = nullptr;
 		std::ifstream ifs( path.c_str(), std::ios::binary | std::ios::ate );
 
-		if ( !ifs )
-		{
-			err = "failed to find file";
-		}
-		else if ( !out_buffer )
+		if ( !out_buffer )
 		{
 			err = "out buffer is null";
+		}
+		else if ( !ifs )
+		{
+			err = "failed to find file";
 		}
 		else
 		{
@@ -1507,11 +1520,14 @@ private:
 				err =
 					"could not obtain mapped memory from buffer to copy file "
 					"into";
+
+				ifs.close();
 			}
 			else
 			{
 				ifs.seekg( 0, std::ios::beg );
 				ifs.read( view.data(), view.byte_size() );
+				ifs.close();
 
 				out_buffer->unmap();
 			}
@@ -1522,7 +1538,6 @@ private:
 			LOG_CRITICAL( "%s : file '%s'", err, path.c_str() );
 		}
 
-		ifs.close();
 
 		return true;
 	}
@@ -1594,22 +1609,71 @@ private:
 			}
 		}
 
-		return geo_impl.create( vertices, indices );
+		return geo_impl.upload( vertices, indices );
 	}
 
 	void create_descriptor_pool()
 	{
-		std::array< VkDescriptorPoolSize, 2 > pool_sizes = {};
-		pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		pool_sizes[0].descriptorCount =
-			static_cast< uint32_t >( _swap_image_count );
-		pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		pool_sizes[1].descriptorCount =
-			static_cast< uint32_t >( _swap_image_count );
+		uint32_t uniform_buffers = 0;
+		uint32_t storage_buffers = 0;
+		uint32_t samplers = 0;
+
+		for ( auto* parameters : {
+				  &program_impl.program->batch_parameters(),
+				  &program_impl.program->material_parameters(),
+				  &program_impl.program->instance_parameters(),
+			  } )
+		{
+			for ( int i = 0; i < parameters->count(); ++i )
+			{
+				switch ( parameters->parameter( i ).cfg().type )
+				{
+				case parameter::type::UNIFORM_BUFFER:
+					++uniform_buffers;
+					break;
+
+				case parameter::type::STORAGE_BUFFER:
+					++storage_buffers;
+					break;
+
+				case parameter::type::SAMPLER2D:
+					++samplers;
+					break;
+				}
+			}
+		}
+
+		uint32_t pool_type_count = 0;
+
+		std::array< VkDescriptorPoolSize, 3 > pool_sizes = {};
+
+		if ( uniform_buffers )
+		{
+			pool_sizes[pool_type_count++] = {
+				VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+				uniform_buffers * _swap_image_count,
+			};
+		}
+
+		if ( storage_buffers )
+		{
+			pool_sizes[pool_type_count++] = {
+				VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+				storage_buffers * _swap_image_count,
+			};
+		}
+
+		if ( samplers )
+		{
+			pool_sizes[pool_type_count++] = {
+				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+				samplers * _swap_image_count,
+			};
+		}
 
 		VkDescriptorPoolCreateInfo pool_info = {};
 		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		pool_info.poolSizeCount = static_cast< uint32_t >( pool_sizes.size() );
+		pool_info.poolSizeCount = pool_type_count;
 		pool_info.pPoolSizes = pool_sizes.data();
 		pool_info.maxSets = static_cast< uint32_t >( _swap_image_count );
 
@@ -1653,7 +1717,7 @@ private:
 			descriptor_writes[0].dstBinding = 0;
 			descriptor_writes[0].dstArrayElement = 0;
 			descriptor_writes[0].descriptorType =
-				VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 			descriptor_writes[0].descriptorCount = 1;
 			descriptor_writes[0].pBufferInfo = &buffer_info;
 

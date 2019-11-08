@@ -104,8 +104,7 @@ namespace igpu
 		sampler_info.minFilter = to_vulkan_filter( cfg.sampler.min_filter );
 		sampler_info.addressModeU = to_vulkan_address( cfg.sampler.addressu );
 		sampler_info.addressModeV = to_vulkan_address( cfg.sampler.addressv );
-		sampler_info.addressModeW =
-			to_vulkan_address( sampler::address::DEFAULT );
+		sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
 		sampler_info.anisotropyEnable = VK_TRUE;
 		sampler_info.maxAnisotropy = 16;
 		sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;

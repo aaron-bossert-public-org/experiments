@@ -25,8 +25,15 @@ namespace igpu
 
 		const VkVertexInputAttributeDescription* attribute_descriptions() const;
 
+		const vulkan_vertex_parameters* vertex_parameters() const;
+
+		const vulkan_geometry* geometry() const;
+
 	private:
 		attribute_indexer _indexer;
+
+		const vulkan_vertex_parameters* _vertex_parameters;
+		const vulkan_geometry* _geometry;
 
 		uint32_t _binding_description_count;
 

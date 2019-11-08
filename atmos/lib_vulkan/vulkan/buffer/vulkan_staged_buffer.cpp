@@ -21,7 +21,8 @@ vulkan_staged_buffer::vulkan_staged_buffer( const config& cfg )
 		  cfg.synchronization->vma(),
 		  VMA_MEMORY_USAGE_GPU_ONLY,
 		  VkBufferUsageFlagBits(
-			  VK_BUFFER_USAGE_TRANSFER_DST_BIT | cfg.vk_usage_flags ),
+			  cfg.vk_usage_flags | VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+			  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT ),
 	  } )
 {}
 
