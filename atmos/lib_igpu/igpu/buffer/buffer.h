@@ -12,9 +12,9 @@ namespace igpu
 		memory_type,
 		DEFAULT( UNDEFINED ),
 
-		( UNDEFINED, 0 ),		  // contents are undefined each map(...)
-		( WRITE_COMBINED, 1 ),	  // contents are undefined each map(...)
-		( PRESERVED, 2 ) );		  // contents are preserved each map(...)
+		( UNDEFINED, 0 ),	   // contents are undefined each map(...)
+		( WRITE_COMBINED, 1 ), // contents are undefined each map(...)
+		( PRESERVED, 2 ) );	   // contents are preserved each map(...)
 
 	class buffer
 	{

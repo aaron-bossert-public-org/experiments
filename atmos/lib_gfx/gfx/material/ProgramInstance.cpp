@@ -95,8 +95,9 @@ namespace
 		const auto& parameters = program->parameters();
 
 		// parameters are defaulted to -1
-		std::vector< const binding_t* >
-			bound_parameters( parameters.size(), nullptr );
+		std::vector< const binding_t* > bound_parameters(
+			parameters.size(),
+			nullptr );
 
 		for ( const auto* parameter : parameters )
 		{

@@ -426,8 +426,10 @@ stack_timer::stack_timer(
 		callsite_data.thread_callstack_tracker().thread_id() ==
 		std::this_thread::get_id() );
 
-	_stack_entry_index = callsite_data.thread_callstack_tracker()
-							 .begin_callsite( callsite_index, instance_desc );
+	_stack_entry_index =
+		callsite_data.thread_callstack_tracker().begin_callsite(
+			callsite_index,
+			instance_desc );
 }
 
 stack_timer::~stack_timer()
@@ -511,4 +513,4 @@ void stack_timer::force_frame_output()
 	thread_callstack_tracker::force_all_output_this_frame();
 }
 
-#endif	  // STACK_TIMERS
+#endif // STACK_TIMERS

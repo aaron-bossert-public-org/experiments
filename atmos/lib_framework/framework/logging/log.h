@@ -36,8 +36,12 @@
 		logging::severity::VERBOSE, \
 		__VA_ARGS__ )
 #define LOG_CONTEXT( SEVERITY, ... ) \
-	logging::                        \
-		log_context( __FILE__, __LINE__, __FUNCSIG__, SEVERITY, __VA_ARGS__ )
+	logging::log_context(            \
+		__FILE__,                    \
+		__LINE__,                    \
+		__FUNCSIG__,                 \
+		SEVERITY,                    \
+		__VA_ARGS__ )
 #define EXCEPTION_CONTEXT( ... ) \
 	logging::exception_string( __FILE__, __LINE__, __FUNCSIG__, __VA_ARGS__ )
 

@@ -68,7 +68,7 @@ public:
 
 #	define STACK_TIMER_SMASH( x, y ) x##y
 
-#else	 // ATMOS_STACK_TIMERS
+#else // ATMOS_STACK_TIMERS
 
 #	define STACK_TIMER_THREAD( name )				;
 #	define STACK_TIMER( name )						;
@@ -77,4 +77,4 @@ public:
 #	define STACK_TIMER_END( token )				;
 #	define STACK_TIMER_CODE( code )
 
-#endif	  // ATMOS_STACK_TIMERS
+#endif // ATMOS_STACK_TIMERS

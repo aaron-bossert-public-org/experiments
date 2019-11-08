@@ -16,8 +16,9 @@ using namespace gfx
 
 			  for ( size_t i = 0; i < _draw_pass_bundles.size(); ++i )
 			  {
-				  sphere visibility_sphere = math::
-					  transform_sphere( meshes[i]->sphere(), model_matrix );
+				  sphere visibility_sphere = math::transform_sphere(
+					  meshes[i]->sphere(),
+					  model_matrix );
 				  _draw_pass_bundles[i]->mesh_state()->visibility_sphere(
 					  visibility_sphere );
 			  }

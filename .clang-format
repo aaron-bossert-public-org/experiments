@@ -203,7 +203,10 @@ ObjCSpaceAfterProperty: true
 ObjCSpaceBeforeProtocolList: true
 # Add a space in front of an Objective-C protocol list, i.e. use Foo <Protocol> instead of Foo<Protocol>.
 
-PenaltyBreakBeforeFirstCallParameter: 1000
+#PenaltyBreakAssignment: 1000
+# The penalty for breaking around an assignment operator.
+
+#PenaltyBreakBeforeFirstCallParameter: 1000000
 # The penalty for breaking a function call after call(.
 
 PenaltyReturnTypeOnItsOwnLine: 1000000
@@ -254,7 +257,7 @@ SpaceInEmptyBlock: false
 SpaceInEmptyParentheses: false
 # If true, spaces may be inserted into ().
 
-SpacesBeforeTrailingComments: 4
+SpacesBeforeTrailingComments: 1
 # The number of spaces before trailing line comments (// - comments).
 
 SpacesInAngles: true

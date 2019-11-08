@@ -47,8 +47,10 @@ void vulkan_staged_buffer::unmap()
 
 		_gpu_buffer.reserve( _byte_size );
 
-		_cfg.synchronization
-			->copy( _staging_buffer, _gpu_buffer, (uint32_t)_byte_size );
+		_cfg.synchronization->copy(
+			_staging_buffer,
+			_gpu_buffer,
+			(uint32_t)_byte_size );
 
 		if ( _cfg.memory == memory_type::WRITE_COMBINED )
 		{

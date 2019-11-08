@@ -175,8 +175,9 @@ namespace concurrent
 	{
 		int_fast8_t dummy = 0;
 
-		if ( !_swap_count
-				  .compare_exchange_strong( dummy, _prev_read_swap_count ) )
+		if ( !_swap_count.compare_exchange_strong(
+				 dummy,
+				 _prev_read_swap_count ) )
 		{
 			auto swap_count = _swap_count.fetch_add( 1 );
 			_prev_read_swap_count = swap_count;

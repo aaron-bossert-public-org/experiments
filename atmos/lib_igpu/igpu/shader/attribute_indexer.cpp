@@ -57,8 +57,9 @@ bool attribute_indexer::reset(
 		_indices[attribute_count].buffer = buff;
 		_indices[attribute_count].attribute = attr;
 		++attribute_count;
-		++attr;	   // increase attr index of where we expect the next attribute
-				   // to be
+
+		// increase attr index of where we expect the next attribute to be
+		++attr;
 
 		if ( shader_param.cfg().components != attribute.parameter.components )
 		{

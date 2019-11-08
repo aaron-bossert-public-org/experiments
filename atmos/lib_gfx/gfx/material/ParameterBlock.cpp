@@ -101,7 +101,7 @@ parameter_block::parameter_handle parameter_block::set(
 	{
 		set( handle, primitive );
 	}
-	else	// no existing parameter with that name, add a new one
+	else // no existing parameter with that name, add a new one
 	{
 		_binding_id = next_binding_id();
 

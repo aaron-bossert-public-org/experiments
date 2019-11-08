@@ -225,7 +225,7 @@ vulkan_image::vulkan_image( const config& cfg )
 	, _sampler( create_sampler( cfg ) )
 	, _gpu_mem_metric( perf::category::GPU_MEM_USAGE, perf_name( cfg ) )
 {
-	_gpu_mem_metric.add( _alloc_info.allocationSize );	  // should not hit
+	_gpu_mem_metric.add( _alloc_info.allocationSize ); // should not hit
 }
 
 const vulkan_image::config& vulkan_image::cfg() const

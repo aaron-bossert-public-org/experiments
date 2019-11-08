@@ -39,8 +39,9 @@ namespace
 		const VkAllocationCallbacks* p_allocator,
 		VkDebugUtilsMessengerEXT* p_debug_messenger )
 	{
-		auto func = (PFN_vkCreateDebugUtilsMessengerEXT)
-			vkGetInstanceProcAddr( instance, "vkCreateDebugUtilsMessengerEXT" );
+		auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
+			instance,
+			"vkCreateDebugUtilsMessengerEXT" );
 		if ( func != nullptr )
 		{
 			return func(
@@ -236,15 +237,15 @@ namespace
 
 		return debug_messenger;
 	}
-#endif	  // ATMOS_DEBUG
+#endif // ATMOS_DEBUG
 
 	struct queue_families
 	{
 		enum fitness_type
 		{
-			ALL,	 // supports all family types
-			SOME,	 // supports some family types
-			ONE,	 // suports one family type
+			ALL,  // supports all family types
+			SOME, // supports some family types
+			ONE,  // suports one family type
 		};
 
 		struct family
@@ -509,16 +510,16 @@ namespace
 			};
 		}
 		return {
-			std::
-				max( capabilities.minImageExtent.width,
-					 std::
-						 min( capabilities.maxImageExtent.width,
-							  (uint32_t)screen_res.x ) ),
-			std::
-				max( capabilities.minImageExtent.height,
-					 std::
-						 min( capabilities.maxImageExtent.height,
-							  (uint32_t)screen_res.y ) ),
+			std::max(
+				capabilities.minImageExtent.width,
+				std::min(
+					capabilities.maxImageExtent.width,
+					(uint32_t)screen_res.x ) ),
+			std::max(
+				capabilities.minImageExtent.height,
+				std::min(
+					capabilities.maxImageExtent.height,
+					(uint32_t)screen_res.y ) ),
 		};
 	}
 

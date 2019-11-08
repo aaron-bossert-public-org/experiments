@@ -139,8 +139,9 @@ std::shared_ptr< mesh_geometry > mesh_geometry::combine(
 		index_count += mesh_geometry->index_count();
 	}
 
-	allocated_safe_buffer< uint16_t >
-		merged_indices( index_count, index_stride );
+	allocated_safe_buffer< uint16_t > merged_indices(
+		index_count,
+		index_stride );
 	allocated_safe_buffer< uint8_t > merged_vertices( vert_count, vert_stride );
 
 	auto output_indices = merged_indices.begin();

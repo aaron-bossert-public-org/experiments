@@ -111,4 +111,4 @@ bool gl_debug::check_for_errors(
 	return is_good;
 }
 
-#endif	  // ATMOS_DEBUG
+#endif // ATMOS_DEBUG

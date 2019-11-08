@@ -204,7 +204,7 @@ bool texture_file_parsing::parse_as_dds(
 {
 	auto dwMagicNumber =
 		*reinterpret_cast< const uint32_t* >( raw_file_data.data() );
-	constexpr uint32_t DDS_MAGIC = 0x20534444;	  // "DDS "
+	constexpr uint32_t DDS_MAGIC = 0x20534444; // "DDS "
 	constexpr uint32_t DDSCAPS2_CUBEMAP = 0x00000200;
 	constexpr uint32_t DDSCAPS2_VOLUME = 0x00200000;
 	constexpr uint32_t DDSF_ALPHAPIXELS = 0x00200000;
@@ -230,7 +230,7 @@ bool texture_file_parsing::parse_as_dds(
 		uint32_t height;
 		uint32_t width;
 		uint32_t pitchOrLinearSize;
-		uint32_t depth;	   // only if DDS_HEADER_FLAGS_VOLUME is set in flags
+		uint32_t depth; // only if DDS_HEADER_FLAGS_VOLUME is set in flags
 		uint32_t mipMapCount;
 		uint32_t reserved1[11];
 		DDS_PIXELFORMAT ddspf;
