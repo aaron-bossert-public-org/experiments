@@ -1,0 +1,39 @@
+implement gl backend 
+
+
+implement metal backend
+
+
+implement directx backend
+
+
+implement vulkan backend 
+
+write unit tests
+add new examples
+migrate example to use purely atmos
+
+implement barriers for job dependencies
+use vulkan attribute sequencer to build descriptors and vulkan dependencies
+
+build vertex attribute sequencer to use same api as vulkan primitive sequencer
+move attribute and primitive MAX_PARAMETERS next to vertex parameters and parameters respectively 
+use vulkan primitive sequencer to build descriptors and vulkan dependencies
+- can prototype this inside vulkan synchronization by using it in void create_descriptor_sets(), and making sure storage buffer works with it 
+
+check alignment of buffer types when mapping
+add storage buffer flags to vulkan parameters which allows any primitive to be bound to it
+add storage buffer bit to vertex, index, uniform, texture memory buffers so they can be read/ modiyed in a compute shader
+
+
+(CURRENT PROGRESS POINT)
+
+rename buffer to UNIFORM_BUFFER and STORAGE_BUFFER
+
+make sure all enums use 0 as an error sentinel
+check spirv output for readonly / write only decorations
+
+
+
+
+
