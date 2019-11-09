@@ -11,6 +11,7 @@
 #include "igpu/context/batch_constraints.h"
 #include "igpu/context/material_constraints.h"
 #include "igpu/shader/fragment_shader.h"
+#include "igpu/shader/primitives.h"
 #include "igpu/shader/program.h"
 #include "igpu/shader/render_states.h"
 #include "igpu/shader/vertex_shader.h"
@@ -90,6 +91,9 @@ namespace igpu
 
 		virtual std::unique_ptr< texture2d > make_texture(
 			const texture2d::config& ) = 0;
+
+		virtual std::unique_ptr< primitives > make_primitives(
+			const primitives::config& ) = 0;
 
 		virtual std::unique_ptr< opaque_batch > make_opaque_batch(
 			const opaque_batch::config& ) = 0;

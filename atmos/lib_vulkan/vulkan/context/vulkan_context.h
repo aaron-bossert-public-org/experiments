@@ -63,6 +63,9 @@ namespace igpu
 		std::unique_ptr< texture2d > make_texture(
 			const texture2d::config& ) override;
 
+		std::unique_ptr< primitives > make_primitives(
+			const primitives::config& ) override;
+
 		std::unique_ptr< opaque_batch > make_opaque_batch(
 			const opaque_batch::config& ) override;
 

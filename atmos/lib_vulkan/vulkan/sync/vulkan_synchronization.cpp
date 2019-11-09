@@ -59,7 +59,7 @@ namespace
 
 	// allocate/build/submit command buffer to be executed asynnchronously
 	template < typename SubmissonBuilder >
-	const scoped_ptr< vulkan_fence >& submit(
+	scoped_ptr< vulkan_fence > submit(
 		vulkan_queue& queue,
 		SubmissonBuilder&& builder )
 	{
@@ -75,6 +75,8 @@ namespace
 			cfg,
 			vulkan_fence::make( {
 				queue.cfg().device,
+				queue.get(),
+				queue.get_increment_submit_index(),
 			} ) );
 		vulkan_command_buffer& command_buffer = queue.pending_commands().back();
 		VkCommandBuffer raw_command_buffer = command_buffer.get();
@@ -89,12 +91,12 @@ namespace
 		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-		vkBeginCommandBuffer( *raw_command_buffer, &begin_info );
+		vkBeginCommandBuffer( raw_command_buffer, &begin_info );
 		builder( raw_command_buffer );
-		vkEndCommandBuffer( *raw_command_buffer );
+		vkEndCommandBuffer( raw_command_buffer );
 
 		vkQueueSubmit(
-			queue.cfg().queue,
+			queue.get(),
 			1,
 			&submit_context.info,
 			command_buffer.fence()->get() );
@@ -120,7 +122,7 @@ namespace
 	// allocate/build/submit command buffer to be executed asynnchronously
 	// ensure memory/execution dependencies are added for args
 	template < typename CommandBuilder, typename... Args >
-	const scoped_ptr< vulkan_fence >& submit(
+	scoped_ptr< vulkan_fence > submit(
 		const scoped_ptr< vulkan_queue >& queue,
 		CommandBuilder&& command_builder,
 		Args... args )
@@ -128,15 +130,7 @@ namespace
 		return submit( *queue, [&]( VkCommandBuffer command_buffer ) {
 			command_builder(
 				command_buffer,
-				add_dependency(
-					command_buffer,
-					args.buffer,
-					{
-						args.access,
-						args.stage,
-						args.dependency,
-						queue,
-					} )... );
+				add_dependency( command_buffer, queue, args )... );
 		} );
 	}
 
@@ -171,6 +165,7 @@ namespace
 		const image_dependency& image_dependency )
 	{
 		vulkan_image& image = image_dependency.image;
+
 		const vulkan_image::ownership& current_owner = image.owner();
 		vulkan_image::ownership target_owner = {
 			image_dependency.layout,
@@ -759,11 +754,16 @@ namespace std
 	};
 }
 
-struct UniformBufferObject
+struct UniformBufferBatch
 {
-	alignas( 16 ) glm::mat4 model;
 	alignas( 16 ) glm::mat4 view;
 	alignas( 16 ) glm::mat4 proj;
+};
+
+
+struct UniformBufferInstance
+{
+	alignas( 16 ) glm::mat4 model;
 };
 
 using namespace igpu;
@@ -786,7 +786,7 @@ private:
 	struct new_texture_impl
 	{
 		HelloTriangleApplication* app;
-		std::unique_ptr< texture2d > texture;
+		std::shared_ptr< texture2d > texture;
 		VkSampler _texture_sampler;
 
 		[[nodiscard]] bool create()
@@ -875,8 +875,9 @@ private:
 				sizeof( vertices[0] ) * vertices.size(),
 				nullptr );
 
-			buffer_view< char >
-				indices_view( sizeof( indices[0] ) * indices.size(), nullptr );
+			buffer_view< char > indices_view(
+				sizeof( indices[0] ) * indices.size(),
+				nullptr );
 
 			index_buffer->map( &indices_view );
 			vertex_buffer->map( &vertices_view );
@@ -964,7 +965,7 @@ private:
 		this,
 	};
 
-	struct new_uniform_impl
+	struct batch_buffer_impl
 	{
 		HelloTriangleApplication* app;
 

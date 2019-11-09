@@ -23,7 +23,7 @@ namespace igpu
 		template < typename VISITOR >
 		void visit( VISITOR&& visitor );
 
-		std::unique_ptr< vulkan_primitives > make( const config& );
+		static std::unique_ptr< vulkan_primitives > make( const config& );
 
 	private:
 		vulkan_primitives( std::vector< vulkan_primitive > );

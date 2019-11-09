@@ -8,7 +8,10 @@ namespace igpu
 	class primitives
 	{
 	public:
-		using config = std::vector< primitive::config >;
+		struct config
+		{
+			std::vector< primitive::config > primitives;
+		};
 
 		virtual size_t primitive_count() const = 0;
 

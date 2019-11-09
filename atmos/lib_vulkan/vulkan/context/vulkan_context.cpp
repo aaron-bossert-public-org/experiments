@@ -10,6 +10,7 @@
 #include "vulkan/defines/vulkan_includes.h"
 #include "vulkan/shader/vulkan_fragment_shader.h"
 #include "vulkan/shader/vulkan_program.h"
+#include "vulkan/shader/vulkan_primitives.h"
 #include "vulkan/shader/vulkan_render_states.h"
 #include "vulkan/shader/vulkan_vertex_shader.h"
 #include "vulkan/sync/vulkan_queue.h"
@@ -794,6 +795,12 @@ std::unique_ptr< texture2d > vulkan_context::make_texture(
 			_state.device,
 		},
 		_synchronization );
+}
+
+std::unique_ptr< primitives > vulkan_context::make_primitives(
+	const primitives::config& cfg)
+{
+	return vulkan_primitives::make(cfg);
 }
 
 std::unique_ptr< opaque_batch > vulkan_context::make_opaque_batch(
