@@ -33,6 +33,8 @@ namespace igpu
 
 		void free_completed_commands();
 
+		ptrdiff_t get_increment_submit_index();
+
 		~vulkan_queue();
 
 	private:
@@ -45,6 +47,7 @@ namespace igpu
 		VkQueue _queue = nullptr;
 		VkCommandPool _command_pool = nullptr;
 		std::list< vulkan_command_buffer > _pending_commands;
+		ptrdiff_t _submit_index = 0;
 
 		const config _cfg;
 	};

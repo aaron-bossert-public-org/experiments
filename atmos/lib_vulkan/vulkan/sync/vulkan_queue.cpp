@@ -53,6 +53,11 @@ void vulkan_queue::free_completed_commands()
 	}
 }
 
+ptrdiff_t vulkan_queue::get_increment_submit_index()
+{
+	return ++_submit_index;
+}
+
 vulkan_queue::~vulkan_queue()
 {
 	_pending_commands.clear();

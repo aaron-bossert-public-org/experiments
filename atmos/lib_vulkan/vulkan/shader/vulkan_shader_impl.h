@@ -30,11 +30,11 @@ namespace igpu
 
 		size_t parameter_count() const;
 
-		const spirv::parameter& parameter( size_t ) const;
+		const parameter::config& parameter( size_t ) const;
 
 		size_t vertex_parameter_count() const;
 
-		const spirv::vertex_parameter& vertex_parameter( size_t ) const;
+		const vertex_parameter::config& vertex_parameter( size_t ) const;
 
 		VkShaderModule shader_module() const;
 
@@ -45,8 +45,8 @@ namespace igpu
 
 		VkShaderModule _shader_module = nullptr;
 		std::vector< uint32_t > _memory;
-		std::vector< spirv::parameter > _parameters;
-		std::vector< spirv::vertex_parameter > _vertex_parameters;
+		std::vector< parameter::config > _parameters;
+		std::vector< vertex_parameter::config > _vertex_parameters;
 
 		perf::metric _cpu_mem_metric;
 	};
@@ -80,7 +80,7 @@ namespace igpu
 			return _shader.parameter_count();
 		}
 
-		const spirv::parameter& parameter( size_t i ) const override
+		const parameter::config& parameter( size_t i ) const override
 		{
 			return _shader.parameter( i );
 		}
@@ -90,7 +90,7 @@ namespace igpu
 			return _shader.vertex_parameter_count();
 		}
 
-		const spirv::vertex_parameter& vertex_parameter( size_t i ) const
+		const vertex_parameter::config& vertex_parameter( size_t i ) const
 		{
 			return _shader.vertex_parameter( i );
 		}

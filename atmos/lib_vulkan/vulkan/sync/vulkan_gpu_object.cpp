@@ -4,8 +4,7 @@
 #include "vulkan/sync/vulkan_fence.h"
 
 using namespace igpu;
-void vulkan_gpu_object::add_fence(
-	const std::shared_ptr< vulkan_fence >& fence )
+void vulkan_gpu_object::add_fence( const scoped_ptr< vulkan_fence >& fence )
 {
 	auto& fences = object_state().fences;
 

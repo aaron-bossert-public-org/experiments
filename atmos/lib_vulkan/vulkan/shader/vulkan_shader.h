@@ -22,6 +22,6 @@ namespace igpu
 
 		virtual size_t parameter_count() const = 0;
 
-		virtual const spirv::parameter& parameter( size_t ) const = 0;
+		virtual const parameter::config& parameter( size_t ) const = 0;
 	};
 }

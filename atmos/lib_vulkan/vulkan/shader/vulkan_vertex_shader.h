@@ -18,7 +18,7 @@ namespace igpu
 	public:
 		virtual size_t vertex_parameter_count() const = 0;
 
-		virtual const spirv::vertex_parameter& vertex_parameter(
+		virtual const vertex_parameter::config& vertex_parameter(
 			size_t ) const = 0;
 
 		static std::unique_ptr< vulkan_vertex_shader > make( const vulkan& vk );

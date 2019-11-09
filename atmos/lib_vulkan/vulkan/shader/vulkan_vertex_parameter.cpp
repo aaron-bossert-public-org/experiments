@@ -35,7 +35,7 @@ const vulkan_vertex_parameter::config& vulkan_vertex_parameter::cfg() const
 }
 
 vulkan_vertex_parameter::vulkan_vertex_parameter(
-	const spirv::vertex_parameter& cfg )
+	const vertex_parameter::config& cfg )
 	: _cfg{
 		  cfg,
 		  to_vulkan_format( cfg.components ),

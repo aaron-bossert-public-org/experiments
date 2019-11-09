@@ -3,6 +3,8 @@
 
 #include "vulkan/defines/vulkan_includes.h"
 
+#include "framework/utility/scoped_ptr.h"
+
 namespace igpu
 {
 	class vulkan_queue;
@@ -20,7 +22,7 @@ namespace igpu
 
 		VkCommandBuffer get();
 
-		const std::shared_ptr< vulkan_fence >& fence() const;
+		scoped_ptr< vulkan_fence > fence() const;
 
 		~vulkan_command_buffer();
 

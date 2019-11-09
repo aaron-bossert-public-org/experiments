@@ -11,7 +11,7 @@ VkCommandBuffer vulkan_command_buffer::get()
 	return _command_buffer;
 }
 
-const std::shared_ptr< vulkan_fence >& vulkan_command_buffer::fence() const
+scoped_ptr< vulkan_fence > vulkan_command_buffer::fence() const
 {
 	return _fence;
 }

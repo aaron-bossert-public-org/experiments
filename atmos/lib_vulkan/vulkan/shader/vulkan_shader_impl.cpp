@@ -2,6 +2,7 @@
 #include "vulkan/shader/vulkan_shader_impl.h"
 
 #include "vulkan/shader/vulkan_compiler.h"
+#include "vulkan/shader/vulkan_parameter.h"
 #include "vulkan/shader/vulkan_shader_stages.h"
 #include "vulkan/shader/vulkan_vertex_shader.h"
 
@@ -83,12 +84,17 @@ void vulkan_shader_impl::unmap()
 		shader_stages stages =
 			from_vulkan_shader_stage_flags( _vk.stage_flags );
 
-		spirv::parse(
-			std::move( _memory ),
-			s_entry_point,
-			stages,
-			&_parameters,
-			&_vertex_parameters );
+		if ( false ==
+			 spirv_parse(
+				 std::move( _memory ),
+				 s_entry_point,
+				 stages,
+				 &_parameters,
+				 &_vertex_parameters ) )
+		{
+			_parameters.clear();
+			_vertex_parameters.clear();
+		}
 	}
 }
 
@@ -108,7 +114,7 @@ size_t vulkan_shader_impl::parameter_count() const
 	return _parameters.size();
 }
 
-const spirv::parameter& vulkan_shader_impl::parameter( size_t i ) const
+const parameter::config& vulkan_shader_impl::parameter( size_t i ) const
 {
 	return _parameters[i];
 }
@@ -118,7 +124,7 @@ size_t vulkan_shader_impl::vertex_parameter_count() const
 	return _vertex_parameters.size();
 }
 
-const spirv::vertex_parameter& vulkan_shader_impl::vertex_parameter(
+const vertex_parameter::config& vulkan_shader_impl::vertex_parameter(
 	size_t i ) const
 {
 	return _vertex_parameters[i];

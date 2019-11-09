@@ -1,7 +1,8 @@
 
 #pragma once
 
-#include <memory>
+#include "framework/utility/scoped_ptr.h"
+
 #include <vector>
 
 namespace igpu
@@ -19,12 +20,12 @@ namespace igpu
 			~state();
 
 		private:
-			std::vector< std::shared_ptr< vulkan_fence > > fences;
+			std::vector< scoped_ptr< vulkan_fence > > fences;
 		};
 
 		virtual state& object_state() = 0;
 
-		void add_fence( const std::shared_ptr< vulkan_fence >& );
+		void add_fence( const scoped_ptr< vulkan_fence >& );
 
 		void wait_on_fences();
 	};

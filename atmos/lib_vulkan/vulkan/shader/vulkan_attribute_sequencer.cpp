@@ -52,7 +52,7 @@ bool vulkan_attribute_sequencer::reset(
 		VkVertexInputAttributeDescription* attribute_description =
 			&_attribute_descriptions[i];
 		attribute_description->binding = ( *pp_binding_description )->binding;
-		attribute_description->location = param.cfg().spv.location;
+		attribute_description->location = (uint32_t)param.cfg().location;
 		attribute_description->format = param.cfg().vk.format;
 		attribute_description->offset = attr_cfg.offset;
 	}

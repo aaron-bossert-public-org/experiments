@@ -19,20 +19,18 @@ namespace
 {
 	void merge_parameters(
 		const vulkan_shader& shader,
-		std::array< std::array< uint8_t, 64 >, 3 >* out_indices,
-		std::array< std::vector< spirv::parameter >, 3 >*
-			descriptor_set_parameter_cfgs )
+		std::array< std::array< uint8_t, parameters::MAX_COUNT >, 3 >*
+			out_indices,
+		std::array< std::vector< parameter::config >, 3 >* parameter_cfgs )
 	{
 		// Get all sampled images in the shader.
 		for ( size_t i = 0; i < shader.parameter_count(); ++i )
 		{
-			const spirv::parameter& parameter = shader.parameter( i );
-			auto& parameters =
-				( *descriptor_set_parameter_cfgs )[parameter.spv
-													   .descriptor_set];
+			const parameter::config& parameter = shader.parameter( i );
+			auto& parameters = ( *parameter_cfgs )[parameter.descriptor_set];
 
-			uint8_t* index = &( *out_indices )[parameter.spv.descriptor_set]
-											  [parameter.spv.binding];
+			uint8_t* index =
+				&( *out_indices )[parameter.descriptor_set][parameter.binding];
 			if ( *index == (uint8_t)-1 )
 			{
 				*index = static_cast< uint8_t >( parameters.size() );
@@ -41,7 +39,7 @@ namespace
 			}
 			else
 			{
-				spirv::parameter* expect = &parameters[*index];
+				parameter::config* expect = &parameters[*index];
 
 #define ERR_CHECK( MEMBER, FMT, F_OP )                             \
 	if ( expect->MEMBER != parameter.MEMBER )                      \
@@ -49,8 +47,8 @@ namespace
 		LOG_CRITICAL(                                              \
 			"descriptor set %d binding %d previously seen as " FMT \
 			" but now seen as " FMT,                               \
-			(int)parameter.spv.descriptor_set,                     \
-			(int)parameter.spv.binding,                            \
+			(int)parameter.descriptor_set,                         \
+			(int)parameter.binding,                                \
 			F_OP( expect->MEMBER ),                                \
 			F_OP( parameter.MEMBER ) );                            \
 	}
@@ -64,7 +62,8 @@ namespace
 				ERR_CHECK( array_size, "%d", int );
 #undef ERR_CHECK
 
-				expect->spv.stages |= parameter.spv.stages;
+				expect->shader_stages |= parameter.shader_stages;
+				expect->decorators |= parameter.decorators;
 			}
 		}
 	}
@@ -100,12 +99,12 @@ VkPipelineLayout vulkan_program::pipeline_layout() const
 	return _pipeline_layout;
 }
 
+
 std::unique_ptr< vulkan_program > vulkan_program::make( const config& cfg )
 {
 	// create merged list of shader uniform inputs
-	std::array< std::vector< spirv::parameter >, 3 >
-		descriptor_set_parameter_cfgs;
-	std::array< std::array< uint8_t, 64 >, 3 > indices = {};
+	std::array< std::vector< parameter::config >, 3 > base_parameter_cfgs;
+	std::array< std::array< uint8_t, parameters::MAX_COUNT >, 3 > indices = {};
 	memset( &indices, -1, sizeof indices );
 
 	vulkan_shader* raw_shaders[] = {
@@ -115,7 +114,7 @@ std::unique_ptr< vulkan_program > vulkan_program::make( const config& cfg )
 
 	for ( vulkan_shader* shader : raw_shaders )
 	{
-		merge_parameters( *shader, &indices, &descriptor_set_parameter_cfgs );
+		merge_parameters( *shader, &indices, &base_parameter_cfgs );
 	}
 
 	// create shader parameters, descriptor set layouts, and pipeline layout
@@ -126,23 +125,23 @@ std::unique_ptr< vulkan_program > vulkan_program::make( const config& cfg )
 	for ( size_t d = 0; d < 3; ++d )
 	{
 		auto& parameters_cfg = parameters_cfgs[d];
-		auto& configs = descriptor_set_parameter_cfgs[d];
+		auto& configs = base_parameter_cfgs[d];
 		parameters_cfg.vk.device = cfg.vk.device;
 		parameters_cfg.vk.parameters.reserve( configs.size() );
 		scratch_bindings.resize( configs.size() );
 
 		for ( size_t i = 0; i < configs.size(); ++i )
 		{
-			spirv::parameter& parameter = configs[i];
-			parameters_cfg.vk.parameters.emplace_back( parameter );
+			parameters_cfg.vk.parameters.emplace_back( configs[i] );
+			const vulkan_parameter::config& parameter =
+				parameters_cfg.vk.parameters.back().cfg();
 
 			auto& binding = scratch_bindings[i];
-			binding.binding = parameter.spv.binding;
+			binding.binding = (uint32_t)parameter.binding;
 			binding.descriptorCount = (uint32_t)parameter.array_size;
-			binding.descriptorType = to_vulkan_type( parameter.type );
+			binding.descriptorType = parameter.vk.descriptor_type;
 			binding.pImmutableSamplers = nullptr;
-			binding.stageFlags =
-				to_vulkan_shader_stage_flags( parameter.spv.stages );
+			binding.stageFlags = parameter.vk.shader_stages;
 		}
 
 		VkDescriptorSetLayoutCreateInfo layout_info = {};
@@ -206,7 +205,7 @@ vulkan_program::vulkan_program(
 	vulkan_parameters::config&& batch_cfg,
 	vulkan_parameters::config&& material_cfg,
 	vulkan_parameters::config&& instance_cfg )
-	: _cfg( std::move( cfg ) )
+	: _cfg( cfg )
 	, _pipeline_layout( pipeline_layout )
 	, _vertex_parameters( std::move( vertex_parameters ) )
 	, _batch_parameters( std::move( batch_cfg ) )

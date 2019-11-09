@@ -1,23 +1,7 @@
 
-
-#include "framework/meta_programming/va_macro.h"
-
-#include <string>
-
-namespace igpu
-{
-	ENUM_FLAGS_SERIALIZABLE(
-
-		decorator_test,
-		DEFAULT( UNDEFINED ),
-
-		( UNDEFINED, 0xFFFFFFFF ),
-		( NONE, 0 ),
-		( READONLY, 1 << 0 ),
-		( WRITEONLY, 1 << 1 ) );
-
-}
 #include "igpu/shader/program_parsing.h"
+
+#include "igpu/shader/parameters.h"
 
 #include "framework/utility/buffer_view.h"
 
@@ -25,7 +9,7 @@ namespace igpu
 #include "igpu_third_party_builtins/SPIRV-Cross/spirv_parser.hpp"
 #include <array>
 
-using namespace igpu::spirv;
+using namespace igpu;
 using namespace spirv_cross;
 
 namespace
@@ -63,54 +47,54 @@ namespace
 		return "unknown type";
 	}
 
-	igpu::shader_stages to_stage_flag( spv::ExecutionModel execution_model )
+	shader_stages to_stage_flag( spv::ExecutionModel execution_model )
 	{
 		switch ( execution_model )
 		{
 		case spv::ExecutionModelVertex:
-			return igpu::shader_stages::VERTEX;
+			return shader_stages::VERTEX;
 
 		case spv::ExecutionModelTessellationControl:
-			return igpu::shader_stages::TESSELLATION_CONTROL;
+			return shader_stages::TESSELLATION_CONTROL;
 
 		case spv::ExecutionModelTessellationEvaluation:
-			return igpu::shader_stages::TESSELLATION_EVALUATION;
+			return shader_stages::TESSELLATION_EVALUATION;
 
 		case spv::ExecutionModelGeometry:
-			return igpu::shader_stages::GEOMETRY;
+			return shader_stages::GEOMETRY;
 
 		case spv::ExecutionModelFragment:
-			return igpu::shader_stages::FRAGMENT;
+			return shader_stages::FRAGMENT;
 
 		case spv::ExecutionModelGLCompute:
-			return igpu::shader_stages::COMPUTE;
+			return shader_stages::COMPUTE;
 		}
 
 		LOG_CRITICAL( "unhandled execution model %d", (int)execution_model );
 
-		return igpu::shader_stages::NONE;
+		return shader_stages::NONE;
 	}
 
-	spv::ExecutionModel to_execution_model( igpu::shader_stages flag )
+	spv::ExecutionModel to_execution_model( shader_stages flag )
 	{
 		switch ( flag )
 		{
-		case igpu::shader_stages::VERTEX:
+		case shader_stages::VERTEX:
 			return spv::ExecutionModelVertex;
 
-		case igpu::shader_stages::TESSELLATION_CONTROL:
+		case shader_stages::TESSELLATION_CONTROL:
 			return spv::ExecutionModelTessellationControl;
 
-		case igpu::shader_stages::TESSELLATION_EVALUATION:
+		case shader_stages::TESSELLATION_EVALUATION:
 			return spv::ExecutionModelTessellationEvaluation;
 
-		case igpu::shader_stages::GEOMETRY:
+		case shader_stages::GEOMETRY:
 			return spv::ExecutionModelGeometry;
 
-		case igpu::shader_stages::FRAGMENT:
+		case shader_stages::FRAGMENT:
 			return spv::ExecutionModelFragment;
 
-		case igpu::shader_stages::COMPUTE:
+		case shader_stages::COMPUTE:
 			return spv::ExecutionModelGLCompute;
 		}
 
@@ -130,32 +114,35 @@ namespace
 		return (spv::ExecutionModel)-1;
 	}
 
-	void parse_spirv_resources(
+	[[nodiscard]] bool parse_spirv_resources(
 		Compiler& compiler,
-		igpu::shader_stages stage,
+		shader_stages shader_stage,
 		ShaderResources& resources,
-		std::array< std::array< uint8_t, 64 >, 3 >* out_indices,
-		std::vector< parameter >* out_parameters )
+		std::array< std::array< uint8_t, parameters::MAX_COUNT >, 3 >*
+			out_indices,
+		std::vector< parameter::config >* out_parameters )
 	{
 		struct
 		{
-			const igpu::parameter::type type;
+			const parameter::type type;
 			const spirv_cross::SmallVector< spirv_cross::Resource >*
 				p_resources;
 		} resource_categories[] = {
 			{
-				igpu::parameter::type::STORAGE_BUFFER,
+				parameter::type::STORAGE_BUFFER,
 				&resources.storage_buffers,
 			},
 			{
-				igpu::parameter::type::UNIFORM_BUFFER,
+				parameter::type::UNIFORM_BUFFER,
 				&resources.uniform_buffers,
 			},
 			{
-				igpu::parameter::type::SAMPLER2D,
+				parameter::type::SAMPLER2D,
 				&resources.sampled_images,
 			},
 		};
+
+		bool success = true;
 
 		// Get all sampled images in the shader.
 		for ( const auto& resource_category : resource_categories )
@@ -164,57 +151,65 @@ namespace
 			{
 				const SPIRType& spir_type =
 					compiler.get_type( resource.type_id );
-				uint32_t descriptor_set = compiler.get_decoration(
+
+				size_t descriptor_set = compiler.get_decoration(
 					resource.id,
 					spv::DecorationDescriptorSet );
-				uint32_t binding =
-					compiler
-						.get_decoration( resource.id, spv::DecorationBinding );
 
-				igpu::decorator decorators = igpu::decorator::READABLE;
+				size_t binding = compiler.get_decoration(
+					resource.id,
+					spv::DecorationBinding );
 
-				if ( resource_category.type ==
-					 igpu::parameter::type::STORAGE_BUFFER )
+
+				decorator decorators = decorator::READABLE;
+
+				if ( resource_category.type == parameter::type::STORAGE_BUFFER )
 				{
-					decorators =
-						igpu::decorator::READABLE | igpu::decorator::WRITABLE;
+					decorators = decorator::NOTHING;
 
 					Bitset ssbo_mask =
 						compiler.get_buffer_block_flags( resource.id );
 
-					if ( ssbo_mask.get( spv::DecorationNonWritable ) )
+					if ( !ssbo_mask.get( spv::DecorationNonWritable ) )
 					{
-						decorators = decorators & ~igpu::decorator::WRITABLE;
+						decorators |= decorator::WRITABLE;
 					}
-					if ( ssbo_mask.get( spv::DecorationNonReadable ) )
+					if ( !ssbo_mask.get( spv::DecorationNonReadable ) )
 					{
-						decorators = decorators & ~igpu::decorator::READABLE;
+						decorators |= decorator::READABLE;
 					}
+				}
+
+				if ( 0 == ( decorators & decorator::READ_WRITE ) )
+				{
+					success = false;
+					LOG_CRITICAL(
+						"%s must be readable or writable",
+						resource.name.c_str() );
 				}
 
 				if ( spir_type.basetype != SPIRType::Struct &&
 					 spir_type.basetype != SPIRType::SampledImage )
 				{
+					success = false;
 					LOG_CRITICAL(
 						"%s is %s, not supported as shader uniform",
 						resource.name.c_str(),
 						spir_type_string( spir_type.basetype ) );
-
-					continue;
 				}
 
 				if ( 1 < spir_type.array.size() )
 				{
+					success = false;
 					LOG_CRITICAL(
 						"multidimensional array resources (eg uniform UBO{} "
 						"ubo[10][10]) not currently supported" );
-					continue;
 				}
 
 				if ( spir_type.columns != 1 )
 				{
+					success = false;
 					LOG_CRITICAL( "matrices not currently supported" );
-					continue;
 				}
 
 				size_t array_size =
@@ -232,16 +227,18 @@ namespace
 						array_size,
 						descriptor_set,
 						binding,
-						stage,
+						shader_stage,
 					} );
 				}
 				else
 				{
-					parameter* parameter = &out_parameters->at( *index );
+					parameter::config* parameter =
+						&out_parameters->at( *index );
 
 #define ERR_CHECK( EXPECT, ACTUAL, FMT, F_OP )                     \
 	if ( EXPECT != ACTUAL )                                        \
 	{                                                              \
+		success = false;                                           \
 		LOG_CRITICAL(                                              \
 			"descriptor set %d binding %d previously seen as " FMT \
 			" but now seen as " FMT,                               \
@@ -260,23 +257,28 @@ namespace
 						parameter->type,
 						resource_category.type,
 						"%s",
-						[]( const igpu::parameter::type& t ) {
-							return igpu::parameter::to_string( t ).data();
+						[]( const parameter::type& t ) {
+							return parameter::to_string( t ).data();
 						} );
 					ERR_CHECK( parameter->array_size, array_size, "%d", int );
 #undef ERR_CHECK
-					parameter->spv.stages |= stage;
+					parameter->shader_stages |= shader_stage;
+					parameter->decorators |= decorators;
 				}
 			}
 		}
+
+		return success;
 	}
 
-	void parse_vertex_parameters(
+	[[nodiscard]] bool parse_vertex_parameters(
 		Compiler& compiler,
 		ShaderResources& resources,
-		std::array< uint8_t, 64 >* out_indices,
-		std::vector< vertex_parameter >* out_vertex_parameters )
+		std::array< uint8_t, parameters::MAX_COUNT >* out_indices,
+		std::vector< vertex_parameter::config >* out_vertex_parameters )
 	{
+		bool success = true;
+
 		for ( auto& resource : resources.stage_inputs )
 		{
 			const SPIRType& spir_type = compiler.get_type( resource.type_id );
@@ -285,52 +287,51 @@ namespace
 
 			if ( spir_type.basetype != SPIRType::Float )
 			{
+				success = false;
 				LOG_CRITICAL(
 					"%s is %s, not supported as vertex attribute",
 					resource.name.c_str(),
 					spir_type_string( spir_type.basetype ) );
-
-				continue;
 			}
 
 			if ( spir_type.array.size() )
 			{
+				success = false;
 				LOG_CRITICAL(
 					"array vertex attributes (eg attribute vec3[10]) not "
 					"currently supported" );
-				continue;
 			}
 
 			if ( spir_type.columns != 1 )
 			{
+				success = false;
 				LOG_CRITICAL( "matrices not currently supported" );
-				continue;
 			}
 
-			igpu::components comp;
+			components comp = components::UNDEFINED;
 
 			switch ( spir_type.vecsize )
 			{
 			case 1:
-				comp = igpu::components::FLOAT1;
+				comp = components::FLOAT1;
 				break;
 			case 2:
-				comp = igpu::components::FLOAT2;
+				comp = components::FLOAT2;
 				break;
 
 			case 3:
-				comp = igpu::components::FLOAT3;
+				comp = components::FLOAT3;
 				break;
 
 			case 4:
-				comp = igpu::components::FLOAT4;
+				comp = components::FLOAT4;
 				break;
 
 			default:
+				success = false;
 				LOG_CRITICAL(
 					"unhandled component count %d",
 					(int)spir_type.vecsize );
-				continue;
 			}
 
 			uint8_t* index = &( *out_indices )[location];
@@ -347,11 +348,12 @@ namespace
 			}
 			else
 			{
-				vertex_parameter* vertex_parameter =
+				vertex_parameter::config* config =
 					&out_vertex_parameters->at( *index );
 #define ERR_CHECK( EXPECT, ACTUAL, FMT, F_OP )            \
 	if ( EXPECT != ACTUAL )                               \
 	{                                                     \
+		success = false;                                  \
 		LOG_CRITICAL(                                     \
 			"vertex attribute %d previously seen as " FMT \
 			" but now seen as " FMT,                      \
@@ -360,40 +362,40 @@ namespace
 			F_OP( ACTUAL ) );                             \
 	}
 				ERR_CHECK(
-					vertex_parameter->name,
+					config->name,
 					resource.name,
 					"%s",
 					[]( const std::string& s ) { return s.c_str(); } );
 				ERR_CHECK(
-					vertex_parameter->components,
+					config->components,
 					comp,
 					"%s",
-					[]( const igpu::components& c ) {
-						return igpu::to_string( c ).data();
+					[]( const components& c ) {
+						return to_string( c ).data();
 					} );
-				ERR_CHECK(
-					vertex_parameter->spv.location,
-					location,
-					"%d",
-					int );
+				ERR_CHECK( config->location, location, "%d", int );
 #undef ERR_CHECK
 			}
 		}
+
+		return success;
 	}
 }
 
-void igpu::spirv::parse(
+bool igpu::spirv_parse(
 	std::vector< uint32_t > spirv,
 	std::string entry_point,
 	shader_stages stages,
-	std::vector< parameter >* out_parameters,
-	std::vector< vertex_parameter >* out_vertex_parameters )
+	std::vector< parameter::config >* out_parameters,
+	std::vector< vertex_parameter::config >* out_vertex_parameters )
 {
+	bool success = true;
 	Parser parser( std::move( spirv ) );
 	parser.parse();
 
-	std::array< std::array< uint8_t, 64 >, 3 > parameter_indices;
-	std::array< uint8_t, 64 > vertex_parameter_indices;
+	std::array< std::array< uint8_t, parameters::MAX_COUNT >, 3 >
+		parameter_indices;
+	std::array< uint8_t, parameters::MAX_COUNT > vertex_parameter_indices;
 	memset( &parameter_indices, -1, sizeof parameter_indices );
 	memset( &vertex_parameter_indices, -1, sizeof vertex_parameter_indices );
 
@@ -413,7 +415,7 @@ void igpu::spirv::parse(
 				ShaderResources resources =
 					compiler.get_shader_resources( active );
 
-				parse_spirv_resources(
+				success &= parse_spirv_resources(
 					compiler,
 					stage,
 					resources,
@@ -422,7 +424,7 @@ void igpu::spirv::parse(
 
 				if ( out_vertex_parameters && stage == shader_stages::VERTEX )
 				{
-					parse_vertex_parameters(
+					success &= parse_vertex_parameters(
 						compiler,
 						resources,
 						&vertex_parameter_indices,
@@ -431,4 +433,6 @@ void igpu::spirv::parse(
 			}
 		}
 	}
+
+	return success;
 }
