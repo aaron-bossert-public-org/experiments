@@ -8,10 +8,10 @@
 		__func__,                                              \
 		#F "(" #__VA_ARGS__ ")",                               \
 		std::function< decltype( F( __VA_ARGS__ ) )() >( [&] { \
-			VULKAN_CONSUME_BREAK_();                           \
+			VULKAN_BREAK_AFTER_RETURN();                       \
 			return F( __VA_ARGS__ );                           \
 		} ) )
-#define VULKAN_CONSUME_BREAK_()                       \
+#define VULKAN_BREAK_AFTER_RETURN()                   \
 	struct EAT                                        \
 	{                                                 \
 		~EAT()                                        \

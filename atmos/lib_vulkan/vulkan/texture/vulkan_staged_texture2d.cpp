@@ -36,8 +36,9 @@ const vulkan_staged_texture2d::config& vulkan_staged_texture2d::cfg() const
 void vulkan_staged_texture2d::map( buffer_view_base* out_buffer_view )
 {
 	_staging_buffer.map( out_buffer_view );
-	_mapped_view = buffer_view<
-		char >( out_buffer_view->byte_size(), (char*)out_buffer_view->data() );
+	_mapped_view = buffer_view< char >(
+		out_buffer_view->byte_size(),
+		(char*)out_buffer_view->data() );
 }
 
 void vulkan_staged_texture2d::unmap( const texture2d::state& state )
@@ -64,11 +65,15 @@ void vulkan_staged_texture2d::unmap()
 		buffer_view< char > parsed_buffer_view = {};
 		texture2d::state state = {};
 
-		if ( !texture_file_parsing::
-				 parse_as_ktx( _mapped_view, &parsed_buffer_view, &state ) )
+		if ( !texture_file_parsing::parse_as_ktx(
+				 _mapped_view,
+				 &parsed_buffer_view,
+				 &state ) )
 		{
-			if ( !texture_file_parsing::
-					 parse_as_dds( _mapped_view, &parsed_buffer_view, &state ) )
+			if ( !texture_file_parsing::parse_as_dds(
+					 _mapped_view,
+					 &parsed_buffer_view,
+					 &state ) )
 			{
 				if ( !texture_file_parsing::parse_as_pvr(
 						 _mapped_view,
@@ -203,8 +208,10 @@ void vulkan_staged_texture2d::upload(
 		_current_state = state;
 		_current_state.mipmap_count = mipmap_count;
 
-		synchronization
-			.copy( _staging_buffer, *_gpu_image, (uint32_t)src_offset );
+		synchronization.copy(
+			_staging_buffer,
+			*_gpu_image,
+			(uint32_t)src_offset );
 
 		if ( generate_mipmaps )
 		{

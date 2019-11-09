@@ -72,8 +72,9 @@ std::vector< const char* > vulkan_window::required_extensions()
 
 	uint32_t count = 0;
 	const char** glfw_extensions = glfwGetRequiredInstanceExtensions( &count );
-	return std::vector<
-		const char* >( glfw_extensions, glfw_extensions + count );
+	return std::vector< const char* >(
+		glfw_extensions,
+		glfw_extensions + count );
 }
 
 bool vulkan_window::poll_events() const

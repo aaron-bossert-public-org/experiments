@@ -42,6 +42,7 @@ std::unique_ptr< vulkan_render_texture2d > vulkan_render_texture2d::make(
 		VK_IMAGE_ASPECT_COLOR_BIT,
 		1 );
 
-	return vulkan_image_target_t<
-		vulkan_render_texture2d >::make( cfg, image_cfg );
+	return vulkan_image_target_t< vulkan_render_texture2d >::make(
+		cfg,
+		image_cfg );
 }
