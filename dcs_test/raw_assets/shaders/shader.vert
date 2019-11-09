@@ -4,13 +4,19 @@
 #define type readonly buffer
 //#define type uniform
 
-layout( set = 0, binding = 0 ) type UniformBufferObject
+layout( set = 0, binding = 1 ) type batch_data
 {
-	mat4 model;
 	mat4 view;
 	mat4 proj;
 }
-ubo;
+batch;
+
+
+layout( set = 2, binding = 3 ) type instance_data
+{
+	mat4 model;
+}
+instance;
 
 layout( location = 0 ) in vec3 pos;
 layout( location = 1 ) in vec3 col;
@@ -21,7 +27,7 @@ layout( location = 1 ) out vec2 fragTexCoord;
 
 void main()
 {
-	gl_Position = ubo.proj * ubo.view * ubo.model * vec4( pos, 1.0 );
+	gl_Position = batch.proj * batch.view * instance.model * vec4( pos, 1.0 );
 
 	fragColor = col;
 	fragTexCoord = uv0;
