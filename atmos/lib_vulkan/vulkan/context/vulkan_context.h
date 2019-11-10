@@ -17,8 +17,18 @@ namespace igpu
 	class vulkan_context : public context
 	{
 	public:
+		struct config : context::config
+		{
+			struct vulkan
+			{
+				VkPhysicalDeviceProperties physical_device_properties;
+			};
+
+			vulkan vk;
+		};
+
 		static std::unique_ptr< vulkan_context > make(
-			const config&,
+			const context::config&,
 			const glm::ivec2& screen_res );
 
 		const config& cfg() const override;

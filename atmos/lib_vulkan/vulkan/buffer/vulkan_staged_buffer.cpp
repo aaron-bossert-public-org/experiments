@@ -12,12 +12,14 @@ vulkan_staged_buffer::vulkan_staged_buffer( const config& cfg )
 	: _cfg( cfg )
 	, _staging_buffer( {
 		  cfg.memory,
+		  cfg.device_properties,
 		  cfg.synchronization->vma(),
 		  VMA_MEMORY_USAGE_CPU_ONLY,
 		  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 	  } )
 	, _gpu_buffer( {
 		  memory_type::WRITE_COMBINED,
+		  cfg.device_properties,
 		  cfg.synchronization->vma(),
 		  VMA_MEMORY_USAGE_GPU_ONLY,
 		  VkBufferUsageFlagBits(

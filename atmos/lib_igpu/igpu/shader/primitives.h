@@ -18,5 +18,7 @@ namespace igpu
 		virtual const igpu::primitive& primitive( size_t ) const = 0;
 
 		bool find_expected( const std::string&, size_t* p_expected ) const;
+
+		virtual ~primitives() = default;
 	};
 }

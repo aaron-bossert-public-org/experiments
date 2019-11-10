@@ -12,5 +12,7 @@ namespace igpu
 		{
 			memory_type memory = memory_type::WRITE_COMBINED;
 		};
+
+		virtual ~compute_buffer() = default;
 	};
 }

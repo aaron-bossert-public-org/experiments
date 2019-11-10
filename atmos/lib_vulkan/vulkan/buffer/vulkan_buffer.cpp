@@ -153,6 +153,14 @@ void vulkan_buffer::reserve( size_t byte_size )
 			info.usage = _cfg.vk.usage;
 			info.sharingMode = _cfg.vk.sharing_mode;
 
+			if ( byte_size >
+				 _cfg.vk.device_properties->limits.maxUniformBufferRange )
+			{
+				info.usage &=
+					~( VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |
+					   VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT );
+			}
+
 			vmaCreateBuffer(
 				_cfg.vk.vma,
 				&info,
@@ -166,6 +174,7 @@ void vulkan_buffer::reserve( size_t byte_size )
 		}
 	}
 }
+
 void vulkan_buffer::release()
 {
 	vulkan_gpu_object::wait_on_fences();

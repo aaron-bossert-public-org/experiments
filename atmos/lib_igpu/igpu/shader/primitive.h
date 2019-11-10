@@ -36,5 +36,7 @@ namespace igpu
 		virtual const config& cfg() const = 0;
 
 		parameter::type type() const;
+
+		virtual ~primitive() = default;
 	};
 }

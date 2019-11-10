@@ -13,12 +13,12 @@ bool attribute_indexer::reset(
 	const vertex_parameters& vertex_parameters,
 	const geometry& geometry )
 {
-	if ( vertex_parameters.count() > MAX_PARAMETERS )
+	if ( vertex_parameters.count() > vertex_parameters::MAX_COUNT )
 	{
 		LOG_CRITICAL(
 			"vertex parameter count (%d) exceeds limit (%d)",
 			(int)vertex_parameters.count(),
-			(int)MAX_PARAMETERS );
+			(int)vertex_parameters::MAX_COUNT );
 		memset( this, 0, sizeof *this );
 		return false;
 	}
@@ -77,9 +77,8 @@ bool attribute_indexer::reset(
 	return success;
 }
 
-const std::array<
-	attribute_indexer::attribute_source,
-	attribute_indexer::MAX_PARAMETERS >&
+const std::
+	array< attribute_indexer::attribute_source, vertex_parameters::MAX_COUNT >&
 	attribute_indexer::indices() const
 {
 	return _indices;

@@ -22,6 +22,7 @@ namespace igpu
 		{
 			struct vulkan
 			{
+				const VkPhysicalDeviceProperties* device_properties = nullptr;
 				VkIndexType format;
 			};
 

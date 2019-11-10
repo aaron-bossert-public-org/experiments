@@ -11,6 +11,11 @@ bool primitives::find_expected( const std::string& name, size_t* p_expected )
 	size_t count = primitive_count();
 	size_t expected = *p_expected;
 
+	if ( 0 == count )
+	{
+		return false;
+	}
+
 	if ( expected >= count )
 	{
 		expected = 0;
@@ -25,7 +30,7 @@ bool primitives::find_expected( const std::string& name, size_t* p_expected )
 			*p_expected = at;
 			return true;
 		}
-		at++;
+		at = ( at + 1 ) % count;
 	} while ( at != expected );
 
 	return false;

@@ -21,10 +21,5 @@ namespace igpu
 		virtual glm::ivec2 res() const = 0;
 
 		virtual ~window() = default;
-
-	protected:
-		window() = default;
-		window( const window& ) = delete;
-		window& operator=( const window& ) = delete;
 	};
 }

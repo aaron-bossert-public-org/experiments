@@ -49,6 +49,7 @@ std::unique_ptr< vulkan_index_buffer > vulkan_index_buffer::make(
 	{
 		return vulkan_staged_buffer_t< vulkan_index_buffer >::make(
 			{
+				cfg.vk.device_properties,
 				VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 				synchronization,
 				cfg.memory,

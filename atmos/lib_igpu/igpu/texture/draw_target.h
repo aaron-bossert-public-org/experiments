@@ -21,5 +21,7 @@ namespace igpu
 		virtual const config& cfg() const = 0;
 
 		glm::ivec2 res() const;
+
+		virtual ~draw_target() = default;
 	};
 }

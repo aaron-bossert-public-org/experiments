@@ -66,7 +66,10 @@ bool vulkan_primitives_descriptor::reset(
 		{
 			std::visit(
 				[&]( auto&& gpu_object ) {
-					append( parameter.cfg(), *gpu_object );
+					if ( !append( parameter.cfg(), *gpu_object ) )
+					{
+						success = false;
+					}
 				},
 				primitive.cfg().vk.gpu_value );
 		}
@@ -131,7 +134,7 @@ VkWriteDescriptorSet* vulkan_primitives_descriptor::next_write_descriptor()
 	return write_descriptor;
 }
 
-VkDescriptorImageInfo* vulkan_primitives_descriptor::append(
+bool vulkan_primitives_descriptor::append(
 	const vulkan_parameter& parameter,
 	const vulkan_image& image )
 {
@@ -143,6 +146,7 @@ VkDescriptorImageInfo* vulkan_primitives_descriptor::append(
 	write_descriptor->descriptorType = parameter.cfg().vk.descriptor_type;
 
 	VkDescriptorImageInfo* image_descriptor = &_image_descriptors[_image_count];
+	write_descriptor->pImageInfo = image_descriptor;
 	++_image_count;
 
 	*image_descriptor = {
@@ -151,13 +155,28 @@ VkDescriptorImageInfo* vulkan_primitives_descriptor::append(
 		parameter.cfg().vk.image_layout,
 	};
 
-	return image_descriptor;
+	return true;
 }
 
-VkDescriptorBufferInfo* vulkan_primitives_descriptor::append(
+bool vulkan_primitives_descriptor::append(
 	const vulkan_parameter& parameter,
 	const vulkan_buffer& buffer )
 {
+	if ( parameter.cfg().type == parameter::type::UNIFORM_BUFFER &&
+		 buffer.mapped_view().byte_size() >
+			 buffer.cfg().vk.device_properties->limits.maxUniformBufferRange )
+	{
+		LOG_CRITICAL(
+			"uniform buffer size limit of current GPU exceeded. To fix this "
+			"switch from 'uniform' to 'buffer' storage in shader, or reduce "
+			"the size of your compute buffer.\n"
+			"parameter:%s\nlimit:%d bytes\nbound buffer size: %d bytes",
+			parameter.cfg().name.c_str(),
+			(int)buffer.cfg()
+				.vk.device_properties->limits.maxUniformBufferRange,
+			(int)buffer.mapped_view().byte_size() );
+		return false;
+	}
 	VkWriteDescriptorSet* write_descriptor = next_write_descriptor();
 
 	write_descriptor->dstBinding = (uint32_t)parameter.cfg().binding;
@@ -167,6 +186,7 @@ VkDescriptorBufferInfo* vulkan_primitives_descriptor::append(
 
 	VkDescriptorBufferInfo* buffer_descriptor =
 		&_buffer_descriptors[_buffer_count];
+	write_descriptor->pBufferInfo = buffer_descriptor;
 	++_buffer_count;
 
 	*buffer_descriptor = {
@@ -175,5 +195,5 @@ VkDescriptorBufferInfo* vulkan_primitives_descriptor::append(
 		VK_WHOLE_SIZE,
 	};
 
-	return buffer_descriptor;
+	return true;
 }

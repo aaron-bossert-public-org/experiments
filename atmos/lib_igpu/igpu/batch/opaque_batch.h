@@ -7,5 +7,8 @@
 namespace igpu
 {
 	class opaque_batch : public batch
-	{};
+	{
+	public:
+		virtual ~opaque_batch() = default;
+	};
 }

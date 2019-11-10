@@ -9,24 +9,41 @@ implement directx backend
 
 implement vulkan backend 
 
+add support for mapping sub buffers
+add support for primitive arrays
+
 write unit tests
 add new examples
 migrate example to use purely atmos
 
-implement barriers for job dependencies
-use vulkan attribute sequencer to build descriptors and vulkan dependencies
+implement composite context for profiling, constructs profiler_texture2d which owns vulkan_texture and forward all calls to wrapping them with callstack timers
 
-build vertex attribute sequencer to use same api as vulkan primitive sequencer
+migrate pipeline code to batching system
+build graphics pipeline cache
+
+implement barriers for job dependencies
+use vulkan attribute sequencer to build vulkan dependencies
+make sure tripple buffering does not cause bariers to be inserted ( only process hazards if they are in use this execution pass ) 
+
+
+//////////////////////////////////////
+(CURRENT PROGRESS POINT)
+//////////////////////////////////////
+
+
+build vertex attributes descriptor to use same api as vulkan primitives descriptor
 move attribute and primitive MAX_PARAMETERS next to vertex parameters and parameters respectively 
-use vulkan primitive sequencer to build descriptors and vulkan dependencies
+use vulkan primitives descriptor to build vulkan dependencies
 - can prototype this inside vulkan synchronization by using it in void create_descriptor_sets(), and making sure storage buffer works with it 
 
-check alignment of buffer types when mapping
-add storage buffer flags to vulkan parameters which allows any primitive to be bound to it
+
+add storage buffer to VkWriteDescriptorSet when parameter::STORAGE_BUFFER is detetected by spirv-cross
+
+use atmos for generating descriptor sets
+
+use vulkan primitives descriptor to build descriptor sets
+
 add storage buffer bit to vertex, index, uniform, texture memory buffers so they can be read/ modiyed in a compute shader
-
-
-(CURRENT PROGRESS POINT)
 
 rename buffer to UNIFORM_BUFFER and STORAGE_BUFFER
 

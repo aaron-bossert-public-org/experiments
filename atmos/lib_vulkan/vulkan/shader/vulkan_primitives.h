@@ -25,6 +25,7 @@ namespace igpu
 
 		static std::unique_ptr< vulkan_primitives > make( const config& );
 
+
 	private:
 		vulkan_primitives( std::vector< vulkan_primitive > );
 

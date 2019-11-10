@@ -23,23 +23,6 @@
 		}                                             \
 	} _;                                              \
 	(void)_
-#ifndef VMA_ASSERT
-#	define VMA_ASSERT( ... ) ASSERT_CONTEXT( __VA_ARGS__ )
-#endif
-
-#ifndef VMA_HEAVY_ASSERT
-#	define VMA_HEAVY_ASSERT( ... ) ASSERT_CONTEXT( __VA_ARGS__ )
-#endif
-
-#ifndef VMA_DEBUG_LOG
-#	define VMA_DEBUG_LOG( ... ) \
-		LOG_VERBOSE( "VulkanMemoryAllocator: " __VA_ARGS__ )
-#endif
-
-#ifndef VMA_RECORDING_ENABLED
-#	define VMA_RECORDING_ENABLED 1
-#endif
-
 
 // clang-format off
 

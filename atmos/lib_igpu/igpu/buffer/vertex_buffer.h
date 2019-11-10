@@ -43,6 +43,8 @@ namespace igpu
 		};
 
 		virtual const config& cfg() const = 0;
+
+		virtual ~vertex_buffer() = default;
 	};
 }
 

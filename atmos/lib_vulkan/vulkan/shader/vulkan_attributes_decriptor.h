@@ -15,15 +15,29 @@ namespace igpu
 	class vulkan_attributes_decriptor
 	{
 	public:
-		bool reset( const vulkan_vertex_parameters&, const vulkan_geometry& );
+		using binding_descriptions_t = std::array<
+			VkVertexInputBindingDescription,
+			vertex_parameters::MAX_COUNT >;
+
+		using attribute_descriptions_t = std::array<
+			VkVertexInputAttributeDescription,
+			vertex_parameters::MAX_COUNT >;
+
+		[[nodiscard]] bool reset(
+			const vulkan_vertex_parameters&,
+			const vulkan_geometry& );
 
 		const attribute_indexer& indexer() const;
 
 		uint32_t binding_description_count() const;
 
-		const VkVertexInputBindingDescription* binding_descriptions() const;
+		const VkPipelineVertexInputStateCreateInfo& vertex_input_info() const;
 
-		const VkVertexInputAttributeDescription* attribute_descriptions() const;
+		const VkPipelineInputAssemblyStateCreateInfo& input_assembly() const;
+
+		const binding_descriptions_t& binding_descriptions() const;
+
+		const attribute_descriptions_t& attribute_descriptions() const;
 
 		const vulkan_vertex_parameters* vertex_parameters() const;
 
@@ -37,14 +51,10 @@ namespace igpu
 
 		uint32_t _binding_description_count;
 
-		std::array<
-			VkVertexInputBindingDescription,
-			attribute_indexer::MAX_PARAMETERS >
-			_binding_descriptions;
+		VkPipelineVertexInputStateCreateInfo _vertex_input_info;
+		VkPipelineInputAssemblyStateCreateInfo _input_assembly;
 
-		std::array<
-			VkVertexInputAttributeDescription,
-			attribute_indexer::MAX_PARAMETERS >
-			_attribute_descriptions;
+		binding_descriptions_t _binding_descriptions;
+		attribute_descriptions_t _attribute_descriptions;
 	};
 }

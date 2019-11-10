@@ -24,6 +24,12 @@
 #pragma warning( push )
 // local variable not initialized, vk_mem_alloc.h
 #pragma warning( disable : 4189 )
+
+#define VMA_ASSERT( ... )		ASSERT_CONTEXT( __VA_ARGS__ )
+#define VMA_HEAVY_ASSERT( ... ) ASSERT_CONTEXT( __VA_ARGS__ )
+#define VMA_DEBUG_LOG( ... ) \
+	LOG_VERBOSE( "VulkanMemoryAllocator: " __VA_ARGS__ )
+
 #include <VulkanMemoryAllocator\src\vk_mem_alloc.h>
 #pragma warning( pop )
 

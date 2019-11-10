@@ -237,6 +237,8 @@ namespace igpu
 				return _map.end();
 			}
 
+			~batch_impl_t() override = default;
+
 			batch_impl_t() = default;
 			batch_impl_t( batch_impl_t&& ) = default;
 			batch_impl_t& operator=( batch_impl_t&& ) = default;
@@ -294,7 +296,7 @@ namespace igpu
 				, _cfg( cfg )
 			{}
 
-			~batch_binding_t()
+			~batch_binding_t() override
 			{
 				auto& geometry = _geometry_ptr->val();
 				{

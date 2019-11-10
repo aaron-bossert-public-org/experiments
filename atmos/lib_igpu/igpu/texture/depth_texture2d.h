@@ -10,5 +10,8 @@
 namespace igpu
 {
 	class depth_texture2d : public depth_buffer
-	{};
+	{
+	public:
+		virtual ~depth_texture2d() = default;
+	};
 }

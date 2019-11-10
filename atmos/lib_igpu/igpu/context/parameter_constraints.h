@@ -25,6 +25,8 @@ namespace igpu
 
 		size_t index_of( const std::string_view& ) const;
 
+		virtual ~parameter_constraints() = default;
+
 	protected:
 		config _cfg;
 		std::unordered_map< std::string_view, size_t > _lookup;

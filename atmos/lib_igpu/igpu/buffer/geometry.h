@@ -26,8 +26,6 @@ namespace igpu
 			std::vector< size_t > vbuff_byte_offsets;
 		};
 
-		virtual ~geometry() = default;
-
 		virtual const config& cfg() const = 0;
 
 		virtual void base_vertex( ptrdiff_t ) = 0;
@@ -55,6 +53,8 @@ namespace igpu
 		virtual size_t vertex_buffer_count() const = 0;
 
 		virtual const igpu::vertex_buffer& vertex_buffer( size_t ) const = 0;
+
+		virtual ~geometry() = default;
 
 		bool find_expected_vertex_param(
 			const std::string& name,

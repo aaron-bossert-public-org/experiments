@@ -23,12 +23,5 @@ namespace igpu
 		virtual const config& cfg() const = 0;
 
 		virtual ~depth_buffer() = default;
-
-	protected:
-		depth_buffer()
-		{}
-
-		depth_buffer( const depth_buffer& ) = delete;
-		depth_buffer& operator=( const depth_buffer& ) = delete;
 	};
 }

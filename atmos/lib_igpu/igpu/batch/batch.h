@@ -28,8 +28,9 @@ namespace igpu
 		void visit(
 			const std::function< void( const instance_batch& ) >& visit );
 
-	protected:
 		virtual ~batch() = default;
+
+	protected:
 		batch() = default;
 		batch( const batch& ) = delete;
 		batch& operator=( const batch& ) = delete;

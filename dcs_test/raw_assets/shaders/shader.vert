@@ -12,7 +12,7 @@ layout( set = 0, binding = 1 ) type batch_data
 batch;
 
 
-layout( set = 2, binding = 3 ) type instance_data
+layout( set = 2, binding = 3 ) uniform instance_data
 {
 	mat4 model;
 }

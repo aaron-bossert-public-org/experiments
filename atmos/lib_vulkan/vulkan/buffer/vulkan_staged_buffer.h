@@ -16,6 +16,7 @@ namespace igpu
 	public:
 		struct config
 		{
+			const VkPhysicalDeviceProperties* device_properties = nullptr;
 			VkBufferUsageFlagBits vk_usage_flags = (VkBufferUsageFlagBits)0;
 			scoped_ptr< vulkan_synchronization > synchronization;
 			memory_type memory;
@@ -92,7 +93,7 @@ namespace igpu
 			}
 			else if ( !cfg.synchronization )
 			{
-				LOG_CRITICAL( "buffer mediator has expired" );
+				LOG_CRITICAL( "vulkan synchronization object has expired" );
 			}
 			else
 			{

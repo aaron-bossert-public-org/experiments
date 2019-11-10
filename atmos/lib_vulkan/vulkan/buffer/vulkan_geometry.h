@@ -15,6 +15,16 @@ namespace igpu
 	class vulkan_geometry : public geometry
 	{
 	public:
+		struct config : geometry::config
+		{
+			struct vulkan
+			{
+				VkPrimitiveTopology topology;
+			};
+
+			vulkan vk;
+		};
+
 		const config& cfg() const override;
 
 		void base_vertex( ptrdiff_t ) override;

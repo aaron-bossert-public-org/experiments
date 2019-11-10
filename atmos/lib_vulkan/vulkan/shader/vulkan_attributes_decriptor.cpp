@@ -1,5 +1,6 @@
-#include "vulkan/buffer/vulkan_geometry.h"
 #include "vulkan/shader/vulkan_attributes_decriptor.h"
+
+#include "vulkan/buffer/vulkan_geometry.h"
 #include "vulkan/shader/vulkan_vertex_parameters.h"
 
 #include "igpu/shader/attribute_indexer.h"
@@ -20,9 +21,7 @@ bool vulkan_attributes_decriptor::reset(
 	_geometry = &geometry;
 	_binding_description_count = 0;
 
-	std::array<
-		VkVertexInputBindingDescription*,
-		attribute_indexer::MAX_PARAMETERS >
+	std::array< VkVertexInputBindingDescription*, vertex_parameters::MAX_COUNT >
 		binding_table = {};
 
 	for ( uint32_t i = 0; i < vertex_parameters.count(); ++i )
@@ -56,18 +55,27 @@ bool vulkan_attributes_decriptor::reset(
 		attribute_description->offset = attr_cfg.offset;
 	}
 
-	VkPipelineVertexInputStateCreateInfo vertex_input_info = {};
-	vertex_input_info.sType =
-		VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+	_vertex_input_info = {
+		VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+		nullptr,
+	};
 
-	vertex_input_info.vertexBindingDescriptionCount =
+	_vertex_input_info.vertexBindingDescriptionCount =
 		_binding_description_count;
-	vertex_input_info.pVertexBindingDescriptions = _binding_descriptions.data();
+	_vertex_input_info.pVertexBindingDescriptions =
+		_binding_descriptions.data();
 
-	vertex_input_info.vertexAttributeDescriptionCount =
+	_vertex_input_info.vertexAttributeDescriptionCount =
 		(uint32_t)vertex_parameters.count();
-	vertex_input_info.pVertexAttributeDescriptions =
+	_vertex_input_info.pVertexAttributeDescriptions =
 		_attribute_descriptions.data();
+
+
+	_input_assembly = {
+		VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+		nullptr,
+	};
+	_input_assembly.topology = geometry.cfg().vk.topology;
 
 	return true;
 }
@@ -77,19 +85,31 @@ const attribute_indexer& vulkan_attributes_decriptor::indexer() const
 	return _indexer;
 }
 
+const VkPipelineVertexInputStateCreateInfo& vulkan_attributes_decriptor::
+	vertex_input_info() const
+{
+	return _vertex_input_info;
+}
+
+const VkPipelineInputAssemblyStateCreateInfo& vulkan_attributes_decriptor::
+	input_assembly() const
+{
+	return _input_assembly;
+}
+
 uint32_t vulkan_attributes_decriptor::binding_description_count() const
 {
 	return _binding_description_count;
 }
 
-const VkVertexInputBindingDescription* vulkan_attributes_decriptor::
-	binding_descriptions() const
+const vulkan_attributes_decriptor::binding_descriptions_t&
+	vulkan_attributes_decriptor::binding_descriptions() const
 {
-	return _binding_descriptions.data();
+	return _binding_descriptions;
 }
 
-const VkVertexInputAttributeDescription* vulkan_attributes_decriptor::
-	attribute_descriptions() const
+const vulkan_attributes_decriptor::attribute_descriptions_t&
+	vulkan_attributes_decriptor::attribute_descriptions() const
 {
-	return _attribute_descriptions.data();
+	return _attribute_descriptions;
 }

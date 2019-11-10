@@ -27,17 +27,12 @@ namespace igpu
 			size_t mipmap_count = 1;
 		};
 
-		virtual ~texture2d() = default;
-
 		virtual void unmap( const state& ) = 0;
 
 		virtual const config& cfg() const = 0;
 
 		virtual const state& current_state() const = 0;
 
-	protected:
-		texture2d() = default;
-		texture2d( const texture2d& ) = delete;
-		texture2d& operator=( const texture2d& ) = delete;
+		virtual ~texture2d() = default;
 	};
 }

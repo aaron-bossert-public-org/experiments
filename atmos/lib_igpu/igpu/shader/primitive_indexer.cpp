@@ -13,12 +13,12 @@ bool primitive_indexer::reset(
 	const parameters& parameters,
 	const primitives& primitives )
 {
-	if ( parameters.count() > MAX_PARAMETERS )
+	if ( parameters.count() > parameters::MAX_COUNT )
 	{
 		LOG_CRITICAL(
 			"parameter count (%d) exceeds limit (%d)",
 			(int)parameters.count(),
-			(int)MAX_PARAMETERS );
+			(int)parameters::MAX_COUNT );
 		memset( this, 0, sizeof *this );
 		return false;
 	}
@@ -42,7 +42,24 @@ bool primitive_indexer::reset(
 
 			_indices[pram] = (uint8_t)prim;
 			++prim;
-			if ( parameter.cfg().type != primitive.type() )
+			if ( parameter.cfg().type == parameter::type::STORAGE_BUFFER )
+			{
+				if ( primitive.type() != parameter::type::STORAGE_BUFFER &&
+					 primitive.type() != parameter::type::UNIFORM_BUFFER )
+				{
+					LOG_CRITICAL(
+						"primitive (%s) expected to be (%s) or (%s) but is "
+						"(%s) instead",
+						parameter.cfg().name.c_str(),
+						parameter::to_string( parameter::type::STORAGE_BUFFER )
+							.data(),
+						parameter::to_string( parameter::type::UNIFORM_BUFFER )
+							.data(),
+						parameter::to_string( primitive.type() ).data() );
+					success = false;
+				}
+			}
+			else if ( parameter.cfg().type != primitive.type() )
 			{
 				LOG_CRITICAL(
 					"primitive (%s) expected to be (%s) but is (%s) instead",
@@ -65,8 +82,8 @@ bool primitive_indexer::reset(
 	return success;
 }
 
-const std::array< uint8_t, primitive_indexer::MAX_PARAMETERS >&
-	primitive_indexer::indices() const
+const std::array< uint8_t, parameters::MAX_COUNT >& primitive_indexer::indices()
+	const
 {
 	return _indices;
 }

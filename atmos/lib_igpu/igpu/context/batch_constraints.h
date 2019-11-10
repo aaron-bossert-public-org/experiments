@@ -9,5 +9,7 @@ namespace igpu
 	{
 	public:
 		using parameter_constraints::parameter_constraints;
+
+		virtual ~batch_constraints() = default;
 	};
 }

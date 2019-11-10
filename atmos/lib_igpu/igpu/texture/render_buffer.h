@@ -22,10 +22,5 @@ namespace igpu
 		virtual const config& cfg() const = 0;
 
 		virtual ~render_buffer() = default;
-
-	protected:
-		render_buffer() = default;
-		render_buffer( const render_buffer& ) = delete;
-		render_buffer& operator=( const render_buffer& ) = delete;
 	};
 }

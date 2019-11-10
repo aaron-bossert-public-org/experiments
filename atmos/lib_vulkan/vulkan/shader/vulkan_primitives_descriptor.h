@@ -20,14 +20,16 @@ namespace igpu
 	class vulkan_primitives_descriptor
 	{
 	public:
-		using image_descriptors_t = std::
-			array< VkDescriptorImageInfo, primitive_indexer::MAX_PARAMETERS >;
-		using buffer_descriptors_t = std::
-			array< VkDescriptorBufferInfo, primitive_indexer::MAX_PARAMETERS >;
-		using write_descriptors_t = std::
-			array< VkWriteDescriptorSet, primitive_indexer::MAX_PARAMETERS >;
+		using image_descriptors_t =
+			std::array< VkDescriptorImageInfo, parameters::MAX_COUNT >;
 
-		bool reset(
+		using buffer_descriptors_t =
+			std::array< VkDescriptorBufferInfo, parameters::MAX_COUNT >;
+
+		using write_descriptors_t =
+			std::array< VkWriteDescriptorSet, parameters::MAX_COUNT >;
+
+		[[nodiscard]] bool reset(
 			VkDescriptorSet,
 			const vulkan_parameters&,
 			const vulkan_primitives& );
@@ -48,15 +50,12 @@ namespace igpu
 
 		const vulkan_primitives* primitives() const;
 
+	private:
 		VkWriteDescriptorSet* next_write_descriptor();
 
-		VkDescriptorImageInfo* append(
-			const vulkan_parameter&,
-			const vulkan_image& );
+		bool append( const vulkan_parameter&, const vulkan_image& );
 
-		VkDescriptorBufferInfo* append(
-			const vulkan_parameter&,
-			const vulkan_buffer& );
+		bool append( const vulkan_parameter&, const vulkan_buffer& );
 
 	private:
 		primitive_indexer _indexer;

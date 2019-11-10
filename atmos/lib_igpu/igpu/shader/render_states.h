@@ -116,10 +116,7 @@ namespace igpu
 
 		virtual const config& cfg() const = 0;
 
-	protected:
-		render_states() = default;
-		render_states( const render_states& ) = delete;
-		render_states& operator=( const render_states& ) = delete;
+		virtual ~render_states() = default;
 	};
 
 	int mem_compare(

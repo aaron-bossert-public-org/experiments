@@ -9,8 +9,8 @@
 #include "vulkan/buffer/vulkan_vertex_buffer.h"
 #include "vulkan/defines/vulkan_includes.h"
 #include "vulkan/shader/vulkan_fragment_shader.h"
-#include "vulkan/shader/vulkan_program.h"
 #include "vulkan/shader/vulkan_primitives.h"
+#include "vulkan/shader/vulkan_program.h"
 #include "vulkan/shader/vulkan_render_states.h"
 #include "vulkan/shader/vulkan_vertex_shader.h"
 #include "vulkan/sync/vulkan_queue.h"
@@ -72,7 +72,7 @@ namespace
 		return VK_ERROR_EXTENSION_NOT_PRESENT;
 	}
 
-	VkInstance create_instance( const vulkan_context::config& cfg )
+	VkInstance create_instance( const context::config& cfg )
 	{
 		VkApplicationInfo app_info = {};
 		app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -205,7 +205,7 @@ namespace
 	}
 
 	VkDebugUtilsMessengerEXT create_debug_messenger(
-		const vulkan_context::config& cfg,
+		const context::config& cfg,
 		VkInstance instance )
 	{
 		VkDebugUtilsMessengerEXT debug_messenger = nullptr;
@@ -457,18 +457,14 @@ namespace
 	}
 
 	VkSampleCountFlagBits get_max_usable_sample_count(
-		VkPhysicalDevice physical_device )
+		const vulkan_context::config& cfg )
 	{
-		VkPhysicalDeviceProperties physical_device_properties;
-		vkGetPhysicalDeviceProperties(
-			physical_device,
-			&physical_device_properties );
-
+		const auto& properties = cfg.vk.physical_device_properties;
 		VkSampleCountFlags counts =
-			physical_device_properties.limits.framebufferColorSampleCounts <
-				physical_device_properties.limits.framebufferDepthSampleCounts
-			? physical_device_properties.limits.framebufferColorSampleCounts
-			: physical_device_properties.limits.framebufferDepthSampleCounts;
+			properties.limits.framebufferColorSampleCounts <
+				properties.limits.framebufferDepthSampleCounts
+			? properties.limits.framebufferColorSampleCounts
+			: properties.limits.framebufferDepthSampleCounts;
 
 		if ( counts & VK_SAMPLE_COUNT_64_BIT )
 		{
@@ -557,24 +553,24 @@ namespace
 			VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
 			present_queue_family,
 			graphics_queue_family,
-			get_max_usable_sample_count( physical_device ),
+			get_max_usable_sample_count( cfg ),
 		} );
 	}
 }
 
 std::unique_ptr< vulkan_context > vulkan_context::make(
-	const config& cfg,
+	const context::config& base_cfg,
 	const glm::ivec2& screen_res )
 {
-	VkInstance instance = create_instance( cfg );
+	VkInstance instance = create_instance( base_cfg );
 	VkDebugUtilsMessengerEXT debug_messenger = nullptr;
 
 #if ATMOS_DEBUG
-	debug_messenger = create_debug_messenger( cfg, instance );
+	debug_messenger = create_debug_messenger( base_cfg, instance );
 #endif
 
 	vulkan_window::config window_cfg = {};
-	window_cfg.name = cfg.name;
+	window_cfg.name = base_cfg.name;
 	window_cfg.vk.instance = instance;
 	auto window = vulkan_window::make( window_cfg, screen_res );
 	if ( !window )
@@ -596,6 +592,12 @@ std::unique_ptr< vulkan_context > vulkan_context::make(
 		return nullptr;
 	}
 
+	vulkan_context::config cfg = {
+		base_cfg,
+	};
+	vkGetPhysicalDeviceProperties(
+		physical_device,
+		&cfg.vk.physical_device_properties );
 
 	std::shared_ptr< vulkan_queue >
 		present_queue = vulkan_queue::make(
@@ -760,37 +762,53 @@ std::unique_ptr< render_states > vulkan_context::make_render_states(
 std::unique_ptr< geometry > vulkan_context::make_geometry(
 	const geometry::config& cfg )
 {
-	return vulkan_geometry::make( cfg );
+	return vulkan_geometry::make( {
+		cfg,
+		to_vulkan_topology( cfg.topology ),
+	} );
 }
 
 std::unique_ptr< vertex_buffer > vulkan_context::make_vertex_buffer(
 	const vertex_buffer::config& cfg )
 {
-	return vulkan_vertex_buffer::make( cfg, _synchronization );
+	return vulkan_vertex_buffer::make(
+		{
+			cfg,
+			&_cfg.vk.physical_device_properties,
+		},
+		_synchronization );
 }
 
 std::unique_ptr< index_buffer > vulkan_context::make_index_buffer(
 	const index_buffer::config& base_cfg )
 {
-	vulkan_index_buffer::config cfg = {
-		base_cfg,
-		to_vulkan_format( base_cfg.format ),
-	};
-
-	return vulkan_index_buffer::make( cfg, _synchronization );
+	return vulkan_index_buffer::make(
+		{
+			base_cfg,
+			&_cfg.vk.physical_device_properties,
+			to_vulkan_format( base_cfg.format ),
+		},
+		_synchronization );
 }
 
 std::unique_ptr< compute_buffer > vulkan_context::make_compute_buffer(
 	const compute_buffer::config& cfg )
 {
-	return vulkan_compute_buffer::make( cfg, _synchronization );
+	return vulkan_compute_buffer::make(
+		{
+			cfg,
+			&_cfg.vk.physical_device_properties,
+		},
+		_synchronization );
 }
+
 std::unique_ptr< texture2d > vulkan_context::make_texture(
 	const texture2d::config& cfg )
 {
 	return vulkan_texture2d::make(
 		{
 			cfg,
+			&_cfg.vk.physical_device_properties,
 			_state.physical_device,
 			_state.device,
 		},
@@ -798,9 +816,9 @@ std::unique_ptr< texture2d > vulkan_context::make_texture(
 }
 
 std::unique_ptr< primitives > vulkan_context::make_primitives(
-	const primitives::config& cfg)
+	const primitives::config& cfg )
 {
-	return vulkan_primitives::make(cfg);
+	return vulkan_primitives::make( cfg );
 }
 
 std::unique_ptr< opaque_batch > vulkan_context::make_opaque_batch(

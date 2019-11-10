@@ -58,5 +58,7 @@ namespace igpu
 
 		virtual const std::optional< utility::sphere >& visibility_sphere()
 			const = 0;
+
+		virtual ~instance_batch() = default;
 	};
 }

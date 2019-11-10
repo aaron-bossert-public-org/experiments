@@ -15,6 +15,16 @@ namespace igpu
 	class vulkan_compute_buffer : public compute_buffer
 	{
 	public:
+		struct config : compute_buffer::config
+		{
+			struct vulkan
+			{
+				const VkPhysicalDeviceProperties* device_properties = nullptr;
+			};
+
+			vulkan vk;
+		};
+
 		virtual vulkan_buffer& gpu_object() = 0;
 
 		virtual const vulkan_buffer& gpu_object() const = 0;

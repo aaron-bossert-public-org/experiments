@@ -24,8 +24,6 @@ namespace igpu
 
 		virtual const config& cfg() const = 0;
 
-		virtual ~program() = default;
-
 		virtual const parameters& batch_parameters() const = 0;
 
 		virtual const parameters& material_parameters() const = 0;
@@ -33,6 +31,8 @@ namespace igpu
 		virtual const parameters& instance_parameters() const = 0;
 
 		virtual const igpu::vertex_parameters& vertex_parameters() const = 0;
+
+		virtual ~program() = default;
 
 	protected:
 		program() = default;

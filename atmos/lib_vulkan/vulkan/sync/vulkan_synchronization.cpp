@@ -918,7 +918,7 @@ private:
 			auto* vulkan = ASSERT_CAST( vulkan_geometry*, geometry.get() );
 			auto& vulkan_indices = vulkan->index_buffer();
 
-			const int MAX_BUFFERS = attribute_indexer::MAX_PARAMETERS;
+			const int MAX_BUFFERS = vertex_parameters::MAX_COUNT;
 			ASSERT_CONTEXT( vulkan->cfg().vertex_buffers.size() < MAX_BUFFERS )
 			VkBuffer vertex_buffers[MAX_BUFFERS];
 			VkDeviceSize offsets[MAX_BUFFERS];
@@ -983,6 +983,7 @@ private:
 				{
 					return false;
 				}
+
 				update( i );
 			}
 
@@ -1207,23 +1208,56 @@ private:
 		this,
 	};
 
-	struct old_descriptor_set_impl
+	struct new_descriptor_set_impl
 	{
-		void create_descriptor_pool()
-		{
-			uint32_t uniform_buffers = 0;
-			uint32_t storage_buffers = 0;
-			uint32_t samplers = 0;
+		HelloTriangleApplication* app = nullptr;
 
-			for ( auto* parameters : {
-					  &app->program_impl.program->batch_parameters(),
-					  &app->program_impl.program->material_parameters(),
-					  &app->program_impl.program->instance_parameters(),
-				  } )
+		struct batch_node_prims
+		{
+			VkDevice device;
+			std::shared_ptr< igpu::primitives > primitives;
+			VkDescriptorSetLayout _layout;
+			VkDescriptorPool _descriptor_pool;
+			VkDescriptorSet _descriptor_set;
+
+			void setup(
+				const vulkan_parameters& parameters,
+				VkDevice device_,
+				std::shared_ptr< igpu::primitives > primitives_ )
 			{
-				for ( int i = 0; i < parameters->count(); ++i )
+				device = device_;
+				primitives = primitives_;
+				_layout = parameters.cfg().vk.layout;
+				_descriptor_pool =
+					create_descriptor_pool( device_, parameters, 1 );
+				_descriptor_set = allocate_descriptor_set(
+					device_,
+					_descriptor_pool,
+					_layout );
+
+				auto* vulkan =
+					ASSERT_CAST( vulkan_primitives*, primitives.get() );
+
+				vulkan_primitives_descriptor primitives_descriptor;
+				if ( primitives_descriptor
+						 .reset( _descriptor_set, parameters, *vulkan ) )
 				{
-					const auto& cfg = parameters->parameter( i ).cfg();
+					update_descriptor_sets( device, primitives_descriptor );
+				}
+			}
+
+			static VkDescriptorPool create_descriptor_pool(
+				VkDevice device,
+				const parameters& parameters,
+				uint32_t max_sets )
+			{
+				uint32_t uniform_buffers = 0;
+				uint32_t storage_buffers = 0;
+				uint32_t samplers = 0;
+
+				for ( int i = 0; i < parameters.count(); ++i )
+				{
+					const auto& cfg = parameters.parameter( i ).cfg();
 					switch ( cfg.type )
 					{
 					case parameter::type::UNIFORM_BUFFER:
@@ -1239,366 +1273,141 @@ private:
 						break;
 					}
 				}
+
+				uint32_t pool_type_count = 0;
+
+				std::array< VkDescriptorPoolSize, 3 > pool_sizes = {};
+
+				if ( uniform_buffers )
+				{
+					pool_sizes[pool_type_count++] = {
+						VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+						uniform_buffers * max_sets,
+					};
+				}
+
+				if ( storage_buffers )
+				{
+					pool_sizes[pool_type_count++] = {
+						VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+						storage_buffers * max_sets,
+					};
+				}
+
+				if ( samplers )
+				{
+					pool_sizes[pool_type_count++] = {
+						VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+						samplers * max_sets,
+					};
+				}
+
+				VkDescriptorPoolCreateInfo pool_info = {};
+				pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+				pool_info.poolSizeCount = pool_type_count;
+				pool_info.pPoolSizes = pool_sizes.data();
+				pool_info.maxSets = static_cast< uint32_t >( max_sets );
+
+				VkDescriptorPool descriptor_pool = nullptr;
+				vkCreateDescriptorPool(
+					device,
+					&pool_info,
+					nullptr,
+					&descriptor_pool );
+				return descriptor_pool;
 			}
 
-			uint32_t pool_type_count = 0;
-
-			std::array< VkDescriptorPoolSize, 3 > pool_sizes = {};
-
-			if ( uniform_buffers )
+			static VkDescriptorSet allocate_descriptor_set(
+				VkDevice device,
+				VkDescriptorPool descriptor_pool,
+				VkDescriptorSetLayout layout )
 			{
-				pool_sizes[pool_type_count++] = {
-					VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-					uniform_buffers * app->_swap_image_count,
-				};
+				VkDescriptorSetAllocateInfo alloc_info = {};
+				alloc_info.sType =
+					VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+				alloc_info.descriptorPool = descriptor_pool;
+				alloc_info.descriptorSetCount = 1;
+				alloc_info.pSetLayouts = &layout;
+
+				VkDescriptorSet set = nullptr;
+				vkAllocateDescriptorSets( device, &alloc_info, &set );
+				return set;
 			}
 
-			if ( storage_buffers )
+			static void update_descriptor_sets(
+				VkDevice device,
+				const vulkan_primitives_descriptor& primitives_descriptor )
 			{
-				pool_sizes[pool_type_count++] = {
-					VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-					storage_buffers * app->_swap_image_count,
-				};
-			}
-
-			if ( samplers )
-			{
-				pool_sizes[pool_type_count++] = {
-					VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-					samplers * app->_swap_image_count,
-				};
-			}
-
-			VkDescriptorPoolCreateInfo pool_info = {};
-			pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-			pool_info.poolSizeCount = pool_type_count;
-			pool_info.pPoolSizes = pool_sizes.data();
-			pool_info.maxSets =
-				static_cast< uint32_t >( app->_swap_image_count * 3 );
-
-			vkCreateDescriptorPool(
-				app->_device,
-				&pool_info,
-				nullptr,
-				&_descriptor_pool );
-		}
-
-		void create_descriptor_sets()
-		{
-			auto* program =
-				ASSERT_CAST( vulkan_program*, app->program_impl.program.get() );
-
-			_batch_descriptor_sets.resize( app->_swap_image_count );
-			_material_descriptor_sets.resize( app->_swap_image_count );
-			_instance_descriptor_sets.resize( app->_swap_image_count );
-
-			allocate_descriptor_set(
-				app->_device,
-				_descriptor_pool,
-				program->batch_parameters().cfg().vk.descriptor_set_layout,
-				&_batch_descriptor_sets );
-			allocate_descriptor_set(
-				app->_device,
-				_descriptor_pool,
-				program->material_parameters().cfg().vk.descriptor_set_layout,
-				&_material_descriptor_sets );
-			allocate_descriptor_set(
-				app->_device,
-				_descriptor_pool,
-				program->instance_parameters().cfg().vk.descriptor_set_layout,
-				&_instance_descriptor_sets );
-
-			for ( size_t i = 0; i < app->_swap_image_count; i++ )
-			{
-				VkDescriptorBufferInfo batch_info =
-					app->batch.descriptor_info( i );
-
-				VkDescriptorImageInfo material_info =
-					app->texture_impl.descriptor_info();
-
-				VkDescriptorBufferInfo instance_info =
-					app->instance.descriptor_info( i );
-
-				std::array< VkWriteDescriptorSet, 3 > descriptor_writes = {};
-
-				descriptor_writes[0].sType =
-					VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				descriptor_writes[0].dstSet = _batch_descriptor_sets[i];
-				descriptor_writes[0].dstBinding = 1;
-				descriptor_writes[0].dstArrayElement = 0;
-				descriptor_writes[0].descriptorType =
-					VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-				descriptor_writes[0].descriptorCount = 1;
-				descriptor_writes[0].pBufferInfo = &batch_info;
-
-				descriptor_writes[1].sType =
-					VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				descriptor_writes[1].dstSet = _material_descriptor_sets[i];
-				descriptor_writes[1].dstBinding = 10;
-				descriptor_writes[1].dstArrayElement = 0;
-				descriptor_writes[1].descriptorType =
-					VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-				descriptor_writes[1].descriptorCount = 1;
-				descriptor_writes[1].pImageInfo = &material_info;
-
-				descriptor_writes[2].sType =
-					VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				descriptor_writes[2].dstSet = _instance_descriptor_sets[i];
-				descriptor_writes[2].dstBinding = 3;
-				descriptor_writes[2].dstArrayElement = 0;
-				descriptor_writes[2].descriptorType =
-					VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-				descriptor_writes[2].descriptorCount = 1;
-				descriptor_writes[2].pBufferInfo = &instance_info;
-
 				vkUpdateDescriptorSets(
-					app->_device,
-					static_cast< uint32_t >( descriptor_writes.size() ),
-					descriptor_writes.data(),
+					device,
+					(uint32_t)primitives_descriptor.parameters()->count(),
+					primitives_descriptor.write_descriptors().data(),
 					0,
 					nullptr );
 			}
-		}
 
-		void create()
+			void destroy()
+			{
+				vkDestroyDescriptorPool( device, _descriptor_pool, nullptr );
+			}
+		};
+
+		size_t _max_sets;
+		std::vector< batch_node_prims > _batch_inputs;
+		std::vector< batch_node_prims > _material_inputs;
+		std::vector< batch_node_prims > _instance_inputs;
+
+		void create( const vulkan_program& program, size_t max_sets )
 		{
-			create_descriptor_pool();
-			create_descriptor_sets();
+			_max_sets = max_sets;
+			for ( size_t i = 0; i < max_sets; ++i )
+			{
+				_batch_inputs.emplace_back().setup(
+					program.batch_parameters(),
+					app->_device,
+					app->_context->make_primitives( { {
+						{ "batch_data", app->batch._compute_buffers[i] },
+					} } ) );
+
+				_material_inputs.emplace_back().setup(
+					program.material_parameters(),
+					app->_device,
+					app->_context->make_primitives( { {
+						{ "texSampler", app->texture_impl.texture },
+					} } ) );
+
+				_instance_inputs.emplace_back().setup(
+					program.instance_parameters(),
+					app->_device,
+					app->_context->make_primitives( { {
+						{ "instance_data", app->instance._compute_buffers[i] },
+					} } ) );
+			}
 		}
 
 		void destroy()
 		{
-			vkDestroyDescriptorPool( app->_device, _descriptor_pool, nullptr );
+			for ( size_t i = 0; i < _max_sets; ++i )
+			{
+				_batch_inputs[i].destroy();
+				_material_inputs[i].destroy();
+				_instance_inputs[i].destroy();
+			}
+
+			_batch_inputs.clear();
+			_material_inputs.clear();
+			_instance_inputs.clear();
 		}
 
-		HelloTriangleApplication* app = nullptr;
-		VkDescriptorPool _descriptor_pool;
-		std::vector< VkDescriptorSet > _batch_descriptor_sets;
-		std::vector< VkDescriptorSet > _material_descriptor_sets;
-		std::vector< VkDescriptorSet > _instance_descriptor_sets;
+		~new_descriptor_set_impl()
+		{
+			LOG_VERBOSE( "~new_descriptor_set_impl" );
+		}
 	};
 
 
-	// struct new_descriptor_set_impl
-	//{
-	//	void create_descriptor_pool()
-	//	{
-	//		uint32_t uniform_buffers = 0;
-	//		uint32_t storage_buffers = 0;
-	//		uint32_t samplers = 0;
+	new_descriptor_set_impl descriptor_set_impl = { this };
 
-	//		for ( auto* parameters : {
-	//				  &app->program_impl.program->batch_parameters(),
-	//				  &app->program_impl.program->material_parameters(),
-	//				  &app->program_impl.program->instance_parameters(),
-	//			  } )
-	//		{
-	//			for ( int i = 0; i < parameters->count(); ++i )
-	//			{
-	//				const auto& cfg = parameters->parameter( i ).cfg();
-	//				switch ( cfg.type )
-	//				{
-	//				case parameter::type::UNIFORM_BUFFER:
-	//					uniform_buffers += (uint32_t)cfg.array_size;
-	//					break;
-
-	//				case parameter::type::STORAGE_BUFFER:
-	//					storage_buffers += (uint32_t)cfg.array_size;
-	//					break;
-
-	//				case parameter::type::SAMPLER2D:
-	//					samplers += (uint32_t)cfg.array_size;
-	//					break;
-	//				}
-	//			}
-	//		}
-
-	//		uint32_t pool_type_count = 0;
-
-	//		std::array< VkDescriptorPoolSize, 3 > pool_sizes = {};
-
-	//		if ( uniform_buffers )
-	//		{
-	//			pool_sizes[pool_type_count++] = {
-	//				VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-	//				uniform_buffers * app->_swap_image_count,
-	//			};
-	//		}
-
-	//		if ( storage_buffers )
-	//		{
-	//			pool_sizes[pool_type_count++] = {
-	//				VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-	//				storage_buffers * app->_swap_image_count,
-	//			};
-	//		}
-
-	//		if ( samplers )
-	//		{
-	//			pool_sizes[pool_type_count++] = {
-	//				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-	//				samplers * app->_swap_image_count,
-	//			};
-	//		}
-
-	//		VkDescriptorPoolCreateInfo pool_info = {};
-	//		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	//		pool_info.poolSizeCount = pool_type_count;
-	//		pool_info.pPoolSizes = pool_sizes.data();
-	//		pool_info.maxSets =
-	//			static_cast< uint32_t >( app->_swap_image_count * 3 );
-
-	//		vkCreateDescriptorPool(
-	//			app->_device,
-	//			&pool_info,
-	//			nullptr,
-	//			&_descriptor_pool );
-	//	}
-
-	//	void create_descriptor_sets()
-	//	{
-	//		auto* program =
-	//			ASSERT_CAST( vulkan_program*, app->program_impl.program.get() );
-
-	//		_batch_descriptor_sets.resize( app->_swap_image_count );
-	//		_material_descriptor_sets.resize( app->_swap_image_count );
-	//		_instance_descriptor_sets.resize( app->_swap_image_count );
-
-	//		allocate_descriptor_set(
-	//			app->_device,
-	//			_descriptor_pool,
-	//			program->batch_parameters().cfg().vk.descriptor_set_layout,
-	//			&_batch_descriptor_sets );
-	//		allocate_descriptor_set(
-	//			app->_device,
-	//			_descriptor_pool,
-	//			program->material_parameters().cfg().vk.descriptor_set_layout,
-	//			&_material_descriptor_sets );
-	//		allocate_descriptor_set(
-	//			app->_device,
-	//			_descriptor_pool,
-	//			program->instance_parameters().cfg().vk.descriptor_set_layout,
-	//			&_instance_descriptor_sets );
-
-	//		for ( size_t i = 0; i < app->_swap_image_count; i++ )
-	//		{
-	//			VkDescriptorBufferInfo batch_info =
-	//				app->batch.descriptor_info( i );
-
-	//			VkDescriptorImageInfo material_info =
-	//				app->texture_impl.descriptor_info();
-
-	//			VkDescriptorBufferInfo instance_info =
-	//				app->instance.descriptor_info( i );
-
-	//			std::array< VkWriteDescriptorSet, 3 > descriptor_writes = {};
-
-	//			descriptor_writes[0].sType =
-	//				VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	//			descriptor_writes[0].dstSet = _batch_descriptor_sets[i];
-	//			descriptor_writes[0].dstBinding = 1;
-	//			descriptor_writes[0].dstArrayElement = 0;
-	//			descriptor_writes[0].descriptorType =
-	//				VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-	//			descriptor_writes[0].descriptorCount = 1;
-	//			descriptor_writes[0].pBufferInfo = &batch_info;
-
-	//			descriptor_writes[1].sType =
-	//				VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	//			descriptor_writes[1].dstSet = _material_descriptor_sets[i];
-	//			descriptor_writes[1].dstBinding = 10;
-	//			descriptor_writes[1].dstArrayElement = 0;
-	//			descriptor_writes[1].descriptorType =
-	//				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	//			descriptor_writes[1].descriptorCount = 1;
-	//			descriptor_writes[1].pImageInfo = &material_info;
-
-	//			descriptor_writes[2].sType =
-	//				VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	//			descriptor_writes[2].dstSet = _instance_descriptor_sets[i];
-	//			descriptor_writes[2].dstBinding = 3;
-	//			descriptor_writes[2].dstArrayElement = 0;
-	//			descriptor_writes[2].descriptorType =
-	//				VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-	//			descriptor_writes[2].descriptorCount = 1;
-	//			descriptor_writes[2].pBufferInfo = &instance_info;
-
-	//			vkUpdateDescriptorSets(
-	//				app->_device,
-	//				static_cast< uint32_t >( descriptor_writes.size() ),
-	//				descriptor_writes.data(),
-	//				0,
-	//				nullptr );
-	//		}
-	//	}
-
-	//	HelloTriangleApplication* app = nullptr;
-
-	//	using primitives_t = std::shared_ptr< primitives >;
-	//	using primitives_set_t = std::vector< primitives_t >;
-
-	//	struct batch_node_prims
-	//	{
-	//		primitives_set_t primitives;
-
-	//		VkDevice device;
-	//		VkDescriptorPool _descriptor_pool;
-	//		std::vector< VkDescriptorSet > _descriptor_sets;
-	//		primitives_set_t instance_primitives;
-
-	//		[[nodiscard]] bool initialize( const vulkan_parameters& parameters )
-	//		{
-	//			vulkan_primitive_sequencer sequencer;
-	//			for ( const auto& primitives : primitives )
-	//			{
-	//				if ( false == sequencer.reset( parameters, *primitives ) )
-	//				{
-	//					return false;
-	//				}
-	//				"not finished"
-	//			}
-	//		}
-
-	//		~batch_node_prims()
-	//		{
-	//			vkDestroyDescriptorPool( device, _descriptor_pool, nullptr );
-	//		}
-	//	};
-
-	//	batch_node_prims _batch_inputs;
-	//	batch_node_prims _material_inputs;
-	//	batch_node_prims _instance_inputs;
-
-	//	void create()
-	//	{
-	//		for ( size_t i = 0; i < app->_swap_image_count; ++i )
-	//		{
-	//			_batch_inputs.primitives.push_back(
-	//				app->_context->make_primitives( { {
-	//					{ "batch", app->batch._compute_buffers[i] },
-	//				} } ) );
-
-	//			_material_inputs.primitives.push_back(
-	//				app->_context->make_primitives( { {
-	//					{ "texSampler", app->texture_impl.texture },
-	//				} } ) );
-
-	//			_instance_inputs.primitives.push_back(
-	//				app->_context->make_primitives( { {
-	//					{ "instance", app->instance._compute_buffers[i] },
-	//				} } ) );
-	//		}
-	//		create_descriptor_pool();
-	//		create_descriptor_sets();
-	//	}
-
-	//	void destroy()
-	//	{
-	//		vkDestroyDescriptorPool( app->_device, _descriptor_pool, nullptr );
-	//	}
-	//};
-
-	old_descriptor_set_impl descriptor_set_impl = { this };
 
 	VkCommandPool _command_pool;
 
@@ -1640,9 +1449,11 @@ public:
 			 program_impl.create() && render_states_impl.create() &&
 			 geo_impl.create() )
 		{
+			auto vk_program =
+				ASSERT_CAST( vulkan_program*, program_impl.program.get() );
 			create_command_pool();
 			create_graphics_pipeline();
-			descriptor_set_impl.create();
+			descriptor_set_impl.create( *vk_program, _swap_image_count );
 
 			if ( load_model() )
 			{
@@ -1800,38 +1611,23 @@ private:
 			ASSERT_CAST( vulkan_geometry*, geo_impl.geometry.get() );
 
 
-		vulkan_attribute_sequencer sequencer;
-		if ( !sequencer.reset( program->vertex_parameters(), *geometry ) )
+		vulkan_attributes_decriptor attributes_descriptor;
+		if ( !attributes_descriptor.reset(
+				 program->vertex_parameters(),
+				 *geometry ) )
 		{
 			return;
 		}
 
-		VkPipelineInputAssemblyStateCreateInfo input_assembly = {};
-		input_assembly.sType =
-			VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-		input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		input_assembly.primitiveRestartEnable = VK_FALSE;
-
-		VkPipelineVertexInputStateCreateInfo vertex_input_info = {};
-		vertex_input_info.sType =
-			VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-
-		vertex_input_info.vertexBindingDescriptionCount =
-			sequencer.binding_description_count();
-		vertex_input_info.pVertexBindingDescriptions =
-			sequencer.binding_descriptions();
-
-		vertex_input_info.vertexAttributeDescriptionCount =
-			(uint32_t)program->vertex_parameters().count();
-		vertex_input_info.pVertexAttributeDescriptions =
-			sequencer.attribute_descriptions();
 
 		VkGraphicsPipelineCreateInfo pipeline_info = {};
 		pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		pipeline_info.stageCount = (uint32_t)shader_stages.size();
 		pipeline_info.pStages = shader_stages.data();
-		pipeline_info.pVertexInputState = &vertex_input_info;
-		pipeline_info.pInputAssemblyState = &input_assembly;
+		pipeline_info.pVertexInputState =
+			&attributes_descriptor.vertex_input_info();
+		pipeline_info.pInputAssemblyState =
+			&attributes_descriptor.input_assembly();
 		pipeline_info.pViewportState = &viewport_state;
 		pipeline_info.pRasterizationState = &rasterizer;
 		pipeline_info.pMultisampleState = &multisampling;

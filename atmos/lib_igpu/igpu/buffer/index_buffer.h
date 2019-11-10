@@ -18,5 +18,7 @@ namespace igpu
 		virtual const config& cfg() const = 0;
 
 		virtual size_t element_count() const = 0;
+
+		virtual ~index_buffer() = default;
 	};
 }

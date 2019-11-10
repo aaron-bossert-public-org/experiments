@@ -15,7 +15,18 @@ namespace igpu
 	class vulkan_vertex_buffer : public vertex_buffer
 	{
 	public:
+		struct config : vertex_buffer::config
+		{
+			struct vulkan
+			{
+				const VkPhysicalDeviceProperties* device_properties = nullptr;
+			};
+
+			vulkan vk;
+		};
+
 		const config& cfg() const override;
+
 		virtual vulkan_buffer& gpu_object() = 0;
 
 		virtual const vulkan_buffer& gpu_object() const = 0;

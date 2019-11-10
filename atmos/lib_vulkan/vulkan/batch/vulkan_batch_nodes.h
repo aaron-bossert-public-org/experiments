@@ -3,7 +3,7 @@
 
 #include "vulkan/batch/vulkan_instance_batch.h"
 #include "vulkan/buffer/vulkan_geometry.h"
-#include "vulkan/shader/vulkan_attribute_sequencer.h"
+#include "vulkan/shader/vulkan_attributes_decriptor.h"
 #include "vulkan/shader/vulkan_graphics_pipeline.h"
 #include "vulkan/shader/vulkan_primitives.h"
 #include "vulkan/shader/vulkan_program.h"
@@ -68,8 +68,8 @@ namespace igpu
 	private:
 		vulkan_root_batch* _root_batch;
 		uint32_t _active_buffer_count = 0;
-		std::array< uint8_t, attribute_indexer::MAX_PARAMETERS >
-			_active_buffers = {};
+		std::array< uint8_t, vertex_parameters::MAX_COUNT > _active_buffers =
+			{};
 	};
 
 	class vulkan_material_batch
