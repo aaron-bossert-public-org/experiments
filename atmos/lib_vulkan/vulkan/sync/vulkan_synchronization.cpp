@@ -700,9 +700,11 @@ vulkan_synchronization::vulkan_synchronization(
 #include "vulkan/buffer/vulkan_compute_buffer.h"
 #include "vulkan/buffer/vulkan_index_buffer.h"
 #include "vulkan/buffer/vulkan_vertex_buffer.h"
-#include "vulkan/shader/vulkan_attribute_sequencer.h"
+#include "vulkan/shader/vulkan_attributes_decriptor.h"
 #include "vulkan/shader/vulkan_fragment_shader.h"
-#include "vulkan/shader/vulkan_primitive_sequencer.h"
+#include "vulkan/shader/vulkan_primitive.h"
+#include "vulkan/shader/vulkan_primitives.h"
+#include "vulkan/shader/vulkan_primitives_descriptor.h"
 #include "vulkan/shader/vulkan_program.h"
 #include "vulkan/shader/vulkan_render_states.h"
 #include "vulkan/shader/vulkan_vertex_shader.h"
@@ -1097,9 +1099,9 @@ private:
 
 			auto vulkan = ASSERT_CAST( vulkan_program*, program.get() );
 			descriptor_set_layouts = {
-				vulkan->batch_parameters().cfg().vk.descriptor_set_layout,
-				vulkan->material_parameters().cfg().vk.descriptor_set_layout,
-				vulkan->instance_parameters().cfg().vk.descriptor_set_layout,
+				vulkan->batch_parameters().cfg().vk.layout,
+				vulkan->material_parameters().cfg().vk.layout,
+				vulkan->instance_parameters().cfg().vk.layout,
 			};
 
 

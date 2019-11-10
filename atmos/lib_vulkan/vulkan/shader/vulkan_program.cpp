@@ -3,7 +3,6 @@
 
 #include "vulkan/shader/vulkan_fragment_shader.h"
 #include "vulkan/shader/vulkan_parameter.h"
-#include "vulkan/shader/vulkan_shader_stages.h"
 #include "vulkan/shader/vulkan_vertex_shader.h"
 
 #include "igpu/shader/program_parsing.h"
@@ -153,21 +152,22 @@ std::unique_ptr< vulkan_program > vulkan_program::make( const config& cfg )
 			cfg.vk.device,
 			&layout_info,
 			nullptr,
-			&parameters_cfg.vk.descriptor_set_layout );
+			&parameters_cfg.vk.layout );
 		scratch_bindings.clear();
 	}
 
 	// create pipeline layouts
 	VkPipelineLayoutCreateInfo pipeline_layout_info = {};
-	std::array< VkDescriptorSetLayout, 3 > descriptor_set_layouts = {
-		parameters_cfgs[0].vk.descriptor_set_layout,
-		parameters_cfgs[1].vk.descriptor_set_layout,
-		parameters_cfgs[2].vk.descriptor_set_layout,
+	std::array< VkDescriptorSetLayout, 3 > layouts = {
+		parameters_cfgs[0].vk.layout,
+		parameters_cfgs[1].vk.layout,
+		parameters_cfgs[2].vk.layout,
 	};
-	ASSERT_CONTEXT( descriptor_set_layouts.size() == parameters_cfgs.size() );
+
+	ASSERT_CONTEXT( layouts.size() == parameters_cfgs.size() );
 	pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipeline_layout_info.setLayoutCount = (uint32_t)parameters_cfgs.size();
-	pipeline_layout_info.pSetLayouts = descriptor_set_layouts.data();
+	pipeline_layout_info.pSetLayouts = layouts.data();
 
 	vkCreatePipelineLayout(
 		cfg.vk.device,

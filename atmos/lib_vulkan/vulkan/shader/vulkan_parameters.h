@@ -17,7 +17,7 @@ namespace igpu
 			struct vulkan
 			{
 				VkDevice device = nullptr;
-				VkDescriptorSetLayout descriptor_set_layout = nullptr;
+				VkDescriptorSetLayout layout = nullptr;
 				std::vector< vulkan_parameter > parameters;
 			};
 
@@ -33,8 +33,6 @@ namespace igpu
 		size_t count() const override;
 
 		const vulkan_parameter& parameter( size_t ) const override;
-
-		VkDescriptorSetLayout descriptor_set_layout();
 
 	private:
 		const config _cfg;

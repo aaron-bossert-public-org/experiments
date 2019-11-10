@@ -1,13 +1,12 @@
-#include "vulkan/shader/vulkan_attribute_sequencer.h"
-
 #include "vulkan/buffer/vulkan_geometry.h"
+#include "vulkan/shader/vulkan_attributes_decriptor.h"
 #include "vulkan/shader/vulkan_vertex_parameters.h"
 
 #include "igpu/shader/attribute_indexer.h"
 
 using namespace igpu;
 
-bool vulkan_attribute_sequencer::reset(
+bool vulkan_attributes_decriptor::reset(
 	const vulkan_vertex_parameters& vertex_parameters,
 	const vulkan_geometry& geometry )
 {
@@ -73,23 +72,23 @@ bool vulkan_attribute_sequencer::reset(
 	return true;
 }
 
-const attribute_indexer& vulkan_attribute_sequencer::indexer() const
+const attribute_indexer& vulkan_attributes_decriptor::indexer() const
 {
 	return _indexer;
 }
 
-uint32_t vulkan_attribute_sequencer::binding_description_count() const
+uint32_t vulkan_attributes_decriptor::binding_description_count() const
 {
 	return _binding_description_count;
 }
 
-const VkVertexInputBindingDescription* vulkan_attribute_sequencer::
+const VkVertexInputBindingDescription* vulkan_attributes_decriptor::
 	binding_descriptions() const
 {
 	return _binding_descriptions.data();
 }
 
-const VkVertexInputAttributeDescription* vulkan_attribute_sequencer::
+const VkVertexInputAttributeDescription* vulkan_attributes_decriptor::
 	attribute_descriptions() const
 {
 	return _attribute_descriptions.data();

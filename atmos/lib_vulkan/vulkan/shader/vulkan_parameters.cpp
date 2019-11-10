@@ -14,10 +14,7 @@ const vulkan_parameters::config& vulkan_parameters::cfg() const
 
 vulkan_parameters::~vulkan_parameters()
 {
-	vkDestroyDescriptorSetLayout(
-		_cfg.vk.device,
-		_cfg.vk.descriptor_set_layout,
-		nullptr );
+	vkDestroyDescriptorSetLayout( _cfg.vk.device, _cfg.vk.layout, nullptr );
 }
 
 size_t vulkan_parameters::count() const

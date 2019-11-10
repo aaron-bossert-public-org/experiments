@@ -12,44 +12,44 @@ using namespace igpu;
 
 namespace
 {
-	vulkan_primitive::vulkan_variant_t to_vulkan_variant(
-		const std::shared_ptr< compute_buffer > ptr )
+	std::shared_ptr< vulkan_compute_buffer > to_vulkan_variant(
+		const std::shared_ptr< compute_buffer >& ptr )
 	{
 		return std::
 			dynamic_pointer_cast< vulkan_compute_buffer, compute_buffer >(
 				ptr );
 	}
 
-	vulkan_primitive::vulkan_variant_t to_vulkan_variant(
-		const std::shared_ptr< vertex_buffer > ptr )
+	std::shared_ptr< vulkan_vertex_buffer > to_vulkan_variant(
+		const std::shared_ptr< vertex_buffer >& ptr )
 	{
 		return std::dynamic_pointer_cast< vulkan_vertex_buffer, vertex_buffer >(
 			ptr );
 	}
 
-	vulkan_primitive::vulkan_variant_t to_vulkan_variant(
-		const std::shared_ptr< index_buffer > ptr )
+	std::shared_ptr< vulkan_index_buffer > to_vulkan_variant(
+		const std::shared_ptr< index_buffer >& ptr )
 	{
 		return std::dynamic_pointer_cast< vulkan_index_buffer, index_buffer >(
 			ptr );
 	}
 
-	vulkan_primitive::vulkan_variant_t to_vulkan_variant(
-		const std::shared_ptr< texture2d > ptr )
+	std::shared_ptr< vulkan_texture2d > to_vulkan_variant(
+		const std::shared_ptr< texture2d >& ptr )
 	{
 		return std::dynamic_pointer_cast< vulkan_texture2d, texture2d >( ptr );
 	}
 
-	vulkan_primitive::vulkan_variant_t to_vulkan_variant(
-		const std::shared_ptr< depth_texture2d > ptr )
+	std::shared_ptr< vulkan_depth_texture2d > to_vulkan_variant(
+		const std::shared_ptr< depth_texture2d >& ptr )
 	{
 		return std::
 			dynamic_pointer_cast< vulkan_depth_texture2d, depth_texture2d >(
 				ptr );
 	}
 
-	vulkan_primitive::vulkan_variant_t to_vulkan_variant(
-		const std::shared_ptr< render_texture2d > ptr )
+	std::shared_ptr< vulkan_render_texture2d > to_vulkan_variant(
+		const std::shared_ptr< render_texture2d >& ptr )
 	{
 		return std::
 			dynamic_pointer_cast< vulkan_render_texture2d, render_texture2d >(
@@ -87,9 +87,11 @@ std::unique_ptr< vulkan_primitives > vulkan_primitives::make(
 	{
 		std::visit(
 			[&]( auto&& ptr ) {
+				auto vulkan = to_vulkan_variant( ptr );
 				vulkan_primitive::config vulkan_cfg = {
 					prim_cfg,
-					to_vulkan_variant( ptr ),
+					&vulkan->gpu_object(),
+					vulkan,
 				};
 				primitives.emplace_back( vulkan_cfg );
 			},

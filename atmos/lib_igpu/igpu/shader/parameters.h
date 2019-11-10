@@ -9,6 +9,8 @@ namespace igpu
 	class parameters
 	{
 	public:
+		static constexpr size_t MAX_COUNT = 64;
+
 		struct config
 		{
 			// placeholder

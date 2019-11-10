@@ -12,7 +12,7 @@ namespace igpu
 	class vulkan_geometry;
 	class vulkan_vertex_parameters;
 
-	class vulkan_attribute_sequencer
+	class vulkan_attributes_decriptor
 	{
 	public:
 		bool reset( const vulkan_vertex_parameters&, const vulkan_geometry& );
