@@ -1827,9 +1827,9 @@ private:
 				_graphics_pipeline );
 
 			std::array< VkDescriptorSet, 3 > descriptor_sets = {
-				descriptor_set_impl._batch_descriptor_sets[i],
-				descriptor_set_impl._material_descriptor_sets[i],
-				descriptor_set_impl._instance_descriptor_sets[i],
+				descriptor_set_impl._batch_inputs[i]._descriptor_set,
+				descriptor_set_impl._material_inputs[i]._descriptor_set,
+				descriptor_set_impl._instance_inputs[i]._descriptor_set,
 			};
 
 			vkCmdBindDescriptorSets(

@@ -1,6 +1,8 @@
 
 #include "vulkan/texture/vulkan_image.h"
 
+#include "vulkan/shader/vulkan_parameter.h"
+
 using namespace igpu;
 
 namespace
@@ -233,36 +235,6 @@ const vulkan_image::config& vulkan_image::cfg() const
 	return _cfg;
 }
 
-const vulkan_image::ownership& vulkan_image::owner() const
-{
-	return _owner;
-}
-
-void vulkan_image::owner( const ownership& owner )
-{
-	_owner = owner;
-}
-
-VkImage vulkan_image::get() const
-{
-	return _image;
-}
-
-VkDeviceMemory vulkan_image::device_memory() const
-{
-	return _device_memory;
-}
-
-VkImageView vulkan_image::image_view() const
-{
-	return _image_view;
-}
-
-VkSampler vulkan_image::sampler() const
-{
-	return _sampler;
-}
-
 vulkan_gpu_object::state& vulkan_image::object_state()
 {
 	return _object_state;
@@ -296,4 +268,62 @@ vulkan_image::~vulkan_image()
 std::unique_ptr< vulkan_image > vulkan_image::make( const config& cfg )
 {
 	return std::unique_ptr< vulkan_image >( new vulkan_image( cfg ) );
+}
+
+void vulkan_image::update_descriptor_set(
+	VkDescriptorSet descriptor_set,
+	const vulkan_parameter::config& parameter_config,
+	size_t array_element ) const
+{
+	VkDescriptorImageInfo image_descriptor{
+		_sampler,
+		_image_view,
+		parameter_config.vk.image_layout,
+	};
+
+	VkWriteDescriptorSet write_descriptor = {
+		VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		nullptr,
+		descriptor_set,
+	};
+
+	write_descriptor.dstBinding = (uint32_t)parameter_config.binding;
+	write_descriptor.dstArrayElement = (uint32_t)array_element;
+	write_descriptor.descriptorCount = (uint32_t)parameter_config.array_size;
+	write_descriptor.descriptorType = parameter_config.vk.descriptor_type;
+	write_descriptor.pImageInfo = &image_descriptor;
+
+	vkUpdateDescriptorSets( _cfg.device, 1, &write_descriptor, 0, nullptr );
+}
+
+void vulkan_image::push_barrier(
+	vulkan_barrier_manager* barrier_manager,
+	const scoped_ptr< vulkan_queue >& src_queue,
+	const scoped_ptr< vulkan_queue >& dst_queue,
+	VkImageLayout src_layout,
+	VkImageLayout dst_layout,
+	const vulkan_job_scope& src_scope,
+	const vulkan_job_scope& dst_scope ) const
+{
+	VkImageMemoryBarrier barrier = {};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.srcAccessMask = (VkFlags)src_scope.access;
+	barrier.dstAccessMask = (VkFlags)dst_scope.access;
+	barrier.oldLayout = src_layout;
+	barrier.newLayout = dst_layout;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.image = _image;
+	barrier.subresourceRange = _cfg.view_info.subresourceRange;
+
+	if ( src_queue != dst_queue )
+	{
+		barrier.srcQueueFamilyIndex = src_queue->cfg().family_index;
+		barrier.dstQueueFamilyIndex = dst_queue->cfg().family_index;
+	}
+
+	barrier_manager->push_barrier(
+		src_scope.stages,
+		dst_scope.stages,
+		barrier );
 }

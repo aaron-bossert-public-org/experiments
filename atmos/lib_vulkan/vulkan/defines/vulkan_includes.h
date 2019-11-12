@@ -52,7 +52,9 @@ namespace igpu
 			const char* message;
 		};
 
-		static std::string stringify_result( VkResult );
+
+		static std::string to_string( VkResult );
+		static std::string to_string( VkImageLayout );
 #if ATMOS_DEBUG
 		static void validate(
 			const char* file,

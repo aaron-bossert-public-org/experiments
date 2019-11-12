@@ -3,7 +3,7 @@
 
 
 #include "vulkan/defines/vulkan_includes.h"
-#include "vulkan/sync/vulkan_gpu_object.h"
+#include "vulkan/sync/vulkan_resource.h"
 
 #include "igpu/buffer/buffer.h"
 
@@ -14,11 +14,9 @@
 
 namespace igpu
 {
-	class vulkan_queue;
-
 	class vulkan_buffer
 		: public buffer
-		, public vulkan_gpu_object
+		, public vulkan_resource
 	{
 	public:
 		struct config
@@ -26,6 +24,7 @@ namespace igpu
 			struct vulkan
 			{
 				const VkPhysicalDeviceProperties* device_properties;
+				VkDevice device = nullptr;
 				VmaAllocator vma = nullptr;
 				VmaMemoryUsage vma_usage;
 				VkBufferUsageFlagBits usage;
@@ -35,14 +34,6 @@ namespace igpu
 
 			memory_type memory = memory_type::WRITE_COMBINED;
 			vulkan vk;
-		};
-
-		struct ownership
-		{
-			VkAccessFlags access;
-			VkPipelineStageFlags stage;
-			VkDependencyFlags dependency;
-			scoped_ptr< vulkan_queue > queue;
 		};
 
 		vulkan_buffer( const config& );
@@ -59,13 +50,23 @@ namespace igpu
 
 		const buffer_view< char >& mapped_view() const;
 
-		const ownership& owner() const;
-
-		VkBuffer get() const;
-
-		void owner( const ownership& );
-
 		vulkan_gpu_object::state& object_state() override;
+
+		vulkan_resource::state& resource_state() override;
+
+		void update_descriptor_set(
+			VkDescriptorSet descriptor_set,
+			const vulkan_parameter::config&,
+			size_t array_element ) const override;
+
+		void push_barrier(
+			vulkan_barrier_manager*,
+			const scoped_ptr< vulkan_queue >& src_queue,
+			const scoped_ptr< vulkan_queue >& dst_queue,
+			VkImageLayout src_layout,
+			VkImageLayout dst_layout,
+			const vulkan_job_scope& src_scope,
+			const vulkan_job_scope& dst_scope ) const override;
 
 		~vulkan_buffer();
 
@@ -76,8 +77,7 @@ namespace igpu
 		VkBuffer _buffer = nullptr;
 		VmaAllocation _vma_allocation = nullptr;
 		vulkan_gpu_object::state _object_state;
-
-		ownership _owner = {};
+		vulkan_resource::state _resource_state;
 
 		perf::metric _mem_metric;
 	};

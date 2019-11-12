@@ -25,7 +25,7 @@ std::unique_ptr< vulkan_window > vulkan_window::make(
 		&surface );
 	if ( result != VK_SUCCESS )
 	{
-		LOG_CRITICAL( debug::stringify_result( result ).c_str() );
+		LOG_CRITICAL( debug::to_string( result ).c_str() );
 	}
 
 	auto w = std::unique_ptr< vulkan_window >(

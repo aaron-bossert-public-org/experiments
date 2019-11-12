@@ -1,5 +1,4 @@
 
-
 #pragma warning( push )
 #pragma warning( disable : 4100 ) // unreferenced local variable
 #pragma warning( disable : 4127 ) // constant if condition

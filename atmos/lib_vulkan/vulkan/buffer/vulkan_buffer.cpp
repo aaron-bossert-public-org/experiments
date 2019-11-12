@@ -1,6 +1,7 @@
 
 #include "vulkan/buffer/vulkan_buffer.h"
 
+#include "vulkan/shader/vulkan_parameter.h"
 #include "vulkan/sync/vulkan_queue.h"
 
 using namespace igpu;
@@ -195,22 +196,69 @@ const buffer_view< char >& vulkan_buffer::mapped_view() const
 	return _mapped_view;
 }
 
-const vulkan_buffer::ownership& vulkan_buffer::owner() const
-{
-	return _owner;
-}
-
-VkBuffer vulkan_buffer::get() const
-{
-	return _buffer;
-}
-
-void vulkan_buffer::owner( const ownership& owner )
-{
-	_owner = owner;
-}
-
 vulkan_gpu_object::state& vulkan_buffer::object_state()
 {
 	return _object_state;
+}
+vulkan_resource::state& vulkan_buffer::resource_state()
+{
+	return _resource_state;
+}
+
+void vulkan_buffer::update_descriptor_set(
+	VkDescriptorSet descriptor_set,
+	const vulkan_parameter::config& parameter_config,
+	size_t array_element ) const
+{
+	VkDescriptorBufferInfo buffer_descriptor{
+		_buffer,
+		0,
+		VK_WHOLE_SIZE,
+	};
+
+	VkWriteDescriptorSet write_descriptor = {
+		VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		nullptr,
+		descriptor_set,
+	};
+
+	write_descriptor.dstBinding = (uint32_t)parameter_config.binding;
+	write_descriptor.dstArrayElement = (uint32_t)array_element;
+	write_descriptor.descriptorCount = (uint32_t)parameter_config.array_size;
+	write_descriptor.descriptorType = parameter_config.vk.descriptor_type;
+	write_descriptor.pBufferInfo = &buffer_descriptor;
+
+	vkUpdateDescriptorSets( _cfg.vk.device, 1, &write_descriptor, 0, nullptr );
+}
+
+void vulkan_buffer::push_barrier(
+	vulkan_barrier_manager* barrier_manager,
+	const scoped_ptr< vulkan_queue >& src_queue,
+	const scoped_ptr< vulkan_queue >& dst_queue,
+	VkImageLayout,
+	VkImageLayout,
+	const vulkan_job_scope& src_scope,
+	const vulkan_job_scope& dst_scope ) const
+{
+	VkBufferMemoryBarrier barrier = {};
+	barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+	barrier.pNext = nullptr;
+	barrier.srcAccessMask = (VkFlags)src_scope.access;
+	barrier.dstAccessMask = (VkFlags)dst_scope.access;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.buffer = _buffer;
+	barrier.offset = 0;
+	barrier.size = _mapped_view.byte_size();
+
+	if ( src_queue != dst_queue )
+	{
+		barrier.srcQueueFamilyIndex = src_queue->cfg().family_index;
+		barrier.dstQueueFamilyIndex = dst_queue->cfg().family_index;
+	}
+
+	barrier_manager->push_barrier(
+		src_scope.stages,
+		dst_scope.stages,
+		barrier );
 }

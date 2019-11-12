@@ -5,9 +5,6 @@
 
 namespace igpu
 {
-	class vulkan_buffer;
-	class vulkan_image;
-
 	class vulkan_compute_buffer;
 
 	class vulkan_vertex_buffer;
@@ -16,6 +13,8 @@ namespace igpu
 	class vulkan_texture2d;
 	class vulkan_depth_texture2d;
 	class vulkan_render_texture2d;
+
+	class vulkan_resource;
 
 	class vulkan_primitive : public primitive
 	{
@@ -30,13 +29,12 @@ namespace igpu
 			std::shared_ptr< vulkan_depth_texture2d >,
 			std::shared_ptr< vulkan_render_texture2d > >;
 
-		using gpu_variant_t = std::variant< vulkan_buffer*, vulkan_image* >;
 
 		struct config : primitive::config
 		{
 			struct vulkan
 			{
-				gpu_variant_t gpu_value;
+				vulkan_resource* resource = nullptr;
 				vulkan_variant_t value;
 			};
 

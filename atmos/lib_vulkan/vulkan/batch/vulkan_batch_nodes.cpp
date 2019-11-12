@@ -8,6 +8,7 @@
 #include "vulkan/buffer/vulkan_index_buffer.h"
 #include "vulkan/context/vulkan_context.h"
 #include "vulkan/sync/vulkan_fence.h"
+#include "vulkan/sync/vulkan_job_scope.h"
 #include "vulkan/texture/vulkan_depth_texture2d.h"
 #include "vulkan/texture/vulkan_image.h"
 #include "vulkan/texture/vulkan_render_texture2d.h"
@@ -69,14 +70,18 @@ vulkan_geometry_batch::vulkan_geometry_batch(
 	: _root_batch( cfg.vk.root_batch )
 {
 	vulkan_program* program = ASSERT_CAST( vulkan_program*, cfg.program.get() );
-	vulkan_attribute_finder attribute_finder;
-	if ( attribute_finder.find_all_attributes( *program, *cfg.vk.geometry ) )
+	vulkan_attributes_decriptor attributes_descriptor;
+	if ( attributes_descriptor.reset(
+			 program->vertex_parameters(),
+			 *cfg.vk.geometry ) )
 	{
-		_active_buffer_count = attribute_finder.binding_description_count();
+		_active_buffer_count =
+			attributes_descriptor.binding_description_count();
 		for ( size_t i = 0; i < _active_buffer_count; ++i )
 		{
 			_active_buffers[i] =
-				(uint8_t)attribute_finder.binding_descriptions()[i].binding;
+				(uint8_t)attributes_descriptor.binding_descriptions()[i]
+					.binding;
 		}
 	}
 }
@@ -90,7 +95,7 @@ vulkan_geometry_batch::~vulkan_geometry_batch()
 	}
 }
 
-void vulkan_geometry_batch::pre_draw( vulkan_batch_draw_state* draw_state )
+bool vulkan_geometry_batch::pre_draw( vulkan_batch_draw_state* draw_state )
 {
 	const vulkan_geometry& geometry = item();
 
@@ -99,6 +104,8 @@ void vulkan_geometry_batch::pre_draw( vulkan_batch_draw_state* draw_state )
 	draw_state->fallback.instance_count = (uint32_t)geometry.instance_count();
 	draw_state->fallback.element_start = (uint32_t)geometry.element_start();
 	draw_state->fallback.element_count = (uint32_t)geometry.element_count();
+
+	return 0 < _active_buffer_count;
 }
 
 void vulkan_geometry_batch::start_draw(
@@ -108,10 +115,10 @@ void vulkan_geometry_batch::start_draw(
 	const vulkan_index_buffer& index_buffer = geometry.index_buffer();
 	const auto& geo_byte_offsets = geometry.cfg().vbuff_byte_offsets;
 
-	VkBuffer vk_buffers[16];
+	VkBuffer vk_buffers[vertex_parameters::MAX_COUNT];
 	VkDeviceSize ibuff_byte_offset =
 		(VkDeviceSize)geometry.cfg().ibuff_byte_offset;
-	VkDeviceSize vbuff_byte_offsets[16];
+	VkDeviceSize vbuff_byte_offsets[vertex_parameters::MAX_COUNT];
 
 	for ( size_t i = 0; i < _active_buffer_count; ++i )
 	{
@@ -122,8 +129,6 @@ void vulkan_geometry_batch::start_draw(
 			i < geo_byte_offsets.size() ? geo_byte_offsets[i] : 0;
 	}
 
-	// should only need to bind vertex buffers in use by program here,
-	// will require adjusting vulkan_vertex_mapper's logic to produce
 	vkCmdBindVertexBuffers(
 		draw_state.command_buffer,
 		0,

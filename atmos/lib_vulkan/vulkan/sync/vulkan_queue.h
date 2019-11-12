@@ -1,14 +1,12 @@
 
 #pragma once
 
-#include "vulkan/buffer/vulkan_buffer.h"
 #include "vulkan/defines/vulkan_includes.h"
 
 #include <list>
 namespace igpu
 {
 	class vulkan_command_buffer;
-	class vulkan_buffer;
 	class vulkan_fence;
 
 	class vulkan_queue

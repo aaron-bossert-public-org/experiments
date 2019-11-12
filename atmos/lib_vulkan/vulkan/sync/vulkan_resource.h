@@ -1,31 +1,83 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
+#include "vulkan/shader/vulkan_parameter.h"
+#include "vulkan/sync/vulkan_barrier_manager.h"
+#include "vulkan/sync/vulkan_gpu_object.h"
+#include "vulkan/sync/vulkan_job_scope.h"
+
+#include "framework/utility/scoped_ptr.h"
+
+#include <list>
 
 namespace igpu
 {
-	class vulkan_fence;
+	class vulkan_dependency;
+	class vulkan_queue;
 
-	class vulkan_resource
+	class vulkan_resource : public vulkan_gpu_object
 	{
 	public:
-		class state
+		using list = std::list< vulkan_dependency* >;
+		using link = list::iterator;
+
+		struct state
 		{
-		public:
-			friend class vulkan_resource;
-
-			~state();
-
 		private:
-			std::vector< std::shared_ptr< vulkan_fence > > fences;
+			friend vulkan_resource;
+
+			scoped_ptr< vulkan_queue > queue;
+			VkDependencyFlags dependency = 0;
+			VkImageLayout layout = VK_IMAGE_LAYOUT_MAX_ENUM;
+
+			list read_deps;
+			list write_deps;
+
+			vulkan_job_scope last_write_scope;
+			vulkan_job_scope combined_read_scope;
+
+			const vulkan_barrier_manager::record* barrier_manager_record =
+				nullptr;
 		};
 
-		virtual state& resource_state() = 0;
 
-		void add_fence( const std::shared_ptr< vulkan_fence >& );
+		link add_read_only_dependency( vulkan_dependency* );
 
-		void wait_on_fences();
+		link add_writeable_dependency( vulkan_dependency* );
+
+
+		void remove_read_only_dependency( const link& );
+
+		void remove_writeable_dependency( const link& );
+
+
+		const vulkan_barrier_manager::record* barrier_manager_record();
+
+		void barrier_manager_record( const vulkan_barrier_manager::record* );
+
+		void on_reallocate_gpu_object();
+
+		void on_barrier(
+			vulkan_barrier_manager*,
+			const scoped_ptr< vulkan_queue >& );
+
+		virtual vulkan_resource::state& resource_state() = 0;
+
+		virtual void update_descriptor_set(
+			VkDescriptorSet descriptor_set,
+			const vulkan_parameter::config&,
+			size_t array_element ) const = 0;
+
+		virtual ~vulkan_resource() = 0;
+
+	protected:
+		virtual void push_barrier(
+			vulkan_barrier_manager*,
+			const scoped_ptr< vulkan_queue >& src_queue,
+			const scoped_ptr< vulkan_queue >& dst_queue,
+			VkImageLayout src_layout,
+			VkImageLayout dst_layout,
+			const vulkan_job_scope& src_scope,
+			const vulkan_job_scope& dst_scope ) const = 0;
 	};
 }

@@ -2,7 +2,7 @@
 #pragma once
 
 #include "vulkan/defines/vulkan_includes.h"
-#include "vulkan/sync/vulkan_gpu_object.h"
+#include "vulkan/sync/vulkan_resource.h"
 
 #include "framework/perf/metrics.h"
 #include "framework/utility/scoped_ptr.h"
@@ -13,7 +13,7 @@ namespace igpu
 {
 	class vulkan_queue;
 
-	class vulkan_image : public vulkan_gpu_object
+	class vulkan_image : public vulkan_resource
 	{
 	public:
 		struct config
@@ -26,34 +26,29 @@ namespace igpu
 			VkSamplerCreateInfo sampler_info = {};
 		};
 
-		struct ownership
-		{
-			VkImageLayout layout;
-			VkAccessFlags access;
-			VkPipelineStageFlags stage;
-			VkDependencyFlags dependency;
-			scoped_ptr< vulkan_queue > queue;
-		};
-
 		vulkan_image( const config& cfg );
 
 		const config& cfg() const;
 
-		const ownership& owner() const;
-
-		void owner( const ownership& );
-
-		VkImage get() const;
-
-		VkDeviceMemory device_memory() const;
-
-		VkImageView image_view() const;
-
-		VkSampler sampler() const;
-
 		~vulkan_image();
 
 		vulkan_gpu_object::state& object_state() override;
+
+		vulkan_resource::state& resource_state() override;
+
+		void update_descriptor_set(
+			VkDescriptorSet descriptor_set,
+			const vulkan_parameter::config&,
+			size_t array_element ) const override;
+
+		void push_barrier(
+			vulkan_barrier_manager*,
+			const scoped_ptr< vulkan_queue >& src_queue,
+			const scoped_ptr< vulkan_queue >& dst_queue,
+			VkImageLayout src_layout,
+			VkImageLayout dst_layout,
+			const vulkan_job_scope& src_scope,
+			const vulkan_job_scope& dst_scope ) const override;
 
 		static bool validate( const config& );
 
@@ -67,10 +62,9 @@ namespace igpu
 		VkImageView _image_view = nullptr;
 		VkSampler _sampler = nullptr;
 		vulkan_gpu_object::state _object_state;
+		vulkan_resource::state _resource_state;
 
 		perf::metric _gpu_mem_metric;
-
-		ownership _owner = {};
 
 		vulkan_image( const vulkan_image& ) = delete;
 		vulkan_image& operator=( const vulkan_image& ) = delete;

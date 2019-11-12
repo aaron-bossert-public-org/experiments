@@ -21,15 +21,15 @@ implement composite context for profiling, constructs profiler_texture2d which o
 migrate pipeline code to batching system
 build graphics pipeline cache
 
-implement barriers for job dependencies
-use vulkan attribute sequencer to build vulkan dependencies
-make sure tripple buffering does not cause bariers to be inserted ( only process hazards if they are in use this execution pass ) 
+add debug_check_barriers to job_dependencies. it checks all read/write resources to see if their barriers are compatible with the job scope
 
 
 //////////////////////////////////////
 (CURRENT PROGRESS POINT)
 //////////////////////////////////////
 
+
+implement barriers for job dependencies
 
 build vertex attributes descriptor to use same api as vulkan primitives descriptor
 move attribute and primitive MAX_PARAMETERS next to vertex parameters and parameters respectively 
