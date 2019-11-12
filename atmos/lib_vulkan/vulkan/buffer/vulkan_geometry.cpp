@@ -96,6 +96,12 @@ size_t vulkan_geometry::element_count() const
 	return _element_count.has_value() ? _element_count.value()
 									  : _index_buffer->element_count();
 }
+
+vulkan_index_buffer& vulkan_geometry::index_buffer()
+{
+	return *_index_buffer;
+}
+
 const vulkan_index_buffer& vulkan_geometry::index_buffer() const
 {
 	return *_index_buffer;
@@ -104,6 +110,11 @@ const vulkan_index_buffer& vulkan_geometry::index_buffer() const
 size_t vulkan_geometry::vertex_buffer_count() const
 {
 	return _vertex_buffers.size();
+}
+
+vulkan_vertex_buffer& vulkan_geometry::vertex_buffer( size_t i )
+{
+	return *_vertex_buffers[i];
 }
 
 const vulkan_vertex_buffer& vulkan_geometry::vertex_buffer( size_t i ) const

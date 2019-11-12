@@ -15,10 +15,10 @@ namespace igpu
 	{
 	public:
 		vulkan_dependency(
+			vulkan_resource*,
 			const VkImageLayout,
 			const vulkan_job_scope&,
-			const scoped_ptr< vulkan_job_dependencies >&,
-			const vulkan_parameter::config& );
+			const scoped_ptr< vulkan_job_dependencies >& );
 
 		vulkan_dependency();
 
@@ -38,14 +38,11 @@ namespace igpu
 
 		const vulkan_job_scope& job_scope() const;
 
-		const vulkan_parameter::config& parameter_config() const;
-
 	private:
+		vulkan_resource* _resource;
 		const vulkan_resource::link _link;
 		const VkImageLayout _layout;
 		const vulkan_job_scope _job_scope;
 		scoped_ptr< vulkan_job_dependencies > _job;
-		scoped_ptr< vulkan_resource > _resource;
-		vulkan_parameter::config _parameter_config;
 	};
 }

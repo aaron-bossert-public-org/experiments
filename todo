@@ -21,13 +21,13 @@ implement composite context for profiling, constructs profiler_texture2d which o
 migrate pipeline code to batching system
 build graphics pipeline cache
 
-add debug_check_barriers to job_dependencies. it checks all read/write resources to see if their barriers are compatible with the job scope
-
 
 //////////////////////////////////////
 (CURRENT PROGRESS POINT)
 //////////////////////////////////////
 
+
+add debug_check_barriers to job_dependencies. it checks all read/write resources to see if their barriers are compatible with the job scope
 
 implement barriers for job dependencies
 

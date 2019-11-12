@@ -205,3 +205,59 @@ void vulkan_resource::on_barrier(
 
 	state.queue = queue;
 }
+
+bool vulkan_resource::validate_barrier(
+	VkImageLayout layout,
+	const vulkan_job_scope& job_scope ) const
+{
+	bool is_valid = true;
+	auto& state = this->resource_state();
+	if ( layout != state.layout )
+	{
+		LOG_CRITICAL(
+			"image layout expected to be(%s) but is (%s) instead",
+			debug::to_string( layout ).c_str(),
+			debug::to_string( state.layout ) );
+		is_valid = false;
+	}
+
+	const vulkan_job_scope* current_scope = nullptr;
+
+	if ( job_scope.is_read_only() )
+	{
+		current_scope = &state.combined_read_scope;
+	}
+	else
+	{
+		current_scope = &state.last_write_scope;
+		if ( 0 != state.combined_read_scope.stages ||
+			 0 != state.combined_read_scope.access )
+		{
+			LOG_CRITICAL(
+				"resource expected to have been made writable but has read "
+				"flags active, stages(%s) access(%s)",
+				debug::to_string( state.combined_read_scope.stages ).c_str(),
+				debug::to_string( state.combined_read_scope.access ).c_str() );
+			is_valid = false;
+		}
+	}
+
+	VkPipelineStageFlags missing_stages =
+		job_scope.stages & ~current_scope->stages;
+	VkAccessFlags missing_access = job_scope.access & ~current_scope->access;
+
+	if ( 0 != missing_stages )
+	{
+		LOG_CRITICAL(
+			"resource read scope missing stage flags(%s)",
+			debug::to_string( missing_stages ).c_str() );
+		is_valid = false;
+	}
+	if ( 0 != missing_access )
+	{
+		LOG_CRITICAL(
+			"resource read scope missing access flags(%s)",
+			debug::to_string( missing_access ).c_str() );
+		is_valid = false;
+	}
+}

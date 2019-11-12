@@ -55,6 +55,9 @@ namespace igpu
 
 		static std::string to_string( VkResult );
 		static std::string to_string( VkImageLayout );
+		static std::string to_stages_string( VkPipelineStageFlags );
+		static std::string to_access_string( VkAccessFlags );
+
 #if ATMOS_DEBUG
 		static void validate(
 			const char* file,

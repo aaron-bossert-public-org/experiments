@@ -47,9 +47,13 @@ namespace igpu
 
 		size_t element_count() const override;
 
+		vulkan_index_buffer& index_buffer() override;
+
 		const vulkan_index_buffer& index_buffer() const override;
 
 		size_t vertex_buffer_count() const override;
+
+		vulkan_vertex_buffer& vertex_buffer( size_t index ) override;
 
 		const vulkan_vertex_buffer& vertex_buffer(
 			size_t index ) const override;

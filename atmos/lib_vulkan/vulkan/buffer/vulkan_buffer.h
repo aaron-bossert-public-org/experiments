@@ -40,6 +40,8 @@ namespace igpu
 
 		const config& cfg() const;
 
+		VkBuffer vk_buffer() const;
+
 		void map( buffer_view_base* ) override;
 
 		void unmap() override;

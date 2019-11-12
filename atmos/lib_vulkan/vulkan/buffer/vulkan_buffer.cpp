@@ -79,6 +79,12 @@ const vulkan_buffer::config& vulkan_buffer::cfg() const
 	return _cfg;
 }
 
+
+VkBuffer vulkan_buffer::vk_buffer() const
+{
+	return _buffer;
+}
+
 void vulkan_buffer::map( buffer_view_base* out_buffer_view )
 {
 	if ( _mapped_view.data() )

@@ -61,6 +61,8 @@ namespace igpu
 			vulkan_barrier_manager*,
 			const scoped_ptr< vulkan_queue >& );
 
+		bool validate_barrier( VkImageLayout, const vulkan_job_scope& ) const;
+
 		virtual vulkan_resource::state& resource_state() = 0;
 
 		virtual void update_descriptor_set(

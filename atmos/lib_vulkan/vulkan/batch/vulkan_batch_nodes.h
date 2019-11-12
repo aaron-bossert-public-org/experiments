@@ -13,8 +13,10 @@
 
 namespace igpu
 {
-	class vulkan_geometry_batch;
 	class vulkan_fence;
+	class vulkan_job_attributes;
+
+	class vulkan_geometry_batch;
 	class vulkan_material_batch;
 	class vulkan_graphics_pipeline_batch;
 	class vulkan_program_batch;
@@ -67,9 +69,7 @@ namespace igpu
 
 	private:
 		vulkan_root_batch* _root_batch;
-		uint32_t _active_buffer_count = 0;
-		std::array< uint8_t, vertex_parameters::MAX_COUNT > _active_buffers =
-			{};
+		std::shared_ptr< vulkan_job_attributes > _job_attributes;
 	};
 
 	class vulkan_material_batch
@@ -153,7 +153,8 @@ namespace igpu
 
 		struct config
 		{
-			vulkan_context* context = nullptr;
+			VkDevice device = nullptr;
+			size_t swap_count = 0;
 		};
 
 		const config& cfg() const;

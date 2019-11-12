@@ -8,6 +8,7 @@
 #include "vulkan/buffer/vulkan_index_buffer.h"
 #include "vulkan/context/vulkan_context.h"
 #include "vulkan/sync/vulkan_fence.h"
+#include "vulkan/sync/vulkan_job_attributes.h"
 #include "vulkan/sync/vulkan_job_scope.h"
 #include "vulkan/texture/vulkan_depth_texture2d.h"
 #include "vulkan/texture/vulkan_image.h"
@@ -68,23 +69,13 @@ void vulkan_instance_batch::draw( const vulkan_batch_draw_state& draw_state )
 vulkan_geometry_batch::vulkan_geometry_batch(
 	const vulkan_instance_batch::config& cfg )
 	: _root_batch( cfg.vk.root_batch )
-{
-	vulkan_program* program = ASSERT_CAST( vulkan_program*, cfg.program.get() );
-	vulkan_attributes_decriptor attributes_descriptor;
-	if ( attributes_descriptor.reset(
-			 program->vertex_parameters(),
-			 *cfg.vk.geometry ) )
-	{
-		_active_buffer_count =
-			attributes_descriptor.binding_description_count();
-		for ( size_t i = 0; i < _active_buffer_count; ++i )
-		{
-			_active_buffers[i] =
-				(uint8_t)attributes_descriptor.binding_descriptions()[i]
-					.binding;
-		}
-	}
-}
+	, _job_attributes( vulkan_job_attributes::make( {
+		  cfg.vk.root_batch->cfg().device,
+		  cfg.vk.root_batch->cfg().swap_count,
+		  &cfg.vk.graphics_pipeline,
+		  cfg.vk.geometry.get(),
+	  } ) )
+{}
 
 vulkan_geometry_batch::~vulkan_geometry_batch()
 {
@@ -99,48 +90,24 @@ bool vulkan_geometry_batch::pre_draw( vulkan_batch_draw_state* draw_state )
 {
 	const vulkan_geometry& geometry = item();
 
-	draw_state->fallback.base_vertex = (int32_t)geometry.base_vertex();
+	if ( !_job_attributes )
+	{
+		return false;
+	}
+
 	draw_state->fallback.instance_start = (uint32_t)geometry.instance_start();
 	draw_state->fallback.instance_count = (uint32_t)geometry.instance_count();
 	draw_state->fallback.element_start = (uint32_t)geometry.element_start();
 	draw_state->fallback.element_count = (uint32_t)geometry.element_count();
+	draw_state->fallback.base_vertex = (int32_t)geometry.base_vertex();
 
-	return 0 < _active_buffer_count;
+	return true;
 }
 
 void vulkan_geometry_batch::start_draw(
 	const vulkan_batch_draw_state& draw_state )
 {
-	const vulkan_geometry& geometry = item();
-	const vulkan_index_buffer& index_buffer = geometry.index_buffer();
-	const auto& geo_byte_offsets = geometry.cfg().vbuff_byte_offsets;
-
-	VkBuffer vk_buffers[vertex_parameters::MAX_COUNT];
-	VkDeviceSize ibuff_byte_offset =
-		(VkDeviceSize)geometry.cfg().ibuff_byte_offset;
-	VkDeviceSize vbuff_byte_offsets[vertex_parameters::MAX_COUNT];
-
-	for ( size_t i = 0; i < _active_buffer_count; ++i )
-	{
-		size_t active_buffer = _active_buffers[i];
-		vk_buffers[i] =
-			geometry.vertex_buffer( active_buffer ).gpu_object().get();
-		vbuff_byte_offsets[i] =
-			i < geo_byte_offsets.size() ? geo_byte_offsets[i] : 0;
-	}
-
-	vkCmdBindVertexBuffers(
-		draw_state.command_buffer,
-		0,
-		_active_buffer_count,
-		vk_buffers,
-		vbuff_byte_offsets );
-
-	vkCmdBindIndexBuffer(
-		draw_state.command_buffer,
-		index_buffer.gpu_object().get(),
-		ibuff_byte_offset,
-		index_buffer.cfg().vk.format );
+	_job_attributes->bind_buffer_cmds( draw_state.command_buffer );
 }
 
 void vulkan_geometry_batch::stop_draw()
@@ -272,9 +239,13 @@ std::unique_ptr< vulkan_batch_binding > vulkan_root_batch::make_binding(
 std::unique_ptr< vulkan_root_batch > vulkan_root_batch::make(
 	const config& cfg )
 {
-	if ( !cfg.context )
+	if ( !cfg.device )
 	{
-		LOG_CRITICAL( "context is null" );
+		LOG_CRITICAL( "device is null" );
+	}
+	else if ( !cfg.swap_count )
+	{
+		LOG_CRITICAL( "swap_count is zero" );
 	}
 	else
 	{

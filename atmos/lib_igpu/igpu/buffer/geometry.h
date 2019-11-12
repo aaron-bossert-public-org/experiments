@@ -48,9 +48,13 @@ namespace igpu
 
 		virtual size_t element_count() const = 0;
 
+		virtual igpu::index_buffer& index_buffer() = 0;
+
 		virtual const igpu::index_buffer& index_buffer() const = 0;
 
 		virtual size_t vertex_buffer_count() const = 0;
+
+		virtual igpu::vertex_buffer& vertex_buffer( size_t ) = 0;
 
 		virtual const igpu::vertex_buffer& vertex_buffer( size_t ) const = 0;
 
