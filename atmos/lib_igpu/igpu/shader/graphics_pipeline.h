@@ -6,6 +6,7 @@
 
 namespace igpu
 {
+	class attribute_indexer;
 	class program;
 	class render_states;
 
@@ -23,5 +24,11 @@ namespace igpu
 		virtual ~graphics_pipeline() = default;
 
 		virtual const config& cfg() const = 0;
+
+		static config make_config( const attribute_indexer& );
+
+		static size_t hash( const config& );
+
+		static bool equal( const config&, const config& );
 	};
 }

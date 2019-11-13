@@ -17,6 +17,7 @@ std::unique_ptr< vulkan_vertex_buffer > vulkan_vertex_buffer::make(
 	{
 		return vulkan_staged_buffer_t< vulkan_vertex_buffer >::make(
 			{
+				cfg.vk.device,
 				cfg.vk.device_properties,
 				VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 				synchronization,

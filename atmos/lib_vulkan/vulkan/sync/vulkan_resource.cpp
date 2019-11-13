@@ -27,7 +27,7 @@ vulkan_resource::link vulkan_resource::add_read_only_dependency(
 
 		if ( !dep_scope.contains( job_scope ) )
 		{
-			dependency->job().activate_read_hazard( dependency );
+			dependency->job_dependencies().activate_read_hazard( dependency );
 		}
 
 		dependencies.push_front( dependency );
@@ -101,6 +101,20 @@ void vulkan_resource::barrier_manager_record(
 	resource_state().barrier_manager_record = record;
 }
 
+void vulkan_resource::wait_pending_jobs() const
+{
+	for ( auto* deps : {
+			  &resource_state().read_deps,
+			  &resource_state().write_deps,
+		  } )
+	{
+		for ( vulkan_dependency* dependency : *deps )
+		{
+			dependency->job_dependencies().wait_pending_job();
+		}
+	}
+}
+
 void vulkan_resource::on_reallocate_gpu_object()
 {
 	for ( auto* deps : {
@@ -110,7 +124,8 @@ void vulkan_resource::on_reallocate_gpu_object()
 	{
 		for ( vulkan_dependency* dependency : *deps )
 		{
-			dependency->job().on_reallocate_gpu_object( dependency );
+			dependency->job_dependencies().on_reallocate_gpu_object(
+				dependency );
 		}
 	}
 }
@@ -122,61 +137,83 @@ void vulkan_resource::on_barrier(
 	auto& state = this->resource_state();
 	auto* record = state.barrier_manager_record;
 
+	uint32_t src_queue_family = state.queue->cfg().family_index;
+	uint32_t dst_queue_family = queue->cfg().family_index;
+
 	// if writes are being performed, we tell all subsequent read dependencies
 	// to apply barriers before accessing the resource.
+	bool is_write = !record->job_scope.is_read_only();
+	bool is_transfer = src_queue_family != dst_queue_family;
+	bool is_transition = state.layout != record->layout;
 
-	if ( !record->job_scope.is_read_only() )
+	if ( is_write || is_transfer || is_transition )
 	{
-		// 1st execution scope is all previous reads and writes
-		// 2nd execution scope is defined by record->job_scope
-		push_barrier(
-			barrier_manager,
-			state.queue,
-			queue,
-			state.layout,
-			record->layout,
-			state.last_write_scope.combined( state.combined_read_scope ),
-			record->job_scope );
+		if ( is_transfer )
+		{
+			push_barrier(
+				src_queue_family,
+				barrier_manager,
+				src_queue_family,
+				src_queue_family,
+				state.layout,
+				record->layout,
+				state.last_write_scope.combined( state.combined_read_scope ),
+				record->job_scope );
+		}
+		else
+		{
+			// transfer queue ownership
+			vulkan_job_scope transfer_job = {
+				VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+				0,
+			};
 
-		// 1st execution scope of subsequent reads is the current write
-		// job_scope
+			// hold layout transition until destination queue takes ownership.
+			// (should be forcing layout transitions onto the graphics queue)
+			push_barrier(
+				src_queue_family,
+				barrier_manager,
+				src_queue_family,
+				dst_queue_family,
+				state.layout,
+				state.layout,
+				state.last_write_scope.combined( state.combined_read_scope ),
+				transfer_job );
+
+			transfer_job.stages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+
+			push_barrier(
+				dst_queue_family,
+				barrier_manager,
+				src_queue_family,
+				dst_queue_family,
+				state.layout,
+				record->layout,
+				transfer_job,
+				record->job_scope );
+
+			state.queue = queue;
+		}
+
+		// 1st execution scope of subsequent barriers is the current job
+		// dependency
 		state.last_write_scope = record->job_scope;
 		state.layout = record->layout;
 
 		// any subsequent read will be forced to add a barrier
-		state.combined_read_scope = {};
-
-		// subsequent jobs depending on read acces to this resource should add
-		// barriers
-		for ( auto read_dep : state.read_deps )
+		if ( is_write )
 		{
-			read_dep->job().activate_read_hazard( read_dep );
+			state.combined_read_scope = {};
 		}
-	}
-	else if ( state.layout != record->layout )
-	{
-		// 1st execution scope is all previous reads and writes
-		// 2nd execution scope is defined by record->job_scope
-		push_barrier(
-			barrier_manager,
-			state.queue,
-			queue,
-			state.layout,
-			record->layout,
-			state.last_write_scope.combined( state.combined_read_scope ),
-			record->job_scope );
-
-		// 1st execution scope of subsequent reads is the current write
-		state.last_write_scope = record->job_scope;
-		state.layout = record->layout;
-
-		// any subsequent read will be forced to add a barrier if they do not
-		// share the same scope as the current barrier
-		// (the transition happens between execution scopes rather than as a
-		// part of the second execution scope so read barriers can be avoided
-		// after a layout transition if they share the same job scope as the
-		// layout transition)
-		state.combined_read_scope = record->job_scope;
+		else
+		{
+			// any subsequent read will be forced to add a barrier if they do
+			// not share the same scope as the current barrier (transitions and
+			// transfers happen between execution scopes rather than as a part
+			// of the second execution scope so read barriers can be avoided
+			// after if they share the same job scope as the layout transition)
+			state.combined_read_scope = record->job_scope;
+		}
 
 		// subsequent jobs depending on read acces to this resource should add
 		// barriers if their job scope is not equal to the current job scope
@@ -184,26 +221,27 @@ void vulkan_resource::on_barrier(
 		{
 			if ( !state.combined_read_scope.contains( read_dep->job_scope() ) )
 			{
-				read_dep->job().activate_read_hazard( read_dep );
+				read_dep->job_dependencies().activate_read_hazard( read_dep );
 			}
 		}
 	}
 	else if ( !state.combined_read_scope.contains( record->job_scope ) )
 	{
 		push_barrier(
+			src_queue_family,
 			barrier_manager,
-			state.queue,
-			queue,
+			src_queue_family,
+			src_queue_family,
 			state.layout,
 			record->layout,
 			state.last_write_scope,
 			record->job_scope );
 
+		// 1st execution scope of subsequent barriers is the current job is
+		// whatever caused the previous write/transition/transfer
 		state.combined_read_scope =
 			state.combined_read_scope.combined( record->job_scope );
 	}
-
-	state.queue = queue;
 }
 
 bool vulkan_resource::validate_barrier(
@@ -217,7 +255,7 @@ bool vulkan_resource::validate_barrier(
 		LOG_CRITICAL(
 			"image layout expected to be(%s) but is (%s) instead",
 			debug::to_string( layout ).c_str(),
-			debug::to_string( state.layout ) );
+			debug::to_string( state.layout ).c_str() );
 		is_valid = false;
 	}
 
@@ -236,8 +274,10 @@ bool vulkan_resource::validate_barrier(
 			LOG_CRITICAL(
 				"resource expected to have been made writable but has read "
 				"flags active, stages(%s) access(%s)",
-				debug::to_string( state.combined_read_scope.stages ).c_str(),
-				debug::to_string( state.combined_read_scope.access ).c_str() );
+				debug::to_stages_string( state.combined_read_scope.stages )
+					.c_str(),
+				debug::to_access_string( state.combined_read_scope.access )
+					.c_str() );
 			is_valid = false;
 		}
 	}
@@ -250,14 +290,16 @@ bool vulkan_resource::validate_barrier(
 	{
 		LOG_CRITICAL(
 			"resource read scope missing stage flags(%s)",
-			debug::to_string( missing_stages ).c_str() );
+			debug::to_stages_string( missing_stages ).c_str() );
 		is_valid = false;
 	}
 	if ( 0 != missing_access )
 	{
 		LOG_CRITICAL(
 			"resource read scope missing access flags(%s)",
-			debug::to_string( missing_access ).c_str() );
+			debug::to_access_string( missing_access ).c_str() );
 		is_valid = false;
 	}
+
+	return true;
 }

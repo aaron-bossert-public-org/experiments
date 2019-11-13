@@ -12,6 +12,7 @@ vulkan_staged_buffer::vulkan_staged_buffer( const config& cfg )
 	: _cfg( cfg )
 	, _staging_buffer( {
 		  cfg.memory,
+		  cfg.device,
 		  cfg.device_properties,
 		  cfg.synchronization->vma(),
 		  VMA_MEMORY_USAGE_CPU_ONLY,
@@ -19,6 +20,7 @@ vulkan_staged_buffer::vulkan_staged_buffer( const config& cfg )
 	  } )
 	, _gpu_buffer( {
 		  memory_type::WRITE_COMBINED,
+		  cfg.device,
 		  cfg.device_properties,
 		  cfg.synchronization->vma(),
 		  VMA_MEMORY_USAGE_GPU_ONLY,

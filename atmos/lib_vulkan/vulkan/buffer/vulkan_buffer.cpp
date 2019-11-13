@@ -71,6 +71,8 @@ vulkan_buffer::vulkan_buffer( const config& cfg )
 
 vulkan_buffer::~vulkan_buffer()
 {
+	vulkan_resource::wait_pending_jobs();
+
 	release();
 }
 
@@ -141,7 +143,7 @@ void vulkan_buffer::reserve( size_t byte_size )
 	}
 	else
 	{
-		vulkan_gpu_object::wait_on_fences();
+		vulkan_resource::wait_pending_jobs();
 
 		if ( _mapped_view.size() < byte_size )
 		{
@@ -178,14 +180,14 @@ void vulkan_buffer::reserve( size_t byte_size )
 			_mapped_view = buffer_view< char >( byte_size, nullptr );
 
 			_mem_metric.add( byte_size );
+
+			vulkan_resource::on_reallocate_gpu_object();
 		}
 	}
 }
 
 void vulkan_buffer::release()
 {
-	vulkan_gpu_object::wait_on_fences();
-
 	if ( _buffer )
 	{
 		vmaDestroyBuffer( _cfg.vk.vma, _buffer, _vma_allocation );
@@ -202,11 +204,12 @@ const buffer_view< char >& vulkan_buffer::mapped_view() const
 	return _mapped_view;
 }
 
-vulkan_gpu_object::state& vulkan_buffer::object_state()
-{
-	return _object_state;
-}
 vulkan_resource::state& vulkan_buffer::resource_state()
+{
+	return _resource_state;
+}
+
+const vulkan_resource::state& vulkan_buffer::resource_state() const
 {
 	return _resource_state;
 }
@@ -238,9 +241,10 @@ void vulkan_buffer::update_descriptor_set(
 }
 
 void vulkan_buffer::push_barrier(
+	uint32_t target_queue_family_index,
 	vulkan_barrier_manager* barrier_manager,
-	const scoped_ptr< vulkan_queue >& src_queue,
-	const scoped_ptr< vulkan_queue >& dst_queue,
+	uint32_t src_queue_family_index,
+	uint32_t dst_queue_family_index,
 	VkImageLayout,
 	VkImageLayout,
 	const vulkan_job_scope& src_scope,
@@ -251,19 +255,14 @@ void vulkan_buffer::push_barrier(
 	barrier.pNext = nullptr;
 	barrier.srcAccessMask = (VkFlags)src_scope.access;
 	barrier.dstAccessMask = (VkFlags)dst_scope.access;
-	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.srcQueueFamilyIndex = src_queue_family_index;
+	barrier.dstQueueFamilyIndex = dst_queue_family_index;
 	barrier.buffer = _buffer;
 	barrier.offset = 0;
 	barrier.size = _mapped_view.byte_size();
 
-	if ( src_queue != dst_queue )
-	{
-		barrier.srcQueueFamilyIndex = src_queue->cfg().family_index;
-		barrier.dstQueueFamilyIndex = dst_queue->cfg().family_index;
-	}
-
 	barrier_manager->push_barrier(
+		target_queue_family_index,
 		src_scope.stages,
 		dst_scope.stages,
 		barrier );

@@ -14,6 +14,7 @@ add support for primitive arrays
 
 write unit tests
 add new examples
+remove raw vulkan type accessors (vulkan_context->device etc...)
 migrate example to use purely atmos
 
 implement composite context for profiling, constructs profiler_texture2d which owns vulkan_texture and forward all calls to wrapping them with callstack timers

@@ -15,6 +15,7 @@ namespace igpu
 		struct config
 		{
 			VkDevice device = nullptr;
+			vulkan_job* job = nullptr;
 			size_t swap_count = 0;
 			std::vector< size_t > vertex_buffer_indices;
 			vulkan_geometry* geometry = nullptr;
@@ -31,11 +32,13 @@ namespace igpu
 		void on_reallocate_gpu_object( vulkan_dependency* ) override;
 
 	protected:
+		vulkan_job_attributes( const config& );
+
+		const vulkan_job& vulkan_job_attributes::job() const override;
+
 		state& job_dependency_state() override;
 
 		const state& job_dependency_state() const override;
-
-		vulkan_job_attributes( const config& );
 
 	private:
 		const config _cfg;

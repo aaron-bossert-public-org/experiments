@@ -7,6 +7,7 @@
 namespace igpu
 {
 	struct vulkan_batch_draw_state;
+	class vulkan_job_primitives;
 
 	class vulkan_root_batch;
 	class vulkan_program;
@@ -23,9 +24,11 @@ namespace igpu
 			{
 				vulkan_root_batch* root_batch;
 				std::shared_ptr< vulkan_graphics_pipeline > graphics_pipeline;
+				std::shared_ptr< vulkan_program > program;
 				std::shared_ptr< vulkan_primitives > material;
 				std::shared_ptr< vulkan_geometry > geometry;
 				std::shared_ptr< vulkan_primitives > primitives;
+				std::vector< size_t > vertex_buffer_indices;
 			};
 
 			vulkan vk;
@@ -85,6 +88,7 @@ namespace igpu
 		//  was padded due to alignment specifier
 		std::optional< utility::sphere > _visibility_sphere;
 #pragma warning( pop )
-		vulkan_primitives* _primitives = nullptr;
+
+		std::shared_ptr< vulkan_job_primitives > _job_primitives;
 	};
 }

@@ -9,6 +9,7 @@
 #include "vulkan/buffer/vulkan_vertex_buffer.h"
 #include "vulkan/defines/vulkan_includes.h"
 #include "vulkan/shader/vulkan_fragment_shader.h"
+#include "vulkan/shader/vulkan_pipeline_cache.h"
 #include "vulkan/shader/vulkan_primitives.h"
 #include "vulkan/shader/vulkan_program.h"
 #include "vulkan/shader/vulkan_render_states.h"
@@ -774,6 +775,7 @@ std::unique_ptr< vertex_buffer > vulkan_context::make_vertex_buffer(
 	return vulkan_vertex_buffer::make(
 		{
 			cfg,
+			_state.device,
 			&_cfg.vk.physical_device_properties,
 		},
 		_synchronization );
@@ -785,6 +787,7 @@ std::unique_ptr< index_buffer > vulkan_context::make_index_buffer(
 	return vulkan_index_buffer::make(
 		{
 			base_cfg,
+			_state.device,
 			&_cfg.vk.physical_device_properties,
 			to_vulkan_format( base_cfg.format ),
 		},
@@ -797,6 +800,7 @@ std::unique_ptr< compute_buffer > vulkan_context::make_compute_buffer(
 	return vulkan_compute_buffer::make(
 		{
 			cfg,
+			_state.device,
 			&_cfg.vk.physical_device_properties,
 		},
 		_synchronization );
@@ -824,23 +828,23 @@ std::unique_ptr< primitives > vulkan_context::make_primitives(
 std::unique_ptr< opaque_batch > vulkan_context::make_opaque_batch(
 	const opaque_batch::config& base_cfg )
 {
-	vulkan_opaque_batch::config cfg = {
+	return vulkan_opaque_batch::make( {
 		base_cfg,
-		this,
-	};
-
-	return vulkan_opaque_batch::make( cfg );
+		_state.device,
+		_back_buffer->framebuffers().size(),
+		_pipeline_cache,
+	} );
 }
 
 std::unique_ptr< transparent_batch > vulkan_context::make_transparent_batch(
 	const transparent_batch::config& base_cfg )
 {
-	vulkan_transparent_batch::config cfg = {
+	return vulkan_transparent_batch::make( {
 		base_cfg,
-		this,
-	};
-
-	return vulkan_transparent_batch::make( cfg );
+		_state.device,
+		_back_buffer->framebuffers().size(),
+		_pipeline_cache,
+	} );
 }
 
 const batch_constraints& vulkan_context::batch_constraints() const
@@ -884,6 +888,7 @@ vulkan_context::vulkan_context(
 	, _transfer_queue( transfer_queue )
 	, _synchronization( synchronization )
 	, _window( std::move( window ) )
+	, _pipeline_cache(vulkan_pipeline_cache::make({device}))
 	, _back_buffer( std::move( back_buffer ) )
 	, _batch_constraints( cfg.batch_constraints )
 	, _material_constraints( cfg.material_constraints )
@@ -904,7 +909,9 @@ vulkan_context::vulkan_context(
 	, _draw_call_metric( perf::category::DRAW_CALL_COUNT, "Draw Calls" )
 	, _polycount_metric( perf::category::POLY_COUNT, "Polycount" )
 #endif
-{}
+{
+	_pipeline_cache->on_back_buffer_resized( *_back_buffer );
+}
 
 vulkan_context::auto_destroy::~auto_destroy()
 {
@@ -952,4 +959,6 @@ void vulkan_context::resize_back_buffer( const glm::ivec2& screen_res )
 		screen_res,
 		_present_queue->cfg().family_index,
 		_graphics_queue->cfg().family_index );
+
+	_pipeline_cache->on_back_buffer_resized( *_back_buffer );
 }

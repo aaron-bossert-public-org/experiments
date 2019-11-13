@@ -60,8 +60,6 @@ namespace igpu
 
 		static std::unique_ptr< vulkan_geometry > make( const config& );
 
-		void add_fence( const std::shared_ptr< vulkan_fence >& );
-
 		~vulkan_geometry() override;
 
 	protected:

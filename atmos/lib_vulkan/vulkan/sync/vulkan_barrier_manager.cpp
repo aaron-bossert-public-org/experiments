@@ -82,6 +82,7 @@ void vulkan_barrier_manager::end_dependencies(
 }
 
 void vulkan_barrier_manager::push_barrier(
+	uint32_t target_queue_family_index,
 	VkPipelineStageFlags src_stages,
 	VkPipelineStageFlags dst_stages,
 	const VkImageMemoryBarrier& barrier )
@@ -91,6 +92,7 @@ void vulkan_barrier_manager::push_barrier(
 	_barrier.image_memory_barriers.push_back( barrier );
 }
 void vulkan_barrier_manager::push_barrier(
+	uint32_t target_queue_family_index,
 	VkPipelineStageFlags src_stages,
 	VkPipelineStageFlags dst_stages,
 	const VkBufferMemoryBarrier& barrier )

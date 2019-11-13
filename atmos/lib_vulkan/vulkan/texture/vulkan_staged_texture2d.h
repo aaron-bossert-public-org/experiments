@@ -2,6 +2,7 @@
 #pragma once
 
 #include "vulkan/buffer/vulkan_buffer.h"
+#include "vulkan/texture/vulkan_image.h"
 #include "vulkan/texture/vulkan_texture2d.h"
 
 #include "framework/perf/metrics.h"
@@ -44,6 +45,6 @@ namespace igpu
 		scoped_ptr< vulkan_synchronization > _synchronization;
 		buffer_view< char > _mapped_view = {};
 		vulkan_buffer _staging_buffer;
-		std::unique_ptr< vulkan_image > _gpu_image;
+		vulkan_image _gpu_image;
 	};
 }

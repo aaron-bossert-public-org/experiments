@@ -19,11 +19,15 @@ vulkan_staged_texture2d::vulkan_staged_texture2d(
 	, _synchronization( synchronization )
 	, _staging_buffer( {
 		  cfg.memory,
+		  cfg.vk.device,
 		  cfg.vk.device_properties,
 		  synchronization->vma(),
 		  VMA_MEMORY_USAGE_CPU_ONLY,
 		  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 	  } )
+	, _gpu_image(
+		  VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+		  VK_IMAGE_USAGE_SAMPLED_BIT )
 {}
 
 vulkan_staged_texture2d::~vulkan_staged_texture2d()
@@ -127,14 +131,12 @@ const vulkan_staged_texture2d::state& vulkan_staged_texture2d::current_state()
 
 vulkan_image& vulkan_staged_texture2d::gpu_object()
 {
-	ASSERT_CONTEXT( (bool)_gpu_image );
-	return *_gpu_image;
+	return _gpu_image;
 }
 
 const vulkan_image& vulkan_staged_texture2d::gpu_object() const
 {
-	ASSERT_CONTEXT( (bool)_gpu_image );
-	return *_gpu_image;
+	return _gpu_image;
 }
 
 void vulkan_staged_texture2d::upload(
@@ -176,7 +178,7 @@ void vulkan_staged_texture2d::upload(
 			}
 		}
 
-		if ( !_gpu_image || _current_state.res != state.res ||
+		if ( _current_state.res != state.res ||
 			 _current_state.format != state.format ||
 			 _current_state.mipmap_count != mipmap_count )
 		{
@@ -192,18 +194,13 @@ void vulkan_staged_texture2d::upload(
 				VK_IMAGE_ASPECT_COLOR_BIT,
 				mipmap_count );
 
-			_gpu_image = nullptr;
-
-			if ( vulkan_image::validate( image_cfg ) )
+			if ( !vulkan_image::validate( image_cfg ) )
 			{
-				_gpu_image = vulkan_image::make( image_cfg );
-			}
-
-			if ( !_gpu_image )
-			{
-				LOG_CRITICAL( "failed to create vulkan_image" );
+				LOG_CRITICAL( "cannot update gpu texture with staged data" );
 				return;
 			}
+
+			_gpu_image.reallocate( image_cfg );
 		}
 
 		_current_state = state;
@@ -211,12 +208,12 @@ void vulkan_staged_texture2d::upload(
 
 		synchronization.copy(
 			_staging_buffer,
-			*_gpu_image,
+			_gpu_image,
 			(uint32_t)src_offset );
 
 		if ( generate_mipmaps )
 		{
-			synchronization.generate_mipmaps( *_gpu_image );
+			synchronization.generate_mipmaps( _gpu_image );
 		}
 	}
 

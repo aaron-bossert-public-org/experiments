@@ -53,7 +53,7 @@ void vulkan_job_attributes::on_reallocate_gpu_object(
 	if ( write_index < _state.write_deps.size() )
 	{
 		LOG_CRITICAL(
-			"something is awry, this job is not supposed to have write "
+			"something is awry, draw jobs are not supposed to have any write "
 			"dependencies" );
 	}
 	else if ( read_index >= _state.read_deps.size() )
@@ -79,6 +79,11 @@ void vulkan_job_attributes::on_reallocate_gpu_object(
 	{
 		_index_buffer = _cfg.geometry->index_buffer().gpu_object().vk_buffer();
 	}
+}
+
+const vulkan_job& vulkan_job_attributes::job() const
+{
+	return *_cfg.job;
 }
 
 std::shared_ptr< vulkan_job_attributes > vulkan_job_attributes::make(

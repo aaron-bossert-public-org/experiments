@@ -1,24 +1,24 @@
 
 #pragma once
 
+#include "vulkan/batch/vulkan_batch_nodes.h"
+#include "vulkan/defines/vulkan_includes.h"
+
 #include "igpu/batch/opaque_batch.h"
+
+#include "framework/utility/scoped_ptr.h"
 
 namespace igpu
 {
 	class vulkan_root_batch;
-	class vulkan_context;
+	class vulkan_pipeline_cache;
 
 	class vulkan_opaque_batch : public opaque_batch
 	{
 	public:
 		struct config : opaque_batch::config
 		{
-			struct vulkan
-			{
-				vulkan_context* context = nullptr;
-			};
-
-			vulkan vk;
+			vulkan_root_batch::vulkan vk;
 		};
 
 		const config& cfg() const override;

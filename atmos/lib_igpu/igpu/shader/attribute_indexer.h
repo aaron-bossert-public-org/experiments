@@ -18,16 +18,34 @@ namespace igpu
 	public:
 		struct attribute_source
 		{
-			unsigned char buffer : 4;
-			unsigned char attribute : 4;
+			enum
+			{
+				BITS = 4,
+			};
+
+			unsigned char buffer : BITS;
+			unsigned char attribute : BITS;
 		};
+
+		using buffer_indices_t =
+			std::array< uint8_t, vertex_parameters::MAX_COUNT >;
+
+		using indices_t =
+			std::array< attribute_source, vertex_parameters::MAX_COUNT >;
 
 		bool reset( const vertex_parameters&, const geometry& );
 
-		const std::array< attribute_source, vertex_parameters::MAX_COUNT >&
-			indices() const;
+		const size_t buffer_count() const;
+
+		const buffer_indices_t& buffer_indices() const;
+
+		const indices_t& indices() const;
 
 	private:
-		std::array< attribute_source, vertex_parameters::MAX_COUNT > _indices;
+		size_t _buffer_count;
+
+		buffer_indices_t _buffer_indices;
+
+		indices_t _indices;
 	};
 }

@@ -116,6 +116,11 @@ const vulkan_job_dependencies::state& vulkan_job_primitives::
 	return _state;
 }
 
+const vulkan_job& vulkan_job_primitives::job() const
+{
+	return *_cfg.job;
+}
+
 void vulkan_job_primitives::on_reallocate_gpu_object(
 	vulkan_dependency* dependency )
 {
@@ -287,6 +292,7 @@ std::shared_ptr< vulkan_job_primitives > vulkan_job_primitives::make(
 						: write_parameter_cfgs;
 
 					deps.emplace_back(
+						primitive.cfg().vk.resource,
 						parameter.cfg().vk.image_layout,
 						job_scope,
 						shared );

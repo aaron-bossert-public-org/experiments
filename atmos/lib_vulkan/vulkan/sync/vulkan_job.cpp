@@ -2,8 +2,6 @@
 #include "vulkan/sync/vulkan_job_dependencies.h"
 
 #include "vulkan/sync/vulkan_dependency.h"
-#include "vulkan/sync/vulkan_fence.h"
-#include "vulkan/sync/vulkan_job.h"
 
 using namespace igpu;
 
@@ -22,8 +20,7 @@ void vulkan_job_dependencies::activate_read_hazard(
 	}
 	else if ( read_index >= state.read_deps.size() )
 	{
-		LOG_CRITICAL(
-			"read dependency does not belong to these job dependencies" );
+		LOG_CRITICAL( "read dependency does not belong to these job dependencies" );
 	}
 	else if ( !dependency->active() )
 	{
@@ -72,17 +69,4 @@ bool vulkan_job_dependencies::validate_barriers() const
 	}
 
 	return all_valid;
-}
-
-void vulkan_job_dependencies::wait_pending_job() const
-{
-	if ( const auto& fence = job().fence() )
-	{
-		fence->wait();
-	}
-}
-
-vulkan_job_dependencies::~vulkan_job_dependencies()
-{
-	wait_pending_job();
 }

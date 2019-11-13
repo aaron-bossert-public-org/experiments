@@ -4,10 +4,18 @@
 
 #include "vulkan/batch/vulkan_instance_batch.h"
 
-using namespace igpu;
+#include "vulkan/batch/vulkan_batch_nodes.h"
+#include "vulkan/sync/vulkan_job_primitives.h"
 
+using namespace igpu;
 vulkan_instance_batch::vulkan_instance_batch( const config& cfg )
-	: _primitives( cfg.vk.primitives.get() )
+	: _job_primitives( vulkan_job_primitives::make( {
+		  cfg.vk.root_batch->vk().device,
+		  cfg.vk.root_batch,
+		  cfg.vk.root_batch->vk().swap_count,
+		  &cfg.vk.program->instance_parameters(),
+		  cfg.vk.primitives.get(),
+	  } ) )
 {}
 
 void vulkan_instance_batch::enabled( bool enabled )

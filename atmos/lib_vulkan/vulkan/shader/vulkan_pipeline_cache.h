@@ -17,21 +17,18 @@ namespace igpu
 		{
 			struct vulkan
 			{
-				VkDevice* device = nullptr;
+				VkDevice device = nullptr;
 			};
 
 			vulkan vk;
 		};
 
-		// std::shared_ptr< vulkan_graphics_pipeline > memoize_graphics_pipeine(
-		//	vulkan_program&,
-		//	vulkan_render_states&,
-		//	vulkan_geometry& );
+		void on_back_buffer_resized( const vulkan_back_buffer& );
 
-		void back_buffer_resized( const vulkan_back_buffer& );
+		std::shared_ptr< vulkan_graphics_pipeline > memoized(
+			const graphics_pipeline::config& );
 
-		static std::unique_ptr< vulkan_graphics_pipeline > make(
-			const config& );
+		static std::unique_ptr< vulkan_pipeline_cache > make( const config& );
 
 		~vulkan_pipeline_cache();
 

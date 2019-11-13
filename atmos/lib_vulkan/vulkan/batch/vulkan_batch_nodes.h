@@ -7,6 +7,7 @@
 #include "vulkan/shader/vulkan_graphics_pipeline.h"
 #include "vulkan/shader/vulkan_primitives.h"
 #include "vulkan/shader/vulkan_program.h"
+#include "vulkan/sync/vulkan_job.h"
 
 #include "igpu/batch/batch_nodes.h"
 #include "igpu/batch/batch_utility.h"
@@ -15,6 +16,8 @@ namespace igpu
 {
 	class vulkan_fence;
 	class vulkan_job_attributes;
+	class vulkan_job_primitives;
+	class vulkan_pipeline_cache;
 
 	class vulkan_geometry_batch;
 	class vulkan_material_batch;
@@ -93,6 +96,7 @@ namespace igpu
 
 	private:
 		vulkan_root_batch* _root_batch;
+		std::shared_ptr< vulkan_job_primitives > _job_primitives;
 	};
 
 	class vulkan_graphics_pipeline_batch
@@ -147,17 +151,19 @@ namespace igpu
 			  root_batch,
 			  vulkan_program_batch,
 			  vulkan_primitives >
+		, public vulkan_job
 	{
 	public:
 		using draw_state_t = vulkan_batch_draw_state;
 
-		struct config
+		struct vulkan
 		{
 			VkDevice device = nullptr;
 			size_t swap_count = 0;
+			scoped_ptr< vulkan_pipeline_cache > pipeline_cache;
 		};
 
-		const config& cfg() const;
+		const vulkan& vk() const;
 
 		void start_draw( const vulkan_batch_draw_state& );
 
@@ -168,16 +174,17 @@ namespace igpu
 		std::unique_ptr< vulkan_batch_binding > make_binding(
 			const instance_batch::config& );
 
-		static std::unique_ptr< vulkan_root_batch > make( const config& );
+		static std::unique_ptr< vulkan_root_batch > make( const vulkan& );
 
 		~vulkan_root_batch();
 
 	private:
-		vulkan_root_batch( const config& cfg );
+		vulkan_root_batch( const vulkan& );
 
 	private:
-		const config _cfg;
+		const vulkan _vk;
 		std::shared_ptr< vulkan_fence > _fence;
+		std::shared_ptr< vulkan_job_primitives > _job_primitives;
 	};
 
 	class vulkan_batch_binding

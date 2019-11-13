@@ -55,6 +55,8 @@ namespace igpu
 
 		void barrier_manager_record( const vulkan_barrier_manager::record* );
 
+		void wait_pending_jobs() const;
+
 		void on_reallocate_gpu_object();
 
 		void on_barrier(
@@ -65,6 +67,8 @@ namespace igpu
 
 		virtual vulkan_resource::state& resource_state() = 0;
 
+		virtual const vulkan_resource::state& resource_state() const = 0;
+
 		virtual void update_descriptor_set(
 			VkDescriptorSet descriptor_set,
 			const vulkan_parameter::config&,
@@ -74,9 +78,10 @@ namespace igpu
 
 	protected:
 		virtual void push_barrier(
+			uint32_t target_queue_family_index,
 			vulkan_barrier_manager*,
-			const scoped_ptr< vulkan_queue >& src_queue,
-			const scoped_ptr< vulkan_queue >& dst_queue,
+			uint32_t src_queue_family_index,
+			uint32_t dst_queue_family_index,
 			VkImageLayout src_layout,
 			VkImageLayout dst_layout,
 			const vulkan_job_scope& src_scope,

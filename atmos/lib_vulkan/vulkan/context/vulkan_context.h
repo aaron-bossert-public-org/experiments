@@ -13,6 +13,7 @@
 namespace igpu
 {
 	class vulkan_synchronization;
+	class vulkan_pipeline_cache;
 
 	class vulkan_context : public context
 	{
@@ -132,7 +133,10 @@ namespace igpu
 		std::shared_ptr< vulkan_queue > _compute_queue;
 		std::shared_ptr< vulkan_queue > _transfer_queue;
 
+		std::shared_ptr< vulkan_pipeline_cache > _pipeline_cache;
+
 		std::shared_ptr< vulkan_synchronization > _synchronization;
+
 		std::unique_ptr< vulkan_window > _window;
 		std::unique_ptr< vulkan_back_buffer > _back_buffer;
 

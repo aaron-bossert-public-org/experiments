@@ -19,10 +19,6 @@ bool vulkan_attributes_decriptor::reset(
 
 	_vertex_parameters = &vertex_parameters;
 	_geometry = &geometry;
-	_binding_description_count = 0;
-
-	std::array< VkVertexInputBindingDescription*, vertex_parameters::MAX_COUNT >
-		binding_table = {};
 
 	for ( uint32_t i = 0; i < vertex_parameters.count(); ++i )
 	{
@@ -32,27 +28,26 @@ bool vulkan_attributes_decriptor::reset(
 		const auto& buff_cfg =
 			geometry.cfg().vertex_buffers[source.buffer]->cfg();
 		const auto& attr_cfg = buff_cfg.attributes[source.attribute];
-		auto** pp_binding_description = &binding_table[source.buffer];
 
-		if ( !*pp_binding_description )
-		{
-			VkVertexInputBindingDescription* binding_description =
-				*pp_binding_description =
-					&_binding_descriptions[_binding_description_count];
-
-			binding_description->binding = _binding_description_count;
-			binding_description->stride = buff_cfg.stride;
-			binding_description->inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-			_binding_description_count++;
-		}
 
 		VkVertexInputAttributeDescription* attribute_description =
 			&_attribute_descriptions[i];
-		attribute_description->binding = ( *pp_binding_description )->binding;
+		attribute_description->binding = source.buffer;
 		attribute_description->location = (uint32_t)param.cfg().location;
 		attribute_description->format = param.cfg().vk.format;
 		attribute_description->offset = attr_cfg.offset;
+	}
+
+	for ( uint32_t i = 0; i < _indexer.buffer_count(); ++i )
+	{
+		uint32_t buffer_index = _indexer.buffer_indices()[i];
+		auto* binding_description = &_binding_descriptions[buffer_index];
+		const auto& buff_cfg =
+			geometry.cfg().vertex_buffers[buffer_index]->cfg();
+
+		binding_description->binding = buffer_index;
+		binding_description->stride = buff_cfg.stride;
+		binding_description->inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 	}
 
 	_vertex_input_info = {
@@ -61,7 +56,7 @@ bool vulkan_attributes_decriptor::reset(
 	};
 
 	_vertex_input_info.vertexBindingDescriptionCount =
-		_binding_description_count;
+		(uint32_t)_indexer.buffer_count();
 	_vertex_input_info.pVertexBindingDescriptions =
 		_binding_descriptions.data();
 
@@ -99,8 +94,9 @@ const VkPipelineInputAssemblyStateCreateInfo& vulkan_attributes_decriptor::
 
 uint32_t vulkan_attributes_decriptor::binding_description_count() const
 {
-	return _binding_description_count;
+	return (uint32_t)_indexer.buffer_count();
 }
+
 
 const vulkan_attributes_decriptor::binding_descriptions_t&
 	vulkan_attributes_decriptor::binding_descriptions() const

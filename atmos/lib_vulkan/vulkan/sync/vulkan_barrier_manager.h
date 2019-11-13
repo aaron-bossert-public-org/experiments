@@ -37,11 +37,13 @@ namespace igpu
 		void end_dependencies( const scoped_ptr< vulkan_queue >& );
 
 		void push_barrier(
+			uint32_t target_family_index,
 			VkPipelineStageFlags src_stages,
 			VkPipelineStageFlags dst_stages,
 			const VkImageMemoryBarrier& );
 
 		void push_barrier(
+			uint32_t target_family_index,
 			VkPipelineStageFlags src_stages,
 			VkPipelineStageFlags dst_stages,
 			const VkBufferMemoryBarrier& );

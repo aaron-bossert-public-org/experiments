@@ -2,7 +2,6 @@
 #pragma once
 
 #include "vulkan/defines/vulkan_includes.h"
-#include "vulkan/sync/vulkan_gpu_object.h"
 
 #include "igpu/shader/graphics_pipeline.h"
 
@@ -11,9 +10,7 @@ namespace igpu
 	class vulkan_program;
 	class vulkan_render_states;
 
-	class vulkan_graphics_pipeline
-		: public graphics_pipeline
-		, public vulkan_gpu_object
+	class vulkan_graphics_pipeline : public graphics_pipeline
 	{
 	public:
 		struct config : graphics_pipeline::config
@@ -22,6 +19,10 @@ namespace igpu
 			{
 				std::shared_ptr< vulkan_program > program;
 				std::shared_ptr< vulkan_render_states > render_states;
+				std::vector< VkVertexInputBindingDescription >
+					binding_descriptions;
+				std ::vector< VkVertexInputAttributeDescription >
+					attribute_descriptions;
 				VkPipelineInputAssemblyStateCreateInfo input_assembly_info = {};
 			};
 
@@ -29,8 +30,6 @@ namespace igpu
 		};
 
 		const config& cfg() const override;
-
-		state& object_state() override;
 
 		static std::unique_ptr< vulkan_graphics_pipeline > make(
 			const config& );
@@ -42,6 +41,5 @@ namespace igpu
 
 	private:
 		const config _cfg;
-		state _object_state;
 	};
 }

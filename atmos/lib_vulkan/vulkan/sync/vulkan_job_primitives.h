@@ -15,6 +15,7 @@ namespace igpu
 		struct config
 		{
 			VkDevice device = nullptr;
+			vulkan_job* job = nullptr;
 			size_t swap_count = 0;
 			const vulkan_parameters* parameters = nullptr;
 			const vulkan_primitives* primitives = nullptr;
@@ -32,6 +33,8 @@ namespace igpu
 
 	protected:
 		vulkan_job_primitives( const config& );
+
+		const vulkan_job& job() const override;
 
 		state& job_dependency_state() override;
 

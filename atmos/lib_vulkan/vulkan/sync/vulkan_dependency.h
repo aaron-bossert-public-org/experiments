@@ -28,9 +28,9 @@ namespace igpu
 
 		VkImageLayout layout() const;
 
-		const vulkan_job_dependencies& job() const;
+		const vulkan_job_dependencies& job_dependencies() const;
 
-		vulkan_job_dependencies& job();
+		vulkan_job_dependencies& job_dependencies();
 
 		const vulkan_resource& resource() const;
 

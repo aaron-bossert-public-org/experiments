@@ -49,8 +49,6 @@ namespace igpu
 		const vulkan_vertex_parameters* _vertex_parameters;
 		const vulkan_geometry* _geometry;
 
-		uint32_t _binding_description_count;
-
 		VkPipelineVertexInputStateCreateInfo _vertex_input_info;
 		VkPipelineInputAssemblyStateCreateInfo _input_assembly;
 

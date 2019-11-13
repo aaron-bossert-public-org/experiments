@@ -92,10 +92,9 @@ namespace
 		return sampler;
 	}
 
-	std::string perf_name( const vulkan_image::config& cfg )
+	std::string perf_name( VkImageUsageFlags usage )
 	{
 		std::string result;
-		auto usage = cfg.image_info.usage;
 		if ( VK_IMAGE_USAGE_TRANSFER_SRC_BIT & usage )
 		{
 			result += "transfer src/";
@@ -219,31 +218,36 @@ bool vulkan_image::validate( const config& cfg )
 }
 
 vulkan_image::vulkan_image( const config& cfg )
-	: _cfg( cfg )
-	, _image( create_image( cfg ) )
-	, _alloc_info( create_alloc_info( cfg, _image ) )
-	, _device_memory( create_device_memory( cfg, _alloc_info, _image ) )
-	, _image_view( create_image_view( cfg, _image ) )
-	, _sampler( create_sampler( cfg ) )
-	, _gpu_mem_metric( perf::category::GPU_MEM_USAGE, perf_name( cfg ) )
+	: _gpu_mem_metric(
+		  perf::category::GPU_MEM_USAGE,
+		  perf_name( cfg.image_info.usage ) )
 {
-	_gpu_mem_metric.add( _alloc_info.allocationSize ); // should not hit
+	reallocate( cfg );
 }
 
-const vulkan_image::config& vulkan_image::cfg() const
+vulkan_image::vulkan_image( VkImageUsageFlags usage )
+	: _gpu_mem_metric( perf::category::GPU_MEM_USAGE, perf_name( usage ) )
+{}
+
+void vulkan_image::reallocate( const config& cfg )
 {
-	return _cfg;
+	vulkan_resource::wait_pending_jobs();
+	release();
+
+	_cfg = cfg;
+
+	_image = create_image( cfg );
+	_alloc_info = create_alloc_info( cfg, _image );
+	_device_memory = create_device_memory( cfg, _alloc_info, _image );
+	_image_view = create_image_view( cfg, _image );
+	_sampler = create_sampler( cfg );
+	_gpu_mem_metric.add( _alloc_info.allocationSize );
+
+	vulkan_resource::on_reallocate_gpu_object();
 }
 
-vulkan_gpu_object::state& vulkan_image::object_state()
+void vulkan_image::release()
 {
-	return _object_state;
-}
-
-vulkan_image::~vulkan_image()
-{
-	vulkan_gpu_object::wait_on_fences();
-
 	if ( _sampler )
 	{
 		vkDestroySampler( _cfg.device, _sampler, nullptr );
@@ -263,6 +267,29 @@ vulkan_image::~vulkan_image()
 	{
 		vkDestroyImage( _cfg.device, _image, nullptr );
 	}
+
+	_gpu_mem_metric.reset();
+}
+
+const vulkan_image::config& vulkan_image::cfg() const
+{
+	return _cfg;
+}
+
+vulkan_resource::state& vulkan_image::resource_state()
+{
+	return _resource_state;
+}
+
+const vulkan_resource::state& vulkan_image::resource_state() const
+{
+	return _resource_state;
+}
+
+vulkan_image::~vulkan_image()
+{
+	vulkan_resource::wait_pending_jobs();
+	release();
 }
 
 std::unique_ptr< vulkan_image > vulkan_image::make( const config& cfg )
@@ -297,9 +324,10 @@ void vulkan_image::update_descriptor_set(
 }
 
 void vulkan_image::push_barrier(
+	uint32_t target_queue_family_index,
 	vulkan_barrier_manager* barrier_manager,
-	const scoped_ptr< vulkan_queue >& src_queue,
-	const scoped_ptr< vulkan_queue >& dst_queue,
+	uint32_t src_queue_family_index,
+	uint32_t dst_queue_family_index,
 	VkImageLayout src_layout,
 	VkImageLayout dst_layout,
 	const vulkan_job_scope& src_scope,
@@ -311,18 +339,13 @@ void vulkan_image::push_barrier(
 	barrier.dstAccessMask = (VkFlags)dst_scope.access;
 	barrier.oldLayout = src_layout;
 	barrier.newLayout = dst_layout;
-	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.srcQueueFamilyIndex = src_queue_family_index;
+	barrier.dstQueueFamilyIndex = dst_queue_family_index;
 	barrier.image = _image;
 	barrier.subresourceRange = _cfg.view_info.subresourceRange;
 
-	if ( src_queue != dst_queue )
-	{
-		barrier.srcQueueFamilyIndex = src_queue->cfg().family_index;
-		barrier.dstQueueFamilyIndex = dst_queue->cfg().family_index;
-	}
-
 	barrier_manager->push_barrier(
+		target_queue_family_index,
 		src_scope.stages,
 		dst_scope.stages,
 		barrier );

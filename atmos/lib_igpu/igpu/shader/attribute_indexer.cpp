@@ -13,6 +13,9 @@ bool attribute_indexer::reset(
 	const vertex_parameters& vertex_parameters,
 	const geometry& geometry )
 {
+	static_assert(
+		1 << attribute_source::BITS >= vertex_parameters::MAX_COUNT );
+
 	if ( vertex_parameters.count() > vertex_parameters::MAX_COUNT )
 	{
 		LOG_CRITICAL(
@@ -27,6 +30,9 @@ bool attribute_indexer::reset(
 	size_t buff = 0;
 	size_t attr = 0;
 	uint32_t attribute_count = 0;
+	_buffer_count = 0;
+
+	std::array< uint8_t*, vertex_parameters::MAX_COUNT > buffer_table = {};
 
 	for ( size_t pram = 0; pram < vertex_parameters.count(); ++pram )
 	{
@@ -54,8 +60,16 @@ bool attribute_indexer::reset(
 		const vertex_buffer::attribute& attribute =
 			vertex_buffer.cfg().attributes[attr];
 
-		_indices[attribute_count].buffer = buff;
+		if ( !buffer_table[buff] )
+		{
+			_buffer_indices[_buffer_count] = (uint8_t)buff;
+			buffer_table[buff] = &_buffer_indices[_buffer_count];
+			_buffer_count++;
+		}
+
+		_indices[attribute_count].buffer = *buffer_table[buff];
 		_indices[attribute_count].attribute = attr;
+
 		++attribute_count;
 
 		// increase attr index of where we expect the next attribute to be
@@ -77,9 +91,18 @@ bool attribute_indexer::reset(
 	return success;
 }
 
-const std::
-	array< attribute_indexer::attribute_source, vertex_parameters::MAX_COUNT >&
-	attribute_indexer::indices() const
+const size_t attribute_indexer::buffer_count() const
+{
+	return _buffer_count;
+}
+
+const attribute_indexer::buffer_indices_t& attribute_indexer::buffer_indices()
+	const
+{
+	return _buffer_indices;
+}
+
+const attribute_indexer::indices_t& attribute_indexer::indices() const
 {
 	return _indices;
 }
