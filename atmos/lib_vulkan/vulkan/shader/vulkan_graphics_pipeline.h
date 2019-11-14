@@ -31,6 +31,8 @@ namespace igpu
 
 		const config& cfg() const override;
 
+		VkPipeline vk_pipeline() const;
+
 		static std::unique_ptr< vulkan_graphics_pipeline > make(
 			const config& );
 

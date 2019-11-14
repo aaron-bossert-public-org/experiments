@@ -4,6 +4,8 @@
 #include "igpu/buffer/topology.h"
 #include "igpu/buffer/vertex_buffer.h"
 
+#include <memory>
+
 namespace igpu
 {
 	class attribute_indexer;
@@ -17,18 +19,19 @@ namespace igpu
 		{
 			std::shared_ptr< program > program;
 			std::shared_ptr< render_states > render_states;
-			std::vector< vertex_buffer::config > verrtex_format;
 			igpu::topology topology;
+			std::vector< vertex_buffer::config > compact_vertex_format;
 		};
 
 		virtual ~graphics_pipeline() = default;
 
 		virtual const config& cfg() const = 0;
 
-		static config make_config( const attribute_indexer& );
+		static config make_config(
+			const attribute_indexer&,
+			const std::shared_ptr< program >&,
+			const std::shared_ptr< render_states >& );
 
-		static size_t hash( const config& );
-
-		static bool equal( const config&, const config& );
+		static ptrdiff_t compare( const config&, const config& );
 	};
 }

@@ -421,6 +421,18 @@ const vulkan_synchronization::config& vulkan_synchronization::cfg() const
 	return _cfg;
 }
 
+size_t vulkan_synchronization::compact_queue_family_index(
+	uint32_t queue_family_index )
+{
+	return _compact_queue_family_indices[queue_family_index];
+}
+
+const std::vector< scoped_ptr< vulkan_queue > >& vulkan_synchronization::
+	compact_queues() const
+{
+	_compact_queues;
+}
+
 VmaAllocator vulkan_synchronization::vma()
 {
 	return _vma;
@@ -669,15 +681,48 @@ std::unique_ptr< vulkan_synchronization > vulkan_synchronization::make(
 	VmaAllocator vma;
 	vmaCreateAllocator( &allocatorInfo, &vma );
 
+	std::vector< size_t > compact;
+	std::vector< scoped_ptr< vulkan_queue > > compact_queues;
+
+	for ( auto& queue : {
+			  cfg.present_queue,
+			  cfg.graphics_queue,
+			  cfg.compute_queue,
+			  cfg.transfer_queue,
+		  } )
+	{
+		uint32_t family_index = queue->cfg().family_index;
+		if ( family_index <= compact.size() )
+		{
+			compact.resize( family_index + 1 );
+		}
+
+		if ( 0 == compact[family_index] )
+		{
+			compact_queues.push_back( queue );
+			compact[family_index] = compact_queues.size();
+		}
+	}
+
+	for ( auto& compact_index : compact )
+	{
+		--compact_index;
+	}
+
 	return std::unique_ptr< vulkan_synchronization >(
-		new vulkan_synchronization( cfg, vma ) );
+		new vulkan_synchronization( cfg, vma, compact, compact_queues ) );
 }
 
 vulkan_synchronization::vulkan_synchronization(
 	const config& cfg,
-	VmaAllocator vma )
+	VmaAllocator vma,
+	const std::vector< size_t >& compact_queue_family_indices,
+	const std::vector< scoped_ptr< vulkan_queue > >& compact_queues )
 	: _cfg( cfg )
 	, _vma( vma )
+	, _queue_family_count( queue_family_count )
+	, _compact_queue_family_indices( compact_queue_family_indices )
+	, _compact_queues( compact_queues )
 {}
 
 #include "vulkan/context/vulkan_context.h"

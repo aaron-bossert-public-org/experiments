@@ -1,72 +1,52 @@
 
-#include "vulkan/sync/vulkan_job_dependencies.h"
+#include "vulkan/sync/vulkan_job.h"
 
+#include "vulkan/sync/vulkan_barrier_manager.h"
 #include "vulkan/sync/vulkan_dependency.h"
+#include "vulkan/sync/vulkan_fence.h"
+#include "vulkan/sync/vulkan_job_dependencies.h"
 
 using namespace igpu;
 
-
-void vulkan_job_dependencies::activate_read_hazard(
-	vulkan_dependency* dependency )
+void vulkan_job::begin_record_cmds()
 {
-	auto& state = job_dependency_state();
-
-	size_t write_index = ( size_t )( dependency - state.write_deps.data() );
-	size_t read_index = ( size_t )( dependency - state.read_deps.data() );
-
-	if ( write_index < state.write_deps.size() )
-	{
-		LOG_CRITICAL( "cannot activate write dependency as read dependency" );
-	}
-	else if ( read_index >= state.read_deps.size() )
-	{
-		LOG_CRITICAL( "read dependency does not belong to these job dependencies" );
-	}
-	else if ( !dependency->active() )
-	{
-		dependency->active( true );
-		state.read_hazards.push_back( dependency );
-	}
+	job_state().recorded_dependencies.clear();
 }
 
-void vulkan_job_dependencies::process_dependencies(
+void vulkan_job::on_record_cmds( vulkan_job_dependencies* dependencies )
+{
+	job_state().recorded_dependencies.push_back( dependencies );
+}
+void vulkan_job::barrier_recorded_commands(
+	const scoped_ptr< vulkan_queue >& queue,
 	vulkan_barrier_manager* barrier_manager )
 {
-	auto& state = job_dependency_state();
-	for ( auto& write_dependency : state.write_deps )
+	auto& state = job_state();
+	barrier_manager->start_dependency_barriers();
+
+	for ( auto* dependencies : state.recorded_dependencies )
 	{
-		barrier_manager->process_dependency( &write_dependency );
+		dependencies->record_dependencies( barrier_manager );
 	}
 
-	for ( auto* read_hazard : state.read_hazards )
-	{
-		barrier_manager->process_dependency( read_hazard );
-	}
+	barrier_manager->finish_dependency_barriers( queue );
 
-	state.read_hazards.clear();
+#if ATMOS_DEBUG
+	for ( auto* dependencies : state.recorded_dependencies )
+	{
+		dependencies->validate_barriers();
+	}
+#endif
 }
 
-bool vulkan_job_dependencies::validate_barriers() const
+void vulkan_job::wait_on_fence() const
 {
-	auto& state = job_dependency_state();
-	bool all_valid = true;
-
-	for ( auto* deps : {
-			  &state.write_deps,
-			  &state.read_deps,
-		  } )
+	if ( const auto& fence = job_state().fence )
 	{
-		for ( const vulkan_dependency& dep : *deps )
-		{
-			if ( false ==
-				 dep.resource().validate_barrier(
-					 dep.layout(),
-					 dep.job_scope() ) )
-			{
-				all_valid = false;
-			}
-		}
+		fence->wait();
 	}
-
-	return all_valid;
+}
+void vulkan_job::fence( const std::shared_ptr< vulkan_fence >& fence )
+{
+	job_state().fence = fence;
 }

@@ -5,9 +5,9 @@
 
 namespace igpu
 {
-	class geometry;
 	class program;
-	class graphics_pipeline;
+	class render_states;
+	class geometry;
 	class primitives;
 	class instance_batch;
 
@@ -16,7 +16,7 @@ namespace igpu
 		utility::frustum frustum;
 	};
 
-	template < typename CHILD_T, typename ITEM_T >
+	template < typename ITEM_T, typename CHILD_T >
 	class batch_api_t
 	{
 	public:
@@ -38,20 +38,19 @@ namespace igpu
 		batch_api_t& operator=( const batch_api_t& ) = default;
 	};
 
-	class geometry_batch : public batch_api_t< instance_batch, geometry >
+	class material_batch : public batch_api_t< primitives, instance_batch >
 	{};
 
-	class material_batch : public batch_api_t< geometry_batch, primitives >
+	class geometry_batch : public batch_api_t< geometry, material_batch >
 	{};
 
-	class graphics_pipeline_batch
-		: public batch_api_t< material_batch, graphics_pipeline >
+	class states_batch : public batch_api_t< render_states, geometry_batch >
 	{};
 
-	class program_batch : public batch_api_t< graphics_pipeline_batch, program >
+	class program_batch : public batch_api_t< program, states_batch >
 	{};
 
-	class root_batch : public batch_api_t< program_batch, primitives >
+	class root_batch : public batch_api_t< primitives, program_batch >
 	{
 	protected:
 		root_batch() = default;

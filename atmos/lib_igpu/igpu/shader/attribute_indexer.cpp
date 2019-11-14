@@ -10,8 +10,8 @@
 using namespace igpu;
 
 bool attribute_indexer::reset(
-	const vertex_parameters& vertex_parameters,
-	const geometry& geometry )
+	const igpu::vertex_parameters& vertex_parameters,
+	const igpu::geometry& geometry )
 {
 	static_assert(
 		1 << attribute_source::BITS >= vertex_parameters::MAX_COUNT );
@@ -31,6 +31,8 @@ bool attribute_indexer::reset(
 	size_t attr = 0;
 	uint32_t attribute_count = 0;
 	_buffer_count = 0;
+	_vertex_parameters = &vertex_parameters;
+	_geometry = &geometry;
 
 	std::array< uint8_t*, vertex_parameters::MAX_COUNT > buffer_table = {};
 
@@ -67,15 +69,16 @@ bool attribute_indexer::reset(
 			_buffer_count++;
 		}
 
-		_indices[attribute_count].buffer = *buffer_table[buff];
-		_indices[attribute_count].attribute = attr;
+		_indices[attribute_count].attribute_index = attr;
+		_indices[attribute_count].compact_buffer_index =
+			buffer_table[buff] - &_buffer_indices[0];
 
 		++attribute_count;
 
 		// increase attr index of where we expect the next attribute to be
 		++attr;
 
-		if ( shader_param.cfg().components != attribute.parameter.components )
+		if ( shader_param.cfg().components != attribute.components )
 		{
 			LOG_CRITICAL(
 				"attribute (%s) expected to be (%s) but geometry (%s) uses "
@@ -83,12 +86,23 @@ bool attribute_indexer::reset(
 				shader_param.cfg().name.c_str(),
 				to_string( shader_param.cfg().components ).data(),
 				geometry.cfg().name.c_str(),
-				to_string( attribute.parameter.components ).data() );
+				to_string( attribute.components ).data() );
 			success = false;
 		}
 	}
 
 	return success;
+}
+
+
+const vertex_parameters* attribute_indexer::vertex_parameters() const
+{
+	return _vertex_parameters;
+}
+
+const igpu::geometry* attribute_indexer::geometry() const
+{
+	return _geometry;
 }
 
 const size_t attribute_indexer::buffer_count() const

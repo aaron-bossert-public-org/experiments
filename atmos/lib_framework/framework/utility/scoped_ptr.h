@@ -95,7 +95,7 @@ public:
 		return !expired();
 	}
 
-	T* operator->() const noexcept
+	T* get() const noexcept
 	{
 		ASSERT_CONTEXT(
 			!_ptr || !expired(),
@@ -105,6 +105,11 @@ public:
 #else
 		return _ptr;
 #endif
+	}
+
+	T* operator->() const noexcept
+	{
+		return get();
 	}
 
 	T& operator*() const noexcept

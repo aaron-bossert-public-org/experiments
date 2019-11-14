@@ -18,6 +18,7 @@
 #include "vulkan/texture/vulkan_texture2d.h"
 
 #include "igpu/batch/batch_utility.h"
+#include "igpu/shader/attribute_indexer.h"
 
 using namespace igpu;
 
@@ -59,6 +60,11 @@ bool vulkan_instance_batch::can_render( vulkan_batch_draw_state* draw_state )
 
 void vulkan_instance_batch::draw( const vulkan_batch_draw_state& draw_state )
 {
+	if ( _job_primitives )
+	{
+		_job_primitives->record_cmds( draw_state.command_buffer );
+	}
+
 	vkCmdDrawIndexed(
 		draw_state.command_buffer,
 		draw_state.resolved.element_count,
@@ -68,17 +74,63 @@ void vulkan_instance_batch::draw( const vulkan_batch_draw_state& draw_state )
 		draw_state.resolved.instance_start );
 }
 
-vulkan_geometry_batch::vulkan_geometry_batch(
-	const vulkan_instance_batch::config& cfg )
-	: _root_batch( cfg.vk.root_batch )
-	, _job_attributes( vulkan_job_attributes::make( {
-		  cfg.vk.root_batch->vk().device,
-		  cfg.vk.root_batch,
-		  cfg.vk.root_batch->vk().swap_count,
-		  cfg.vk.vertex_buffer_indices,
-		  cfg.vk.geometry.get(),
-	  } ) )
+vulkan_material_batch::vulkan_material_batch( const config& cfg )
+	: _cfg( cfg )
+{
+	if ( cfg.primitives )
+	{
+		_job_primitives =
+			vulkan_job_primitives::make( vulkan_job_primitives::config{
+				cfg.root_batch->vk().device,
+				cfg.program->pipeline_layout(),
+				cfg.root_batch,
+				cfg.root_batch->vk().swap_count,
+				1,
+				&cfg.program->material_parameters(),
+				cfg.primitives.get(),
+			} );
+	}
+}
+
+vulkan_material_batch::~vulkan_material_batch()
 {}
+
+void vulkan_material_batch::start_draw(
+	const vulkan_batch_draw_state& draw_state )
+{
+	if ( _job_primitives )
+	{
+		_job_primitives->record_cmds( draw_state.command_buffer );
+	}
+}
+
+void vulkan_material_batch::stop_draw()
+{}
+
+vulkan_geometry_batch::vulkan_geometry_batch( const config& cfg )
+	: _cfg( cfg )
+	, _job_attributes( vulkan_job_attributes::make( {
+		  cfg.root_batch->vk().device,
+		  cfg.root_batch,
+		  cfg.root_batch->vk().swap_count,
+		  cfg.active_vertex_buffers,
+		  cfg.geometry.get(),
+	  } ) )
+{
+	if ( cfg.batch_primitives )
+	{
+		_job_primitives =
+			vulkan_job_primitives::make( vulkan_job_primitives::config{
+				cfg.root_batch->vk().device,
+				cfg.program->pipeline_layout(),
+				cfg.root_batch,
+				cfg.root_batch->vk().swap_count,
+				0,
+				&cfg.program->material_parameters(),
+				cfg.batch_primitives.get(),
+			} );
+	}
+}
 
 vulkan_geometry_batch::~vulkan_geometry_batch()
 {}
@@ -104,76 +156,37 @@ bool vulkan_geometry_batch::pre_draw( vulkan_batch_draw_state* draw_state )
 void vulkan_geometry_batch::start_draw(
 	const vulkan_batch_draw_state& draw_state )
 {
-	_job_attributes->bind_buffer_cmds( draw_state.command_buffer );
+	vkCmdBindPipeline(
+		draw_state.command_buffer,
+		VK_PIPELINE_BIND_POINT_GRAPHICS,
+		_cfg.pipeline->vk_pipeline() );
+
+	if ( _job_primitives )
+	{
+		_job_primitives->record_cmds( draw_state.command_buffer );
+	}
+
+	_job_attributes->record_cmds( draw_state.command_buffer );
 }
 
 void vulkan_geometry_batch::stop_draw()
 {}
 
-vulkan_geometry* vulkan_geometry_batch::get_key(
-	const vulkan_instance_batch::config& cfg )
-{
-	return cfg.vk.geometry.get();
-}
-
-vulkan_material_batch::vulkan_material_batch(
-	const vulkan_instance_batch::config& cfg )
-	: _root_batch( cfg.vk.root_batch )
-	, _job_primitives( vulkan_job_primitives::make( {
-		  cfg.vk.root_batch->vk().device,
-		  cfg.vk.root_batch,
-		  cfg.vk.root_batch->vk().swap_count,
-		  &cfg.vk.program->material_parameters(),
-		  cfg.vk.material.get(),
-	  } ) )
+vulkan_states_batch::vulkan_states_batch( const config& cfg )
+	: _cfg( cfg )
 {}
 
-vulkan_material_batch::~vulkan_material_batch()
+vulkan_states_batch::~vulkan_states_batch()
 {}
 
-void vulkan_material_batch::start_draw( const vulkan_batch_draw_state& )
+void vulkan_states_batch::start_draw( const vulkan_batch_draw_state& )
 {}
 
-void vulkan_material_batch::stop_draw()
+void vulkan_states_batch::stop_draw()
 {}
 
-vulkan_primitives* vulkan_material_batch::get_key(
-	const vulkan_instance_batch::config& cfg )
-{
-	return cfg.vk.material.get();
-}
-
-vulkan_graphics_pipeline_batch::vulkan_graphics_pipeline_batch(
-	const vulkan_instance_batch::config& cfg )
-	: _root_batch( cfg.vk.root_batch )
-{}
-
-vulkan_graphics_pipeline_batch::~vulkan_graphics_pipeline_batch()
-{
-	auto fence = _root_batch->fence();
-	if ( fence )
-	{
-		fence->wait();
-	}
-}
-
-void vulkan_graphics_pipeline_batch::start_draw(
-	const vulkan_batch_draw_state& )
-{}
-
-void vulkan_graphics_pipeline_batch::stop_draw()
-{}
-
-vulkan_graphics_pipeline* vulkan_graphics_pipeline_batch::get_key(
-	const vulkan_instance_batch::config& cfg )
-{
-	return cfg.vk.graphics_pipeline.get();
-}
-
-
-vulkan_program_batch::vulkan_program_batch(
-	const vulkan_instance_batch::config& cfg )
-	: _root_batch( cfg.vk.root_batch )
+vulkan_program_batch::vulkan_program_batch( const config& cfg )
+	: _cfg( cfg )
 {}
 
 vulkan_program_batch::~vulkan_program_batch()
@@ -185,12 +198,6 @@ void vulkan_program_batch::start_draw( const vulkan_batch_draw_state& )
 void vulkan_program_batch::stop_draw()
 {}
 
-vulkan_program* vulkan_program_batch::get_key(
-	const vulkan_instance_batch::config& cfg )
-{
-	return ASSERT_CAST( vulkan_program*, cfg.program.get() );
-}
-
 const vulkan_root_batch::vulkan& vulkan_root_batch::vk() const
 {
 	return _vk;
@@ -198,59 +205,138 @@ const vulkan_root_batch::vulkan& vulkan_root_batch::vk() const
 
 void vulkan_root_batch::start_draw( const vulkan_batch_draw_state& draw_state )
 {
-	_fence = draw_state.fence;
-	ASSERT_CONTEXT( (bool)_fence );
+	ASSERT_CONTEXT( (bool)draw_state.fence );
+	vulkan_job::fence( draw_state.fence );
 }
 
 void vulkan_root_batch::stop_draw()
 {}
 
-const std::shared_ptr< vulkan_fence >& vulkan_root_batch::fence() const
-{
-	return _fence;
-}
-
 std::unique_ptr< vulkan_batch_binding > vulkan_root_batch::make_binding(
-	const instance_batch::config& base_cfg )
+	const instance_batch::config& cfg )
 {
-	auto prog = std::dynamic_pointer_cast< vulkan_program, program >(
-		base_cfg.program );
+	auto prog =
+		std::dynamic_pointer_cast< vulkan_program, program >( cfg.program );
 
+	auto states =
+		std::dynamic_pointer_cast< vulkan_render_states, render_states >(
+			cfg.states );
 
-	auto geo = std::dynamic_pointer_cast< vulkan_geometry, geometry >(
-		base_cfg.geometry );
+	auto geo =
+		std::dynamic_pointer_cast< vulkan_geometry, geometry >( cfg.geometry );
 
-	vulkan_attributes_decriptor attributes_descriptor;
-	if ( attributes_descriptor.reset( prog->vertex_parameters(), *geo ) )
+	auto mat = std::dynamic_pointer_cast< vulkan_primitives, primitives >(
+		cfg.material );
+
+	auto inst = std::dynamic_pointer_cast< vulkan_primitives, primitives >(
+		cfg.instance );
+
+	vulkan_program_batch* program_batch = nullptr;
 	{
-		auto mat = std::dynamic_pointer_cast< vulkan_primitives, primitives >(
-			base_cfg.material );
+		auto& map = this->map();
+		auto found = map.find( prog.get() );
+		if ( !map.found( found ) )
+		{
+			found = map.emplace(
+						   prog.get(),
+						   vulkan_program_batch::config{
+							   this,
+							   prog,
+						   } )
+						.first;
+		}
+		program_batch = &found->second->val();
+	}
 
-		auto prim = std::dynamic_pointer_cast< vulkan_primitives, primitives >(
-			base_cfg.material );
+	vulkan_states_batch* states_batch = nullptr;
+	{
+		auto& map = program_batch->map();
+		auto found = map.find( states.get() );
+		if ( !map.found( found ) )
+		{
+			found = map.emplace(
+						   states.get(),
+						   vulkan_states_batch::config{
+							   this,
+							   states,
+						   } )
+						.first;
+		}
+		states_batch = &found->second->val();
+	}
 
-		auto pipeline_config =
-			graphics_pipeline::make_config( attributes_descriptor.indexer() );
+	vulkan_geometry_batch* geometry_batch = nullptr;
+	{
+		auto& map = states_batch->map();
+		auto found = map.find( geo.get() );
+		if ( !map.found( found ) )
+		{
+			attribute_indexer indexer;
+			if ( !indexer.reset( prog->vertex_parameters(), *geo ) )
+			{
+				LOG_CRITICAL(
+					"failed to index vertex attributes for batch binding" );
+				return nullptr;
+			}
 
-		auto pipeline = _vk.pipeline_cache->memoized( pipeline_config );
+			auto pipeline = _vk.pipeline_cache->memoized(
+				indexer,
+				graphics_pipeline::make_config(
+					indexer,
+					cfg.program,
+					cfg.states ) );
 
-		vulkan_instance_batch::config cfg{
-			base_cfg,
+			const auto& buffer_indices = indexer.buffer_indices();
+
+			std::vector< size_t > active_vertex_buffers(
+				buffer_indices.data(),
+				buffer_indices.data() + indexer.buffer_count() );
+
+			found = map.emplace(
+						   geo.get(),
+						   vulkan_geometry_batch::config{
+							   this,
+							   prog,
+							   _vk.primitives,
+							   pipeline,
+							   geo,
+							   std::move( active_vertex_buffers ),
+						   } )
+						.first;
+		}
+		geometry_batch = &found->second->val();
+	}
+
+	vulkan_material_batch* material_batch = nullptr;
+	{
+		auto& map = geometry_batch->map();
+		auto found = map.find( mat.get() );
+		if ( !map.found( found ) )
+		{
+			found = map.emplace(
+						   mat.get(),
+						   vulkan_material_batch::config{
+							   this,
+							   prog,
+							   mat,
+						   } )
+						.first;
+		}
+		material_batch = &found->second->val();
+	}
+
+	return std::unique_ptr< vulkan_batch_binding >( new vulkan_batch_binding(
+		this,
+		program_batch,
+		states_batch,
+		geometry_batch,
+		material_batch,
+		{
+			cfg,
 			this,
-			pipeline,
 			prog,
-			mat,
-			geo,
-			prim,
-		};
-
-		return batch_utility::make_binding< vulkan_batch_binding >(
-			*this,
-			cfg );
-	};
-
-
-	return nullptr;
+			inst,
+		} ) );
 }
 
 std::unique_ptr< vulkan_root_batch > vulkan_root_batch::make( const vulkan& vk )
@@ -267,6 +353,10 @@ std::unique_ptr< vulkan_root_batch > vulkan_root_batch::make( const vulkan& vk )
 	{
 		LOG_CRITICAL( "pipeline_cache is null" );
 	}
+	else if ( !vk.primitives )
+	{
+		LOG_CRITICAL( "primitives is null" );
+	}
 	else
 	{
 		return std::unique_ptr< vulkan_root_batch >(
@@ -282,10 +372,17 @@ vulkan_root_batch::vulkan_root_batch( const vulkan& vk )
 
 vulkan_root_batch::~vulkan_root_batch()
 {
-	if ( _fence )
-	{
-		_fence->wait();
-	}
+	vulkan_job::wait_on_fence();
+}
+
+vulkan_job::state& vulkan_root_batch::job_state()
+{
+	return _job_state;
+}
+
+const vulkan_job::state& vulkan_root_batch::job_state() const
+{
+	return _job_state;
 }
 
 vulkan_batch_binding::~vulkan_batch_binding()

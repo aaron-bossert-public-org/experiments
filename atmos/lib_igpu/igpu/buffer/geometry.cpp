@@ -35,7 +35,7 @@ bool geometry::find_expected_vertex_param(
 
 	do
 	{
-		if ( attributes->at( attr ).parameter.name == name )
+		if ( attributes->at( attr ).name == name )
 		{
 			*p_expected_buff = buff;
 			*p_expected_attr = attr;

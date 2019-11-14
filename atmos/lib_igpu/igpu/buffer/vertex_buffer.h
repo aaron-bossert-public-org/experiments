@@ -31,7 +31,8 @@ namespace igpu
 	public:
 		struct attribute
 		{
-			vertex_parameter::config parameter;
+			std::string name;
+			components components;
 			uint32_t offset = 0;
 		};
 

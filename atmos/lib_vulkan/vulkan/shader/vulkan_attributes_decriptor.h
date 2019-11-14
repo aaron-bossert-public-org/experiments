@@ -23,9 +23,7 @@ namespace igpu
 			VkVertexInputAttributeDescription,
 			vertex_parameters::MAX_COUNT >;
 
-		[[nodiscard]] bool reset(
-			const vulkan_vertex_parameters&,
-			const vulkan_geometry& );
+		void reset( const attribute_indexer& );
 
 		const attribute_indexer& indexer() const;
 
@@ -44,8 +42,7 @@ namespace igpu
 		const vulkan_geometry* geometry() const;
 
 	private:
-		attribute_indexer _indexer;
-
+		const attribute_indexer* _indexer;
 		const vulkan_vertex_parameters* _vertex_parameters;
 		const vulkan_geometry* _geometry;
 

@@ -17,28 +17,30 @@ namespace igpu
 			VkDevice device = nullptr;
 			vulkan_job* job = nullptr;
 			size_t swap_count = 0;
-			std::vector< size_t > vertex_buffer_indices;
+			std::vector< size_t > active_vertex_buffers;
 			vulkan_geometry* geometry = nullptr;
 		};
 
 		const config& cfg() const;
 
-		void bind_buffer_cmds( VkCommandBuffer ) const;
-
 		static std::shared_ptr< vulkan_job_attributes > make( const config& );
 
 		~vulkan_job_attributes();
 
-		void on_reallocate_gpu_object( vulkan_dependency* ) override;
-
 	protected:
 		vulkan_job_attributes( const config& );
 
-		const vulkan_job& vulkan_job_attributes::job() const override;
+		vulkan_job& job() override;
+
+		const vulkan_job& job() const override;
 
 		state& job_dependency_state() override;
 
 		const state& job_dependency_state() const override;
+
+		void on_record_cmds( VkCommandBuffer ) override;
+
+		void on_gpu_object_reallocated( vulkan_dependency* ) override;
 
 	private:
 		const config _cfg;

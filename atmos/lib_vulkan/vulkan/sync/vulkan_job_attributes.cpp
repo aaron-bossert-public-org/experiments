@@ -5,32 +5,15 @@
 #include "vulkan/buffer/vulkan_geometry.h"
 #include "vulkan/shader/vulkan_vertex_parameters.h"
 #include "vulkan/sync/vulkan_dependency.h"
+#include "vulkan/sync/vulkan_job.h"
 
 #include <array>
 
 using namespace igpu;
 
-
 const vulkan_job_attributes::config& vulkan_job_attributes::cfg() const
 {
 	return _cfg;
-}
-
-void vulkan_job_attributes::bind_buffer_cmds(
-	VkCommandBuffer command_buffer ) const
-{
-	vkCmdBindVertexBuffers(
-		command_buffer,
-		0,
-		(uint32_t)_vertex_buffers.size(),
-		_vertex_buffers.data(),
-		_vertex_buffer_offsets.data() );
-
-	vkCmdBindIndexBuffer(
-		command_buffer,
-		_index_buffer,
-		_index_buffer_offset,
-		_index_type );
 }
 
 vulkan_job_dependencies::state& vulkan_job_attributes::job_dependency_state()
@@ -42,43 +25,6 @@ const vulkan_job_dependencies::state& vulkan_job_attributes::
 	job_dependency_state() const
 {
 	return _state;
-}
-
-void vulkan_job_attributes::on_reallocate_gpu_object(
-	vulkan_dependency* dependency )
-{
-	size_t write_index = ( size_t )( dependency - _state.write_deps.data() );
-	size_t read_index = ( size_t )( dependency - _state.read_deps.data() );
-
-	if ( write_index < _state.write_deps.size() )
-	{
-		LOG_CRITICAL(
-			"something is awry, draw jobs are not supposed to have any write "
-			"dependencies" );
-	}
-	else if ( read_index >= _state.read_deps.size() )
-	{
-		LOG_CRITICAL( "dependency does not belong to these job dependencies" );
-	}
-	else if ( read_index > _vertex_buffers.size() )
-	{
-		LOG_CRITICAL(
-			"something is awry, this read index (%d) does not map to a vertex "
-			"or index buffer",
-			(int)read_index );
-	}
-	else if ( read_index < _vertex_buffers.size() )
-	{
-		size_t buffer_index = _cfg.vertex_buffer_indices[read_index];
-		_vertex_buffers[read_index] =
-			_cfg.geometry->vertex_buffer( buffer_index )
-				.gpu_object()
-				.vk_buffer();
-	}
-	else
-	{
-		_index_buffer = _cfg.geometry->index_buffer().gpu_object().vk_buffer();
-	}
 }
 
 const vulkan_job& vulkan_job_attributes::job() const
@@ -117,11 +63,11 @@ std::shared_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
 		scoped_ptr< vulkan_job_dependencies > scoped_ptr = shared;
 		vulkan_geometry* geometry = cfg.geometry;
 
-		vertex_buffers.reserve( cfg.vertex_buffer_indices.size() );
-		vertex_buffer_offsets.reserve( cfg.vertex_buffer_indices.size() );
-		read_deps.reserve( cfg.vertex_buffer_indices.size() + 1 );
+		vertex_buffers.reserve( cfg.active_vertex_buffers.size() );
+		vertex_buffer_offsets.reserve( cfg.active_vertex_buffers.size() );
+		read_deps.reserve( cfg.active_vertex_buffers.size() + 1 );
 
-		for ( size_t i : cfg.vertex_buffer_indices )
+		for ( size_t i : cfg.active_vertex_buffers )
 		{
 			vulkan_vertex_buffer& vertex_buffer = geometry->vertex_buffer( i );
 			vertex_buffers.push_back( vertex_buffer.gpu_object().vk_buffer() );
@@ -159,3 +105,56 @@ vulkan_job_attributes ::~vulkan_job_attributes()
 vulkan_job_attributes::vulkan_job_attributes( const config& cfg )
 	: _cfg( cfg )
 {}
+
+void vulkan_job_attributes::on_record_cmds( VkCommandBuffer command_buffer )
+{
+	vkCmdBindVertexBuffers(
+		command_buffer,
+		0,
+		(uint32_t)_vertex_buffers.size(),
+		_vertex_buffers.data(),
+		_vertex_buffer_offsets.data() );
+
+	vkCmdBindIndexBuffer(
+		command_buffer,
+		_index_buffer,
+		_index_buffer_offset,
+		_index_type );
+}
+
+void vulkan_job_attributes::on_gpu_object_reallocated(
+	vulkan_dependency* dependency )
+{
+	size_t write_index = ( size_t )( dependency - _state.write_deps.data() );
+	size_t read_index = ( size_t )( dependency - _state.read_deps.data() );
+
+	if ( write_index < _state.write_deps.size() )
+	{
+		LOG_CRITICAL(
+			"something is awry, draw jobs are not supposed to have any write "
+			"dependencies" );
+	}
+	else if ( read_index >= _state.read_deps.size() )
+	{
+		LOG_CRITICAL( "dependency does not belong to these job dependencies" );
+	}
+	else if ( read_index > _vertex_buffers.size() )
+	{
+		LOG_CRITICAL(
+			"something is awry, this read index (%d) does not map to a vertex "
+			"or index buffer",
+			(int)read_index );
+	}
+	else if ( read_index < _vertex_buffers.size() )
+	{
+		size_t buffer_index = _cfg.active_vertex_buffers[read_index];
+		_vertex_buffers[read_index] =
+			_cfg.geometry->vertex_buffer( buffer_index )
+				.gpu_object()
+				.vk_buffer();
+	}
+	else
+	{
+		_index_buffer = _cfg.geometry->index_buffer().gpu_object().vk_buffer();
+	}
+}

@@ -8,15 +8,23 @@
 #include "vulkan/sync/vulkan_job_primitives.h"
 
 using namespace igpu;
+
 vulkan_instance_batch::vulkan_instance_batch( const config& cfg )
-	: _job_primitives( vulkan_job_primitives::make( {
-		  cfg.vk.root_batch->vk().device,
-		  cfg.vk.root_batch,
-		  cfg.vk.root_batch->vk().swap_count,
-		  &cfg.vk.program->instance_parameters(),
-		  cfg.vk.primitives.get(),
-	  } ) )
-{}
+{
+	if ( cfg.vk.instance )
+	{
+		_job_primitives =
+			vulkan_job_primitives::make( vulkan_job_primitives::config{
+				cfg.vk.root_batch->vk().device,
+				cfg.vk.program->pipeline_layout(),
+				cfg.vk.root_batch,
+				cfg.vk.root_batch->vk().swap_count,
+				2,
+				&cfg.vk.program->instance_parameters(),
+				cfg.vk.instance.get(),
+			} );
+	}
+}
 
 void vulkan_instance_batch::enabled( bool enabled )
 {

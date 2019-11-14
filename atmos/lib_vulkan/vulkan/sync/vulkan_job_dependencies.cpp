@@ -32,18 +32,18 @@ void vulkan_job_dependencies::activate_read_hazard(
 	}
 }
 
-void vulkan_job_dependencies::process_dependencies(
+void vulkan_job_dependencies::record_dependencies(
 	vulkan_barrier_manager* barrier_manager )
 {
 	auto& state = job_dependency_state();
 	for ( auto& write_dependency : state.write_deps )
 	{
-		barrier_manager->process_dependency( &write_dependency );
+		barrier_manager->record_dependency( &write_dependency );
 	}
 
 	for ( auto* read_hazard : state.read_hazards )
 	{
-		barrier_manager->process_dependency( read_hazard );
+		barrier_manager->record_dependency( read_hazard );
 	}
 
 	state.read_hazards.clear();
@@ -74,12 +74,22 @@ bool vulkan_job_dependencies::validate_barriers() const
 	return all_valid;
 }
 
+
+void vulkan_job_dependencies::on_record_cmds( VkCommandBuffer command_buffer )
+{
+	job().on_record_cmds( this );
+	on_record_cmds( command_buffer );
+}
+
+void vulkan_job_dependencies::gpu_object_reallocated(
+	vulkan_dependency* dependency )
+{
+	on_gpu_object_reallocated( dependency );
+}
+
 void vulkan_job_dependencies::wait_pending_job() const
 {
-	if ( const auto& fence = job().fence() )
-	{
-		fence->wait();
-	}
+	job().wait_on_fence();
 }
 
 vulkan_job_dependencies::~vulkan_job_dependencies()

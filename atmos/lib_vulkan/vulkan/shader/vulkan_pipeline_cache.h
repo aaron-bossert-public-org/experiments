@@ -8,6 +8,7 @@
 #include <unordered_map>
 namespace igpu
 {
+	class attribute_indexer;
 	class vulkan_back_buffer;
 
 	class vulkan_pipeline_cache
@@ -26,6 +27,7 @@ namespace igpu
 		void on_back_buffer_resized( const vulkan_back_buffer& );
 
 		std::shared_ptr< vulkan_graphics_pipeline > memoized(
+			const attribute_indexer&,
 			const graphics_pipeline::config& );
 
 		static std::unique_ptr< vulkan_pipeline_cache > make( const config& );

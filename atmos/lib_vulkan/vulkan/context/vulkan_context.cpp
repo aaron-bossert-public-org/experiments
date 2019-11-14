@@ -404,7 +404,7 @@ namespace
 
 		LOG_CRITICAL(
 			"failed to find GPU with queue families "
-			"present/graphcis/compute/transfer" );
+			"present/graphics/compute/transfer" );
 
 		return nullptr;
 	}

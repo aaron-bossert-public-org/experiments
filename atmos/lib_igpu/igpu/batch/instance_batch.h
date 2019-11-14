@@ -21,10 +21,10 @@ namespace igpu
 		struct config
 		{
 			std::shared_ptr< program > program;
-			std::shared_ptr< render_states > render_states;
-			std::shared_ptr< primitives > material;
+			std::shared_ptr< render_states > states;
 			std::shared_ptr< geometry > geometry;
-			std::shared_ptr< primitives > primitives;
+			std::shared_ptr< primitives > material;
+			std::shared_ptr< primitives > instance;
 		};
 
 		using item_t = batch_binding;

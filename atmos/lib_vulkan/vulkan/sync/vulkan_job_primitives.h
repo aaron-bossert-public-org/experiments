@@ -15,13 +15,13 @@ namespace igpu
 		struct config
 		{
 			VkDevice device = nullptr;
+			VkPipelineLayout pipeline_layout = nullptr;
 			vulkan_job* job = nullptr;
 			size_t swap_count = 0;
+			uint32_t descriptor_index = UINT32_MAX;
 			const vulkan_parameters* parameters = nullptr;
 			const vulkan_primitives* primitives = nullptr;
 		};
-
-		VkDescriptorSet descriptor_set();
 
 		~vulkan_job_primitives();
 
@@ -29,16 +29,20 @@ namespace igpu
 
 		const config& cfg() const;
 
-		void on_reallocate_gpu_object( vulkan_dependency* ) override;
-
 	protected:
 		vulkan_job_primitives( const config& );
+
+		vulkan_job& job() override;
 
 		const vulkan_job& job() const override;
 
 		state& job_dependency_state() override;
 
 		const state& job_dependency_state() const override;
+
+		void on_record_cmds( VkCommandBuffer ) override;
+
+		void on_gpu_object_reallocated( vulkan_dependency* ) override;
 
 	private:
 		const config _cfg;

@@ -1,4 +1,3 @@
-
 #include "vulkan/sync/vulkan_job_primitives.h"
 
 #include "vulkan/shader/vulkan_parameters.h"
@@ -119,52 +118,6 @@ const vulkan_job_dependencies::state& vulkan_job_primitives::
 const vulkan_job& vulkan_job_primitives::job() const
 {
 	return *_cfg.job;
-}
-
-void vulkan_job_primitives::on_reallocate_gpu_object(
-	vulkan_dependency* dependency )
-{
-	size_t write_index = ( size_t )( dependency - _state.write_deps.data() );
-	size_t read_index = ( size_t )( dependency - _state.read_deps.data() );
-
-	if ( write_index >= _state.write_deps.size() &&
-		 read_index >= _state.read_deps.size() )
-	{
-		LOG_CRITICAL( "dependency does not belong to these job dependencies" );
-	}
-	else if ( false == _descriptors_dirty )
-	{
-		_descriptors_dirty = true;
-		_swap_index = ( _swap_index + 1 ) % _descriptor_sets.size();
-	}
-}
-
-VkDescriptorSet vulkan_job_primitives::descriptor_set()
-{
-	VkDescriptorSet descriptor_set = _descriptor_sets[_swap_index];
-
-	if ( _descriptors_dirty )
-	{
-		_descriptors_dirty = false;
-
-		for ( size_t i = 0; i < _state.write_deps.size(); ++i )
-		{
-			const auto& dep = _state.write_deps[i];
-			const auto& cfg = _write_parameter_cfgs[i];
-
-			dep.resource().update_descriptor_set( descriptor_set, cfg, 0 );
-		}
-
-		for ( size_t i = 0; i < _state.read_deps.size(); ++i )
-		{
-			const auto& dep = _state.read_deps[i];
-			const auto& cfg = _read_parameter_cfgs[i];
-
-			dep.resource().update_descriptor_set( descriptor_set, cfg, 0 );
-		}
-	}
-
-	return descriptor_set;
 }
 
 std::shared_ptr< vulkan_job_primitives > vulkan_job_primitives::make(
@@ -316,3 +269,57 @@ vulkan_job_primitives ::~vulkan_job_primitives()
 vulkan_job_primitives::vulkan_job_primitives( const config& cfg )
 	: _cfg( cfg )
 {}
+
+void vulkan_job_primitives::on_record_cmds( VkCommandBuffer command_buffer )
+{
+	VkDescriptorSet descriptor_set = _descriptor_sets[_swap_index];
+
+	if ( _descriptors_dirty )
+	{
+		_descriptors_dirty = false;
+
+		for ( size_t i = 0; i < _state.write_deps.size(); ++i )
+		{
+			const auto& dep = _state.write_deps[i];
+			const auto& cfg = _write_parameter_cfgs[i];
+
+			dep.resource().update_descriptor_set( descriptor_set, cfg, 0 );
+		}
+
+		for ( size_t i = 0; i < _state.read_deps.size(); ++i )
+		{
+			const auto& dep = _state.read_deps[i];
+			const auto& cfg = _read_parameter_cfgs[i];
+
+			dep.resource().update_descriptor_set( descriptor_set, cfg, 0 );
+		}
+	}
+
+	vkCmdBindDescriptorSets(
+		command_buffer,
+		VK_PIPELINE_BIND_POINT_GRAPHICS,
+		_cfg.pipeline_layout,
+		(uint32_t)_cfg.descriptor_index,
+		1,
+		&descriptor_set,
+		0,		   // dynamic offset count
+		nullptr ); // dynamic offsets
+}
+
+void vulkan_job_primitives::on_gpu_object_reallocated(
+	vulkan_dependency* dependency )
+{
+	size_t write_index = ( size_t )( dependency - _state.write_deps.data() );
+	size_t read_index = ( size_t )( dependency - _state.read_deps.data() );
+
+	if ( write_index >= _state.write_deps.size() &&
+		 read_index >= _state.read_deps.size() )
+	{
+		LOG_CRITICAL( "dependency does not belong to these job dependencies" );
+	}
+	else if ( false == _descriptors_dirty )
+	{
+		_descriptors_dirty = true;
+		_swap_index = ( _swap_index + 1 ) % _descriptor_sets.size();
+	}
+}

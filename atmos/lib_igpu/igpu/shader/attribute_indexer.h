@@ -23,8 +23,8 @@ namespace igpu
 				BITS = 4,
 			};
 
-			unsigned char buffer : BITS;
-			unsigned char attribute : BITS;
+			unsigned char compact_buffer_index : BITS;
+			unsigned char attribute_index : BITS;
 		};
 
 		using buffer_indices_t =
@@ -35,6 +35,10 @@ namespace igpu
 
 		bool reset( const vertex_parameters&, const geometry& );
 
+		const igpu::vertex_parameters* vertex_parameters() const;
+
+		const igpu::geometry* geometry() const;
+
 		const size_t buffer_count() const;
 
 		const buffer_indices_t& buffer_indices() const;
@@ -42,6 +46,10 @@ namespace igpu
 		const indices_t& indices() const;
 
 	private:
+		const igpu::vertex_parameters* _vertex_parameters = nullptr;
+
+		const igpu::geometry* _geometry = nullptr;
+
 		size_t _buffer_count;
 
 		buffer_indices_t _buffer_indices;

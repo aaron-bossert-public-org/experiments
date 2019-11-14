@@ -33,6 +33,10 @@ namespace igpu
 
 		const config& cfg() const;
 
+		size_t compact_queue_family_index( uint32_t queue_family_index ) const;
+
+		const std::vector< scoped_ptr< vulkan_queue > >& compact_queues() const;
+
 		VmaAllocator vma();
 
 		void copy(
@@ -56,10 +60,16 @@ namespace igpu
 		static std::unique_ptr< vulkan_synchronization > make( const config& );
 
 	protected:
-		vulkan_synchronization( const config&, VmaAllocator );
+		vulkan_synchronization(
+			const config&,
+			VmaAllocator,
+			const std::vector< size_t >&,
+			const std::vector< scoped_ptr< vulkan_queue > >& );
 
 	private:
 		const config _cfg;
+		const std::vector< size_t > _compact_queue_family_indices;
+		const std::vector< scoped_ptr< vulkan_queue > > _compact_queues;
 		VmaAllocator _vma;
 	};
 }

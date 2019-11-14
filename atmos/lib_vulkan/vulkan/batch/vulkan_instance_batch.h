@@ -11,8 +11,6 @@ namespace igpu
 
 	class vulkan_root_batch;
 	class vulkan_program;
-	class vulkan_graphics_pipeline;
-	class vulkan_geometry;
 	class vulkan_primitives;
 
 	class vulkan_instance_batch : public instance_batch
@@ -22,13 +20,9 @@ namespace igpu
 		{
 			struct vulkan
 			{
-				vulkan_root_batch* root_batch;
-				std::shared_ptr< vulkan_graphics_pipeline > graphics_pipeline;
+				vulkan_root_batch* root_batch = nullptr;
 				std::shared_ptr< vulkan_program > program;
-				std::shared_ptr< vulkan_primitives > material;
-				std::shared_ptr< vulkan_geometry > geometry;
-				std::shared_ptr< vulkan_primitives > primitives;
-				std::vector< size_t > vertex_buffer_indices;
+				std::shared_ptr< vulkan_primitives > instance;
 			};
 
 			vulkan vk;

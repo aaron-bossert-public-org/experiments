@@ -48,6 +48,8 @@ public:
 
 	iter_t find( const key_t& key );
 
+	bool found( const iter_t& iter );
+
 	bool erase( const iter_t& iter );
 
 	// array interface
@@ -108,6 +110,12 @@ typename associative_vector< KEY, VAL >::iter_t associative_vector< KEY, VAL >::
 	find( const KEY& key )
 {
 	return _key_to_element_ptrs.find( key );
+}
+
+template < typename KEY, typename VAL >
+bool associative_vector< KEY, VAL >::found( const iter_t& iter )
+{
+	return iter != _key_to_element_ptrs.end();
 }
 
 template < typename KEY, typename VAL >

@@ -124,8 +124,7 @@ void vulkan_resource::on_reallocate_gpu_object()
 	{
 		for ( vulkan_dependency* dependency : *deps )
 		{
-			dependency->job_dependencies().on_reallocate_gpu_object(
-				dependency );
+			dependency->job_dependencies().gpu_object_reallocated( dependency );
 		}
 	}
 }
