@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include "framework/utility/string_utils.h"
 
 #include <string_view>
 
@@ -20,15 +19,13 @@
 #define ENUM_SERIALIZABLE_( ENUM, TYPE, DEF, ... )  \
 	ENUM_CLASS_DECL( ENUM, TYPE, DEF, __VA_ARGS__ ) \
 	ENUM_IS_VALID( ENUM, __VA_ARGS__ )              \
-	ENUM_TO_STR( ENUM, __VA_ARGS__ )                \
-	ENUM_FROM_STR( ENUM, DEF, __VA_ARGS__ )
+	ENUM_TO_STR( ENUM, __VA_ARGS__ )
 
 #define ENUM_FLAGS_SERIALIZABLE_( ENUM, TYPE, DEF, ... ) \
 	ENUM_CLASS_DECL( ENUM, TYPE, DEF, __VA_ARGS__ )      \
 	ENUM_FLAG_OPS( ENUM, TYPE )                          \
 	ENUM_IS_VALID( ENUM, __VA_ARGS__ )                   \
-	ENUM_TO_STR( ENUM, __VA_ARGS__ )                     \
-	ENUM_FROM_STR( ENUM, DEF, __VA_ARGS__ )
+	ENUM_TO_STR( ENUM, __VA_ARGS__ )
 
 #define ENUM_DECL_DEFAULT( DEF ) DEF
 
@@ -124,24 +121,6 @@ NAME:                                           \
 NAME:                                         \
 	return #NAME;
 
-#define ENUM_FROM_STR( ENUM, DEF, ... )                \
-	constexpr static ENUM ENUM##_from_string(          \
-		const std::string_view s,                      \
-		ENUM fallback = ENUM::ENUM_DECL_##DEF )        \
-	{                                                  \
-		using enum_t = ENUM;                           \
-		switch ( string_utils::c_hash_32( s.data() ) ) \
-		{                                              \
-			ENUM_FROM_STR_CASE( __VA_ARGS__ )          \
-		default:                                       \
-			return fallback;                           \
-		}                                              \
-	}
-
-#define ENUM_FROM_STR_CASE( ... )                               \
-	VA_DISTRIBUTE_PRE(                                          \
-		case string_utils::c_hash_32 ENUM_FROM_STR_CASE_UNPACK, \
-		__VA_ARGS__ )
 
 #define ENUM_FROM_STR_CASE_UNPACK( NAME, INIT ) \
 	( #NAME )                                   \

@@ -21,13 +21,13 @@ implement composite context for profiling, constructs profiler_texture2d which o
 
 migrate pipeline code to batching system
 build graphics pipeline cache
-think about removing vulkan_pipeine_cache, maybe unnecessary. just memoize renderstates and primitives instead
 
 //////////////////////////////////////
 (CURRENT PROGRESS POINT)
 //////////////////////////////////////
 
 
+think about removing vulkan_pipeine_cache, maybe unnecessary. just memoize renderstates and primitives instead
 finish error proofing job dependencies
 vulkan_job implements begin(queue) and end() which accepts a command buffer and writes barriers to it.
 add config to vulkan_job. config holds barrier manager. 

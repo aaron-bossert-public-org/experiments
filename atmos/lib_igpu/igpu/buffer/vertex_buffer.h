@@ -33,7 +33,7 @@ namespace igpu
 		{
 			std::string name;
 			components components;
-			uint32_t offset = 0;
+			size_t offset = 0;
 		};
 
 		struct config

@@ -12,6 +12,9 @@ namespace igpu
 	class render_texture2d : public render_buffer
 	{
 	public:
+		struct config : render_buffer::config
+		{};
+
 		virtual ~render_texture2d() = default;
 	};
 }

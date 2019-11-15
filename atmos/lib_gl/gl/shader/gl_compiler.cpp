@@ -8,7 +8,6 @@
 //
 //#include "framework/utility/buffer_view.h"
 //
-//#include "igpu/context/vertex_constraints.h"
 //#include "igpu/shader/program.h"
 //
 //#include <vector>

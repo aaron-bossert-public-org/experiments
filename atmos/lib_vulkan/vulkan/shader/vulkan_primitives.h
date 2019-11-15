@@ -12,6 +12,8 @@ namespace igpu
 	class vulkan_primitives : public primitives
 	{
 	public:
+		const config& cfg() const override;
+
 		size_t primitive_count() const override;
 
 		const vulkan_primitive& primitive( size_t ) const override;
@@ -27,9 +29,10 @@ namespace igpu
 
 
 	private:
-		vulkan_primitives( std::vector< vulkan_primitive > );
+		vulkan_primitives( const config&, std::vector< vulkan_primitive > );
 
 	private:
+		const config _cfg;
 		const std::vector< vulkan_primitive > _primitives;
 	};
 

@@ -5,9 +5,7 @@
 #include "gl/window/gl_back_buffer.h"
 #include "gl/window/gl_window.h"
 
-#include "igpu/context/batch_constraints.h"
 #include "igpu/context/context.h"
-#include "igpu/context/material_constraints.h"
 #include "igpu/utility/utility_types.h"
 
 #include "framework/perf/metrics.h"
@@ -55,10 +53,6 @@ namespace igpu
 
 		std::unique_ptr< texture2d > make_texture(
 			const texture2d::config& ) override;
-
-		const igpu::batch_constraints& batch_constraints() const override;
-
-		const igpu::material_constraints& material_constraints() const override;
 
 		const gl_window& window() const override;
 
@@ -134,8 +128,6 @@ namespace igpu
 
 	private:
 		config _cfg;
-		igpu::batch_constraints _batch_constraints;
-		igpu::material_constraints _material_constraints;
 		std::unique_ptr< gl_window > _gl_window;
 		utility::viewport _current_viewport;
 		size_t _batch_drawpass_id = 0;

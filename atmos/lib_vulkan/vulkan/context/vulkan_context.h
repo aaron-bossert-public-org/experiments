@@ -83,10 +83,6 @@ namespace igpu
 		std::unique_ptr< transparent_batch > make_transparent_batch(
 			const transparent_batch::config& ) override;
 
-		const igpu::batch_constraints& batch_constraints() const override;
-
-		const igpu::material_constraints& material_constraints() const override;
-
 		const vulkan_window& window() const override;
 
 		const vulkan_back_buffer& back_buffer() const override;
@@ -139,9 +135,6 @@ namespace igpu
 
 		std::unique_ptr< vulkan_window > _window;
 		std::unique_ptr< vulkan_back_buffer > _back_buffer;
-
-		igpu::batch_constraints _batch_constraints;
-		igpu::material_constraints _material_constraints;
 
 #if ATMOS_PERFORMANCE_TRACKING
 		perf::metric _renderstate_switch_metric;

@@ -8,8 +8,6 @@
 #include "igpu/buffer/index_buffer.h"
 #include "igpu/buffer/topology.h"
 #include "igpu/buffer/vertex_buffer.h"
-#include "igpu/context/batch_constraints.h"
-#include "igpu/context/material_constraints.h"
 #include "igpu/shader/fragment_shader.h"
 #include "igpu/shader/primitives.h"
 #include "igpu/shader/program.h"
@@ -31,6 +29,7 @@ namespace igpu
 {
 	class back_buffer;
 	class window;
+	class memoizer;
 
 	class context
 	{
@@ -38,8 +37,6 @@ namespace igpu
 		struct config
 		{
 			std::string name;
-			batch_constraints::config batch_constraints;
-			material_constraints::config material_constraints;
 			color_format color_format = color_format::INT_R8G8B8A8;
 			depth_format depth_format = depth_format::D24S8;
 			bool enable_validation
@@ -52,66 +49,75 @@ namespace igpu
 
 		virtual const config& cfg() const = 0;
 
-		virtual std::unique_ptr< draw_target > make_draw_target(
+		virtual std::unique_ptr< draw_target > make(
 			const draw_target::config& ) = 0;
 
-		virtual std::unique_ptr< render_buffer > make_render_buffer(
+		virtual std::unique_ptr< render_buffer > make(
 			const render_buffer::config& ) = 0;
 
-		virtual std::unique_ptr< render_texture2d > make_render_texture2d(
+		virtual std::unique_ptr< render_texture2d > make(
 			const render_texture2d::config& ) = 0;
 
-		virtual std::unique_ptr< depth_buffer > make_depth_buffer(
+		virtual std::unique_ptr< depth_buffer > make(
 			const depth_buffer::config& ) = 0;
 
-		virtual std::unique_ptr< depth_texture2d > make_depth_texture2d(
+		virtual std::unique_ptr< depth_texture2d > make(
 			const depth_texture2d::config& ) = 0;
 
-		virtual std::unique_ptr< program > make_program(
-			const program::config& ) = 0;
+		virtual std::unique_ptr< vertex_shader > make(
+			const vertex_shader::config& ) = 0;
 
-		virtual std::unique_ptr< vertex_shader > make_vertex_shader() = 0;
+		virtual std::unique_ptr< fragment_shader > make(
+			const fragment_shader::config& ) = 0;
 
-		virtual std::unique_ptr< fragment_shader > make_fragment_shader() = 0;
-
-		virtual std::unique_ptr< render_states > make_render_states(
-			const render_states::config& ) = 0;
-
-		virtual std::unique_ptr< geometry > make_geometry(
-			const geometry::config& ) = 0;
-
-		virtual std::unique_ptr< vertex_buffer > make_vertex_buffer(
+		virtual std::unique_ptr< vertex_buffer > make(
 			const vertex_buffer::config& ) = 0;
 
-		virtual std::unique_ptr< index_buffer > make_index_buffer(
+		virtual std::unique_ptr< index_buffer > make(
 			const index_buffer::config& ) = 0;
 
-		virtual std::unique_ptr< compute_buffer > make_compute_buffer(
+		virtual std::unique_ptr< compute_buffer > make(
 			const compute_buffer::config& ) = 0;
 
-		virtual std::unique_ptr< texture2d > make_texture(
+		virtual std::unique_ptr< texture2d > make(
 			const texture2d::config& ) = 0;
 
-		virtual std::unique_ptr< primitives > make_primitives(
-			const primitives::config& ) = 0;
-
-		virtual std::unique_ptr< opaque_batch > make_opaque_batch(
+		virtual std::unique_ptr< opaque_batch > make(
 			const opaque_batch::config& ) = 0;
 
-		virtual std::unique_ptr< transparent_batch > make_transparent_batch(
+		virtual std::unique_ptr< transparent_batch > make(
 			const transparent_batch::config& ) = 0;
-
-		virtual const batch_constraints& batch_constraints() const = 0;
-
-		virtual const material_constraints& material_constraints() const = 0;
 
 		virtual const window& window() const = 0;
 
 		virtual const back_buffer& back_buffer() const = 0;
 
+
+		std::shared_ptr< program > make_shared( const program::config& );
+
+		std::shared_ptr< render_states > make_shared(
+			const render_states::config& );
+
+		std::shared_ptr< geometry > make_shared( const geometry::config& );
+
+		std::shared_ptr< primitives > make_shared( const primitives::config& );
+
+
 		virtual ~context() = default;
 
 	protected:
+		virtual std::unique_ptr< program > make( const program::config& ) = 0;
+
+		virtual std::unique_ptr< render_states > make(
+			const render_states::config& ) = 0;
+
+		virtual std::unique_ptr< geometry > make( const geometry::config& ) = 0;
+
+		virtual std::unique_ptr< primitives > make(
+			const primitives::config& ) = 0;
+
+		std::vector< std::shared_ptr< memoizer > > _memoizers;
+
 		context() = default;
 		context( const context& ) = delete;
 		context& operator=( const context& ) = delete;

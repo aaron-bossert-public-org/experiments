@@ -1,7 +1,12 @@
 
 #include "igpu/buffer/geometry.h"
 
+#include "igpu/buffer/index_buffer.h"
 #include "igpu/buffer/vertex_buffer.h"
+
+#include "framework/utility/hash_utils.h"
+
+#include <algorithm>
 
 using namespace igpu;
 
@@ -57,4 +62,67 @@ bool geometry::find_expected_vertex_param(
 	} while ( buff != expected_buff || attr != expected_attr );
 
 	return false;
+}
+
+size_t geometry::config::hash( const config& cfg )
+{
+	size_t h = hash_utils::hash_combine(
+		cfg.topology,
+		cfg.index_buffer,
+		cfg.ibuff_byte_offset );
+
+	for ( size_t i = 0; i < cfg.vertex_buffers.size(); ++i )
+	{
+		hash_utils::hash_combine( &h, cfg.vertex_buffers[i] );
+		hash_utils::hash_combine( &h, cfg.vbuff_byte_offsets[i] );
+	}
+
+	return h;
+}
+
+ptrdiff_t geometry::config::compare( const config& lhs, const config& rhs )
+{
+	if ( lhs.topology != rhs.topology )
+	{
+		return (ptrdiff_t)lhs.topology - (ptrdiff_t)rhs.topology;
+	}
+
+	if ( lhs.index_buffer != rhs.index_buffer )
+	{
+		return lhs.index_buffer.get() - rhs.index_buffer.get();
+	}
+
+	if ( lhs.ibuff_byte_offset != rhs.ibuff_byte_offset )
+	{
+		return lhs.ibuff_byte_offset - rhs.ibuff_byte_offset;
+	}
+
+	size_t buff_count =
+		std::min( lhs.vertex_buffers.size(), rhs.vertex_buffers.size() );
+
+	for ( size_t i = 0; i < buff_count; ++i )
+	{
+		if ( lhs.vertex_buffers[i] != rhs.vertex_buffers[i] )
+		{
+			return lhs.vertex_buffers[i].get() - rhs.vertex_buffers[i].get();
+		}
+	}
+
+	size_t offset_count = std::min(
+		lhs.vbuff_byte_offsets.size(),
+		rhs.vbuff_byte_offsets.size() );
+	for ( size_t i = 0; i < offset_count; ++i )
+	{
+		if ( lhs.vbuff_byte_offsets[i] != rhs.vbuff_byte_offsets[i] )
+		{
+			return lhs.vbuff_byte_offsets[i] - rhs.vbuff_byte_offsets[i];
+		}
+	}
+
+	if ( lhs.vertex_buffers.size() != rhs.vertex_buffers.size() )
+	{
+		return lhs.vertex_buffers.size() - rhs.vertex_buffers.size();
+	}
+
+	return lhs.vbuff_byte_offsets.size() - rhs.vbuff_byte_offsets.size();
 }

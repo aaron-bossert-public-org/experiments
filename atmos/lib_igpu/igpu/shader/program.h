@@ -20,6 +20,10 @@ namespace igpu
 			std::string name;
 			std::shared_ptr< vertex_shader > vertex;
 			std::shared_ptr< fragment_shader > fragment;
+
+			static size_t hash( const config& );
+
+			static ptrdiff_t compare( const config&, const config& );
 		};
 
 		virtual const config& cfg() const = 0;

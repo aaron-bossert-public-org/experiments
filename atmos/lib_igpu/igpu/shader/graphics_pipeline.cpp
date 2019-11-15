@@ -7,6 +7,8 @@
 #include "igpu/shader/render_states.h"
 #include "igpu/shader/vertex_parameters.h"
 
+#include "framework/utility/hash_utils.h"
+
 using namespace igpu;
 
 graphics_pipeline::config graphics_pipeline::make_config(
@@ -57,7 +59,32 @@ graphics_pipeline::config graphics_pipeline::make_config(
 	return cfg;
 }
 
-ptrdiff_t graphics_pipeline::compare( const config& lhs, const config& rhs )
+size_t graphics_pipeline::config::hash( const config& cfg )
+{
+	size_t h = hash_utils::hash_combine(
+		cfg.program,
+		cfg.render_states,
+		(size_t)cfg.topology );
+
+	for ( const auto& buffer_config : cfg.compact_vertex_format )
+	{
+		h = hash_utils::hash_combine( h, buffer_config.stride );
+		for ( const auto& attribute : buffer_config.attributes )
+		{
+			h = hash_utils::hash_combine(
+				h,
+				attribute.name,
+				(size_t)attribute.components,
+				(size_t)attribute.offset );
+		}
+	}
+
+	return h;
+}
+
+ptrdiff_t graphics_pipeline::config::compare(
+	const config& lhs,
+	const config& rhs )
 {
 	if ( lhs.program != rhs.program )
 	{

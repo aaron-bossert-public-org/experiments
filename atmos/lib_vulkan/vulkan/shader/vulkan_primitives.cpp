@@ -59,6 +59,11 @@ namespace
 	}
 }
 
+const vulkan_primitives::config& vulkan_primitives::cfg() const
+{
+	return _cfg;
+}
+
 size_t vulkan_primitives::primitive_count() const
 {
 	return _primitives.size();
@@ -101,10 +106,12 @@ std::unique_ptr< vulkan_primitives > vulkan_primitives::make(
 	}
 
 	return std::unique_ptr< vulkan_primitives >(
-		new vulkan_primitives( std::move( primitives ) ) );
+		new vulkan_primitives( cfg, std::move( primitives ) ) );
 }
 
 vulkan_primitives::vulkan_primitives(
+	const config& cfg,
 	std::vector< vulkan_primitive > primitives )
-	: _primitives( std::move( primitives ) )
+	: _cfg( cfg )
+	, _primitives( std::move( primitives ) )
 {}

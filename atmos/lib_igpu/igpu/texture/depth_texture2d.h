@@ -12,6 +12,8 @@ namespace igpu
 	class depth_texture2d : public depth_buffer
 	{
 	public:
+		struct config : depth_buffer::config
+		{};
 		virtual ~depth_texture2d() = default;
 	};
 }

@@ -3,6 +3,8 @@
 
 #include "igpu/shader/primitive.h"
 
+#include <vector>
+
 namespace igpu
 {
 	class primitives
@@ -11,7 +13,13 @@ namespace igpu
 		struct config
 		{
 			std::vector< primitive::config > primitives;
+
+			static size_t hash( const config& );
+
+			static ptrdiff_t compare( const config&, const config& );
 		};
+
+		virtual const config& cfg() const = 0;
 
 		virtual size_t primitive_count() const = 0;
 

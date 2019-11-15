@@ -24,6 +24,10 @@ namespace igpu
 			std::vector< std::shared_ptr< vertex_buffer > > vertex_buffers;
 			size_t ibuff_byte_offset = 0;
 			std::vector< size_t > vbuff_byte_offsets;
+
+			static size_t hash( const config& );
+
+			static ptrdiff_t compare( const config&, const config& );
 		};
 
 		virtual const config& cfg() const = 0;

@@ -1,27 +1,14 @@
 
 #pragma once
 
+#include "framework/utility/hash_utils.h"
+
 #include <cstdarg>
 #include <string_view>
 #include <vector>
 
 namespace string_utils
 {
-	// c_hash(nullptr) == c_hash("") == seed * prime
-	constexpr uint32_t c_hash_32(
-		const char* str,
-		uint32_t seed = 2166136261U,
-		uint32_t i = 0 )
-	{
-		uint64_t prime = 16777619U;
-		return ( str == nullptr || str[i] == 0 )
-			? uint32_t( seed * prime )
-			: c_hash_32(
-				  str,
-				  uint32_t( ( seed ^ (uint32_t)str[i] ) * prime ),
-				  i + 1 );
-	}
-
 	//------------------------------------------------------------------------------
 	using const_ref = const std::string_view&;
 

@@ -103,16 +103,6 @@
 //	return gl_texture2d::make(cfg);
 //}
 //
-// const batch_constraints& gl_context::batch_constraints() const
-//{
-//	return _batch_constraints;
-//}
-//
-// const material_constraints& gl_context::material_constraints() const
-//{
-//	return _material_constraints;
-//}
-//
 // const gl_window& gl_context::window() const
 //{
 //	return *_gl_window;
@@ -127,8 +117,6 @@
 //	const config& cfg,
 //	std::unique_ptr<igpu::gl_window> window)
 //	: _cfg(cfg)
-//	, _batch_constraints(cfg.batch_constraints)
-//	, _material_constraints(cfg.material_constraints)
 //	, _gl_window(std::move(window))
 //	, _packed_states(gl_packed_states({}))
 //#if ATMOS_PERFORMANCE_TRACKING
@@ -218,7 +206,7 @@
 //
 //// provided macro for testing if states have changed, and updating existing
 /// value
-//                                #define test_redundancy( mode, force ) \
+//                                 #define test_redundancy( mode, force ) \
 //if( !force && !memcmp( _packed_states._gl_##mode, mode ) ) return;\
 //_packed_states._gl_##mode = mode;
 //

@@ -125,7 +125,7 @@ namespace igpu
 			using key_t = typename child_t::item_t*;
 			using map_t = associative_vector< key_t, child_t >;
 
-			template < typename INSTANCE_CONFIG, typename... ARGS >
+			template < typename INSTANCE_CONFIG >
 			batch_impl_t( const INSTANCE_CONFIG& instance_cfg )
 			{
 				get_key( instance_cfg, &_item );

@@ -8,6 +8,9 @@ namespace igpu
 	class transparent_batch : public batch
 	{
 	public:
+		struct config : batch::config
+		{};
+
 		virtual ~transparent_batch() = default;
 	};
 }

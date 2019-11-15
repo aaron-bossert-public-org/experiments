@@ -847,16 +847,6 @@ std::unique_ptr< transparent_batch > vulkan_context::make_transparent_batch(
 	} );
 }
 
-const batch_constraints& vulkan_context::batch_constraints() const
-{
-	return _batch_constraints;
-}
-
-const material_constraints& vulkan_context::material_constraints() const
-{
-	return _material_constraints;
-}
-
 const vulkan_window& vulkan_context::window() const
 {
 	return *_window;
@@ -890,8 +880,6 @@ vulkan_context::vulkan_context(
 	, _window( std::move( window ) )
 	, _pipeline_cache(vulkan_pipeline_cache::make({device}))
 	, _back_buffer( std::move( back_buffer ) )
-	, _batch_constraints( cfg.batch_constraints )
-	, _material_constraints( cfg.material_constraints )
 #if ATMOS_PERFORMANCE_TRACKING
 	, _renderstate_switch_metric(
 		  perf::category::SWITCH_RENDER_STATES,

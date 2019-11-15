@@ -21,6 +21,10 @@ namespace igpu
 			std::shared_ptr< render_states > render_states;
 			igpu::topology topology;
 			std::vector< vertex_buffer::config > compact_vertex_format;
+
+			static size_t hash( const config& );
+
+			static ptrdiff_t compare( const config&, const config& );
 		};
 
 		virtual ~graphics_pipeline() = default;
@@ -31,7 +35,5 @@ namespace igpu
 			const attribute_indexer&,
 			const std::shared_ptr< program >&,
 			const std::shared_ptr< render_states >& );
-
-		static ptrdiff_t compare( const config&, const config& );
 	};
 }

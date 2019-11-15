@@ -4,6 +4,8 @@
 #include "igpu/shader/parameter.h"
 #include "igpu/shader/vertex_parameter.h"
 
+#include <vector>
+
 class buffer_view_base;
 
 namespace igpu
