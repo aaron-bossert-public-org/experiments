@@ -12,7 +12,7 @@ using namespace igpu;
 
 namespace
 {
-	std::unique_ptr< vulkan_render_buffer > create_render_buffer(
+	std::shared_ptr< vulkan_render_buffer > create_render_buffer(
 		const vulkan_back_buffer::config& cfg )
 	{
 		return vulkan_render_buffer::make( {
@@ -23,13 +23,14 @@ namespace
 			{
 				cfg.vk.physical_device,
 				cfg.vk.device,
+				to_vulkan_format( cfg.color_format ),
 				cfg.vk.sample_count,
 				VK_SHARING_MODE_EXCLUSIVE,
 			},
 		} );
 	}
 
-	std::unique_ptr< vulkan_depth_buffer > create_depth_buffer(
+	std::shared_ptr< vulkan_depth_buffer > create_depth_buffer(
 		const vulkan_back_buffer::config& cfg )
 	{
 		return vulkan_depth_buffer::make( {
@@ -40,6 +41,7 @@ namespace
 			{
 				cfg.vk.physical_device,
 				cfg.vk.device,
+				to_vulkan_format( cfg.color_format ),
 				cfg.vk.sample_count,
 				VK_SHARING_MODE_EXCLUSIVE,
 			},
@@ -244,99 +246,6 @@ namespace
 		return swap_chain_image_views;
 	}
 
-	VkRenderPass create_render_pass(
-		const vulkan_back_buffer::config& cfg,
-		VkFormat color_format,
-		VkFormat depth_format )
-	{
-		VkAttachmentDescription color_attachment = {};
-		color_attachment.format = color_format;
-		color_attachment.samples = cfg.vk.sample_count;
-		color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		color_attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentDescription depth_attachment = {};
-		depth_attachment.format = depth_format;
-		depth_attachment.samples = cfg.vk.sample_count;
-		depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depth_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		depth_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depth_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		depth_attachment.finalLayout =
-			VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentDescription color_attachment_resolve = {};
-		color_attachment_resolve.format = color_format;
-		color_attachment_resolve.samples = VK_SAMPLE_COUNT_1_BIT;
-		color_attachment_resolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		color_attachment_resolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		color_attachment_resolve.stencilLoadOp =
-			VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		color_attachment_resolve.stencilStoreOp =
-			VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		color_attachment_resolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		color_attachment_resolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-		VkAttachmentReference color_attachment_ref = {};
-		color_attachment_ref.attachment = 0;
-		color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentReference depth_attachment_ref = {};
-		depth_attachment_ref.attachment = 1;
-		depth_attachment_ref.layout =
-			VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentReference color_attachment_resolve_ref = {};
-		color_attachment_resolve_ref.attachment = 2;
-		color_attachment_resolve_ref.layout =
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		VkSubpassDescription subpass = {};
-		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpass.colorAttachmentCount = 1;
-		subpass.pColorAttachments = &color_attachment_ref;
-		subpass.pDepthStencilAttachment = &depth_attachment_ref;
-		subpass.pResolveAttachments = &color_attachment_resolve_ref;
-
-		VkSubpassDependency dependency = {};
-		dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.srcAccessMask = 0;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
-			VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-		std::array< VkAttachmentDescription, 3 > attachments = {
-			color_attachment,
-			depth_attachment,
-			color_attachment_resolve,
-		};
-		VkRenderPassCreateInfo render_pass_info = {};
-		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		render_pass_info.attachmentCount =
-			static_cast< uint32_t >( attachments.size() );
-		render_pass_info.pAttachments = attachments.data();
-		render_pass_info.subpassCount = 1;
-		render_pass_info.pSubpasses = &subpass;
-		render_pass_info.dependencyCount = 1;
-		render_pass_info.pDependencies = &dependency;
-
-		VkRenderPass render_pass = nullptr;
-		vkCreateRenderPass(
-			cfg.vk.device,
-			&render_pass_info,
-			nullptr,
-			&render_pass );
-		return render_pass;
-	}
-
 	std::vector< VkFramebuffer > create_framebuffers(
 		const vulkan_back_buffer::config cfg,
 		VkImageView color_image_view,
@@ -430,29 +339,22 @@ std::unique_ptr< vulkan_back_buffer > vulkan_back_buffer::make(
 		create_swap_chain( cfg, surface_caps, surface_format, image_count );
 	auto images = create_images( cfg, swap_chain );
 	auto image_views = create_image_views( cfg, images, surface_format.format );
-	VkRenderPass render_pass = create_render_pass(
-		cfg,
-		color->gpu_object().cfg().image_info.format,
-		depth->gpu_object().cfg().image_info.format );
 
-	image_count = (uint32_t)images.size();
-
-	auto framebuffers = create_framebuffers(
-		cfg,
-		color->gpu_object().image_view(),
-		depth->gpu_object().image_view(),
-		image_views,
-		render_pass );
+	vulkan_draw_target::config draw_config = {
+		std::static_pointer_cast< render_buffer, vulkan_render_buffer >(
+			color ),
+		std::static_pointer_cast< depth_buffer, vulkan_depth_buffer >( depth ),
+		cfg.vk.device,
+		color,
+		depth,
+	};
 
 	return std::unique_ptr< vulkan_back_buffer >( new vulkan_back_buffer(
 		cfg,
+		draw_config,
 		swap_chain,
-		render_pass,
 		images,
-		image_views,
-		framebuffers,
-		std::move( color ),
-		std::move( depth ) ) );
+		image_views ) );
 }
 
 VkSwapchainKHR vulkan_back_buffer::swap_chain() const
@@ -460,10 +362,6 @@ VkSwapchainKHR vulkan_back_buffer::swap_chain() const
 	return _swap_chain;
 }
 
-VkRenderPass vulkan_back_buffer::render_pass() const
-{
-	return _render_pass;
-}
 
 const std::vector< VkFramebuffer >& vulkan_back_buffer::framebuffers() const
 {
@@ -483,25 +381,24 @@ vulkan_back_buffer::~vulkan_back_buffer()
 	}
 
 	vkDestroySwapchainKHR( _cfg.vk.device, _swap_chain, nullptr );
-
-	vkDestroyRenderPass( _cfg.vk.device, _render_pass, nullptr );
 }
 
 vulkan_back_buffer::vulkan_back_buffer(
 	const config& cfg,
+	const vulkan_draw_target::config& draw_cfg,
 	VkSwapchainKHR swap_chain,
-	VkRenderPass render_pass,
 	const std::vector< VkImage >& images,
-	const std::vector< VkImageView >& image_views,
-	const std::vector< VkFramebuffer >& framebuffers,
-	std::unique_ptr< vulkan_render_buffer > color,
-	std::unique_ptr< vulkan_depth_buffer > depth )
-	: _cfg( cfg )
+	const std::vector< VkImageView >& image_views )
+	: vulkan_draw_target( draw_cfg )
+	, _cfg( cfg )
 	, _swap_chain( swap_chain )
-	, _render_pass( render_pass )
 	, _images( images )
 	, _image_views( image_views )
-	, _framebuffers( framebuffers )
-	, _color( std::move( color ) )
-	, _depth( std::move( depth ) )
-{}
+{
+	_framebuffers = create_framebuffers(
+		cfg,
+		draw_cfg.vk.color->gpu_object().vk_image_view(),
+		draw_cfg.vk.depth->gpu_object().vk_image_view(),
+		image_views,
+		render_pass() );
+}

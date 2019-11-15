@@ -7,6 +7,7 @@
 #include "vulkan/buffer/vulkan_compute_buffer.h"
 #include "vulkan/buffer/vulkan_index_buffer.h"
 #include "vulkan/context/vulkan_context.h"
+#include "vulkan/shader/vulkan_graphics_pipeline.h"
 #include "vulkan/shader/vulkan_pipeline_cache.h"
 #include "vulkan/sync/vulkan_fence.h"
 #include "vulkan/sync/vulkan_job_attributes.h"
@@ -279,10 +280,10 @@ std::unique_ptr< vulkan_batch_binding > vulkan_root_batch::make_binding(
 				return nullptr;
 			}
 
-			auto pipeline = _vk.pipeline_cache->memoized(
-				indexer,
-				graphics_pipeline::make_config(
+			auto pipeline =
+				_vk.pipeline_cache->make( graphics_pipeline::make_config(
 					indexer,
+					_vk.draw_target,
 					cfg.program,
 					cfg.states ) );
 
@@ -344,6 +345,10 @@ std::unique_ptr< vulkan_root_batch > vulkan_root_batch::make( const vulkan& vk )
 	if ( !vk.device )
 	{
 		LOG_CRITICAL( "device is null" );
+	}
+	else if ( !vk.draw_target )
+	{
+		LOG_CRITICAL( "draw_target is null" );
 	}
 	else if ( !vk.swap_count )
 	{

@@ -16,6 +16,7 @@
 namespace igpu
 {
 	class vulkan_batch_binding;
+	class vulkan_draw_target;
 	class vulkan_fence;
 	class vulkan_job_attributes;
 	class vulkan_job_primitives;
@@ -177,6 +178,7 @@ namespace igpu
 		struct vulkan
 		{
 			VkDevice device = nullptr;
+			scoped_ptr< vulkan_draw_target > draw_target;
 			size_t swap_count = 0;
 			scoped_ptr< vulkan_pipeline_cache > pipeline_cache;
 			std::shared_ptr< vulkan_primitives > primitives;

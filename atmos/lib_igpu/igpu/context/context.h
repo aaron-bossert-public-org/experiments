@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "igpu/batch/opaque_batch.h"
@@ -9,6 +8,7 @@
 #include "igpu/buffer/topology.h"
 #include "igpu/buffer/vertex_buffer.h"
 #include "igpu/shader/fragment_shader.h"
+#include "igpu/shader/graphics_pipeline.h"
 #include "igpu/shader/primitives.h"
 #include "igpu/shader/program.h"
 #include "igpu/shader/render_states.h"
@@ -29,7 +29,7 @@ namespace igpu
 {
 	class back_buffer;
 	class window;
-	class memoizer;
+	class tracker;
 
 	class context
 	{
@@ -47,7 +47,71 @@ namespace igpu
 #endif
 		};
 
+		template < typename T >
+		using sp_t = std::shared_ptr< T >;
+
+		template < typename T >
+		using config_t = const typename T::config&;
+
 		virtual const config& cfg() const = 0;
+		virtual const window& window() const = 0;
+
+		virtual const back_buffer& back_buffer() const = 0;
+
+		virtual ~context() = default;
+
+		sp_t< program > make_shared( config_t< program > );
+
+		sp_t< render_states > make_shared( config_t< render_states > );
+
+		sp_t< geometry > make_shared( config_t< geometry > );
+
+		sp_t< primitives > make_shared( config_t< primitives > );
+
+		sp_t< graphics_pipeline > make_shared( config_t< graphics_pipeline > );
+
+		sp_t< draw_target > make_shared( config_t< draw_target > );
+
+		sp_t< render_buffer > make_shared( config_t< render_buffer > );
+
+		sp_t< render_texture2d > make_shared( config_t< render_texture2d > );
+
+		sp_t< depth_buffer > make_shared( config_t< depth_buffer > );
+
+		sp_t< depth_texture2d > make_shared( config_t< depth_texture2d > );
+
+		sp_t< vertex_shader > make_shared( config_t< vertex_shader > );
+
+		sp_t< fragment_shader > make_shared( config_t< fragment_shader > );
+
+		sp_t< vertex_buffer > make_shared( config_t< vertex_buffer > );
+
+		sp_t< index_buffer > make_shared( config_t< index_buffer > );
+
+		sp_t< compute_buffer > make_shared( config_t< compute_buffer > );
+
+		sp_t< texture2d > make_shared( config_t< texture2d > );
+
+		sp_t< opaque_batch > make_shared( config_t< opaque_batch > );
+
+		sp_t< transparent_batch > make_shared( config_t< transparent_batch > );
+
+		template < typename T >
+		void visit( const std::function< void( T* ) >& );
+
+	protected:
+		virtual std::unique_ptr< program > make( const program::config& ) = 0;
+
+		virtual std::unique_ptr< render_states > make(
+			const render_states::config& ) = 0;
+
+		virtual std::unique_ptr< geometry > make( const geometry::config& ) = 0;
+
+		virtual std::unique_ptr< primitives > make(
+			const primitives::config& ) = 0;
+
+		virtual std::unique_ptr< graphics_pipeline > make(
+			const graphics_pipeline::config& ) = 0;
 
 		virtual std::unique_ptr< draw_target > make(
 			const draw_target::config& ) = 0;
@@ -88,38 +152,81 @@ namespace igpu
 		virtual std::unique_ptr< transparent_batch > make(
 			const transparent_batch::config& ) = 0;
 
-		virtual const window& window() const = 0;
-
-		virtual const back_buffer& back_buffer() const = 0;
-
-
-		std::shared_ptr< program > make_shared( const program::config& );
-
-		std::shared_ptr< render_states > make_shared(
-			const render_states::config& );
-
-		std::shared_ptr< geometry > make_shared( const geometry::config& );
-
-		std::shared_ptr< primitives > make_shared( const primitives::config& );
-
-
-		virtual ~context() = default;
-
-	protected:
-		virtual std::unique_ptr< program > make( const program::config& ) = 0;
-
-		virtual std::unique_ptr< render_states > make(
-			const render_states::config& ) = 0;
-
-		virtual std::unique_ptr< geometry > make( const geometry::config& ) = 0;
-
-		virtual std::unique_ptr< primitives > make(
-			const primitives::config& ) = 0;
-
-		std::vector< std::shared_ptr< memoizer > > _memoizers;
+		std::vector< std::shared_ptr< tracker > > _trackers;
 
 		context() = default;
 		context( const context& ) = delete;
 		context& operator=( const context& ) = delete;
 	};
+
+	template <>
+	void context::visit< program >( const std::function< void( program* ) >& );
+
+	template <>
+	void context::visit< render_states >(
+		const std::function< void( render_states* ) >& );
+
+	template <>
+	void context::visit< geometry >(
+		const std::function< void( geometry* ) >& );
+
+	template <>
+	void context::visit< primitives >(
+		const std::function< void( primitives* ) >& );
+
+	template <>
+	void context::visit< graphics_pipeline >(
+		const std::function< void( graphics_pipeline* ) >& );
+
+	template <>
+	void context::visit< draw_target >(
+		const std::function< void( draw_target* ) >& );
+
+	template <>
+	void context::visit< render_buffer >(
+		const std::function< void( render_buffer* ) >& );
+
+	template <>
+	void context::visit< render_texture2d >(
+		const std::function< void( render_texture2d* ) >& );
+
+	template <>
+	void context::visit< depth_buffer >(
+		const std::function< void( depth_buffer* ) >& );
+
+	template <>
+	void context::visit< depth_texture2d >(
+		const std::function< void( depth_texture2d* ) >& );
+
+	template <>
+	void context::visit< vertex_shader >(
+		const std::function< void( vertex_shader* ) >& );
+
+	template <>
+	void context::visit< fragment_shader >(
+		const std::function< void( fragment_shader* ) >& );
+
+	template <>
+	void context::visit< vertex_buffer >(
+		const std::function< void( vertex_buffer* ) >& );
+
+	template <>
+	void context::visit< index_buffer >(
+		const std::function< void( index_buffer* ) >& );
+
+	template <>
+	void context::visit< compute_buffer >(
+		const std::function< void( compute_buffer* ) >& );
+
+	template <>
+	void context::visit< texture2d >(
+		const std::function< void( texture2d* ) >& );
+
+	template <>
+	void context::visit< opaque_batch >(
+		const std::function< void( opaque_batch* ) >& );
+
+	template <>
+	void context::visit< transparent_batch >(
+		const std::function< void( transparent_batch* ) >& );
 }

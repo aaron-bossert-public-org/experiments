@@ -9,6 +9,7 @@
 #include "vulkan/buffer/vulkan_vertex_buffer.h"
 #include "vulkan/defines/vulkan_includes.h"
 #include "vulkan/shader/vulkan_fragment_shader.h"
+#include "vulkan/shader/vulkan_graphics_pipeline.h"
 #include "vulkan/shader/vulkan_pipeline_cache.h"
 #include "vulkan/shader/vulkan_primitives.h"
 #include "vulkan/shader/vulkan_program.h"
@@ -610,6 +611,10 @@ std::unique_ptr< vulkan_context > vulkan_context::make(
 		transfer_queue = vulkan_queue::make(
 			{ device, families.transfer.family_index.value(), 0 } );
 
+	auto pipeline_cache = vulkan_pipeline_cache::make( {
+		device,
+	} );
+
 	vulkan_synchronization::config synchronization_cfg = {};
 	synchronization_cfg.physical_device = physical_device;
 	synchronization_cfg.device = device;
@@ -646,6 +651,7 @@ std::unique_ptr< vulkan_context > vulkan_context::make(
 		graphics_queue,
 		compute_queue,
 		transfer_queue,
+		std::move( pipeline_cache ),
 		std::move( synchronization ),
 		std::move( window ),
 		std::move( back_buffer ) ) );
@@ -656,70 +662,110 @@ const vulkan_context::config& vulkan_context::cfg() const
 	return _cfg;
 }
 
-std::unique_ptr< draw_target > vulkan_context::make_draw_target(
+std::unique_ptr< graphics_pipeline > vulkan_context::make(
+	const graphics_pipeline::config& base_cfg )
+{
+	auto draw_target =
+		std::dynamic_pointer_cast< vulkan_draw_target, igpu::draw_target >(
+			base_cfg.draw_target );
+
+	auto program = std::dynamic_pointer_cast< vulkan_program, igpu::program >(
+		base_cfg.program );
+
+	auto render_states =
+		std::dynamic_pointer_cast< vulkan_render_states, igpu::render_states >(
+			base_cfg.render_states );
+
+	return vulkan_graphics_pipeline::make(
+		{
+			base_cfg,
+			_state.device,
+			_pipeline_cache,
+			draw_target,
+			program,
+			render_states,
+		},
+		_back_buffer->cfg().res );
+}
+
+std::unique_ptr< draw_target > vulkan_context::make(
 	const draw_target::config& base_cfg )
 {
+	auto color =
+		std::dynamic_pointer_cast< vulkan_render_buffer, igpu::render_buffer >(
+			base_cfg.color );
+
+	auto depth =
+		std::dynamic_pointer_cast< vulkan_depth_buffer, igpu::depth_buffer >(
+			base_cfg.depth );
+
 	return vulkan_draw_target::make( {
 		base_cfg,
-		ASSERT_CAST( vulkan_render_target*, base_cfg.color.get() ),
-		ASSERT_CAST( vulkan_depth_target*, base_cfg.depth.get() ),
+		_state.device,
+		color,
+		depth,
 	} );
 }
 
-std::unique_ptr< render_buffer > vulkan_context::make_render_buffer(
+std::unique_ptr< render_buffer > vulkan_context::make(
 	const render_buffer::config& base_cfg )
 {
 	return vulkan_render_buffer::make( {
 		base_cfg,
 		_state.physical_device,
 		_state.device,
+		to_vulkan_format( base_cfg.format ),
 		_back_buffer->cfg().vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
 	} );
 }
 
-std::unique_ptr< render_texture2d > vulkan_context::make_render_texture2d(
+std::unique_ptr< render_texture2d > vulkan_context::make(
 	const render_texture2d::config& base_cfg )
 {
 	return vulkan_render_texture2d::make( {
 		base_cfg,
 		_state.physical_device,
 		_state.device,
+		to_vulkan_format( base_cfg.format ),
 		_back_buffer->cfg().vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
 	} );
 }
 
-std::unique_ptr< depth_buffer > vulkan_context::make_depth_buffer(
+std::unique_ptr< depth_buffer > vulkan_context::make(
 	const depth_buffer::config& base_cfg )
 {
 	return vulkan_depth_buffer::make( {
 		base_cfg,
 		_state.physical_device,
 		_state.device,
+		to_vulkan_format( base_cfg.format ),
 		_back_buffer->cfg().vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
 	} );
 }
 
-std::unique_ptr< depth_texture2d > vulkan_context::make_depth_texture2d(
+std::unique_ptr< depth_texture2d > vulkan_context::make(
 	const depth_texture2d::config& base_cfg )
 {
 	return vulkan_depth_texture2d::make( {
 		base_cfg,
 		_state.physical_device,
 		_state.device,
+		to_vulkan_format( base_cfg.format ),
 		_back_buffer->cfg().vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
 	} );
 }
 
-std::unique_ptr< program > vulkan_context::make_program(
+std::unique_ptr< program > vulkan_context::make(
 	const program::config& base_cfg )
 {
 	auto vertex =
 		std::dynamic_pointer_cast< vulkan_vertex_shader, vertex_shader >(
 			base_cfg.vertex );
+
 	auto fragment =
 		std::dynamic_pointer_cast< vulkan_fragment_shader, fragment_shader >(
 			base_cfg.fragment );
@@ -732,7 +778,8 @@ std::unique_ptr< program > vulkan_context::make_program(
 	} );
 }
 
-std::unique_ptr< vertex_shader > vulkan_context::make_vertex_shader()
+std::unique_ptr< vertex_shader > vulkan_context::make(
+	const vertex_shader::config& )
 {
 	return vulkan_vertex_shader::make( {
 		this->_state.device,
@@ -740,7 +787,8 @@ std::unique_ptr< vertex_shader > vulkan_context::make_vertex_shader()
 	} );
 }
 
-std::unique_ptr< fragment_shader > vulkan_context::make_fragment_shader()
+std::unique_ptr< fragment_shader > vulkan_context::make(
+	const fragment_shader::config& )
 {
 	return vulkan_fragment_shader::make( {
 		this->_state.device,
@@ -748,7 +796,7 @@ std::unique_ptr< fragment_shader > vulkan_context::make_fragment_shader()
 	} );
 }
 
-std::unique_ptr< render_states > vulkan_context::make_render_states(
+std::unique_ptr< render_states > vulkan_context::make(
 	const render_states::config& base_cfg )
 {
 	vulkan_render_states::config cfg = {
@@ -759,9 +807,7 @@ std::unique_ptr< render_states > vulkan_context::make_render_states(
 	return std::unique_ptr< render_states >( new vulkan_render_states( cfg ) );
 }
 
-
-std::unique_ptr< geometry > vulkan_context::make_geometry(
-	const geometry::config& cfg )
+std::unique_ptr< geometry > vulkan_context::make( const geometry::config& cfg )
 {
 	return vulkan_geometry::make( {
 		cfg,
@@ -769,7 +815,7 @@ std::unique_ptr< geometry > vulkan_context::make_geometry(
 	} );
 }
 
-std::unique_ptr< vertex_buffer > vulkan_context::make_vertex_buffer(
+std::unique_ptr< vertex_buffer > vulkan_context::make(
 	const vertex_buffer::config& cfg )
 {
 	return vulkan_vertex_buffer::make(
@@ -781,7 +827,7 @@ std::unique_ptr< vertex_buffer > vulkan_context::make_vertex_buffer(
 		_synchronization );
 }
 
-std::unique_ptr< index_buffer > vulkan_context::make_index_buffer(
+std::unique_ptr< index_buffer > vulkan_context::make(
 	const index_buffer::config& base_cfg )
 {
 	return vulkan_index_buffer::make(
@@ -794,7 +840,7 @@ std::unique_ptr< index_buffer > vulkan_context::make_index_buffer(
 		_synchronization );
 }
 
-std::unique_ptr< compute_buffer > vulkan_context::make_compute_buffer(
+std::unique_ptr< compute_buffer > vulkan_context::make(
 	const compute_buffer::config& cfg )
 {
 	return vulkan_compute_buffer::make(
@@ -806,7 +852,7 @@ std::unique_ptr< compute_buffer > vulkan_context::make_compute_buffer(
 		_synchronization );
 }
 
-std::unique_ptr< texture2d > vulkan_context::make_texture(
+std::unique_ptr< texture2d > vulkan_context::make(
 	const texture2d::config& cfg )
 {
 	return vulkan_texture2d::make(
@@ -819,29 +865,39 @@ std::unique_ptr< texture2d > vulkan_context::make_texture(
 		_synchronization );
 }
 
-std::unique_ptr< primitives > vulkan_context::make_primitives(
+std::unique_ptr< primitives > vulkan_context::make(
 	const primitives::config& cfg )
 {
 	return vulkan_primitives::make( cfg );
 }
 
-std::unique_ptr< opaque_batch > vulkan_context::make_opaque_batch(
+std::unique_ptr< opaque_batch > vulkan_context::make(
 	const opaque_batch::config& base_cfg )
 {
+	auto draw_target =
+		std::dynamic_pointer_cast< vulkan_draw_target, igpu::draw_target >(
+			base_cfg.draw_target );
+
 	return vulkan_opaque_batch::make( {
 		base_cfg,
 		_state.device,
+		draw_target,
 		_back_buffer->framebuffers().size(),
 		_pipeline_cache,
 	} );
 }
 
-std::unique_ptr< transparent_batch > vulkan_context::make_transparent_batch(
+std::unique_ptr< transparent_batch > vulkan_context::make(
 	const transparent_batch::config& base_cfg )
 {
+	auto draw_target =
+		std::dynamic_pointer_cast< vulkan_draw_target, igpu::draw_target >(
+			base_cfg.draw_target );
+
 	return vulkan_transparent_batch::make( {
 		base_cfg,
 		_state.device,
+		draw_target,
 		_back_buffer->framebuffers().size(),
 		_pipeline_cache,
 	} );
@@ -867,6 +923,7 @@ vulkan_context::vulkan_context(
 	const std::shared_ptr< vulkan_queue >& graphics_queue,
 	const std::shared_ptr< vulkan_queue >& compute_queue,
 	const std::shared_ptr< vulkan_queue >& transfer_queue,
+	const std::shared_ptr< vulkan_pipeline_cache >& pipeline_cache,
 	const std::shared_ptr< vulkan_synchronization >& synchronization,
 	std::unique_ptr< vulkan_window > window,
 	std::unique_ptr< vulkan_back_buffer > back_buffer )
@@ -876,9 +933,9 @@ vulkan_context::vulkan_context(
 	, _graphics_queue( graphics_queue )
 	, _compute_queue( compute_queue )
 	, _transfer_queue( transfer_queue )
+	, _pipeline_cache(pipeline_cache)
 	, _synchronization( synchronization )
 	, _window( std::move( window ) )
-	, _pipeline_cache(vulkan_pipeline_cache::make({device}))
 	, _back_buffer( std::move( back_buffer ) )
 #if ATMOS_PERFORMANCE_TRACKING
 	, _renderstate_switch_metric(
@@ -897,9 +954,7 @@ vulkan_context::vulkan_context(
 	, _draw_call_metric( perf::category::DRAW_CALL_COUNT, "Draw Calls" )
 	, _polycount_metric( perf::category::POLY_COUNT, "Polycount" )
 #endif
-{
-	_pipeline_cache->on_back_buffer_resized( *_back_buffer );
-}
+{}
 
 vulkan_context::auto_destroy::~auto_destroy()
 {
@@ -916,26 +971,6 @@ vulkan_context::auto_destroy::~auto_destroy()
 vulkan_context::~vulkan_context()
 {}
 
-VkInstance vulkan_context::instance()
-{
-	return _state.instance;
-}
-
-VkPhysicalDevice vulkan_context::physical_device()
-{
-	return _state.physical_device;
-}
-
-VkDevice vulkan_context::device()
-{
-	return _state.device;
-}
-
-vulkan_synchronization& vulkan_context::synchronization()
-{
-	return *_synchronization;
-}
-
 void vulkan_context::resize_back_buffer( const glm::ivec2& screen_res )
 {
 	_back_buffer = nullptr;
@@ -947,6 +982,4 @@ void vulkan_context::resize_back_buffer( const glm::ivec2& screen_res )
 		screen_res,
 		_present_queue->cfg().family_index,
 		_graphics_queue->cfg().family_index );
-
-	_pipeline_cache->on_back_buffer_resized( *_back_buffer );
 }

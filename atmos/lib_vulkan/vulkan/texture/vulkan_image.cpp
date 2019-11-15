@@ -276,6 +276,11 @@ const vulkan_image::config& vulkan_image::cfg() const
 	return _cfg;
 }
 
+VkImageView vulkan_image::vk_image_view() const
+{
+	return _image_view;
+}
+
 vulkan_resource::state& vulkan_image::resource_state()
 {
 	return _resource_state;

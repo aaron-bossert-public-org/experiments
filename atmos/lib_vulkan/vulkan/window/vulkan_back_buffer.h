@@ -3,6 +3,7 @@
 
 #include "vulkan/defines/vulkan_includes.h"
 #include "vulkan/texture/vulkan_depth_buffer.h"
+#include "vulkan/texture/vulkan_draw_target.h"
 #include "vulkan/texture/vulkan_render_buffer.h"
 
 #include "igpu/window/back_buffer.h"
@@ -13,7 +14,9 @@ namespace igpu
 {
 	class vulkan_queue;
 
-	class vulkan_back_buffer : public back_buffer
+	class vulkan_back_buffer
+		: public back_buffer
+		, public vulkan_draw_target
 	{
 	public:
 		struct config : back_buffer::config
@@ -40,8 +43,6 @@ namespace igpu
 
 		VkSwapchainKHR swap_chain() const;
 
-		VkRenderPass render_pass() const;
-
 		const std::vector< VkFramebuffer >& framebuffers() const;
 
 		static std::unique_ptr< vulkan_back_buffer > make( const config& );
@@ -51,19 +52,15 @@ namespace igpu
 	private:
 		vulkan_back_buffer(
 			const config&,
+			const vulkan_draw_target::config&,
 			VkSwapchainKHR,
-			VkRenderPass,
 			const std::vector< VkImage >&,
-			const std::vector< VkImageView >&,
-			const std::vector< VkFramebuffer >&,
-			std::unique_ptr< vulkan_render_buffer >,
-			std::unique_ptr< vulkan_depth_buffer > );
+			const std::vector< VkImageView >& );
 
 	private:
 		const config _cfg;
 
 		VkSwapchainKHR _swap_chain;
-		VkRenderPass _render_pass;
 
 		std::vector< VkImage > _images;
 		std::vector< VkImageView > _image_views;

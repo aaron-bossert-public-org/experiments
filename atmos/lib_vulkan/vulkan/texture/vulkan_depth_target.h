@@ -14,7 +14,8 @@ namespace igpu
 		{
 			VkPhysicalDevice physical_device = nullptr;
 			VkDevice device = nullptr;
-			VkSampleCountFlagBits sample_count;
+			VkFormat format = VK_FORMAT_UNDEFINED;
+			VkSampleCountFlagBits sample_count = (VkSampleCountFlagBits)0;
 			VkSharingMode sharing_mode;
 		};
 

@@ -13,10 +13,12 @@ using namespace igpu;
 
 graphics_pipeline::config graphics_pipeline::make_config(
 	const attribute_indexer& indexer,
+	const std::shared_ptr< draw_target >& draw_target,
 	const std::shared_ptr< program >& program,
 	const std::shared_ptr< render_states >& render_states )
 {
 	graphics_pipeline::config cfg;
+	cfg.draw_target = draw_target;
 	cfg.program = program;
 	cfg.render_states = render_states;
 	cfg.topology = indexer.geometry()->cfg().topology;

@@ -19,13 +19,33 @@ migrate example to use purely atmos
 
 implement composite context for profiling, constructs profiler_texture2d which owns vulkan_texture and forward all calls to wrapping them with callstack timers
 
+implement implicit readback. when mapping a buffer, check to see if there are pending write jobs from the gpu side. sync and copy to cpuside if so. if buffer is peresistent it needs to wait for the last copy to complete.
+
+implement deferred upload. when uploading data to gpu, wait until resource to be used by a readable job before uploading. combined with implicit read back this should allow for gpu write only buffers to be synchronized properly using just storage buffer decorators in shader and memory_type on cpu side.
+
+implement abandoning for write combined buffers
+
+resizing windows should wait for all queues to complete, rebuild all graphics pipelines using visit, then rebuild all batches also using visit.
+
+use cached primary command buffer for each geometry batch , record desriptorsets and instances each frame into secondary command buffer
+gm
+
 migrate pipeline code to batching system
 build graphics pipeline cache
+vulkan context builds graphics piplines
+vulkan contexts iterates live pipelines for pipline cache to rebuild them on framebuffer resize
+vulkan batch nodes selects the proper vk pipeline based on draw target size
+drawing batches takes a screen rect as input, use this to decide weather or not to use the full screen vk pipeline
+graphics pipeline tightly bound to draw target via batches. each draw target with the same objects drawn to it needs to have a separate batch
+do back buffer resizing in place, batches need to automatically respond to changes in their draw targets, possibly by caching viewport and render pass pointer and comparing in pre render. it might be beneficial to stop the world and iterate all the graphics pipellines when draw targets are resized...
 
 //////////////////////////////////////
 (CURRENT PROGRESS POINT)
 //////////////////////////////////////
 
+
+
+vulkan context implements make shared for all object types, and does not memoize those that do not need it, but does allow iterating over live instances of each type of object
 
 think about removing vulkan_pipeine_cache, maybe unnecessary. just memoize renderstates and primitives instead
 finish error proofing job dependencies

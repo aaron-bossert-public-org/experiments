@@ -30,9 +30,11 @@ namespace igpu
 
 		vulkan_image( VkImageUsageFlags );
 
-		void reallocate( const config& cfg );
-
 		const config& cfg() const;
+
+		VkImageView vk_image_view() const;
+
+		void reallocate( const config& cfg );
 
 		~vulkan_image();
 

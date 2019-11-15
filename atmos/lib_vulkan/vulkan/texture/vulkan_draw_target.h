@@ -1,15 +1,15 @@
 
 #pragma once
 
+#include "vulkan/texture/vulkan_depth_buffer.h"
+#include "vulkan/texture/vulkan_render_buffer.h"
+
 #include "igpu/texture/draw_target.h"
 
 #include <memory>
 
 namespace igpu
 {
-	class vulkan_render_target;
-	class vulkan_depth_target;
-
 	class vulkan_draw_target : public draw_target
 	{
 	public:
@@ -17,20 +17,29 @@ namespace igpu
 		{
 			struct vulkan
 			{
-				vulkan_render_target* color = nullptr;
-				vulkan_depth_target* depth = nullptr;
+				VkDevice device = nullptr;
+				std::shared_ptr< vulkan_render_buffer > color = nullptr;
+				std::shared_ptr< vulkan_depth_buffer > depth = nullptr;
 			};
 
 			vulkan vk;
 		};
 
-		const config& cfg() const override;
+		const vulkan_render_buffer& color() const override;
+
+		const vulkan_depth_buffer& depth() const override;
+
+		VkRenderPass render_pass() const;
 
 		static std::unique_ptr< vulkan_draw_target > make( const config& );
 
-	private:
+		~vulkan_draw_target();
+
+	protected:
 		vulkan_draw_target( const config& );
 
+	private:
 		const config _cfg;
+		VkRenderPass _render_pass = nullptr;
 	};
 }

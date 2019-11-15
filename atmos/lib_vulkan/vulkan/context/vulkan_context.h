@@ -34,67 +34,65 @@ namespace igpu
 
 		const config& cfg() const override;
 
-		std::unique_ptr< draw_target > make_draw_target(
+		void resize_back_buffer( const glm::ivec2& screen_res );
+
+		~vulkan_context();
+
+	private:
+		std::unique_ptr< graphics_pipeline > make(
+			const graphics_pipeline ::config& ) override;
+
+		std::unique_ptr< draw_target > make(
 			const draw_target::config& ) override;
 
-		std::unique_ptr< render_buffer > make_render_buffer(
+		std::unique_ptr< render_buffer > make(
 			const render_buffer::config& ) override;
 
-		std::unique_ptr< render_texture2d > make_render_texture2d(
+		std::unique_ptr< render_texture2d > make(
 			const render_texture2d::config& ) override;
 
-		std::unique_ptr< depth_buffer > make_depth_buffer(
+		std::unique_ptr< depth_buffer > make(
 			const depth_buffer::config& ) override;
 
-		std::unique_ptr< depth_texture2d > make_depth_texture2d(
+		std::unique_ptr< depth_texture2d > make(
 			const depth_texture2d::config& ) override;
 
-		std::unique_ptr< program > make_program(
-			const program::config& ) override;
+		std::unique_ptr< program > make( const program::config& ) override;
 
-		std::unique_ptr< vertex_shader > make_vertex_shader() override;
+		std::unique_ptr< vertex_shader > make(
+			const vertex_shader::config& ) override;
 
-		std::unique_ptr< fragment_shader > make_fragment_shader() override;
+		std::unique_ptr< fragment_shader > make(
+			const fragment_shader::config& ) override;
 
-		std::unique_ptr< render_states > make_render_states(
+		std::unique_ptr< render_states > make(
 			const render_states::config& ) override;
 
-		std::unique_ptr< geometry > make_geometry(
-			const geometry::config& ) override;
+		std::unique_ptr< geometry > make( const geometry::config& ) override;
 
-		std::unique_ptr< vertex_buffer > make_vertex_buffer(
+		std::unique_ptr< vertex_buffer > make(
 			const vertex_buffer::config& ) override;
 
-		std::unique_ptr< index_buffer > make_index_buffer(
+		std::unique_ptr< index_buffer > make(
 			const index_buffer::config& ) override;
 
-		std::unique_ptr< compute_buffer > make_compute_buffer(
+		std::unique_ptr< compute_buffer > make(
 			const compute_buffer::config& ) override;
 
-		std::unique_ptr< texture2d > make_texture(
-			const texture2d::config& ) override;
+		std::unique_ptr< texture2d > make( const texture2d::config& ) override;
 
-		std::unique_ptr< primitives > make_primitives(
+		std::unique_ptr< primitives > make(
 			const primitives::config& ) override;
 
-		std::unique_ptr< opaque_batch > make_opaque_batch(
+		std::unique_ptr< opaque_batch > make(
 			const opaque_batch::config& ) override;
 
-		std::unique_ptr< transparent_batch > make_transparent_batch(
+		std::unique_ptr< transparent_batch > make(
 			const transparent_batch::config& ) override;
 
 		const vulkan_window& window() const override;
 
 		const vulkan_back_buffer& back_buffer() const override;
-
-		~vulkan_context();
-
-		// todo: delete these methods and the need for their functionality
-		VkInstance instance();
-		VkPhysicalDevice physical_device();
-		VkDevice device();
-		vulkan_synchronization& synchronization();
-		void resize_back_buffer( const glm::ivec2& screen_res );
 
 	protected:
 		vulkan_context(
@@ -107,6 +105,7 @@ namespace igpu
 			const std::shared_ptr< vulkan_queue >& graphics_queue,
 			const std::shared_ptr< vulkan_queue >& compute_queue,
 			const std::shared_ptr< vulkan_queue >& transfer_queue,
+			const std::shared_ptr< vulkan_pipeline_cache >&,
 			const std::shared_ptr< vulkan_synchronization >&,
 			std::unique_ptr< vulkan_window >,
 			std::unique_ptr< vulkan_back_buffer > );
