@@ -27,11 +27,12 @@ namespace igpu
 			friend vulkan_resource;
 
 			scoped_ptr< vulkan_queue > queue;
-			VkDependencyFlags dependency = 0;
 			VkImageLayout layout = VK_IMAGE_LAYOUT_MAX_ENUM;
 
 			list read_deps;
 			list write_deps;
+
+			size_t write_count = 0;
 
 			vulkan_job_scope last_write_scope;
 			vulkan_job_scope combined_read_scope;
@@ -55,9 +56,9 @@ namespace igpu
 
 		void barrier_manager_record( const vulkan_barrier_manager::record* );
 
-		void wait_pending_jobs() const;
+		ptrdiff_t write_count() const;
 
-		void on_reallocate_gpu_object();
+		void wait_pending_jobs() const;
 
 		void on_barrier(
 			vulkan_barrier_manager*,
@@ -77,6 +78,11 @@ namespace igpu
 		virtual ~vulkan_resource() = 0;
 
 	protected:
+		void reinitialize(
+			const scoped_ptr< vulkan_queue >&,
+			const vulkan_job_scope&,
+			VkImageLayout layout );
+
 		virtual void push_barrier(
 			uint32_t target_queue_family_index,
 			vulkan_barrier_manager*,

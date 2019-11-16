@@ -9,7 +9,9 @@ using namespace igpu;
 
 namespace
 {
-	VkRenderPass create_render_pass( const vulkan_draw_target::config& cfg )
+	VkRenderPass create_render_pass(
+		const vulkan_draw_target::config& cfg,
+		uint32_t* out_raster_sub_pass )
 	{
 		VkAttachmentDescription color_attachment = {};
 		color_attachment.format = cfg.vk.color->cfg().vk.format;
@@ -91,6 +93,8 @@ namespace
 		render_pass_info.dependencyCount = 1;
 		render_pass_info.pDependencies = &dependency;
 
+		*out_raster_sub_pass = 0;
+
 		VkRenderPass render_pass = nullptr;
 		vkCreateRenderPass(
 			cfg.vk.device,
@@ -100,19 +104,20 @@ namespace
 		return render_pass;
 	}
 }
-const vulkan_render_buffer& vulkan_draw_target::color() const
-{
-	return *_cfg.vk.color;
-}
 
-const vulkan_depth_buffer& vulkan_draw_target::depth() const
+const vulkan_draw_target::config& vulkan_draw_target::cfg() const
 {
-	return *_cfg.vk.depth;
+	return _cfg;
 }
 
 VkRenderPass vulkan_draw_target::render_pass() const
 {
 	return _render_pass;
+}
+
+uint32_t vulkan_draw_target::raster_sub_pass() const
+{
+	return _raster_sub_pass;
 }
 
 std::unique_ptr< vulkan_draw_target > vulkan_draw_target::make(
@@ -146,5 +151,5 @@ vulkan_draw_target::~vulkan_draw_target()
 
 vulkan_draw_target::vulkan_draw_target( const config& cfg )
 	: _cfg( cfg )
-	, _render_pass( create_render_pass( cfg ) )
+	, _render_pass( create_render_pass( cfg, &_raster_sub_pass ) )
 {}

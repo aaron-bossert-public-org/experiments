@@ -12,6 +12,7 @@
 
 namespace igpu
 {
+	class vulkan_barrier_manager;
 	class vulkan_synchronization;
 	class vulkan_pipeline_cache;
 
@@ -33,6 +34,10 @@ namespace igpu
 			const glm::ivec2& screen_res );
 
 		const config& cfg() const override;
+
+		const vulkan_window& window() const override;
+
+		scoped_ptr< draw_target > back_buffer() override;
 
 		void resize_back_buffer( const glm::ivec2& screen_res );
 
@@ -90,9 +95,7 @@ namespace igpu
 		std::unique_ptr< transparent_batch > make(
 			const transparent_batch::config& ) override;
 
-		const vulkan_window& window() const override;
-
-		const vulkan_back_buffer& back_buffer() const override;
+		void end_frame();
 
 	protected:
 		vulkan_context(
@@ -101,14 +104,15 @@ namespace igpu
 			VkDebugUtilsMessengerEXT,
 			VkPhysicalDevice,
 			VkDevice,
+			VkSampleCountFlagBits sample_count,
 			const std::shared_ptr< vulkan_queue >& present_queue,
 			const std::shared_ptr< vulkan_queue >& graphics_queue,
 			const std::shared_ptr< vulkan_queue >& compute_queue,
 			const std::shared_ptr< vulkan_queue >& transfer_queue,
-			const std::shared_ptr< vulkan_pipeline_cache >&,
+			const std::shared_ptr< vulkan_barrier_manager >&,
 			const std::shared_ptr< vulkan_synchronization >&,
-			std::unique_ptr< vulkan_window >,
-			std::unique_ptr< vulkan_back_buffer > );
+			const std::shared_ptr< vulkan_pipeline_cache >&,
+			std::unique_ptr< vulkan_window > );
 
 	private:
 		const config _cfg;
@@ -123,17 +127,18 @@ namespace igpu
 			VkDevice device = nullptr;
 		} _state;
 
+		VkSampleCountFlagBits _sample_count = (VkSampleCountFlagBits)0;
+
 		std::shared_ptr< vulkan_queue > _present_queue;
 		std::shared_ptr< vulkan_queue > _graphics_queue;
 		std::shared_ptr< vulkan_queue > _compute_queue;
 		std::shared_ptr< vulkan_queue > _transfer_queue;
-
-		std::shared_ptr< vulkan_pipeline_cache > _pipeline_cache;
-
+		std::shared_ptr< vulkan_barrier_manager > _barrier_manager;
 		std::shared_ptr< vulkan_synchronization > _synchronization;
+		std::shared_ptr< vulkan_pipeline_cache > _pipeline_cache;
+		std::shared_ptr< vulkan_back_buffer > _back_buffer;
 
 		std::unique_ptr< vulkan_window > _window;
-		std::unique_ptr< vulkan_back_buffer > _back_buffer;
 
 #if ATMOS_PERFORMANCE_TRACKING
 		perf::metric _renderstate_switch_metric;

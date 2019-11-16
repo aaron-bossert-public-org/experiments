@@ -9,11 +9,13 @@
 #include "vulkan/context/vulkan_context.h"
 #include "vulkan/shader/vulkan_graphics_pipeline.h"
 #include "vulkan/shader/vulkan_pipeline_cache.h"
+#include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_fence.h"
 #include "vulkan/sync/vulkan_job_attributes.h"
 #include "vulkan/sync/vulkan_job_primitives.h"
 #include "vulkan/sync/vulkan_job_scope.h"
 #include "vulkan/texture/vulkan_depth_texture2d.h"
+#include "vulkan/texture/vulkan_draw_target.h"
 #include "vulkan/texture/vulkan_image.h"
 #include "vulkan/texture/vulkan_render_texture2d.h"
 #include "vulkan/texture/vulkan_texture2d.h"
@@ -23,33 +25,36 @@
 
 using namespace igpu;
 
-bool vulkan_instance_batch::can_render( vulkan_batch_draw_state* draw_state )
+bool vulkan_instance_batch::can_raster(
+	vulkan_batch_raster_state* raster_state )
 {
 	if ( _enabled )
 	{
-		draw_state->resolved.instance_count =
+		raster_state->resolved.instance_count =
 			(uint32_t)_instance_count.value_or(
-				draw_state->fallback.instance_count );
-		draw_state->resolved.element_count = (uint32_t)_element_count.value_or(
-			draw_state->fallback.element_count );
+				raster_state->fallback.instance_count );
 
-		if ( draw_state->resolved.instance_count &&
-			 draw_state->resolved.element_count )
+		raster_state->resolved.element_count =
+			(uint32_t)_element_count.value_or(
+				raster_state->fallback.element_count );
+
+		if ( raster_state->resolved.instance_count &&
+			 raster_state->resolved.element_count )
 		{
 			if ( !_visibility_sphere ||
 				 utility::intersects(
-					 draw_state->frustum,
+					 raster_state->frustum,
 					 _visibility_sphere.value() ) )
 			{
-				draw_state->resolved.base_vertex =
+				raster_state->resolved.base_vertex =
 					(int32_t)_base_vertex.value_or(
-						draw_state->fallback.base_vertex );
-				draw_state->resolved.instance_start =
+						raster_state->fallback.base_vertex );
+				raster_state->resolved.instance_start =
 					(uint32_t)_instance_start.value_or(
-						draw_state->fallback.instance_start );
-				draw_state->resolved.element_start =
+						raster_state->fallback.instance_start );
+				raster_state->resolved.element_start =
 					(uint32_t)_element_start.value_or(
-						draw_state->fallback.element_start );
+						raster_state->fallback.element_start );
 
 				return true;
 			}
@@ -59,20 +64,21 @@ bool vulkan_instance_batch::can_render( vulkan_batch_draw_state* draw_state )
 	return false;
 }
 
-void vulkan_instance_batch::draw( const vulkan_batch_draw_state& draw_state )
+void vulkan_instance_batch::rasterize(
+	const vulkan_batch_raster_state& raster_state )
 {
 	if ( _job_primitives )
 	{
-		_job_primitives->record_cmds( draw_state.command_buffer );
+		_job_primitives->record_cmds( raster_state.command_buffer );
 	}
 
 	vkCmdDrawIndexed(
-		draw_state.command_buffer,
-		draw_state.resolved.element_count,
-		draw_state.resolved.instance_count,
-		draw_state.resolved.element_start,
-		draw_state.resolved.base_vertex,
-		draw_state.resolved.instance_start );
+		raster_state.command_buffer->vk_cmds(),
+		raster_state.resolved.element_count,
+		raster_state.resolved.instance_count,
+		raster_state.resolved.element_start,
+		raster_state.resolved.base_vertex,
+		raster_state.resolved.instance_start );
 }
 
 vulkan_material_batch::vulkan_material_batch( const config& cfg )
@@ -96,16 +102,16 @@ vulkan_material_batch::vulkan_material_batch( const config& cfg )
 vulkan_material_batch::~vulkan_material_batch()
 {}
 
-void vulkan_material_batch::start_draw(
-	const vulkan_batch_draw_state& draw_state )
+void vulkan_material_batch::start_raster(
+	const vulkan_batch_raster_state& raster_state )
 {
 	if ( _job_primitives )
 	{
-		_job_primitives->record_cmds( draw_state.command_buffer );
+		_job_primitives->record_cmds( raster_state.command_buffer );
 	}
 }
 
-void vulkan_material_batch::stop_draw()
+void vulkan_material_batch::stop_raster()
 {}
 
 vulkan_geometry_batch::vulkan_geometry_batch( const config& cfg )
@@ -136,7 +142,8 @@ vulkan_geometry_batch::vulkan_geometry_batch( const config& cfg )
 vulkan_geometry_batch::~vulkan_geometry_batch()
 {}
 
-bool vulkan_geometry_batch::pre_draw( vulkan_batch_draw_state* draw_state )
+bool vulkan_geometry_batch::pre_raster(
+	vulkan_batch_raster_state* raster_state )
 {
 	const vulkan_geometry& geometry = item();
 
@@ -145,33 +152,39 @@ bool vulkan_geometry_batch::pre_draw( vulkan_batch_draw_state* draw_state )
 		return false;
 	}
 
-	draw_state->fallback.instance_start = (uint32_t)geometry.instance_start();
-	draw_state->fallback.instance_count = (uint32_t)geometry.instance_count();
-	draw_state->fallback.element_start = (uint32_t)geometry.element_start();
-	draw_state->fallback.element_count = (uint32_t)geometry.element_count();
-	draw_state->fallback.base_vertex = (int32_t)geometry.base_vertex();
+	raster_state->fallback.instance_start = (uint32_t)geometry.instance_start();
+	raster_state->fallback.instance_count = (uint32_t)geometry.instance_count();
+	raster_state->fallback.element_start = (uint32_t)geometry.element_start();
+	raster_state->fallback.element_count = (uint32_t)geometry.element_count();
+	raster_state->fallback.base_vertex = (int32_t)geometry.base_vertex();
 
 	return true;
 }
 
-void vulkan_geometry_batch::start_draw(
-	const vulkan_batch_draw_state& draw_state )
+void vulkan_geometry_batch::start_raster(
+	const vulkan_batch_raster_state& raster_state )
 {
 	vkCmdBindPipeline(
-		draw_state.command_buffer,
+		raster_state.command_buffer->vk_cmds(),
 		VK_PIPELINE_BIND_POINT_GRAPHICS,
 		_cfg.pipeline->vk_pipeline() );
 
 	if ( _job_primitives )
 	{
-		_job_primitives->record_cmds( draw_state.command_buffer );
+		_job_primitives->record_cmds( raster_state.command_buffer );
 	}
 
-	_job_attributes->record_cmds( draw_state.command_buffer );
+	_job_attributes->record_cmds( raster_state.command_buffer );
 }
 
-void vulkan_geometry_batch::stop_draw()
+void vulkan_geometry_batch::stop_raster()
 {}
+
+void vulkan_geometry_batch::rebind_draw_target(
+	const scoped_ptr< vulkan_draw_target >& vulkan_draw_target ) const
+{
+	_cfg.pipeline->rebind_draw_target( vulkan_draw_target );
+}
 
 vulkan_states_batch::vulkan_states_batch( const config& cfg )
 	: _cfg( cfg )
@@ -180,10 +193,10 @@ vulkan_states_batch::vulkan_states_batch( const config& cfg )
 vulkan_states_batch::~vulkan_states_batch()
 {}
 
-void vulkan_states_batch::start_draw( const vulkan_batch_draw_state& )
+void vulkan_states_batch::start_raster( const vulkan_batch_raster_state& )
 {}
 
-void vulkan_states_batch::stop_draw()
+void vulkan_states_batch::stop_raster()
 {}
 
 vulkan_program_batch::vulkan_program_batch( const config& cfg )
@@ -193,10 +206,10 @@ vulkan_program_batch::vulkan_program_batch( const config& cfg )
 vulkan_program_batch::~vulkan_program_batch()
 {}
 
-void vulkan_program_batch::start_draw( const vulkan_batch_draw_state& )
+void vulkan_program_batch::start_raster( const vulkan_batch_raster_state& )
 {}
 
-void vulkan_program_batch::stop_draw()
+void vulkan_program_batch::stop_raster()
 {}
 
 const vulkan_root_batch::vulkan& vulkan_root_batch::vk() const
@@ -204,14 +217,42 @@ const vulkan_root_batch::vulkan& vulkan_root_batch::vk() const
 	return _vk;
 }
 
-void vulkan_root_batch::start_draw( const vulkan_batch_draw_state& draw_state )
+void vulkan_root_batch::start_raster(
+	const vulkan_batch_raster_state& raster_state )
 {
-	ASSERT_CONTEXT( (bool)draw_state.fence );
-	vulkan_job::fence( draw_state.fence );
+	if ( !raster_state.command_buffer )
+	{
+		LOG_CRITICAL( "command buffer is null" );
+	}
+	else if ( !raster_state.command_buffer->fence() )
+	{
+		LOG_CRITICAL( "command buffer fence is null" );
+	}
+	else
+	{
+		vulkan_job::fence( raster_state.command_buffer->fence() );
+	}
 }
 
-void vulkan_root_batch::stop_draw()
+void vulkan_root_batch::stop_raster()
 {}
+
+void vulkan_root_batch::rebind_draw_target(
+	const scoped_ptr< vulkan_draw_target >& vulkan_draw_target )
+{
+	_vk.draw_target = vulkan_draw_target;
+
+	for ( const auto& program : *this )
+	{
+		for ( const auto& states : program )
+		{
+			for ( const vulkan_geometry_batch& geometry : states )
+			{
+				geometry.rebind_draw_target( vulkan_draw_target );
+			}
+		}
+	}
+}
 
 std::unique_ptr< vulkan_batch_binding > vulkan_root_batch::make_binding(
 	const instance_batch::config& cfg )
@@ -281,7 +322,7 @@ std::unique_ptr< vulkan_batch_binding > vulkan_root_batch::make_binding(
 			}
 
 			auto pipeline =
-				_vk.pipeline_cache->make( graphics_pipeline::make_config(
+				_vk.context->make_shared( graphics_pipeline::make_config(
 					indexer,
 					_vk.draw_target,
 					cfg.program,
@@ -299,7 +340,9 @@ std::unique_ptr< vulkan_batch_binding > vulkan_root_batch::make_binding(
 							   this,
 							   prog,
 							   _vk.primitives,
-							   pipeline,
+							   std::dynamic_pointer_cast<
+								   vulkan_graphics_pipeline,
+								   graphics_pipeline >( pipeline ),
 							   geo,
 							   std::move( active_vertex_buffers ),
 						   } )

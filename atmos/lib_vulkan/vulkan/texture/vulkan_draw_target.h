@@ -6,10 +6,14 @@
 
 #include "igpu/texture/draw_target.h"
 
+#include "framework/utility/scoped_ptr.h"
+
 #include <memory>
 
 namespace igpu
 {
+	class vulkan_command_buffer;
+
 	class vulkan_draw_target : public draw_target
 	{
 	public:
@@ -25,9 +29,15 @@ namespace igpu
 			vulkan vk;
 		};
 
-		const vulkan_render_buffer& color() const override;
+		const config& cfg() const override;
 
-		const vulkan_depth_buffer& depth() const override;
+		void begin_raster() override;
+
+		scoped_ptr< vulkan_command_buffer > raster_cmds();
+
+		void end_raster() override;
+
+		uint32_t raster_sub_pass() const;
 
 		VkRenderPass render_pass() const;
 
@@ -40,6 +50,8 @@ namespace igpu
 
 	private:
 		const config _cfg;
+		uint32_t _raster_sub_pass = UINT32_MAX;
 		VkRenderPass _render_pass = nullptr;
+		std::shared_ptr< vulkan_command_buffer > _raster_cmds;
 	};
 }

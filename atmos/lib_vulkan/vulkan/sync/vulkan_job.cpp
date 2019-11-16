@@ -39,14 +39,16 @@ void vulkan_job::barrier_recorded_commands(
 #endif
 }
 
-void vulkan_job::wait_on_fence() const
+void vulkan_job::wait_on_fence()
 {
 	if ( const auto& fence = job_state().fence )
 	{
 		fence->wait();
 	}
+
+	job_state().fence = nullptr;
 }
-void vulkan_job::fence( const std::shared_ptr< vulkan_fence >& fence )
+void vulkan_job::fence( const scoped_ptr< vulkan_fence >& fence )
 {
 	job_state().fence = fence;
 }

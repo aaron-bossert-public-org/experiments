@@ -18,7 +18,7 @@ namespace igpu
 			};
 		};
 
-		VkSemaphore get() const;
+		VkSemaphore vk_semaphore() const;
 
 		static std::unique_ptr< vulkan_semaphore > make( const config& );
 

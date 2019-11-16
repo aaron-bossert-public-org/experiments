@@ -19,8 +19,13 @@ namespace igpu
 	public:
 		struct config
 		{
-			std::shared_ptr< draw_target > draw_target;
-			std::vector< primitives::config > primitives;
+			scoped_ptr< draw_target > draw_target;
+			primitives::config primitives;
+		};
+
+		struct raster_state
+		{
+			utility::frustum frustum;
 		};
 
 		virtual const config& cfg() const = 0;
@@ -28,12 +33,12 @@ namespace igpu
 		virtual std::unique_ptr< batch_binding > make_binding(
 			const instance_batch::config& ) = 0;
 
-		virtual void render( const utility::frustum& frustum ) = 0;
+		virtual void raster(
+			const scoped_ptr< draw_target >&,
+			const raster_state& ) = 0;
 
 		void visit(
 			const std::function< void( const instance_batch& ) >& visit );
-
-		virtual void on_back_buffer_resized( const glm::ivec2& ) = 0;
 
 		virtual ~batch() = default;
 

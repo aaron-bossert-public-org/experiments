@@ -4,6 +4,7 @@
 #include "vulkan/buffer/vulkan_buffer.h"
 #include "vulkan/buffer/vulkan_geometry.h"
 #include "vulkan/shader/vulkan_vertex_parameters.h"
+#include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_dependency.h"
 #include "vulkan/sync/vulkan_job.h"
 
@@ -76,6 +77,7 @@ std::shared_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
 
 			vulkan_resource* resource = &vertex_buffer.gpu_object();
 			vulkan_job_scope job_scope = {
+				decorator::READABLE,
 				VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
 				VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT,
 			};
@@ -87,6 +89,7 @@ std::shared_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
 		index_type = geometry->index_buffer().cfg().vk.index_type;
 		vulkan_resource* resource = &geometry->index_buffer().gpu_object();
 		vulkan_job_scope job_scope = {
+			decorator::READABLE,
 			VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
 			VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_INDEX_READ_BIT,
 		};
@@ -106,23 +109,24 @@ vulkan_job_attributes::vulkan_job_attributes( const config& cfg )
 	: _cfg( cfg )
 {}
 
-void vulkan_job_attributes::on_record_cmds( VkCommandBuffer command_buffer )
+void vulkan_job_attributes::on_record_cmds(
+	const scoped_ptr< vulkan_command_buffer >& command_buffer )
 {
 	vkCmdBindVertexBuffers(
-		command_buffer,
+		command_buffer->vk_cmds(),
 		0,
 		(uint32_t)_vertex_buffers.size(),
 		_vertex_buffers.data(),
 		_vertex_buffer_offsets.data() );
 
 	vkCmdBindIndexBuffer(
-		command_buffer,
+		command_buffer->vk_cmds(),
 		_index_buffer,
 		_index_buffer_offset,
 		_index_type );
 }
 
-void vulkan_job_attributes::on_gpu_object_reallocated(
+void vulkan_job_attributes::on_resource_reinitialized(
 	vulkan_dependency* dependency )
 {
 	size_t write_index = ( size_t )( dependency - _state.write_deps.data() );

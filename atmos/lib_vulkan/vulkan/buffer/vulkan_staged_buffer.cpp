@@ -8,25 +8,74 @@
 #include "framework/utility/buffer_view.h"
 using namespace igpu;
 
+namespace
+{
+	VmaMemoryUsage cpu_vma_usage( memory_type memory )
+	{
+		switch ( memory )
+		{
+		case memory_type::WRITE_COMBINED:
+			return VMA_MEMORY_USAGE_CPU_ONLY;
+		case memory_type::PRESERVED:
+			return VMA_MEMORY_USAGE_CPU_ONLY;
+		}
+	}
+
+	VkBufferUsageFlags cpu_usage( memory_type memory )
+	{
+		switch ( memory )
+		{
+		case memory_type::WRITE_COMBINED:
+			return VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+		case memory_type::PRESERVED:
+			return VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+				VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		}
+	}
+
+	VmaMemoryUsage gpu_vma_usage( memory_type memory )
+	{
+		switch ( memory )
+		{
+		case memory_type::WRITE_COMBINED:
+			return VMA_MEMORY_USAGE_GPU_ONLY;
+		case memory_type::PRESERVED:
+			return VMA_MEMORY_USAGE_GPU_ONLY;
+		}
+	}
+
+
+	VkBufferUsageFlags gpu_usage( memory_type memory )
+	{
+		switch ( memory )
+		{
+		case memory_type::WRITE_COMBINED:
+			return VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+				VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+		case memory_type::PRESERVED:
+			return VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+				VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+				VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+		}
+	}
+}
 vulkan_staged_buffer::vulkan_staged_buffer( const config& cfg )
 	: _cfg( cfg )
 	, _staging_buffer( {
 		  cfg.memory,
 		  cfg.device,
 		  cfg.device_properties,
-		  cfg.synchronization->vma(),
-		  VMA_MEMORY_USAGE_CPU_ONLY,
-		  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		  cfg.synchronization,
+		  cpu_vma_usage( cfg.memory ),
+		  cpu_usage( cfg.memory ),
 	  } )
 	, _gpu_buffer( {
 		  memory_type::WRITE_COMBINED,
 		  cfg.device,
 		  cfg.device_properties,
-		  cfg.synchronization->vma(),
-		  VMA_MEMORY_USAGE_GPU_ONLY,
-		  VkBufferUsageFlagBits(
-			  cfg.vk_usage_flags | VK_BUFFER_USAGE_TRANSFER_DST_BIT |
-			  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT ),
+		  cfg.synchronization,
+		  gpu_vma_usage( cfg.memory ),
+		  gpu_usage( cfg.memory ) | cfg.vk_usage_flags,
 	  } )
 {}
 
@@ -48,18 +97,7 @@ void vulkan_staged_buffer::unmap()
 	else
 	{
 		_staging_buffer.unmap();
-
-		_gpu_buffer.reserve( _byte_size );
-
-		_cfg.synchronization->copy(
-			_staging_buffer,
-			_gpu_buffer,
-			(uint32_t)_byte_size );
-
-		if ( _cfg.memory == memory_type::WRITE_COMBINED )
-		{
-			_staging_buffer.release();
-		}
+		_gpu_buffer.transfer_from( _staging_Buffer );
 	}
 }
 

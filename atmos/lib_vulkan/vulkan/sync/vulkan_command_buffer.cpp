@@ -6,7 +6,7 @@
 using namespace igpu;
 
 
-VkCommandBuffer vulkan_command_buffer::get()
+VkCommandBuffer vulkan_command_buffer::vk_cmds() const
 {
 	return _command_buffer;
 }

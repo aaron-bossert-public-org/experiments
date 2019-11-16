@@ -75,19 +75,37 @@ bool vulkan_job_dependencies::validate_barriers() const
 }
 
 
-void vulkan_job_dependencies::on_record_cmds( VkCommandBuffer command_buffer )
+void vulkan_job_dependencies::on_record_cmds(
+	const scoped_ptr< vulkan_command_buffer >& command_buffer )
 {
 	job().on_record_cmds( this );
 	on_record_cmds( command_buffer );
 }
 
-void vulkan_job_dependencies::gpu_object_reallocated(
+void vulkan_job_dependencies::resource_reinitialized(
 	vulkan_dependency* dependency )
 {
-	on_gpu_object_reallocated( dependency );
+	auto& state = job_dependency_state();
+
+	size_t write_index = ( size_t )( dependency - state.write_deps.data() );
+	size_t read_index = ( size_t )( dependency - state.read_deps.data() );
+
+	if ( write_index < state.write_deps.size() )
+	{
+		on_gpu_object_reallocated( dependency );
+	}
+	else if ( read_index < state.read_deps.size() )
+	{
+		activate_read_hazard( dependency );
+		on_gpu_object_reallocated( dependency );
+	}
+	else if ( !dependency->active() )
+	{
+		LOG_CRITICAL( "dependency does not belong to these job dependencies" );
+	}
 }
 
-void vulkan_job_dependencies::wait_pending_job() const
+void vulkan_job_dependencies::wait_pending_job()
 {
 	job().wait_on_fence();
 }

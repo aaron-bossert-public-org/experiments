@@ -11,6 +11,7 @@
 
 namespace igpu
 {
+	class vulkan_draw_target;
 	class vulkan_pipeline_cache;
 	class vulkan_program;
 	class vulkan_render_states;
@@ -34,9 +35,9 @@ namespace igpu
 
 		const config& cfg() const override;
 
-		VkPipeline vk_pipeline( const glm::ivec2& res ) const;
+		VkPipeline vk_pipeline() const;
 
-		void on_draw_target_resized() override;
+		void rebind_draw_target( const scoped_ptr< vulkan_draw_target >& );
 
 		static std::unique_ptr< vulkan_graphics_pipeline > make(
 			const config& );
@@ -44,14 +45,10 @@ namespace igpu
 		~vulkan_graphics_pipeline();
 
 	private:
-		vulkan_graphics_pipeline(
-			const config&,
-			VkPipeline full_screen_pipeline,
-			VkPipeline part_screen_pipeline );
+		vulkan_graphics_pipeline( const config&, VkPipeline );
 
 	private:
-		const config _cfg;
-		VkPipeline _full_screen_pipeline;
-		VkPipeline _part_screen_pipeline;
+		config _cfg;
+		VkPipeline _vk_pipeline;
 	};
 }

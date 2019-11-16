@@ -3,6 +3,7 @@
 #include "vulkan/shader/vulkan_parameters.h"
 #include "vulkan/shader/vulkan_primitives.h"
 #include "vulkan/shader/vulkan_primitives_descriptor.h"
+#include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_dependency.h"
 
 #include "framework/logging/log.h"
@@ -207,16 +208,15 @@ std::shared_ptr< vulkan_job_primitives > vulkan_job_primitives::make(
 						cfg.primitives->primitive( prim_idx );
 
 					vulkan_job_scope job_scope = {
+						parameter.cfg().decorators,
 						parameter.cfg().vk.pipeline_stages,
 					};
 
-					if ( 0 !=
-						 ( parameter.cfg().decorators & decorator::READABLE ) )
+					if ( job_scope.is_readable() )
 					{
 						job_scope.access |= VK_ACCESS_SHADER_READ_BIT;
 					}
-					if ( 0 !=
-						 ( parameter.cfg().decorators & decorator::WRITABLE ) )
+					if ( job_scope.is_writable() )
 					{
 						job_scope.access |= VK_ACCESS_SHADER_WRITE_BIT;
 					}
@@ -238,11 +238,12 @@ std::shared_ptr< vulkan_job_primitives > vulkan_job_primitives::make(
 						job_scope.access |= VK_ACCESS_INDEX_READ_BIT;
 					}
 
-					auto& deps =
-						job_scope.is_read_only() ? read_deps : write_deps;
-					auto& cfgs = job_scope.is_read_only()
-						? read_parameter_cfgs
-						: write_parameter_cfgs;
+
+					bool is_writable = job_scope.is_writable();
+
+					auto& deps = is_writable ? write_deps : read_deps;
+					auto& cfgs = is_writable ? write_parameter_cfgs
+											 : read_parameter_cfgs;
 
 					deps.emplace_back(
 						primitive.cfg().vk.resource,
@@ -270,7 +271,8 @@ vulkan_job_primitives::vulkan_job_primitives( const config& cfg )
 	: _cfg( cfg )
 {}
 
-void vulkan_job_primitives::on_record_cmds( VkCommandBuffer command_buffer )
+void vulkan_job_primitives::on_record_cmds(
+	const scoped_ptr< vulkan_command_buffer >& command_buffer )
 {
 	VkDescriptorSet descriptor_set = _descriptor_sets[_swap_index];
 
@@ -296,7 +298,7 @@ void vulkan_job_primitives::on_record_cmds( VkCommandBuffer command_buffer )
 	}
 
 	vkCmdBindDescriptorSets(
-		command_buffer,
+		command_buffer->vk_cmds(),
 		VK_PIPELINE_BIND_POINT_GRAPHICS,
 		_cfg.pipeline_layout,
 		(uint32_t)_cfg.descriptor_index,
@@ -306,7 +308,7 @@ void vulkan_job_primitives::on_record_cmds( VkCommandBuffer command_buffer )
 		nullptr ); // dynamic offsets
 }
 
-void vulkan_job_primitives::on_gpu_object_reallocated(
+void vulkan_job_primitives::on_resource_reinitialized(
 	vulkan_dependency* dependency )
 {
 	size_t write_index = ( size_t )( dependency - _state.write_deps.data() );

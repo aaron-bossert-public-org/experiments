@@ -1,6 +1,7 @@
 
 #include "vulkan/window/vulkan_back_buffer.h"
 
+#include "vulkan/context/vulkan_context.h"
 #include "vulkan/sync/vulkan_queue.h"
 #include "vulkan/texture/vulkan_image.h"
 
@@ -12,50 +13,14 @@ using namespace igpu;
 
 namespace
 {
-	std::shared_ptr< vulkan_render_buffer > create_render_buffer(
-		const vulkan_back_buffer::config& cfg )
-	{
-		return vulkan_render_buffer::make( {
-			"back buffer color",
-			cfg.color_format,
-			cfg.sampler,
-			cfg.res,
-			{
-				cfg.vk.physical_device,
-				cfg.vk.device,
-				to_vulkan_format( cfg.color_format ),
-				cfg.vk.sample_count,
-				VK_SHARING_MODE_EXCLUSIVE,
-			},
-		} );
-	}
-
-	std::shared_ptr< vulkan_depth_buffer > create_depth_buffer(
-		const vulkan_back_buffer::config& cfg )
-	{
-		return vulkan_depth_buffer::make( {
-			"back buffer depth",
-			cfg.depth_format,
-			cfg.sampler,
-			cfg.res,
-			{
-				cfg.vk.physical_device,
-				cfg.vk.device,
-				to_vulkan_format( cfg.color_format ),
-				cfg.vk.sample_count,
-				VK_SHARING_MODE_EXCLUSIVE,
-			},
-		} );
-	}
-
 	bool validate_swap_surface_format(
 		const vulkan_back_buffer::config& cfg,
 		const VkSurfaceFormatKHR& surface_format )
 	{
 		uint32_t format_count;
 		vkGetPhysicalDeviceSurfaceFormatsKHR(
-			cfg.vk.physical_device,
-			cfg.vk.surface,
+			cfg.back_buffer.physical_device,
+			cfg.back_buffer.surface,
 			&format_count,
 			nullptr );
 
@@ -63,8 +28,8 @@ namespace
 		if ( format_count != 0 )
 		{
 			vkGetPhysicalDeviceSurfaceFormatsKHR(
-				cfg.vk.physical_device,
-				cfg.vk.surface,
+				cfg.back_buffer.physical_device,
+				cfg.back_buffer.surface,
 				&format_count,
 				formats.data() );
 		}
@@ -95,13 +60,13 @@ namespace
 		{
 			LOG_CRITICAL(
 				"could not find support for surface format %s",
-				to_string( cfg.color_format ).data() );
+				to_string( cfg.color->cfg().format ).data() );
 		}
 		else
 		{
 			LOG_CRITICAL(
 				"could not find support for surface color space %d",
-				cfg.vk.color_space );
+				cfg.back_buffer.color_space );
 		}
 
 		return false;
@@ -112,8 +77,8 @@ namespace
 	{
 		uint32_t present_mode_count;
 		vkGetPhysicalDeviceSurfacePresentModesKHR(
-			cfg.vk.physical_device,
-			cfg.vk.surface,
+			cfg.back_buffer.physical_device,
+			cfg.back_buffer.surface,
 			&present_mode_count,
 			nullptr );
 
@@ -121,8 +86,8 @@ namespace
 		if ( present_mode_count != 0 )
 		{
 			vkGetPhysicalDeviceSurfacePresentModesKHR(
-				cfg.vk.physical_device,
-				cfg.vk.surface,
+				cfg.back_buffer.physical_device,
+				cfg.back_buffer.surface,
 				&present_mode_count,
 				present_modes.data() );
 		}
@@ -154,13 +119,13 @@ namespace
 
 		VkSwapchainCreateInfoKHR create_info = {};
 		create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-		create_info.surface = cfg.vk.surface;
+		create_info.surface = cfg.back_buffer.surface;
 		create_info.minImageCount = image_count;
 		create_info.imageFormat = surface_format.format;
 		create_info.imageColorSpace = surface_format.colorSpace;
 		create_info.imageExtent = {
-			(uint32_t)cfg.res.x,
-			(uint32_t)cfg.res.y,
+			(uint32_t)cfg.color->cfg().res.x,
+			(uint32_t)cfg.color->cfg().res.y,
 		};
 		create_info.imageArrayLayers = 1;
 		create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -170,8 +135,8 @@ namespace
 		create_info.clipped = VK_TRUE;
 
 		uint32_t queue_family_indices[2] = {
-			cfg.vk.present_queue_family,
-			cfg.vk.graphics_queue_family,
+			cfg.back_buffer.present_queue_family,
+			cfg.back_buffer.graphics_queue_family,
 		};
 
 		if ( queue_family_indices[0] != queue_family_indices[1] )
@@ -248,8 +213,6 @@ namespace
 
 	std::vector< VkFramebuffer > create_framebuffers(
 		const vulkan_back_buffer::config cfg,
-		VkImageView color_image_view,
-		VkImageView depth_image_view,
 		const std::vector< VkImageView >& image_views,
 		VkRenderPass render_pass )
 	{
@@ -258,8 +221,8 @@ namespace
 		for ( size_t i = 0; i < image_views.size(); i++ )
 		{
 			std::array< VkImageView, 3 > attachments = {
-				color_image_view,
-				depth_image_view,
+				cfg.vk.color->gpu_object().vk_image_view(),
+				cfg.vk.depth->gpu_object().vk_image_view(),
 				image_views[i],
 			};
 
@@ -269,8 +232,8 @@ namespace
 			framebuffer_info.attachmentCount =
 				static_cast< uint32_t >( attachments.size() );
 			framebuffer_info.pAttachments = attachments.data();
-			framebuffer_info.width = cfg.res.x;
-			framebuffer_info.height = cfg.res.y;
+			framebuffer_info.width = cfg.color->cfg().res.x,
+			framebuffer_info.height = cfg.color->cfg().res.y,
 			framebuffer_info.layers = 1;
 			vkCreateFramebuffer(
 				cfg.vk.device,
@@ -289,37 +252,36 @@ const vulkan_back_buffer::config& vulkan_back_buffer::cfg() const
 	return _cfg;
 }
 
-const vulkan_render_buffer& vulkan_back_buffer::color() const
+void vulkan_back_buffer::end_raster() override
 {
-	return *_color;
-}
-
-const vulkan_depth_buffer& vulkan_back_buffer::depth() const
-{
-	return *_depth;
+	vulkan_draw_target::end_raster();
+	_cfg.vk.context->end_frame();
 }
 
 std::unique_ptr< vulkan_back_buffer > vulkan_back_buffer::make(
 	const config& cfg )
 {
-	auto color = create_render_buffer( cfg );
-	auto depth = create_depth_buffer( cfg );
-
-	if ( !color || !depth )
+	if ( !cfg.color )
 	{
+		LOG_CRITICAL( "render target is null" );
+		return nullptr;
+	}
+	else if ( !cfg.depth )
+	{
+		LOG_CRITICAL( "depth target is null" );
 		return nullptr;
 	}
 
 	vulkan_back_buffer::config back_buffer_cfg = {};
 	VkSurfaceCapabilitiesKHR surface_caps = {};
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-		cfg.vk.physical_device,
-		cfg.vk.surface,
+		cfg.back_buffer.physical_device,
+		cfg.back_buffer.surface,
 		&surface_caps );
 
 	VkSurfaceFormatKHR surface_format = {
-		color->gpu_object().cfg().image_info.format,
-		cfg.vk.color_space,
+		cfg.vk.color->gpu_object().cfg().image_info.format,
+		cfg.back_buffer.color_space,
 	};
 
 	if ( !validate_swap_surface_format( cfg, surface_format ) )
@@ -340,21 +302,8 @@ std::unique_ptr< vulkan_back_buffer > vulkan_back_buffer::make(
 	auto images = create_images( cfg, swap_chain );
 	auto image_views = create_image_views( cfg, images, surface_format.format );
 
-	vulkan_draw_target::config draw_config = {
-		std::static_pointer_cast< render_buffer, vulkan_render_buffer >(
-			color ),
-		std::static_pointer_cast< depth_buffer, vulkan_depth_buffer >( depth ),
-		cfg.vk.device,
-		color,
-		depth,
-	};
-
-	return std::unique_ptr< vulkan_back_buffer >( new vulkan_back_buffer(
-		cfg,
-		draw_config,
-		swap_chain,
-		images,
-		image_views ) );
+	return std::unique_ptr< vulkan_back_buffer >(
+		new vulkan_back_buffer( cfg, swap_chain, images, image_views ) );
 }
 
 VkSwapchainKHR vulkan_back_buffer::swap_chain() const
@@ -385,20 +334,14 @@ vulkan_back_buffer::~vulkan_back_buffer()
 
 vulkan_back_buffer::vulkan_back_buffer(
 	const config& cfg,
-	const vulkan_draw_target::config& draw_cfg,
 	VkSwapchainKHR swap_chain,
 	const std::vector< VkImage >& images,
 	const std::vector< VkImageView >& image_views )
-	: vulkan_draw_target( draw_cfg )
+	: vulkan_draw_target( cfg )
 	, _cfg( cfg )
 	, _swap_chain( swap_chain )
 	, _images( images )
 	, _image_views( image_views )
 {
-	_framebuffers = create_framebuffers(
-		cfg,
-		draw_cfg.vk.color->gpu_object().vk_image_view(),
-		draw_cfg.vk.depth->gpu_object().vk_image_view(),
-		image_views,
-		render_pass() );
+	_framebuffers = create_framebuffers( cfg, image_views, render_pass() );
 }

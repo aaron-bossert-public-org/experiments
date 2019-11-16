@@ -11,8 +11,6 @@ namespace igpu
 		struct config
 		{
 			VkDevice device = nullptr;
-			VkQueue queue = nullptr;
-			ptrdiff_t submit_index = 0;
 			VkFenceCreateInfo info = {
 				VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
 				nullptr,
@@ -24,7 +22,7 @@ namespace igpu
 
 		const config& cfg() const;
 
-		VkFence get() const;
+		VkFence vk_fence() const;
 
 		bool is_ready( uint64_t wait_nanosecnods = 0 );
 

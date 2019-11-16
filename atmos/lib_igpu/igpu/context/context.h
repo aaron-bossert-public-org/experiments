@@ -27,7 +27,6 @@
 
 namespace igpu
 {
-	class back_buffer;
 	class window;
 	class tracker;
 
@@ -54,9 +53,10 @@ namespace igpu
 		using config_t = const typename T::config&;
 
 		virtual const config& cfg() const = 0;
+
 		virtual const window& window() const = 0;
 
-		virtual const back_buffer& back_buffer() const = 0;
+		virtual scoped_ptr< draw_target > back_buffer() = 0;
 
 		virtual ~context() = default;
 

@@ -4,12 +4,17 @@
 #include "vulkan/defines/vulkan_includes.h"
 #include "vulkan/sync/vulkan_job_scope.h"
 
+#include "framework/utility/scoped_ptr.h"
+
 #include <vector>
 
 namespace igpu
 {
 	class vulkan_dependency;
+	class vulkan_queue;
+	class vulkan_fence;
 	class vulkan_resource;
+	class vulkan_semaphore;
 	class vulkan_synchronization;
 
 	class vulkan_barrier_manager
@@ -17,6 +22,7 @@ namespace igpu
 	public:
 		struct config
 		{
+			VkDevice device = nullptr;
 			scoped_ptr< vulkan_synchronization > synchronization;
 		};
 
@@ -24,6 +30,7 @@ namespace igpu
 		{
 			VkPipelineStageFlags src_stages = 0;
 			VkPipelineStageFlags dst_stages = 0;
+			VkPipelineStageFlags transfer_stages = 0;
 			std::vector< VkBufferMemoryBarrier > buffer_memory_barriers;
 			std::vector< VkImageMemoryBarrier > image_memory_barriers;
 		};
@@ -39,7 +46,9 @@ namespace igpu
 
 		void record_dependency( vulkan_dependency* );
 
-		void finish_dependency_barriers( const scoped_ptr< vulkan_queue >& );
+		void finish_dependency_barriers(
+			const scoped_ptr< vulkan_queue >&,
+			scoped_ptr< vulkan_fence >* out_fence = nullptr );
 
 		// invoked in indirectly via finish_dependency_barriers
 		void push_barrier(
@@ -57,8 +66,18 @@ namespace igpu
 
 		static std::unique_ptr< vulkan_barrier_manager > make( const config& );
 
+		~vulkan_barrier_manager();
+
 	private:
-		vulkan_barrier_manager( const config& );
+		struct transfer_semaphores
+		{
+			std::unique_ptr< vulkan_semaphore > wait;
+			std::unique_ptr< vulkan_semaphore > signal;
+		};
+
+		vulkan_barrier_manager(
+			const config&,
+			std::vector< std::vector< transfer_semaphores > >&& );
 
 		record* resolve( const record* );
 
@@ -66,10 +85,15 @@ namespace igpu
 
 		const pipeline_barrier& barrier( uint32_t queue_family_index ) const;
 
+		transfer_semaphores& transfer_semaphores_for_queues(
+			size_t src_compact_queue_index,
+			size_t dst_compact_queue_index );
+
 	private:
 		const config _cfg;
 		bool _recording_barriers = false;
 		std::vector< record > _pending_records;
 		std::vector< pipeline_barrier > _barriers;
+		std::vector< std::vector< transfer_semaphores > > _transfer_semaphores;
 	};
 }

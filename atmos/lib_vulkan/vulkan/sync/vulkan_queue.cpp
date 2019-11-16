@@ -9,53 +9,87 @@ using namespace igpu;
 
 std::unique_ptr< vulkan_queue > vulkan_queue::make( const config& cfg )
 {
-	VkQueue queue = nullptr;
-	vkGetDeviceQueue( cfg.device, cfg.family_index, cfg.index, &queue );
+	VkQueue vk_queue = nullptr;
+	vkGetDeviceQueue( cfg.device, cfg.family_index, cfg.index, &vk_queue );
 
 	VkCommandPool command_pool;
 	VkCommandPoolCreateInfo pool_info = {};
 	pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	pool_info.queueFamilyIndex = cfg.family_index;
+	pool_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
 
 	vkCreateCommandPool( cfg.device, &pool_info, nullptr, &command_pool );
 
 	return std::unique_ptr< vulkan_queue >(
-		new vulkan_queue( cfg, queue, command_pool ) );
+		new vulkan_queue( cfg, vk_queue, command_pool ) );
 }
 
 const vulkan_queue::config& vulkan_queue::cfg() const
 {
 	return _cfg;
 }
-
-VkQueue vulkan_queue::get()
+void vulkan_queue::one_time_command( const command_builder_t& builder )
 {
-	return _queue;
+	one_time_command( 0, nullptr, nullptr, builder, 0, nullptr );
 }
 
-VkCommandPool vulkan_queue::command_pool()
+void vulkan_queue::one_time_command(
+	uint32_t wait_count,
+	const VkSemaphore* p_wait_semaphores,
+	const VkPipelineStageFlags* p_wait_stages,
+	const command_builder_t& builder,
+	uint32_t signal_count,
+	const VkSemaphore* p_signal_semaphores )
 {
-	return _command_pool;
-}
+	free_completed_commands();
 
-std::list< vulkan_command_buffer >& vulkan_queue::pending_commands()
-{
-	return _pending_commands;
+	std::shared_ptr< vulkan_fence > fence = vulkan_fence::make( {
+		_cfg.device,
+	} );
+
+	_pending_commands.push_back( std::make_shared< vulkan_command_buffer >(
+
+		vulkan_command_buffer::config{
+			_cfg.device,
+			_command_pool,
+			VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+		},
+		fence ) );
+
+
+	VkCommandBufferBeginInfo begin_info = {};
+	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	VkCommandBuffer vk_cmds = _pending_commands.back()->vk_cmds();
+
+	vkBeginCommandBuffer( vk_cmds, &begin_info );
+	builder( *_pending_commands.back() );
+	vkEndCommandBuffer( vk_cmds );
+
+	VkSubmitInfo info = {
+		VK_STRUCTURE_TYPE_SUBMIT_INFO,
+		nullptr,
+		wait_count,
+		p_wait_semaphores,
+		p_wait_stages,
+		1,
+		&vk_cmds,
+		signal_count,
+		p_signal_semaphores,
+	};
+
+	vkQueueSubmit( _vk_queue, 1, &info, fence->vk_fence() );
 }
 
 void vulkan_queue::free_completed_commands()
 {
 	// free front chunk of oldest command buffers
 	while ( _pending_commands.size() &&
-			_pending_commands.front().fence()->is_ready() )
+			_pending_commands.front()->fence()->is_ready() )
 	{
 		_pending_commands.erase( _pending_commands.begin() );
 	}
-}
-
-ptrdiff_t vulkan_queue::get_increment_submit_index()
-{
-	return ++_submit_index;
 }
 
 vulkan_queue::~vulkan_queue()
@@ -67,9 +101,9 @@ vulkan_queue::~vulkan_queue()
 
 vulkan_queue::vulkan_queue(
 	const config& cfg,
-	VkQueue queue,
+	VkQueue vk_queue,
 	VkCommandPool command_pool )
 	: _cfg( cfg )
-	, _queue( queue )
+	, _vk_queue( vk_queue )
 	, _command_pool( command_pool )
 {}

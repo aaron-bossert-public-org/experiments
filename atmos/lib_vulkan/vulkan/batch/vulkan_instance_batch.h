@@ -6,7 +6,7 @@
 
 namespace igpu
 {
-	struct vulkan_batch_draw_state;
+	struct vulkan_batch_raster_state;
 	class vulkan_job_primitives;
 
 	class vulkan_root_batch;
@@ -60,9 +60,9 @@ namespace igpu
 		const std::optional< utility::sphere >& visibility_sphere()
 			const override;
 
-		bool can_render( vulkan_batch_draw_state* );
+		bool can_raster( vulkan_batch_raster_state* );
 
-		void draw( const vulkan_batch_draw_state& );
+		void rasterize( const vulkan_batch_raster_state& );
 
 		vulkan_instance_batch() = default;
 		vulkan_instance_batch( vulkan_instance_batch&& ) = default;

@@ -18,9 +18,11 @@ namespace igpu
 			std::shared_ptr< depth_buffer > depth;
 		};
 
-		virtual const render_buffer& color() const = 0;
+		virtual const config& cfg() const = 0;
 
-		virtual const depth_buffer& depth() const = 0;
+		virtual void begin_raster() = 0;
+
+		virtual void end_raster() = 0;
 
 		glm::ivec2 res() const;
 

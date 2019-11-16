@@ -8,6 +8,7 @@
 #include "vulkan/shader/vulkan_render_states.h"
 #include "vulkan/sync/vulkan_job.h"
 
+#include "igpu/batch/batch.h"
 #include "igpu/batch/batch_nodes.h"
 #include "igpu/batch/batch_utility.h"
 
@@ -16,6 +17,7 @@
 namespace igpu
 {
 	class vulkan_batch_binding;
+	class vulkan_command_buffer;
 	class vulkan_draw_target;
 	class vulkan_fence;
 	class vulkan_job_attributes;
@@ -29,10 +31,10 @@ namespace igpu
 	class vulkan_geometry_batch;
 	class vulkan_material_batch;
 
-	struct vulkan_batch_draw_state : batch_draw_state
+	struct vulkan_batch_raster_state : batch::raster_state
 	{
-		std::shared_ptr< vulkan_fence > fence;
-		VkCommandBuffer command_buffer;
+		scoped_ptr< vulkan_command_buffer > command_buffer;
+
 		struct
 		{
 			vulkan_root_batch* root = nullptr;
@@ -72,9 +74,9 @@ namespace igpu
 		vulkan_material_batch( vulkan_material_batch&& ) = default;
 		vulkan_material_batch& operator=( vulkan_material_batch&& ) = default;
 
-		void start_draw( const vulkan_batch_draw_state& );
+		void start_raster( const vulkan_batch_raster_state& );
 
-		void stop_draw();
+		void stop_raster();
 
 	private:
 		config _cfg;
@@ -103,11 +105,14 @@ namespace igpu
 		vulkan_geometry_batch( vulkan_geometry_batch&& ) = default;
 		vulkan_geometry_batch& operator=( vulkan_geometry_batch&& ) = default;
 
-		[[nodiscard]] bool pre_draw( vulkan_batch_draw_state* );
+		[[nodiscard]] bool pre_raster( vulkan_batch_raster_state* );
 
-		void start_draw( const vulkan_batch_draw_state& );
+		void start_raster( const vulkan_batch_raster_state& );
 
-		void stop_draw();
+		void stop_raster();
+
+		void rebind_draw_target(
+			const scoped_ptr< vulkan_draw_target >& ) const;
 
 	private:
 		config _cfg;
@@ -133,9 +138,9 @@ namespace igpu
 		vulkan_states_batch( vulkan_states_batch&& ) = default;
 		vulkan_states_batch& operator=( vulkan_states_batch&& ) = default;
 
-		void start_draw( const vulkan_batch_draw_state& );
+		void start_raster( const vulkan_batch_raster_state& );
 
-		void stop_draw();
+		void stop_raster();
 
 	private:
 		config _cfg;
@@ -157,9 +162,9 @@ namespace igpu
 		vulkan_program_batch( vulkan_program_batch&& ) = default;
 		vulkan_program_batch& operator=( vulkan_program_batch&& ) = default;
 
-		void start_draw( const vulkan_batch_draw_state& );
+		void start_raster( const vulkan_batch_raster_state& );
 
-		void stop_draw();
+		void stop_raster();
 
 	private:
 		config _cfg;
@@ -173,22 +178,26 @@ namespace igpu
 		, public vulkan_job
 	{
 	public:
-		using draw_state_t = vulkan_batch_draw_state;
+		using raster_state_t = vulkan_batch_raster_state;
 
 		struct vulkan
 		{
 			VkDevice device = nullptr;
-			scoped_ptr< vulkan_draw_target > draw_target;
+			vulkan_context* context = nullptr;
 			size_t swap_count = 0;
+			scoped_ptr< vulkan_draw_target > draw_target;
 			scoped_ptr< vulkan_pipeline_cache > pipeline_cache;
 			std::shared_ptr< vulkan_primitives > primitives;
 		};
 
 		const vulkan& vk() const;
 
-		void start_draw( const vulkan_batch_draw_state& );
+		void start_raster( const vulkan_batch_raster_state& );
 
-		void stop_draw();
+		void stop_raster();
+
+		void rebind_draw_target(
+			const scoped_ptr< vulkan_draw_target >& draw_target );
 
 		std::unique_ptr< vulkan_batch_binding > make_binding(
 			const instance_batch::config& );
@@ -205,7 +214,7 @@ namespace igpu
 		const vulkan_job::state& job_state() const override;
 
 	private:
-		const vulkan _vk;
+		vulkan _vk;
 		vulkan_job::state _job_state;
 	};
 

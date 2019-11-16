@@ -14,6 +14,8 @@
 
 namespace igpu
 {
+	class vulkan_synchronization;
+
 	class vulkan_buffer
 		: public buffer
 		, public vulkan_resource
@@ -25,7 +27,7 @@ namespace igpu
 			{
 				VkDevice device = nullptr;
 				const VkPhysicalDeviceProperties* device_properties;
-				VmaAllocator vma = nullptr;
+				scoped_ptr< vulkan_synchronization > synchronization;
 				VmaMemoryUsage vma_usage;
 				VkBufferUsageFlagBits usage;
 				VmaAllocationCreateFlagBits vma_flags = {};
@@ -46,9 +48,7 @@ namespace igpu
 
 		void unmap() override;
 
-		void reserve( size_t byte_capacity );
-
-		void release();
+		void transfer_from( vulkan_buffer& );
 
 		const buffer_view< char >& mapped_view() const;
 
@@ -74,8 +74,14 @@ namespace igpu
 		~vulkan_buffer();
 
 	private:
+		void ensure( size_t byte_size );
+
+		void abandon();
+
+	private:
 		const config _cfg;
 
+		size_t _memory_size = 0;
 		buffer_view< char > _mapped_view = {};
 		VkBuffer _buffer = nullptr;
 		VmaAllocation _vma_allocation = nullptr;

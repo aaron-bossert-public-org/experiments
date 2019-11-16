@@ -11,11 +11,6 @@ namespace igpu
 	class primitives;
 	class instance_batch;
 
-	struct batch_draw_state
-	{
-		utility::frustum frustum;
-	};
-
 	template < typename ITEM_T, typename CHILD_T >
 	class batch_api_t
 	{

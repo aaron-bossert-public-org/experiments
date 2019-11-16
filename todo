@@ -17,27 +17,22 @@ add new examples
 remove raw vulkan type accessors (vulkan_context->device etc...)
 migrate example to use purely atmos
 
+
 implement composite context for profiling, constructs profiler_texture2d which owns vulkan_texture and forward all calls to wrapping them with callstack timers
 
 implement implicit readback. when mapping a buffer, check to see if there are pending write jobs from the gpu side. sync and copy to cpuside if so. if buffer is peresistent it needs to wait for the last copy to complete.
 
+add support for compute shaders
+
+implement abandoning for write combined buffers, remove device wait idle, wait queues etc. when uploading write combined, abandon previous gpu buffer and clear resource job state.
+
 implement deferred upload. when uploading data to gpu, wait until resource to be used by a readable job before uploading. combined with implicit read back this should allow for gpu write only buffers to be synchronized properly using just storage buffer decorators in shader and memory_type on cpu side.
 
-implement abandoning for write combined buffers
+implement build mipmaps as vulkan job
 
-resizing windows should wait for all queues to complete, rebuild all graphics pipelines using visit, then rebuild all batches also using visit.
+draw target owns command buffer pool, a command buffer for each swap index, and a fence for each command buffer. this is used to prevent over running the swap count and to prevent having to dynamically create command buffers each frame (reset after waiting on the fence)
 
-use cached primary command buffer for each geometry batch , record desriptorsets and instances each frame into secondary command buffer
-gm
-
-migrate pipeline code to batching system
-build graphics pipeline cache
-vulkan context builds graphics piplines
-vulkan contexts iterates live pipelines for pipline cache to rebuild them on framebuffer resize
-vulkan batch nodes selects the proper vk pipeline based on draw target size
-drawing batches takes a screen rect as input, use this to decide weather or not to use the full screen vk pipeline
-graphics pipeline tightly bound to draw target via batches. each draw target with the same objects drawn to it needs to have a separate batch
-do back buffer resizing in place, batches need to automatically respond to changes in their draw targets, possibly by caching viewport and render pass pointer and comparing in pre render. it might be beneficial to stop the world and iterate all the graphics pipellines when draw targets are resized...
+implement queue ownership transfers inside barriermanager, using n*n*2 premade semaphores
 
 //////////////////////////////////////
 (CURRENT PROGRESS POINT)
@@ -45,7 +40,14 @@ do back buffer resizing in place, batches need to automatically respond to chang
 
 
 
+migrate pipeline code to batching system
+vulkan context builds graphics piplines
+build graphics pipeline cache
+vulkan batch nodes selects the proper vk pipeline based on draw target size
 vulkan context implements make shared for all object types, and does not memoize those that do not need it, but does allow iterating over live instances of each type of object
+assert vertex parameters count is not too large in its constructor, or program if it is allocated in place within program::make 
+implement draw target resizing as draw target rebinding on batches
+graphics pipeline tightly bound to a draw target via batches using scoped pointer. this binding can be changed at runtime, but batches must point to a valid draw target. batches cannot be allowed to extend the lifetime of the draw target they reference
 
 think about removing vulkan_pipeine_cache, maybe unnecessary. just memoize renderstates and primitives instead
 finish error proofing job dependencies

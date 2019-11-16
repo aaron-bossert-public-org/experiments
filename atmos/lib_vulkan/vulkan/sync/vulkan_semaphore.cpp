@@ -3,7 +3,7 @@
 
 using namespace igpu;
 
-VkSemaphore vulkan_semaphore::get() const
+VkSemaphore vulkan_semaphore::vk_semaphore() const
 {
 	return _semaphore;
 }

@@ -24,7 +24,8 @@ namespace igpu
 
 		~vulkan_transparent_batch() override;
 
-		void render( const utility::frustum& frustum ) override;
+		void raster( const scoped_ptr< draw_target >&, const raster_state& )
+			override;
 
 		std::unique_ptr< batch_binding > make_binding(
 			const instance_batch::config& ) override;

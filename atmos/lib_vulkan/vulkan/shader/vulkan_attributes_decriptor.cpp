@@ -30,7 +30,7 @@ void vulkan_attributes_decriptor::reset( const attribute_indexer& indexer )
 		attribute_description->binding = source.compact_buffer_index;
 		attribute_description->location = (uint32_t)param.cfg().location;
 		attribute_description->format = param.cfg().vk.format;
-		attribute_description->offset = attr_cfg.offset;
+		attribute_description->offset = (uint32_t)attr_cfg.offset;
 	}
 
 	for ( uint32_t i = 0; i < indexer.buffer_count(); ++i )

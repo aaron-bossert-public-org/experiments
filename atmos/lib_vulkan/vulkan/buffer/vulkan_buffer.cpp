@@ -1,8 +1,11 @@
 
 #include "vulkan/buffer/vulkan_buffer.h"
 
+#include "vulkan/context/vulkan_abandon_manager.h"
 #include "vulkan/shader/vulkan_parameter.h"
+#include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_queue.h"
+#include "vulkan/sync/vulkan_synchronization.h"
 
 using namespace igpu;
 
@@ -73,7 +76,7 @@ vulkan_buffer::~vulkan_buffer()
 {
 	vulkan_resource::wait_pending_jobs();
 
-	release();
+	abandon();
 }
 
 const vulkan_buffer::config& vulkan_buffer::cfg() const
@@ -95,7 +98,7 @@ void vulkan_buffer::map( buffer_view_base* out_buffer_view )
 	}
 	else
 	{
-		reserve( out_buffer_view->byte_size() );
+		ensure( out_buffer_view->byte_size() );
 
 		if ( !_buffer )
 		{
@@ -107,7 +110,10 @@ void vulkan_buffer::map( buffer_view_base* out_buffer_view )
 		else
 		{
 			void* mapped;
-			vmaMapMemory( _cfg.vk.vma, _vma_allocation, &mapped );
+			vmaMapMemory(
+				_cfg.vk.synchronization->vma(),
+				_vma_allocation,
+				&mapped );
 
 			_mapped_view =
 				buffer_view< char >( _mapped_view.size(), (char*)mapped );
@@ -127,7 +133,7 @@ void vulkan_buffer::unmap()
 	}
 	else
 	{
-		vmaUnmapMemory( _cfg.vk.vma, _vma_allocation );
+		vmaUnmapMemory( _cfg.vk.synchronization->vma(), _vma_allocation );
 		_mapped_view = buffer_view_base(
 			_mapped_view.size(),
 			nullptr,
@@ -135,68 +141,69 @@ void vulkan_buffer::unmap()
 	}
 }
 
-void vulkan_buffer::reserve( size_t byte_size )
+void vulkan_buffer::transfer_from( vulkan_buffer& other )
 {
-	if ( _mapped_view.data() )
+	if ( _cfg.memory == memory_type::WRITE_COMBINED )
 	{
-		LOG_CRITICAL( "cannot reserve while mapped" );
+		ASSERT_CONTEXT(
+			other.cfg().memory == memory_type::WRITE_COMBINED,
+			"currently transfer not implemented between non WRITE_COMBINED and "
+			"WRITE_COMBINED buffers" );
+
+		abandon();
+		ensure( other.mapped_view().byte_size() );
+
+		const auto& transfer_queue =
+			_cfg.vk.synchronization->cfg().transfer_queue;
+
+		transfer_queue->one_time_command(
+			[&]( vulkan_command_buffer& command_buffer ) {
+				VkBufferCopy region = {};
+				region.srcOffset = 0;
+				region.dstOffset = 0;
+				region.size = (uint32_t)other.mapped_view().byte_size();
+
+				vkCmdCopyBuffer(
+					command_buffer.vk_cmds(),
+					_buffer,
+					other._buffer,
+					1,
+					&region );
+			} );
+
+
+		other.abandon();
+
+		vulkan_job_scope initial_scope = {};
+
+		initial_scope.decorators = decorator::WRITABLE;
+		initial_scope.stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		initial_scope.access = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+		vulkan_resource::reinitialize(
+			transfer_queue,
+			initial_scope,
+			VK_IMAGE_LAYOUT_MAX_ENUM );
 	}
 	else
 	{
 		vulkan_resource::wait_pending_jobs();
 
-		if ( _mapped_view.size() < byte_size )
-		{
-			release();
-		}
+		LOG_CRITICAL( "%s not handled", to_string( _cfg.memory ).data() );
 
-		if ( !_buffer )
-		{
-			VmaAllocationCreateInfo vma_info = {};
-			vma_info.usage = _cfg.vk.vma_usage;
-			vma_info.flags = _cfg.vk.vma_flags;
+		const auto& transfer_queue =
+			_cfg.vk.synchronization->cfg().transfer_queue;
 
-			VkBufferCreateInfo info = {};
-			info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-			info.size = byte_size;
-			info.usage = _cfg.vk.usage;
-			info.sharingMode = _cfg.vk.sharing_mode;
+		vulkan_job_scope initial_scope = {};
+		initial_scope.decorators = decorator::WRITABLE;
+		initial_scope.stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		initial_scope.access = VK_ACCESS_TRANSFER_WRITE_BIT;
 
-			if ( byte_size >
-				 _cfg.vk.device_properties->limits.maxUniformBufferRange )
-			{
-				info.usage &=
-					~( VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |
-					   VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT );
-			}
-
-			vmaCreateBuffer(
-				_cfg.vk.vma,
-				&info,
-				&vma_info,
-				&_buffer,
-				&_vma_allocation,
-				nullptr );
-			_mapped_view = buffer_view< char >( byte_size, nullptr );
-
-			_mem_metric.add( byte_size );
-
-			vulkan_resource::on_reallocate_gpu_object();
-		}
+		vulkan_resource::reinitialize(
+			transfer_queue,
+			initial_scope,
+			VK_IMAGE_LAYOUT_MAX_ENUM );
 	}
-}
-
-void vulkan_buffer::release()
-{
-	if ( _buffer )
-	{
-		vmaDestroyBuffer( _cfg.vk.vma, _buffer, _vma_allocation );
-	}
-
-	_mem_metric.reset();
-	_buffer = nullptr;
-	_vma_allocation = nullptr;
-	_mapped_view = buffer_view< char >( 0, nullptr );
 }
 
 const buffer_view< char >& vulkan_buffer::mapped_view() const
@@ -266,4 +273,69 @@ void vulkan_buffer::push_barrier(
 		src_scope.stages,
 		dst_scope.stages,
 		barrier );
+}
+
+void vulkan_buffer::ensure( size_t byte_size )
+{
+	if ( _cfg.memory == memory_type::WRITE_COMBINED )
+	{
+		if ( _memory_size < byte_size )
+		{
+			abandon();
+		}
+
+		if ( !_buffer )
+		{
+			VmaAllocationCreateInfo vma_info = {};
+			vma_info.usage = _cfg.vk.vma_usage;
+			vma_info.flags = _cfg.vk.vma_flags;
+
+			VkBufferCreateInfo info = {};
+			info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+			info.size = byte_size;
+			info.usage = _cfg.vk.usage;
+			info.sharingMode = _cfg.vk.sharing_mode;
+
+			if ( byte_size >
+				 _cfg.vk.device_properties->limits.maxUniformBufferRange )
+			{
+				info.usage &=
+					~( VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |
+					   VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT );
+			}
+
+			vmaCreateBuffer(
+				_cfg.vk.synchronization->vma(),
+				&info,
+				&vma_info,
+				&_buffer,
+				&_vma_allocation,
+				nullptr );
+
+			_mem_metric.add( byte_size );
+		}
+	}
+	else
+	{
+		LOG_CRITICAL( "%s not handled", to_string( _cfg.memory ).data() );
+		// handle memory_type::PRESERVED with  _gpu_buffer.write_count() !=
+		// _last_write_count ) to know if we need to do gpu read back in
+		// order to ensure the contents of our buffer
+	}
+}
+
+void vulkan_buffer::abandon()
+{
+	if ( _buffer )
+	{
+		_cfg.vk.synchronization->abandon_manager().abandon(
+			_buffer,
+			_vma_allocation );
+	}
+
+	_mem_metric.reset();
+	_memory_size = 0;
+	_buffer = nullptr;
+	_vma_allocation = nullptr;
+	_mapped_view = buffer_view< char >( 0, nullptr );
 }

@@ -8,6 +8,7 @@
 
 namespace igpu
 {
+	class vulkan_barrier_manager;
 	class vulkan_synchronization;
 	class vulkan_queue;
 
@@ -20,6 +21,7 @@ namespace igpu
 			const VkPhysicalDeviceProperties* device_properties = nullptr;
 			VkBufferUsageFlagBits vk_usage_flags = (VkBufferUsageFlagBits)0;
 			scoped_ptr< vulkan_synchronization > synchronization;
+			scoped_ptr< vulkan_barrier_manager > barrier_manager;
 			memory_type memory;
 		};
 
@@ -41,6 +43,7 @@ namespace igpu
 
 	private:
 		const config _cfg;
+		size_t _last_write_count = 0;
 		size_t _byte_size = 0;
 		vulkan_buffer _staging_buffer;
 		vulkan_buffer _gpu_buffer;

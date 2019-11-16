@@ -3,7 +3,11 @@
 
 #include "vulkan/defines/vulkan_includes.h"
 
+#include "framework/utility/scoped_ptr.h"
+
+#include <functional>
 #include <list>
+
 namespace igpu
 {
 	class vulkan_command_buffer;
@@ -19,19 +23,26 @@ namespace igpu
 			uint32_t index = ~0U;
 		};
 
+		using command_builder_t =
+			std::function< void( vulkan_command_buffer& ) >;
+
 		static std::unique_ptr< vulkan_queue > make( const config& );
 
 		const config& cfg() const;
 
-		VkQueue get();
+		void one_time_command( const command_builder_t& );
 
-		VkCommandPool command_pool();
+		void one_time_command(
+			uint32_t wait_count,
+			const VkSemaphore* p_wait_semaphores,
+			const VkPipelineStageFlags* p_wait_stages,
+			const command_builder_t&,
+			uint32_t signal_count,
+			const VkSemaphore* p_signal_semaphores );
 
-		std::list< vulkan_command_buffer >& pending_commands();
+		VkQueue vk_queue() const;
 
 		void free_completed_commands();
-
-		ptrdiff_t get_increment_submit_index();
 
 		~vulkan_queue();
 
@@ -42,9 +53,9 @@ namespace igpu
 			VkCommandPool command_pool );
 
 	private:
-		VkQueue _queue = nullptr;
+		VkQueue _vk_queue = nullptr;
 		VkCommandPool _command_pool = nullptr;
-		std::list< vulkan_command_buffer > _pending_commands;
+		std::list< std::shared_ptr< vulkan_command_buffer > > _pending_commands;
 		ptrdiff_t _submit_index = 0;
 
 		const config _cfg;

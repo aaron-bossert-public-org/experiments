@@ -12,6 +12,9 @@ class scoped_ptr : private std::weak_ptr< T >
 {
 	using weak_t = std::weak_ptr< T >;
 
+	template < typename U >
+	friend class scoped_ptr;
+
 public:
 	constexpr scoped_ptr() noexcept {};
 
@@ -88,6 +91,12 @@ public:
 		reset();
 		_ptr = nullptr;
 		return *this;
+	}
+
+	template < class T2 >
+	scoped_ptr< T2 > dynamic_ptr_cast() const noexcept
+	{
+		return std::dynamic_pointer_cast< T2, T >( lock() );
 	}
 
 	explicit operator bool() const noexcept
@@ -214,3 +223,15 @@ public:
 private:
 	void* _ptr = nullptr;
 };
+
+namespace std
+{
+	template < typename T >
+	struct hash< scoped_ptr< T > >
+	{
+		size_t operator()( const scoped_ptr< T >& scoped ) const
+		{
+			return std::hash< T* >()( scoped.get() );
+		}
+	};
+}

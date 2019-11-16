@@ -13,7 +13,7 @@ const vulkan_fence::config& vulkan_fence::cfg() const
 	return _cfg;
 }
 
-VkFence vulkan_fence::get() const
+VkFence vulkan_fence::vk_fence() const
 {
 	return _fence;
 }
@@ -52,7 +52,4 @@ vulkan_fence::vulkan_fence( const config& cfg )
 		vkCreateFence( cfg.device, &cfg.info, nullptr, &fence );
 		return fence;
 	}() )
-{
-	ASSERT_CONTEXT( cfg.queue );
-	ASSERT_CONTEXT( cfg.submit_index );
-}
+{}

@@ -6,6 +6,7 @@
 #include "igpu/shader/program.h"
 #include "igpu/shader/render_states.h"
 #include "igpu/shader/vertex_parameters.h"
+#include "igpu/texture/draw_target.h"
 
 #include "framework/utility/hash_utils.h"
 
@@ -13,17 +14,17 @@ using namespace igpu;
 
 graphics_pipeline::config graphics_pipeline::make_config(
 	const attribute_indexer& indexer,
-	const std::shared_ptr< draw_target >& draw_target,
-	const std::shared_ptr< program >& program,
-	const std::shared_ptr< render_states >& render_states )
+	const scoped_ptr< draw_target >& draw_target,
+	const scoped_ptr< program >& program,
+	const scoped_ptr< render_states >& render_states )
 {
-	graphics_pipeline::config cfg;
-	cfg.draw_target = draw_target;
-	cfg.program = program;
-	cfg.render_states = render_states;
-	cfg.topology = indexer.geometry()->cfg().topology;
-
-	cfg.compact_vertex_format.resize( indexer.buffer_count() );
+	graphics_pipeline::config cfg{
+		draw_target,
+		program,
+		render_states,
+		indexer.geometry()->cfg().topology,
+		std::vector< vertex_buffer::config >( indexer.buffer_count() ),
+	};
 
 	// build one vertex buffer config for each final buffer specified by the
 	// indexer. this can be a subset of the buffers in the geometry provided to
@@ -64,6 +65,7 @@ graphics_pipeline::config graphics_pipeline::make_config(
 size_t graphics_pipeline::config::hash( const config& cfg )
 {
 	size_t h = hash_utils::hash_combine(
+		cfg.draw_target,
 		cfg.program,
 		cfg.render_states,
 		(size_t)cfg.topology );
@@ -88,6 +90,11 @@ ptrdiff_t graphics_pipeline::config::compare(
 	const config& lhs,
 	const config& rhs )
 {
+	if ( lhs.draw_target != rhs.draw_target )
+	{
+		return lhs.draw_target.get() - rhs.draw_target.get();
+	}
+
 	if ( lhs.program != rhs.program )
 	{
 		return lhs.program.get() - rhs.program.get();

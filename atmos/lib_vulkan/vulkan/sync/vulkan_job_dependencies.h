@@ -10,9 +10,10 @@
 
 namespace igpu
 {
-	class vulkan_job;
-	class vulkan_dependency;
 	class vulkan_barrier_manager;
+	class vulkan_command_buffer;
+	class vulkan_dependency;
+	class vulkan_job;
 
 	class vulkan_job_dependencies
 	{
@@ -30,11 +31,11 @@ namespace igpu
 
 		bool validate_barriers() const;
 
-		void wait_pending_job() const;
+		void wait_pending_job();
 
-		void record_cmds( VkCommandBuffer );
+		void record_cmds( const scoped_ptr< vulkan_command_buffer >& );
 
-		void gpu_object_reallocated( vulkan_dependency* );
+		void resource_reinitialized( vulkan_dependency* );
 
 		virtual ~vulkan_job_dependencies();
 
@@ -47,8 +48,9 @@ namespace igpu
 
 		virtual const state& job_dependency_state() const = 0;
 
-		virtual void on_record_cmds( VkCommandBuffer ) = 0;
+		virtual void on_record_cmds(
+			const scoped_ptr< vulkan_command_buffer >& ) = 0;
 
-		virtual void on_gpu_object_reallocated( vulkan_dependency* ) = 0;
+		virtual void on_resource_reinitialized( vulkan_dependency* ) = 0;
 	};
 }

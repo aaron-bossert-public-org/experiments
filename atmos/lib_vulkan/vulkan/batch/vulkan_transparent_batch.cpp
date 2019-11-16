@@ -14,7 +14,9 @@ const vulkan_transparent_batch::config& vulkan_transparent_batch::cfg() const
 vulkan_transparent_batch::~vulkan_transparent_batch()
 {}
 
-void vulkan_transparent_batch::render( const utility::frustum& )
+void vulkan_transparent_batch::raster(
+	const scoped_ptr< draw_target >&,
+	const raster_state& )
 {
 	LOG_CRITICAL( "not implemented" );
 	// batch_utility::render_transparent(*_root_batch, frustum);

@@ -2,419 +2,14 @@
 #include "vulkan/sync/vulkan_synchronization.h"
 
 #include "vulkan/buffer/vulkan_buffer.h"
+#include "vulkan/context/vulkan_abandon_manager.h"
 #include "vulkan/defines/vulkan_includes.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_fence.h"
 #include "vulkan/sync/vulkan_queue.h"
 #include "vulkan/texture/vulkan_image.h"
 
-
 using namespace igpu;
-
-namespace
-{
-	struct submit_context
-	{
-		VkSubmitInfo info;
-
-		operator const VkSubmitInfo*() const
-		{
-			return &info;
-		}
-		operator VkCommandBuffer() const
-		{
-			return *info.pCommandBuffers;
-		}
-	};
-
-	// allocate/build/execute/free a temporary command buffer before function
-	// exits
-	template < typename SubmissonBuilder, typename... Args >
-	void submit_sync( vulkan_queue& queue, SubmissonBuilder&& builder )
-	{
-		vulkan_command_buffer command_buffer( {
-			queue.cfg().device,
-			queue.command_pool(),
-			VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-		} );
-		VkCommandBuffer raw_command_buffer = command_buffer.get();
-
-
-		submit_context submit_context = {};
-		submit_context.info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submit_context.info.commandBufferCount = 1;
-		submit_context.info.pCommandBuffers = &raw_command_buffer;
-
-		VkCommandBufferBeginInfo begin_info = {};
-		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-		vkBeginCommandBuffer( raw_command_buffer, &begin_info );
-		builder( raw_command_buffer );
-		vkEndCommandBuffer( raw_command_buffer );
-
-		vkQueueSubmit( queue.get(), 1, &submit_context.info, VK_NULL_HANDLE );
-		vkQueueWaitIdle( queue.get() );
-	}
-
-	// allocate/build/submit command buffer to be executed asynnchronously
-	template < typename SubmissonBuilder >
-	scoped_ptr< vulkan_fence > submit(
-		vulkan_queue& queue,
-		SubmissonBuilder&& builder )
-	{
-		queue.free_completed_commands();
-
-		vulkan_command_buffer::config cfg = {
-			queue.cfg().device,
-			queue.command_pool(),
-			VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-		};
-
-		queue.pending_commands().emplace_back(
-			cfg,
-			vulkan_fence::make( {
-				queue.cfg().device,
-				queue.get(),
-				queue.get_increment_submit_index(),
-			} ) );
-		vulkan_command_buffer& command_buffer = queue.pending_commands().back();
-		VkCommandBuffer raw_command_buffer = command_buffer.get();
-
-
-		submit_context submit_context = {};
-		submit_context.info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submit_context.info.commandBufferCount = 1;
-		submit_context.info.pCommandBuffers = &raw_command_buffer;
-
-		VkCommandBufferBeginInfo begin_info = {};
-		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-		vkBeginCommandBuffer( raw_command_buffer, &begin_info );
-		builder( raw_command_buffer );
-		vkEndCommandBuffer( raw_command_buffer );
-
-		vkQueueSubmit(
-			queue.get(),
-			1,
-			&submit_context.info,
-			command_buffer.fence()->get() );
-
-		return command_buffer.fence();
-	}
-
-	// allocate/build/execute/free a temporary command buffer before function
-	// exits ensure memory/execution dependencies are added for args
-	template < typename CommandBuilder, typename... Args >
-	void submit_sync(
-		const scoped_ptr< vulkan_queue >& queue,
-		CommandBuilder&& command_builder,
-		Args... args )
-	{
-		submit_sync( *queue, [&]( VkCommandBuffer command_buffer ) {
-			command_builder(
-				command_buffer,
-				add_dependency( command_buffer, queue, args )... );
-		} );
-	}
-
-	// allocate/build/submit command buffer to be executed asynnchronously
-	// ensure memory/execution dependencies are added for args
-	template < typename CommandBuilder, typename... Args >
-	scoped_ptr< vulkan_fence > submit(
-		const scoped_ptr< vulkan_queue >& queue,
-		CommandBuilder&& command_builder,
-		Args... args )
-	{
-		return submit( *queue, [&]( VkCommandBuffer command_buffer ) {
-			command_builder(
-				command_buffer,
-				add_dependency( command_buffer, queue, args )... );
-		} );
-	}
-
-	struct image_dependency
-	{
-		vulkan_image& image;
-		VkImageLayout layout;
-		VkAccessFlags access;
-		VkPipelineStageFlags stage;
-		VkDependencyFlags dependency;
-	};
-
-	image_dependency dependency(
-		vulkan_image& image,
-		VkImageLayout layout,
-		VkAccessFlags access,
-		VkPipelineStageFlags stage,
-		VkDependencyFlags dependency = (VkDependencyFlags)0 )
-	{
-		return {
-			image,
-			layout,
-			access,
-			stage,
-			dependency,
-		};
-	}
-
-	VkImage add_dependency(
-		VkCommandBuffer command_buffer,
-		const scoped_ptr< vulkan_queue >& queue,
-		const image_dependency& image_dependency )
-	{
-		vulkan_image& image = image_dependency.image;
-
-		const vulkan_image::ownership& current_owner = image.owner();
-		vulkan_image::ownership target_owner = {
-			image_dependency.layout,
-			image_dependency.access,
-			image_dependency.stage,
-			image_dependency.dependency,
-			queue,
-		};
-
-		// apparently this is slower than VkMemoryBarrier, need an api to handle
-		// these in bulk with VkMemoryBarrier.
-		VkImageMemoryBarrier barrier = {};
-		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-		barrier.srcAccessMask = (VkFlags)current_owner.access;
-		barrier.dstAccessMask = (VkFlags)target_owner.access;
-		barrier.oldLayout = current_owner.layout;
-		barrier.newLayout = target_owner.layout;
-		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.image = image.get();
-		barrier.subresourceRange = image.cfg().view_info.subresourceRange;
-
-		// cannot add dependency with null queue
-		if ( !target_owner.queue )
-		{
-			LOG_CRITICAL( "target owner queue is null" );
-		}
-		// just a layout transition to initialize image to the specified state,
-		// no dependency actually added via vkbarriers this branch
-		else if ( !current_owner.queue )
-		{
-			vkCmdPipelineBarrier(
-				command_buffer,
-				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-				target_owner.stage,
-				target_owner.dependency,
-				0,
-				nullptr,
-				0,
-				nullptr,
-				1,
-				&barrier );
-		}
-		// add dependency to some operation within the queue that has already
-		// aquired this buffer
-		else if ( current_owner.queue == target_owner.queue )
-		{
-			if ( target_owner.access != current_owner.access ||
-				 target_owner.stage != current_owner.stage )
-			{
-				vkCmdPipelineBarrier(
-					command_buffer,
-					current_owner.stage,
-					target_owner.stage,
-					target_owner.dependency,
-					0,
-					nullptr,
-					0,
-					nullptr,
-					1,
-					&barrier );
-			}
-		}
-
-		// release current queue's ownership of this buffer and aquire ownership
-		// on target_queue
-		else if ( current_owner.queue )
-		{
-			VkImageMemoryBarrier source_barrier = barrier;
-			source_barrier.dstAccessMask = 0;
-			source_barrier.srcQueueFamilyIndex =
-				current_owner.queue->cfg().family_index;
-			source_barrier.dstQueueFamilyIndex =
-				target_owner.queue->cfg().family_index;
-
-			VkImageMemoryBarrier dest_barrier = barrier;
-			dest_barrier.srcAccessMask = 0;
-			dest_barrier.srcQueueFamilyIndex =
-				current_owner.queue->cfg().family_index;
-			dest_barrier.dstQueueFamilyIndex =
-				target_owner.queue->cfg().family_index;
-
-			// Relese exclusive ownersip on _queue
-			submit_sync(
-				current_owner.queue,
-				[&]( VkCommandBuffer current_owner_command_buffer ) {
-					vkCmdPipelineBarrier(
-						current_owner_command_buffer,
-						current_owner.stage,
-						VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-						0,
-						0,
-						nullptr,
-						0,
-						nullptr,
-						1,
-						&source_barrier );
-				} );
-
-			// Aquire exclusive ownership on target_queue
-
-			vkCmdPipelineBarrier(
-				command_buffer,
-				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-				target_owner.stage,
-				target_owner.dependency,
-				0,
-				nullptr,
-				0,
-				nullptr,
-				1,
-				&dest_barrier );
-		}
-
-		image.owner( target_owner );
-
-		return image.get();
-	}
-
-	struct buffer_dependency
-	{
-		vulkan_buffer& buffer;
-		VkAccessFlags access;
-		VkPipelineStageFlags stage;
-		VkDependencyFlags dependency;
-	};
-
-	buffer_dependency dependency(
-		vulkan_buffer& buffer,
-		VkAccessFlags access,
-		VkPipelineStageFlags stage,
-		VkDependencyFlags dependency = (VkDependencyFlagBits)0 )
-	{
-		return {
-			buffer,
-			access,
-			stage,
-			dependency,
-		};
-	};
-
-	VkBuffer add_dependency(
-		VkCommandBuffer command_buffer,
-		const scoped_ptr< vulkan_queue >& queue,
-		const buffer_dependency& buffer_dependency )
-	{
-		vulkan_buffer& buffer = buffer_dependency.buffer;
-		const vulkan_buffer::ownership& current_owner = buffer.owner();
-		vulkan_buffer::ownership target_owner = {
-			buffer_dependency.access,
-			buffer_dependency.stage,
-			buffer_dependency.dependency,
-			queue,
-		};
-
-		// apparently this is slower than VkMemoryBarrier, need an api to handle
-		// these in bulk with VkMemoryBarrier.
-		VkBufferMemoryBarrier barrier = {};
-		barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-		barrier.pNext = nullptr;
-		barrier.srcAccessMask = (VkFlags)current_owner.access;
-		barrier.dstAccessMask = (VkFlags)target_owner.access;
-		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.buffer = buffer.get();
-		barrier.offset = 0;
-		barrier.size = buffer.mapped_view().byte_size();
-
-		// cannot add dependency with null queue
-		if ( !target_owner.queue )
-		{
-			LOG_CRITICAL( "target owner queue is null" );
-		}
-		// add dependency to some operation within the queue that has already
-		// aquired this buffer
-		else if ( current_owner.queue == target_owner.queue )
-		{
-			if ( target_owner.access != current_owner.access ||
-				 target_owner.stage != current_owner.stage )
-			{
-				vkCmdPipelineBarrier(
-					command_buffer,
-					current_owner.stage,
-					target_owner.stage,
-					target_owner.dependency,
-					0,
-					nullptr,
-					1,
-					&barrier,
-					0,
-					nullptr );
-			}
-		}
-
-		// release current queue's ownership of this buffer and aquire ownership
-		// on target_queue
-		else if ( current_owner.queue )
-		{
-			VkBufferMemoryBarrier source_barrier = barrier;
-			source_barrier.dstAccessMask = 0;
-			source_barrier.srcQueueFamilyIndex =
-				current_owner.queue->cfg().family_index;
-			source_barrier.dstQueueFamilyIndex =
-				target_owner.queue->cfg().family_index;
-
-			VkBufferMemoryBarrier dest_barrier = barrier;
-			dest_barrier.srcAccessMask = 0;
-			dest_barrier.srcQueueFamilyIndex =
-				current_owner.queue->cfg().family_index;
-			dest_barrier.dstQueueFamilyIndex =
-				target_owner.queue->cfg().family_index;
-
-			// Relese exclusive ownersip on _queue
-			submit_sync(
-				current_owner.queue,
-				[&]( VkCommandBuffer current_owner_command_buffer ) {
-					vkCmdPipelineBarrier(
-						current_owner_command_buffer,
-						current_owner.stage,
-						VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-						0,
-						0,
-						nullptr,
-						1,
-						&source_barrier,
-						0,
-						nullptr );
-				} );
-
-			// Aquire exclusive ownership on target_queue
-
-			vkCmdPipelineBarrier(
-				command_buffer,
-				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-				target_owner.stage,
-				target_owner.dependency,
-				0,
-				nullptr,
-				1,
-				&dest_barrier,
-				0,
-				nullptr );
-		}
-
-		buffer.owner( target_owner );
-
-		return buffer.get();
-	}
-}
 
 const vulkan_synchronization::config& vulkan_synchronization::cfg() const
 {
@@ -422,7 +17,7 @@ const vulkan_synchronization::config& vulkan_synchronization::cfg() const
 }
 
 size_t vulkan_synchronization::compact_queue_family_index(
-	uint32_t queue_family_index )
+	uint32_t queue_family_index ) const
 {
 	return _compact_queue_family_indices[queue_family_index];
 }
@@ -438,38 +33,15 @@ VmaAllocator vulkan_synchronization::vma()
 	return _vma;
 }
 
-void vulkan_synchronization::copy(
-	vulkan_buffer& src,
-	vulkan_buffer& dst,
-	uint32_t size,
-	uint32_t src_offset,
-	uint32_t dst_offset )
+void vulkan_synchronization::end_frame()
 {
-	submit_sync(
-		_cfg.transfer_queue,
-		[&]( VkCommandBuffer command_buffer,
-			 VkBuffer src_buffer,
-			 VkBuffer dst_buffer ) {
-			VkBufferCopy region = {};
-			region.srcOffset = src_offset;
-			region.dstOffset = dst_offset;
-			region.size = size;
+	_abandon_frame = ( _abandon_frame + 1 ) % _abandon_managers.size();
+	_abandon_managers[_abaondon_frame]->destroy_abandoned();
+}
 
-			vkCmdCopyBuffer(
-				command_buffer,
-				src_buffer,
-				dst_buffer,
-				1,
-				&region );
-		},
-		dependency(
-			src,
-			VK_ACCESS_TRANSFER_READ_BIT,
-			VK_PIPELINE_STAGE_TRANSFER_BIT ),
-		dependency(
-			dst,
-			VK_ACCESS_TRANSFER_WRITE_BIT,
-			VK_PIPELINE_STAGE_TRANSFER_BIT ) );
+vulkan_abandon_manager& abandon_manager() const
+{
+	return *_abandon_managers[_abaondon_frame];
 }
 
 void vulkan_synchronization::copy(
@@ -723,7 +295,15 @@ vulkan_synchronization::vulkan_synchronization(
 	, _queue_family_count( queue_family_count )
 	, _compact_queue_family_indices( compact_queue_family_indices )
 	, _compact_queues( compact_queues )
-{}
+{
+	while ( _abandon_managers.size() < _cfg.swap_count )
+	{
+		_abandon_managers.push_back( vulkan_abandon_manager::make( {
+			_cfg.device,
+			_vma,
+		} ) );
+	}
+}
 
 #include "vulkan/context/vulkan_context.h"
 #include "vulkan/defines/vulkan_includes.h"
@@ -1523,6 +1103,8 @@ public:
 
 	void cleanup()
 	{
+		vkDeviceWaitIdle( _device );
+
 		on_cleanup_swap_chain();
 
 		texture_impl.destroy();
@@ -1556,8 +1138,6 @@ public:
 private:
 	void on_cleanup_swap_chain()
 	{
-		vkDeviceWaitIdle( _device );
-
 		vkDestroyPipeline( _device, _graphics_pipeline, nullptr );
 		vkFreeCommandBuffers(
 			_device,
@@ -1577,8 +1157,9 @@ private:
 			std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
 		}
 
-		on_cleanup_swap_chain();
 		_context->resize_back_buffer( window_res );
+
+		on_cleanup_swap_chain();
 		create_graphics_pipeline();
 		create_command_buffers();
 	}

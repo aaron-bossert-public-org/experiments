@@ -22,7 +22,7 @@ namespace igpu
 		{
 			friend class vulkan_job;
 
-			std::shared_ptr< vulkan_fence > fence;
+			scoped_ptr< vulkan_fence > fence;
 			std::vector< vulkan_job_dependencies* > recorded_dependencies;
 		};
 
@@ -34,10 +34,10 @@ namespace igpu
 			const scoped_ptr< vulkan_queue >&,
 			vulkan_barrier_manager* );
 
-		void wait_on_fence() const;
+		void wait_on_fence();
 
 	protected:
-		void fence( const std::shared_ptr< vulkan_fence >& );
+		void fence( const scoped_ptr< vulkan_fence >& );
 
 		virtual state& job_state() = 0;
 

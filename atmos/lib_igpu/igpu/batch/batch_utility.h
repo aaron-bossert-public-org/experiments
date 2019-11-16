@@ -22,8 +22,8 @@ namespace igpu
 			return map.find( key );
 		}
 
-		template < typename ROOT_BATCH, typename DRAW_STATE >
-		void render_opaque( ROOT_BATCH& root_batch, DRAW_STATE& draw_state )
+		template < typename ROOT_BATCH, typename RASTER_STATE >
+		void raster_opaque( ROOT_BATCH& root_batch, RASTER_STATE& raster_state )
 		{
 			for ( auto& program_batch : root_batch )
 			{
@@ -31,7 +31,8 @@ namespace igpu
 				{
 					for ( auto& geometry_batch : states_batch )
 					{
-						if ( false == geometry_batch.pre_draw( &draw_state ) )
+						if ( false ==
+							 geometry_batch.pre_raster( &raster_state ) )
 						{
 							continue;
 						}
@@ -40,79 +41,82 @@ namespace igpu
 						{
 							for ( auto& instance_batch : material_batch )
 							{
-								if ( !instance_batch.can_render( &draw_state ) )
+								if ( !instance_batch.can_raster(
+										 &raster_state ) )
 								{
 									continue;
 								}
 
-								// only call batch.start_draw if we have
-								// instances to render
-								if ( !draw_state.batches.material )
+								// only call batch.start_raster if we have
+								// instances to raster
+								if ( !raster_state.batches.material )
 								{
-									if ( !draw_state.batches.geometry )
+									if ( !raster_state.batches.geometry )
 									{
-										if ( !draw_state.batches.states )
+										if ( !raster_state.batches.states )
 										{
-											if ( !draw_state.batches.program )
+											if ( !raster_state.batches.program )
 											{
-												if ( !draw_state.batches.root )
+												if ( !raster_state.batches
+														  .root )
 												{
-													root_batch.start_draw(
-														draw_state );
-													draw_state.batches.root =
+													root_batch.start_raster(
+														raster_state );
+													raster_state.batches.root =
 														&root_batch;
 												}
-												program_batch.start_draw(
-													draw_state );
-												draw_state.batches.program =
+												program_batch.start_raster(
+													raster_state );
+												raster_state.batches.program =
 													&program_batch;
 											}
-											states_batch.start_draw(
-												draw_state );
-											draw_state.batches.states =
+											states_batch.start_raster(
+												raster_state );
+											raster_state.batches.states =
 												&states_batch;
 										}
-										geometry_batch.start_draw( draw_state );
-										draw_state.batches.geometry =
+										geometry_batch.start_raster(
+											raster_state );
+										raster_state.batches.geometry =
 											&geometry_batch;
 									}
-									material_batch.start_draw( draw_state );
-									draw_state.batches.material =
+									material_batch.start_raster( raster_state );
+									raster_state.batches.material =
 										&material_batch;
 								}
 
-								draw_state.batches.instance = &instance_batch;
-								instance_batch.draw( draw_state );
-								draw_state.batches.instance = nullptr;
+								raster_state.batches.instance = &instance_batch;
+								instance_batch.rasterize( raster_state );
+								raster_state.batches.instance = nullptr;
 							}
-							if ( draw_state.batches.material )
+							if ( raster_state.batches.material )
 							{
-								draw_state.batches.material = nullptr;
-								material_batch.stop_draw();
+								raster_state.batches.material = nullptr;
+								material_batch.stop_raster();
 							}
 						}
-						if ( draw_state.batches.geometry )
+						if ( raster_state.batches.geometry )
 						{
-							draw_state.batches.geometry = nullptr;
-							geometry_batch.stop_draw();
+							raster_state.batches.geometry = nullptr;
+							geometry_batch.stop_raster();
 						}
 					}
-					if ( draw_state.batches.states )
+					if ( raster_state.batches.states )
 					{
-						draw_state.batches.states = nullptr;
-						states_batch.stop_draw();
+						raster_state.batches.states = nullptr;
+						states_batch.stop_raster();
 					}
 				}
-				if ( draw_state.batches.program )
+				if ( raster_state.batches.program )
 				{
-					draw_state.batches.program = nullptr;
-					program_batch.stop_draw();
+					raster_state.batches.program = nullptr;
+					program_batch.stop_raster();
 				}
 			}
-			if ( draw_state.batches.root )
+			if ( raster_state.batches.root )
 			{
-				draw_state.batches.root = nullptr;
-				root_batch.stop_draw();
+				raster_state.batches.root = nullptr;
+				root_batch.stop_raster();
 			}
 		}
 

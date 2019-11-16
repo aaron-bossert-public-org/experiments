@@ -20,7 +20,7 @@ namespace igpu
 			VkCommandBufferLevel level;
 		};
 
-		VkCommandBuffer get();
+		VkCommandBuffer vk_cmds() const;
 
 		scoped_ptr< vulkan_fence > fence() const;
 

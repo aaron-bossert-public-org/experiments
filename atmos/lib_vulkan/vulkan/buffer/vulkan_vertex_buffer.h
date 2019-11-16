@@ -11,6 +11,7 @@ namespace igpu
 {
 	class vulkan_buffer;
 	class vulkan_synchronization;
+	class vulkan_barrier_manager;
 
 	class vulkan_vertex_buffer : public vertex_buffer
 	{
@@ -36,7 +37,8 @@ namespace igpu
 
 		static std::unique_ptr< vulkan_vertex_buffer > make(
 			const config&,
-			const scoped_ptr< vulkan_synchronization >& );
+			const scoped_ptr< vulkan_synchronization >&,
+			const scoped_ptr< vulkan_barrier_manager >& );
 
 	protected:
 		vulkan_vertex_buffer( const config& );

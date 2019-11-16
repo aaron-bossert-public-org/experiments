@@ -1,18 +1,89 @@
 
 #include "vulkan/shader/vulkan_graphics_pipeline.h"
 
+#include "vulkan/shader/vulkan_fragment_shader.h"
+#include "vulkan/shader/vulkan_pipeline_cache.h"
 #include "vulkan/shader/vulkan_program.h"
 #include "vulkan/shader/vulkan_render_states.h"
+#include "vulkan/shader/vulkan_vertex_shader.h"
+#include "vulkan/texture/vulkan_draw_target.h"
 
 using namespace igpu;
 
 namespace
 {
-	bool build_pipelines(
-		const vulkan_graphics_pipeline::config& cfg,
-		const glm::ivec2& screen_res,
-		VkPipeline* p_fullscreen,
-		VkPipeline* p_partscreen )
+	struct vertex_assembly
+	{
+		std::array<
+			VkVertexInputBindingDescription,
+			vertex_parameters::MAX_COUNT >
+			binding_descriptions;
+
+		std::array<
+			VkVertexInputAttributeDescription,
+			vertex_parameters::MAX_COUNT >
+			attribute_descriptions;
+
+		VkPipelineVertexInputStateCreateInfo vertex_input_info;
+		VkPipelineInputAssemblyStateCreateInfo input_assembly;
+	};
+
+	void build_vertex_assembly(
+		const vulkan_vertex_parameters& parameters,
+		const std::vector< vertex_buffer::config >& compact_vertex_format,
+		vertex_assembly* out_assembly )
+	{
+		out_assembly->vertex_input_info.vertexAttributeDescriptionCount = 0;
+		out_assembly->vertex_input_info.pVertexAttributeDescriptions =
+			out_assembly->attribute_descriptions.data();
+
+		out_assembly->vertex_input_info.vertexBindingDescriptionCount =
+			(uint32_t)compact_vertex_format.size();
+		out_assembly->vertex_input_info.pVertexBindingDescriptions =
+			out_assembly->binding_descriptions.data();
+
+		uint32_t* p_attrib_index =
+			&out_assembly->vertex_input_info.vertexAttributeDescriptionCount;
+
+		for ( size_t binding = 0; binding < compact_vertex_format.size();
+			  ++binding )
+		{
+			const vertex_buffer::config& buff_cfg =
+				compact_vertex_format[binding];
+
+			out_assembly->binding_descriptions[binding] = {
+				(uint32_t)binding,
+				buff_cfg.stride,
+				VK_VERTEX_INPUT_RATE_VERTEX,
+			};
+
+			for ( size_t a = 0; a < buff_cfg.attributes.size();
+				  ++a, ++*p_attrib_index )
+			{
+				const vulkan_vertex_parameter& parameter =
+					parameters.parameter( *p_attrib_index );
+
+				const vertex_buffer::attribute& attribute =
+					buff_cfg.attributes[a];
+
+				out_assembly->attribute_descriptions[*p_attrib_index] = {
+					(uint32_t)parameter.cfg().location,
+					(uint32_t)binding,
+					parameter.cfg().vk.format,
+					(uint32_t)attribute.offset,
+				};
+			}
+		}
+
+		ASSERT_CONTEXT(
+			parameters.count() ==
+				out_assembly->vertex_input_info.vertexAttributeDescriptionCount,
+			"incorrect number of parameters(%d), program expects(%d)",
+			out_assembly->vertex_input_info.vertexAttributeDescriptionCount,
+			(int)parameters.count() );
+	}
+
+	VkPipeline build_pipeline( const vulkan_graphics_pipeline::config& cfg )
 	{
 		if ( cfg.topology == topology::UNDEFINED )
 		{
@@ -38,29 +109,27 @@ namespace
 		{
 			LOG_CRITICAL( "render_states is null" );
 		}
-		else if ( !screen_res.x )
+		else if ( !cfg.vk.draw_target )
 		{
-			LOG_CRITICAL( "screen_res.x is zero" );
-		}
-		else if ( !screen_res.y )
-		{
-			LOG_CRITICAL( "screen_res.y is zero" );
+			LOG_CRITICAL( "draw_target is null" );
 		}
 		else
 		{
+			auto res = cfg.draw_target->res();
+
 			VkViewport viewport = {};
 			viewport.x = 0.0f;
 			viewport.y = 0.0f;
-			viewport.width = (float)screen_res.x;
-			viewport.height = (float)screen_res.x;
+			viewport.width = (float)res.x;
+			viewport.height = (float)res.x;
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 
 			VkRect2D scissor = {};
 			scissor.offset = {};
 			scissor.extent = {
-				(uint32_t)screen_res.x,
-				(uint32_t)screen_res.y,
+				(uint32_t)res.x,
+				(uint32_t)res.y,
 			};
 
 			VkPipelineViewportStateCreateInfo viewport_state = {};
@@ -86,7 +155,8 @@ namespace
 			multisampling.sType =
 				VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 			multisampling.sampleShadingEnable = VK_FALSE;
-			multisampling.rasterizationSamples = cfg.vk.msaa_samples;
+			multisampling.rasterizationSamples =
+				cfg.vk.draw_target->cfg().vk.color->cfg().vk.sample_count;
 
 			VkPipelineColorBlendStateCreateInfo color_blending = {};
 			color_blending.sType =
@@ -106,6 +176,11 @@ namespace
 				cfg.vk.program->cfg().vk.fragment->stage_info(),
 			};
 
+			vertex_assembly assembly;
+			build_vertex_assembly(
+				cfg.vk.program->vertex_parameters(),
+				cfg.compact_vertex_format,
+				&assembly );
 
 			VkGraphicsPipelineCreateInfo pipeline_info = {
 				VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -113,34 +188,32 @@ namespace
 
 			pipeline_info.stageCount = (uint32_t)shader_stages.size();
 			pipeline_info.pStages = shader_stages.data();
-			pipeline_info.pVertexInputState =
-				&attributes_descriptor.vertex_input_info();
-			pipeline_info.pInputAssemblyState =
-				&attributes_descriptor.input_assembly();
+			pipeline_info.pVertexInputState = &assembly.vertex_input_info;
+			pipeline_info.pInputAssemblyState = &assembly.input_assembly;
 			pipeline_info.pViewportState = &viewport_state;
 			pipeline_info.pRasterizationState = &rasterizer;
 			pipeline_info.pMultisampleState = &multisampling;
 			pipeline_info.pDepthStencilState =
-				render_states_impl.depth_stencil();
+				&cfg.vk.render_states->cfg().vk.depth_stencil;
 			pipeline_info.pColorBlendState = &color_blending;
-			pipeline_info.layout = program_impl.pipeline_layout;
-			pipeline_info.renderPass = _context->back_buffer().render_pass();
-			;
-			pipeline_info.subpass = 0;
+			pipeline_info.layout = cfg.vk.program->pipeline_layout();
+			pipeline_info.renderPass = cfg.vk.draw_target->render_pass();
+			pipeline_info.subpass =
+				(uint32_t)cfg.vk.draw_target->raster_sub_pass();
 			pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
 
+			VkPipeline pipeline = nullptr;
 			vkCreateGraphicsPipelines(
-				_device,
-				VK_NULL_HANDLE,
+				cfg.vk.device,
+				cfg.vk.pipeline_cache->vk_pipeline_cache(),
 				1,
 				&pipeline_info,
 				nullptr,
-				&_graphics_pipeline );
-
-			return true;
+				&pipeline );
+			return nullptr;
 		}
 
-		return false;
+		return nullptr;
 	}
 }
 const vulkan_graphics_pipeline::config& vulkan_graphics_pipeline::cfg() const
@@ -148,81 +221,43 @@ const vulkan_graphics_pipeline::config& vulkan_graphics_pipeline::cfg() const
 	return _cfg;
 }
 
-std::unique_ptr< vulkan_graphics_pipeline > vulkan_graphics_pipeline::make(
-	const config& cfg,
-	const glm::ivec2& screen_res )
+VkPipeline vulkan_graphics_pipeline::vk_pipeline() const
 {
-	VkPipeline full_screen_pipeline = nullptr;
-	VkPipeline part_screen_pipeline = nullptr;
-	if ( !build_pipelines(
-			 cfg,
-			 screen_res,
-			 &full_screen_pipeline,
-			 &part_screen_pipeline ) )
+	return _vk_pipeline;
+}
+
+void vulkan_graphics_pipeline::rebind_draw_target(
+	const scoped_ptr< vulkan_draw_target >& draw_target )
+{
+	if ( draw_target )
+	{
+		_cfg.draw_target = scoped_ptr< igpu::draw_target >( draw_target );
+		_cfg.vk.draw_target = draw_target;
+
+		vkDestroyPipeline( _cfg.vk.device, _vk_pipeline, nullptr );
+		_vk_pipeline = build_pipeline( _cfg );
+	}
+}
+
+std::unique_ptr< vulkan_graphics_pipeline > vulkan_graphics_pipeline::make(
+	const config& cfg )
+{
+	if ( VkPipeline pipeline = build_pipeline( cfg ) )
 	{
 		return std::unique_ptr< vulkan_graphics_pipeline >(
-			new vulkan_graphics_pipeline(
-				cfg,
-				screen_res,
-				full_screen_pipeline,
-				part_screen_pipeline ) );
+			new vulkan_graphics_pipeline( cfg, pipeline ) );
 	}
 	return nullptr;
 }
 
 vulkan_graphics_pipeline::~vulkan_graphics_pipeline()
-{}
+{
+	vkDestroyPipeline( _cfg.vk.device, _vk_pipeline, nullptr );
+}
 
 vulkan_graphics_pipeline::vulkan_graphics_pipeline(
 	const config& cfg,
-	const glm::ivec2& screen_res,
-	VkPipeline full_screen_pipeline,
-	VkPipeline part_screen_pipeline )
+	VkPipeline vk_pipeline )
 	: _cfg( cfg )
-	, _screen_res( screen_res )
-	, _full_screen_pipeline( full_screen_pipeline )
-	, _part_screen_pipeline( part_screen_pipeline )
+	, _vk_pipeline( vk_pipeline )
 {}
-
-
-#pragma once
-
-#include "vulkan/defines/vulkan_includes.h"
-
-#include "igpu/shader/graphics_pipeline.h"
-
-namespace igpu
-{
-	class vulkan_program;
-	class vulkan_render_states;
-
-	class vulkan_graphics_pipeline : public graphics_pipeline
-	{
-	public:
-		struct config : graphics_pipeline::config
-		{
-			struct vulkan
-			{
-				std::shared_ptr< vulkan_program > program;
-				std::shared_ptr< vulkan_render_states > render_states;
-			};
-
-			vulkan vk;
-		};
-
-		const config& cfg() const override;
-
-		VkPipeline vk_pipeline() const;
-
-		static std::unique_ptr< vulkan_graphics_pipeline > make(
-			const config& );
-
-		~vulkan_graphics_pipeline();
-
-	private:
-		vulkan_graphics_pipeline( const config& );
-
-	private:
-		const config _cfg;
-	};
-}

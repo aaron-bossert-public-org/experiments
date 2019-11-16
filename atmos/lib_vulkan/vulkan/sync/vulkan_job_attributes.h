@@ -38,9 +38,10 @@ namespace igpu
 
 		const state& job_dependency_state() const override;
 
-		void on_record_cmds( VkCommandBuffer ) override;
+		void on_record_cmds(
+			const scoped_ptr< vulkan_command_buffer >& ) override;
 
-		void on_gpu_object_reallocated( vulkan_dependency* ) override;
+		void on_resource_reinitialized( vulkan_dependency* ) override;
 
 	private:
 		const config _cfg;

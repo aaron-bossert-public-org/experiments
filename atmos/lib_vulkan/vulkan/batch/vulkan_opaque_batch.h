@@ -21,11 +21,12 @@ namespace igpu
 			vulkan_root_batch::vulkan vk;
 		};
 
-		const config& cfg() const override;
+		const opaque_batch::config& cfg() const override;
 
 		~vulkan_opaque_batch() override;
 
-		void render( const utility::frustum& frustum ) override;
+		void raster( const scoped_ptr< draw_target >&, const raster_state& )
+			override;
 
 		std::unique_ptr< batch_binding > make_binding(
 			const instance_batch::config& ) override;
@@ -34,11 +35,11 @@ namespace igpu
 
 	private:
 		vulkan_opaque_batch(
-			const config&,
+			const opaque_batch::config&,
 			std::unique_ptr< vulkan_root_batch > );
 
 	private:
-		const config _cfg;
+		opaque_batch::config _cfg;
 		std::unique_ptr< vulkan_root_batch > _root_batch;
 	};
 }
