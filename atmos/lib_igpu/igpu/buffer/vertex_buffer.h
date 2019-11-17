@@ -60,5 +60,4 @@ namespace igpu
 		__VA_ARGS__ )
 
 #define IGPU_VERT_CFG_OF_ATTRIB__ARGS_EXPAND( V, A ) \
-	{ { #A, to_components( ( *( (V*)0 ) ).A ) },     \
-	  ( ( size_t ) & ( ( (V*)0 )->A ) ) },
+	{ #A, to_components( ( *(V*)0 ).A ), ( ( size_t ) & ( ( (V*)0 )->A ) ) },

@@ -59,6 +59,7 @@ namespace igpu
 		const glm::ivec2& res,
 		VkFormat format,
 		VkImageUsageFlags usage,
+		VkImageTiling tiling,
 		VkSampleCountFlagBits samples,
 		VkSharingMode sharing_mode,
 		VkImageAspectFlags aspect_mask,
@@ -80,7 +81,7 @@ namespace igpu
 		image_info.mipLevels = (uint32_t)mipmap_count;
 		image_info.arrayLayers = 1;
 		image_info.format = format;
-		image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+		image_info.tiling = tiling;
 		image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		image_info.usage = usage;
 		image_info.samples = samples;

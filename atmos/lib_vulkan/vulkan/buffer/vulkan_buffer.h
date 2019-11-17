@@ -29,7 +29,7 @@ namespace igpu
 				const VkPhysicalDeviceProperties* device_properties;
 				scoped_ptr< vulkan_synchronization > synchronization;
 				VmaMemoryUsage vma_usage;
-				VkBufferUsageFlagBits usage;
+				VkBufferUsageFlags usage;
 				VmaAllocationCreateFlagBits vma_flags = {};
 				VkSharingMode sharing_mode = VK_SHARING_MODE_EXCLUSIVE;
 			};
@@ -40,6 +40,8 @@ namespace igpu
 
 		vulkan_buffer( const config& );
 
+		~vulkan_buffer();
+
 		const config& cfg() const;
 
 		VkBuffer vk_buffer() const;
@@ -48,10 +50,13 @@ namespace igpu
 
 		void unmap() override;
 
-		void transfer_from( vulkan_buffer& );
-
 		const buffer_view< char >& mapped_view() const;
 
+		void reset( size_t = 0 );
+
+		void copy_from( vulkan_barrier_manager&, vulkan_buffer& );
+
+	private:
 		vulkan_resource::state& resource_state() override;
 
 		const vulkan_resource::state& resource_state() const override;
@@ -71,20 +76,16 @@ namespace igpu
 			const vulkan_job_scope& src_scope,
 			const vulkan_job_scope& dst_scope ) const override;
 
-		~vulkan_buffer();
-
-	private:
-		void ensure( size_t byte_size );
-
-		void abandon();
-
-	private:
 		const config _cfg;
 
-		size_t _memory_size = 0;
-		buffer_view< char > _mapped_view = {};
-		VkBuffer _buffer = nullptr;
-		VmaAllocation _vma_allocation = nullptr;
+		struct
+		{
+			size_t memory_size = 0;
+			buffer_view< char > mapped_view = {};
+			VkBuffer buffer = nullptr;
+			VmaAllocation vma_allocation = nullptr;
+		} _allocation;
+
 		vulkan_resource::state _resource_state;
 
 		perf::metric _mem_metric;

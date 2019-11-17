@@ -4,6 +4,8 @@
 #include "vulkan/defines/vulkan_includes.h"
 #include "vulkan/sync/vulkan_resource.h"
 
+#include "igpu/buffer/buffer.h"
+
 #include "framework/perf/metrics.h"
 #include "framework/utility/scoped_ptr.h"
 
@@ -11,7 +13,10 @@
 
 namespace igpu
 {
+	class vulkan_buffer;
 	class vulkan_queue;
+	class vulkan_barrier_manager;
+	class vulkan_synchronization;
 
 	class vulkan_image : public vulkan_resource
 	{
@@ -20,6 +25,8 @@ namespace igpu
 		{
 			VkPhysicalDevice physical_device = nullptr;
 			VkDevice device = nullptr;
+			memory_type memory = memory_type::UNDEFINED;
+			scoped_ptr< vulkan_synchronization > synchronization;
 			VkMemoryPropertyFlagBits memory_properties;
 			VkImageCreateInfo image_info = {};
 			VkImageViewCreateInfo view_info = {};
@@ -30,14 +37,28 @@ namespace igpu
 
 		vulkan_image( VkImageUsageFlags );
 
+		~vulkan_image();
+
 		const config& cfg() const;
 
 		VkImageView vk_image_view() const;
 
-		void reallocate( const config& cfg );
+		VkSampler vk_sampler() const;
 
-		~vulkan_image();
+		void reset( const config* = nullptr );
 
+		void copy_from( vulkan_barrier_manager&, vulkan_buffer& );
+
+		void generate_mipmaps( vulkan_barrier_manager& );
+
+		static bool can_generate_mipmaps(
+			VkPhysicalDevice,
+			VkFormat format,
+			VkImageTiling tiling );
+
+		static bool validate( const config& );
+
+	private:
 		vulkan_resource::state& resource_state() override;
 
 		const vulkan_resource::state& resource_state() const override;
@@ -57,20 +78,19 @@ namespace igpu
 			const vulkan_job_scope& src_scope,
 			const vulkan_job_scope& dst_scope ) const override;
 
-		static bool validate( const config& );
-
 		static std::unique_ptr< vulkan_image > make( const config& cfg );
 
-	private:
-		void release();
-
-	private:
 		config _cfg;
-		VkImage _image = nullptr;
-		VkMemoryAllocateInfo _alloc_info;
-		VkDeviceMemory _device_memory = nullptr;
-		VkImageView _image_view = nullptr;
-		VkSampler _sampler = nullptr;
+
+		struct
+		{
+			VkImage image = nullptr;
+			VkDeviceMemory device_memory = nullptr;
+			VkImageView image_view = nullptr;
+			VkSampler sampler = nullptr;
+
+		} _allocation;
+
 		vulkan_resource::state _resource_state;
 
 		perf::metric _gpu_mem_metric;

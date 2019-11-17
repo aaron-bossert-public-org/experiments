@@ -1,8 +1,12 @@
-
 #include "vulkan/window/vulkan_back_buffer.h"
 
+#include "vulkan/context/vulkan_abandon_manager.h"
 #include "vulkan/context/vulkan_context.h"
+#include "vulkan/sync/vulkan_command_buffer.h"
+#include "vulkan/sync/vulkan_fence.h"
 #include "vulkan/sync/vulkan_queue.h"
+#include "vulkan/sync/vulkan_semaphore.h"
+#include "vulkan/sync/vulkan_synchronization.h"
 #include "vulkan/texture/vulkan_image.h"
 
 #include "framework/logging/log.h"
@@ -111,16 +115,14 @@ namespace
 
 	VkSwapchainKHR create_swap_chain(
 		const vulkan_back_buffer::config& cfg,
-		const VkSurfaceCapabilitiesKHR& surface_caps,
-		const VkSurfaceFormatKHR& surface_format,
-		uint32_t image_count )
+		const VkSurfaceFormatKHR& surface_format )
 	{
 		VkPresentModeKHR present_mode = choose_swap_present_mode( cfg );
 
 		VkSwapchainCreateInfoKHR create_info = {};
 		create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 		create_info.surface = cfg.back_buffer.surface;
-		create_info.minImageCount = image_count;
+		create_info.minImageCount = (uint32_t)cfg.vk.swap_count;
 		create_info.imageFormat = surface_format.format;
 		create_info.imageColorSpace = surface_format.colorSpace;
 		create_info.imageExtent = {
@@ -129,10 +131,11 @@ namespace
 		};
 		create_info.imageArrayLayers = 1;
 		create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-		create_info.preTransform = surface_caps.currentTransform;
 		create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 		create_info.presentMode = present_mode;
 		create_info.clipped = VK_TRUE;
+		create_info.preTransform =
+			cfg.back_buffer.surface_caps.currentTransform;
 
 		uint32_t queue_family_indices[2] = {
 			cfg.back_buffer.present_queue_family,
@@ -178,73 +181,56 @@ namespace
 		return images;
 	}
 
-	std::vector< VkImageView > create_image_views(
+	VkImageView create_image_views(
 		const vulkan_back_buffer::config& cfg,
-		const std::vector< VkImage >& swap_chain_images,
+		VkImage swap_chain_image,
 		VkFormat image_format )
 	{
-		std::vector< VkImageView > swap_chain_image_views;
-		swap_chain_image_views.reserve( swap_chain_images.size() );
+		VkImageViewCreateInfo view_info = {};
+		view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		view_info.image = swap_chain_image;
+		view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		view_info.format = image_format;
+		view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		view_info.subresourceRange.baseMipLevel = 0;
+		view_info.subresourceRange.levelCount = 1;
+		view_info.subresourceRange.baseArrayLayer = 0;
+		view_info.subresourceRange.layerCount = 1;
 
-		for ( VkImage swap_chain_image : swap_chain_images )
-		{
-			VkImageViewCreateInfo view_info = {};
-			view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			view_info.image = swap_chain_image;
-			view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			view_info.format = image_format;
-			view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			view_info.subresourceRange.baseMipLevel = 0;
-			view_info.subresourceRange.levelCount = 1;
-			view_info.subresourceRange.baseArrayLayer = 0;
-			view_info.subresourceRange.layerCount = 1;
-
-			VkImageView image_view;
-			vkCreateImageView(
-				cfg.vk.device,
-				&view_info,
-				nullptr,
-				&image_view );
-			swap_chain_image_views.push_back( image_view );
-		}
-
-		return swap_chain_image_views;
+		VkImageView image_view;
+		vkCreateImageView( cfg.vk.device, &view_info, nullptr, &image_view );
+		return image_view;
 	}
 
-	std::vector< VkFramebuffer > create_framebuffers(
+	VkFramebuffer create_framebuffer(
 		const vulkan_back_buffer::config cfg,
-		const std::vector< VkImageView >& image_views,
+		VkImageView image_view,
 		VkRenderPass render_pass )
 	{
-		std::vector< VkFramebuffer > framebuffers( image_views.size() );
+		std::array< VkImageView, 3 > attachments = {
+			cfg.vk.color->gpu_object().vk_image_view(),
+			cfg.vk.depth->gpu_object().vk_image_view(),
+			image_view,
+		};
 
-		for ( size_t i = 0; i < image_views.size(); i++ )
-		{
-			std::array< VkImageView, 3 > attachments = {
-				cfg.vk.color->gpu_object().vk_image_view(),
-				cfg.vk.depth->gpu_object().vk_image_view(),
-				image_views[i],
-			};
+		VkFramebufferCreateInfo framebuffer_info = {};
+		framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		framebuffer_info.renderPass = render_pass;
+		framebuffer_info.attachmentCount =
+			static_cast< uint32_t >( attachments.size() );
+		framebuffer_info.pAttachments = attachments.data();
+		framebuffer_info.width = cfg.color->cfg().res.x,
+		framebuffer_info.height = cfg.color->cfg().res.y,
+		framebuffer_info.layers = 1;
 
-			VkFramebufferCreateInfo framebuffer_info = {};
-			framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			framebuffer_info.renderPass = render_pass;
-			framebuffer_info.attachmentCount =
-				static_cast< uint32_t >( attachments.size() );
-			framebuffer_info.pAttachments = attachments.data();
-			framebuffer_info.width = cfg.color->cfg().res.x,
-			framebuffer_info.height = cfg.color->cfg().res.y,
-			framebuffer_info.layers = 1;
-			vkCreateFramebuffer(
-				cfg.vk.device,
-				&framebuffer_info,
-				nullptr,
-				&framebuffers[i] );
-		}
-
-		return framebuffers;
+		VkFramebuffer framebuffer = nullptr;
+		vkCreateFramebuffer(
+			cfg.vk.device,
+			&framebuffer_info,
+			nullptr,
+			&framebuffer );
+		return framebuffer;
 	}
-
 }
 
 const vulkan_back_buffer::config& vulkan_back_buffer::cfg() const
@@ -252,96 +238,224 @@ const vulkan_back_buffer::config& vulkan_back_buffer::cfg() const
 	return _cfg;
 }
 
-void vulkan_back_buffer::end_raster() override
+void vulkan_back_buffer::begin_raster()
 {
-	vulkan_draw_target::end_raster();
-	_cfg.vk.context->end_frame();
+	swap_state& frame_state = frame_swap_state();
+	VkFence vk_fence = frame_state.raster_fence->vk_fence();
+	VkCommandBuffer vk_cmds = frame_state.raster_cmds->vk_cmds();
+	VkCommandBufferBeginInfo begin_info = {};
+
+	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	frame_state.raster_fence->wait();
+	_cfg.vk.abandon_manager->swap_frame();
+
+	vkResetFences( _cfg.vk.device, 1, &vk_fence );
+	vkBeginCommandBuffer( vk_cmds, &begin_info );
+}
+
+scoped_ptr< vulkan_command_buffer > vulkan_back_buffer::raster_cmds()
+{
+	return _st.swap_states[_st.swap_index].raster_cmds;
+}
+
+scoped_ptr< vulkan_fence > vulkan_back_buffer::raster_fence()
+{
+	return _st.swap_states[_st.swap_index].raster_fence;
+}
+
+void vulkan_back_buffer::end_raster()
+{
+	switch ( do_end_raster() )
+	{
+	case VK_SUBOPTIMAL_KHR:
+		LOG_WARNING( "vkAcquireNextImageKHR: VK_SUBOPTIMAL_KHR" );
+		[[fallthrough]];
+	case VK_ERROR_OUT_OF_DATE_KHR:
+		_cfg.back_buffer.context->recreate_back_buffer();
+	}
+}
+
+VkResult vulkan_back_buffer::do_end_raster()
+{
+	uint32_t image_index = 0;
+	swap_state& frame_state = frame_swap_state();
+	VkFence vk_fence = frame_state.raster_fence->vk_fence();
+	VkCommandBuffer vk_cmds = frame_state.raster_cmds->vk_cmds();
+	VkSemaphore aquire_sem = frame_state.aquire_sem->vk_semaphore();
+	VkSemaphore raster_sem = frame_state.aquire_sem->vk_semaphore();
+	VkPipelineStageFlags aquire_stage =
+		VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+	if ( VkResult result = vkAcquireNextImageKHR(
+			 _cfg.vk.device,
+			 _st.swap_chain,
+			 std::numeric_limits< uint64_t >::max(),
+			 aquire_sem,
+			 VK_NULL_HANDLE,
+			 &image_index ) )
+	{
+		return result;
+	}
+
+	VkSubmitInfo submit_info = {};
+	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submit_info.waitSemaphoreCount = 1;
+	submit_info.pWaitSemaphores = &aquire_sem;
+	submit_info.pWaitDstStageMask = &aquire_stage;
+	submit_info.commandBufferCount = 1;
+	submit_info.pCommandBuffers = &vk_cmds;
+	submit_info.signalSemaphoreCount = 1;
+	submit_info.pSignalSemaphores = &raster_sem;
+
+
+	vkEndCommandBuffer( vk_cmds );
+
+	vkQueueSubmit(
+		_cfg.vk.syncronization->cfg().graphics_queue->vk_queue(),
+		1,
+		&submit_info,
+		vk_fence );
+
+	VkPresentInfoKHR present_info = {};
+	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	present_info.waitSemaphoreCount = 1;
+	present_info.pWaitSemaphores = &raster_sem;
+	present_info.swapchainCount = 1;
+	present_info.pSwapchains = &_st.swap_chain;
+	present_info.pImageIndices = &image_index;
+
+	if ( VkResult result = vkQueuePresentKHR(
+			 _cfg.vk.syncronization->cfg().present_queue->vk_queue(),
+			 &present_info ) )
+	{
+		return result;
+	}
+
+	_st.swap_index = ( _st.swap_index + 1 ) % _cfg.vk.swap_count;
+	return VK_SUCCESS;
+}
+
+size_t vulkan_back_buffer::swap_index() const
+{
+	return _st.swap_index;
+}
+
+VkSwapchainKHR vulkan_back_buffer::swap_chain() const
+{
+	return _st.swap_chain;
+}
+
+VkFramebuffer vulkan_back_buffer::framebuffer( size_t swap_index ) const
+{
+	return _st.swap_states[swap_index].framebuffer;
 }
 
 std::unique_ptr< vulkan_back_buffer > vulkan_back_buffer::make(
 	const config& cfg )
 {
-	if ( !cfg.color )
-	{
-		LOG_CRITICAL( "render target is null" );
-		return nullptr;
-	}
-	else if ( !cfg.depth )
-	{
-		LOG_CRITICAL( "depth target is null" );
-		return nullptr;
-	}
-
-	vulkan_back_buffer::config back_buffer_cfg = {};
-	VkSurfaceCapabilitiesKHR surface_caps = {};
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-		cfg.back_buffer.physical_device,
-		cfg.back_buffer.surface,
-		&surface_caps );
-
+	state st = {};
 	VkSurfaceFormatKHR surface_format = {
 		cfg.vk.color->gpu_object().cfg().image_info.format,
 		cfg.back_buffer.color_space,
 	};
 
-	if ( !validate_swap_surface_format( cfg, surface_format ) )
+	if ( !cfg.vk.color )
 	{
-		return nullptr;
+		LOG_CRITICAL( "render target is null" );
+	}
+	else if ( !cfg.vk.depth )
+	{
+		LOG_CRITICAL( "depth target is null" );
+	}
+	else
+	{
+		VkCommandPoolCreateInfo pool_info = {};
+		pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		pool_info.queueFamilyIndex =
+			cfg.vk.syncronization->cfg().graphics_queue->cfg().family_index;
+
+		vkCreateCommandPool(
+			cfg.vk.device,
+			&pool_info,
+			nullptr,
+			&st.command_pool );
 	}
 
-	uint32_t image_count = surface_caps.minImageCount + 1;
-	if ( surface_caps.maxImageCount > 0 &&
-		 image_count > surface_caps.maxImageCount )
+	if ( !st.command_pool )
 	{
-		image_count = surface_caps.maxImageCount;
+		LOG_CRITICAL( "command_pool is null" );
+	}
+	else if ( validate_swap_surface_format( cfg, surface_format ) )
+	{
+		st.swap_chain = create_swap_chain( cfg, surface_format );
 	}
 
+	if ( !st.swap_chain )
+	{
+		LOG_CRITICAL( "swap_chain is null" );
+	}
+	else
+	{
+		st.swap_states.resize( cfg.vk.swap_count );
+		auto images = create_images( cfg, st.swap_chain );
 
-	VkSwapchainKHR swap_chain =
-		create_swap_chain( cfg, surface_caps, surface_format, image_count );
-	auto images = create_images( cfg, swap_chain );
-	auto image_views = create_image_views( cfg, images, surface_format.format );
+		for ( size_t i = 0; i < cfg.vk.swap_count; ++i )
+		{
+			auto& ss = st.swap_states[i];
+			ss.image = images[i];
+			ss.image_view =
+				create_image_views( cfg, ss.image, surface_format.format );
 
-	return std::unique_ptr< vulkan_back_buffer >(
-		new vulkan_back_buffer( cfg, swap_chain, images, image_views ) );
-}
+			ss.aquire_sem = vulkan_semaphore::make( { cfg.vk.device } );
+			ss.raster_sem = vulkan_semaphore::make( { cfg.vk.device } );
+			ss.raster_fence = vulkan_fence::make( { cfg.vk.device } );
+			ss.raster_cmds.reset( new vulkan_command_buffer( {
+				cfg.vk.device,
+				cfg.vk.abandon_manager,
+				st.command_pool,
+				VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+			} ) );
+		}
 
-VkSwapchainKHR vulkan_back_buffer::swap_chain() const
-{
-	return _swap_chain;
-}
+		return std::unique_ptr< vulkan_back_buffer >(
+			new vulkan_back_buffer( cfg, st ) );
+	}
 
-
-const std::vector< VkFramebuffer >& vulkan_back_buffer::framebuffers() const
-{
-	return _framebuffers;
+	return nullptr;
 }
 
 vulkan_back_buffer::~vulkan_back_buffer()
 {
-	for ( auto framebuffer : _framebuffers )
+	vkDeviceWaitIdle( _cfg.vk.device );
+
+	for ( auto& ss : _st.swap_states )
 	{
-		vkDestroyFramebuffer( _cfg.vk.device, framebuffer, nullptr );
+		vkDestroyFramebuffer( _cfg.vk.device, ss.framebuffer, nullptr );
+		vkDestroyImageView( _cfg.vk.device, ss.image_view, nullptr );
 	}
 
-	for ( auto image_view : _image_views )
-	{
-		vkDestroyImageView( _cfg.vk.device, image_view, nullptr );
-	}
+	vkDestroySwapchainKHR( _cfg.vk.device, _st.swap_chain, nullptr );
 
-	vkDestroySwapchainKHR( _cfg.vk.device, _swap_chain, nullptr );
+	vkDestroyCommandPool( _cfg.vk.device, _st.command_pool, nullptr );
 }
 
-vulkan_back_buffer::vulkan_back_buffer(
-	const config& cfg,
-	VkSwapchainKHR swap_chain,
-	const std::vector< VkImage >& images,
-	const std::vector< VkImageView >& image_views )
+vulkan_back_buffer::vulkan_back_buffer( const config& cfg, const state& st )
 	: vulkan_draw_target( cfg )
 	, _cfg( cfg )
-	, _swap_chain( swap_chain )
-	, _images( images )
-	, _image_views( image_views )
+	, _st( st )
 {
-	_framebuffers = create_framebuffers( cfg, image_views, render_pass() );
+	VkRenderPass rp = render_pass();
+
+	for ( auto& ss : _st.swap_states )
+	{
+		ss.framebuffer = create_framebuffer( cfg, ss.image_view, rp );
+	}
+}
+
+vulkan_back_buffer::swap_state& vulkan_back_buffer::frame_swap_state()
+{
+	return _st.swap_states[_st.swap_index];
 }

@@ -1,6 +1,10 @@
 
 #include "vulkan/texture/vulkan_draw_target.h"
 
+#include "vulkan/context/vulkan_abandon_manager.h"
+#include "vulkan/sync/vulkan_barrier_manager.h"
+#include "vulkan/sync/vulkan_synchronization.h"
+
 #include "framework/logging/log.h"
 
 #include <array>
@@ -112,12 +116,12 @@ const vulkan_draw_target::config& vulkan_draw_target::cfg() const
 
 VkRenderPass vulkan_draw_target::render_pass() const
 {
-	return _render_pass;
+	return _state.render_pass;
 }
 
 uint32_t vulkan_draw_target::raster_sub_pass() const
 {
-	return _raster_sub_pass;
+	return _state.raster_sub_pass;
 }
 
 std::unique_ptr< vulkan_draw_target > vulkan_draw_target::make(
@@ -137,8 +141,10 @@ std::unique_ptr< vulkan_draw_target > vulkan_draw_target::make(
 	}
 	else
 	{
-		return std::unique_ptr< vulkan_draw_target >(
-			new vulkan_draw_target( cfg ) );
+		LOG_CRITICAL( "render to offscreen draw targets not yet implemented " );
+
+		// return std::unique_ptr< vulkan_draw_target >(
+		//	new vulkan_draw_target( cfg ) );
 	}
 
 	return nullptr;
@@ -146,10 +152,14 @@ std::unique_ptr< vulkan_draw_target > vulkan_draw_target::make(
 
 vulkan_draw_target::~vulkan_draw_target()
 {
-	vkDestroyRenderPass( _cfg.vk.device, _render_pass, nullptr );
+	vkDestroyRenderPass( _cfg.vk.device, _state.render_pass, nullptr );
 }
 
 vulkan_draw_target::vulkan_draw_target( const config& cfg )
 	: _cfg( cfg )
-	, _render_pass( create_render_pass( cfg, &_raster_sub_pass ) )
+	, _state( [&cfg]() {
+		state st = {};
+		st.render_pass = create_render_pass( cfg, &st.raster_sub_pass );
+		return st;
+	}() )
 {}

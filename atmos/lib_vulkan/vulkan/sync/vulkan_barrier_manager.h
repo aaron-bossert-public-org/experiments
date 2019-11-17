@@ -6,13 +6,18 @@
 
 #include "framework/utility/scoped_ptr.h"
 
+#include <initializer_list>
 #include <vector>
 
 namespace igpu
 {
+	class frame_job_barrier;
+
+	class vulkan_buffer;
 	class vulkan_dependency;
-	class vulkan_queue;
 	class vulkan_fence;
+	class vulkan_image;
+	class vulkan_queue;
 	class vulkan_resource;
 	class vulkan_semaphore;
 	class vulkan_synchronization;
@@ -42,13 +47,19 @@ namespace igpu
 			vulkan_job_scope job_scope;
 		};
 
-		void start_dependency_barriers();
+		void submit_frame_job(
+			const scoped_ptr< vulkan_queue >,
+			const std::initializer_list< frame_job_barrier >&,
+			const std::function< void( VkCommandBuffer ) >& );
 
-		void record_dependency( vulkan_dependency* );
+		void start_recording_barriers();
 
-		void finish_dependency_barriers(
-			const scoped_ptr< vulkan_queue >&,
-			scoped_ptr< vulkan_fence >* out_fence = nullptr );
+		void record_barrier(
+			vulkan_resource* resource,
+			VkImageLayout layout,
+			const vulkan_job_scope& job_scope );
+
+		void submit_recorded_barriers( const scoped_ptr< vulkan_queue >& );
 
 		// invoked in indirectly via finish_dependency_barriers
 		void push_barrier(
@@ -95,5 +106,25 @@ namespace igpu
 		std::vector< record > _pending_records;
 		std::vector< pipeline_barrier > _barriers;
 		std::vector< std::vector< transfer_semaphores > > _transfer_semaphores;
+	};
+
+	class frame_job_barrier
+	{
+	public:
+		frame_job_barrier(
+			vulkan_buffer* buffer,
+			const vulkan_job_scope& scope );
+
+		frame_job_barrier(
+			vulkan_image* image,
+			VkImageLayout layout_,
+			const vulkan_job_scope& scope );
+
+	private:
+		friend class vulkan_barrier_manager;
+
+		vulkan_resource* resource = nullptr;
+		VkImageLayout layout = VK_IMAGE_LAYOUT_MAX_ENUM;
+		vulkan_job_scope job_scope;
 	};
 }

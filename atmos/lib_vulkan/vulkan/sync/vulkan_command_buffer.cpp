@@ -1,19 +1,13 @@
 
 #include "vulkan/sync/vulkan_command_buffer.h"
 
-#include "vulkan/sync/vulkan_fence.h"
+#include "vulkan/context/vulkan_abandon_manager.h"
 
 using namespace igpu;
-
 
 VkCommandBuffer vulkan_command_buffer::vk_cmds() const
 {
 	return _command_buffer;
-}
-
-scoped_ptr< vulkan_fence > vulkan_command_buffer::fence() const
-{
-	return _fence;
 }
 
 vulkan_command_buffer::vulkan_command_buffer( const config& cfg )
@@ -23,6 +17,10 @@ vulkan_command_buffer::vulkan_command_buffer( const config& cfg )
 	if ( !_cfg.device )
 	{
 		LOG_CRITICAL( "device is null" );
+	}
+	else if ( !_cfg.abandon_manager )
+	{
+		LOG_CRITICAL( "abandon_manager is null" );
 	}
 	else if ( !_cfg.command_pool )
 	{
@@ -40,28 +38,10 @@ vulkan_command_buffer::vulkan_command_buffer( const config& cfg )
 	}
 }
 
-vulkan_command_buffer::vulkan_command_buffer(
-	const config& cfg,
-	const std::shared_ptr< vulkan_fence >& fence )
-	: vulkan_command_buffer( cfg )
-{
-	ASSERT_CONTEXT( (bool)fence );
-	_fence = fence;
-}
-
 vulkan_command_buffer::~vulkan_command_buffer()
 {
-	if ( _fence )
-	{
-		_fence->wait();
-	}
-
 	if ( _command_buffer )
 	{
-		vkFreeCommandBuffers(
-			_cfg.device,
-			_cfg.command_pool,
-			1,
-			&_command_buffer );
+		_cfg.abandon_manager->abandon( _cfg.command_pool, _command_buffer );
 	}
 }

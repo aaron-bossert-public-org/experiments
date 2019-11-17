@@ -33,8 +33,6 @@ namespace igpu
 
 		void unmap();
 
-		void release();
-
 		vulkan_buffer& gpu_buffer();
 
 		const vulkan_buffer& gpu_buffer() const;

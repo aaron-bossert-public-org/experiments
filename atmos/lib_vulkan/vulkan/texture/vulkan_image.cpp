@@ -1,7 +1,13 @@
 
 #include "vulkan/texture/vulkan_image.h"
 
+#include "vulkan/buffer/vulkan_buffer.h"
+#include "vulkan/context/vulkan_abandon_manager.h"
 #include "vulkan/shader/vulkan_parameter.h"
+#include "vulkan/sync/vulkan_barrier_manager.h"
+#include "vulkan/sync/vulkan_synchronization.h"
+
+#include <algorithm>
 
 using namespace igpu;
 
@@ -92,6 +98,58 @@ namespace
 		return sampler;
 	}
 
+	void mip_transfer_barrier(
+		VkCommandBuffer command_buffer,
+		VkImage image,
+		uint32_t mip,
+		igpu::decorator decorator )
+	{
+		VkImageMemoryBarrier barrier = {};
+		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		barrier.image = image;
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		barrier.subresourceRange.baseArrayLayer = 0;
+		barrier.subresourceRange.layerCount = 1;
+		barrier.subresourceRange.levelCount = 1;
+		barrier.subresourceRange.baseMipLevel = mip;
+
+		if ( decorator == decorator::READABLE )
+		{
+			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		}
+		else if ( decorator == decorator::WRITABLE )
+		{
+			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+			barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+			barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		}
+		else
+		{
+			LOG_CRITICAL(
+				"unhandled decorator %s",
+				to_string( decorator ).data() );
+			return;
+		}
+
+		vkCmdPipelineBarrier(
+			command_buffer,
+			VK_PIPELINE_STAGE_TRANSFER_BIT,
+			VK_PIPELINE_STAGE_TRANSFER_BIT,
+			(VkDependencyFlags)0,
+			0,
+			nullptr,
+			0,
+			nullptr,
+			1,
+			&barrier );
+	}
+
 	std::string perf_name( VkImageUsageFlags usage )
 	{
 		std::string result;
@@ -139,6 +197,246 @@ namespace
 		result.resize( result.size() - 1 );
 		return result;
 	}
+}
+
+vulkan_image::vulkan_image( const config& cfg )
+	: _gpu_mem_metric(
+		  perf::category::GPU_MEM_USAGE,
+		  perf_name( cfg.image_info.usage ) )
+{
+	reset( &cfg );
+}
+
+vulkan_image::vulkan_image( VkImageUsageFlags usage )
+	: _gpu_mem_metric( perf::category::GPU_MEM_USAGE, perf_name( usage ) )
+{
+	_cfg.image_info.usage = usage;
+}
+
+vulkan_image::~vulkan_image()
+{
+	vulkan_resource::wait_pending_jobs();
+	reset();
+}
+
+const vulkan_image::config& vulkan_image::cfg() const
+{
+	return _cfg;
+}
+
+VkImageView vulkan_image::vk_image_view() const
+{
+	return _allocation.image_view;
+}
+
+VkSampler vulkan_image::vk_sampler() const
+{
+	return _allocation.sampler;
+}
+
+void vulkan_image::reset( const config* p_cfg )
+{
+	if ( p_cfg && p_cfg->memory == memory_type::PRESERVED )
+	{
+		LOG_CRITICAL( "reset preserved is not implemented" );
+	}
+	else
+	{
+		auto& abandon_manager = _cfg.synchronization->abandon_manager();
+
+		abandon_manager.abandon( _allocation.sampler );
+		abandon_manager.abandon( _allocation.image_view );
+		abandon_manager.abandon( _allocation.device_memory );
+		abandon_manager.abandon( _allocation.image );
+
+		if ( !p_cfg )
+		{
+			auto usage = _cfg.image_info.usage;
+			_cfg = {};
+			_cfg.image_info.usage = usage;
+
+			_allocation = {};
+			_gpu_mem_metric.reset();
+		}
+		else if ( _cfg.image_info.usage != p_cfg->image_info.usage )
+		{
+			LOG_CRITICAL( "cannot modify image usage after it is created" );
+		}
+		else
+		{
+			_cfg = *p_cfg;
+
+			_allocation.image = create_image( _cfg );
+			auto alloc_info = create_alloc_info( _cfg, _allocation.image );
+
+			_allocation.device_memory =
+				create_device_memory( _cfg, alloc_info, _allocation.image );
+
+			_allocation.image_view =
+				create_image_view( _cfg, _allocation.image );
+
+			_allocation.sampler = create_sampler( _cfg );
+
+			_gpu_mem_metric.add( alloc_info.allocationSize );
+		}
+
+		vulkan_resource::reinitialized(
+			nullptr,
+			{},
+			VK_IMAGE_LAYOUT_UNDEFINED );
+	}
+}
+
+void vulkan_image::copy_from(
+	vulkan_barrier_manager& barrier_manager,
+	vulkan_buffer& buffer )
+{
+	if ( _cfg.memory == memory_type::PRESERVED )
+	{
+		LOG_CRITICAL( "preserved copy_from buffer is not implemented" );
+	}
+	else
+	{
+		barrier_manager.submit_frame_job(
+			_cfg.synchronization->cfg().transfer_queue,
+			{
+				frame_job_barrier(
+					&buffer,
+					{
+						decorator::READABLE,
+						VK_PIPELINE_STAGE_TRANSFER_BIT,
+						VK_ACCESS_TRANSFER_READ_BIT,
+					} ),
+
+				frame_job_barrier(
+					this,
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+					{
+						decorator::WRITABLE,
+						VK_PIPELINE_STAGE_TRANSFER_BIT,
+						VK_ACCESS_TRANSFER_WRITE_BIT,
+					} ),
+			},
+			[&]( VkCommandBuffer command_buffer ) {
+				VkBufferImageCopy region = {};
+				region.bufferOffset = 0;
+				region.bufferRowLength = 0;
+				region.bufferImageHeight = 0;
+				region.imageSubresource.aspectMask =
+					_cfg.view_info.subresourceRange.aspectMask;
+				region.imageSubresource.mipLevel = 0;
+				region.imageSubresource.baseArrayLayer = 0;
+				region.imageSubresource.layerCount = 1;
+				region.imageOffset = {};
+				region.imageExtent = _cfg.image_info.extent;
+
+
+				vkCmdCopyBufferToImage(
+					command_buffer,
+					buffer.vk_buffer(),
+					_allocation.image,
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+					1,
+					&region );
+			} );
+	}
+}
+
+void vulkan_image::generate_mipmaps( vulkan_barrier_manager& barrier_manager )
+{
+	if ( !can_generate_mipmaps(
+			 _cfg.physical_device,
+			 _cfg.image_info.format,
+			 _cfg.image_info.tiling ) )
+	{
+		LOG_CRITICAL(
+			"cannot generate mipmaos because vk format %d does not support "
+			"blitting for tiling mode %d",
+			(int)_cfg.image_info.format,
+			(int)_cfg.image_info.tiling );
+	}
+	else
+	{
+		barrier_manager.submit_frame_job(
+
+			_cfg.synchronization->cfg().graphics_queue,
+			{
+				frame_job_barrier(
+					this,
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+					{
+						decorator::WRITABLE,
+						VK_ACCESS_TRANSFER_WRITE_BIT,
+						VK_PIPELINE_STAGE_TRANSFER_BIT,
+					} ),
+			},
+			[&]( VkCommandBuffer command_buffer ) {
+				int32_t mip_width = _cfg.image_info.extent.width;
+				int32_t mip_height = _cfg.image_info.extent.height;
+
+				uint32_t mip_count = _cfg.view_info.subresourceRange.levelCount;
+
+				for ( uint32_t i = 1; i < mip_count; ++i )
+				{
+					mip_transfer_barrier(
+						command_buffer,
+						_allocation.image,
+						i - 1,
+						decorator::READABLE );
+
+					VkImageBlit blit = {};
+					blit.srcOffsets[0] = {};
+					blit.srcOffsets[1] = {
+						mip_width,
+						mip_height,
+						1,
+					};
+
+					mip_width = std::max( 1, mip_width / 2 );
+					mip_height = std::max( 1, mip_height / 2 );
+
+					blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+					blit.srcSubresource.mipLevel = i - 1;
+					blit.srcSubresource.baseArrayLayer = 0;
+					blit.srcSubresource.layerCount = 1;
+					blit.dstOffsets[0] = {};
+					blit.dstOffsets[1] = { mip_width, mip_height, 1 };
+					blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+					blit.dstSubresource.mipLevel = i;
+					blit.dstSubresource.baseArrayLayer = 0;
+					blit.dstSubresource.layerCount = 1;
+				}
+			} );
+	}
+}
+
+bool vulkan_image::can_generate_mipmaps(
+	VkPhysicalDevice physical_device,
+	VkFormat format,
+	VkImageTiling tiling )
+{
+	VkFlags required = VK_FORMAT_FEATURE_BLIT_SRC_BIT |
+		VK_FORMAT_FEATURE_BLIT_DST_BIT |
+		VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT;
+
+	VkFlags actual = 0;
+	VkFormatProperties format_properties;
+	vkGetPhysicalDeviceFormatProperties(
+		physical_device,
+		format,
+		&format_properties );
+
+	switch ( tiling )
+	{
+	case VK_IMAGE_TILING_OPTIMAL:
+		actual = format_properties.optimalTilingFeatures;
+		break;
+	case VK_IMAGE_TILING_LINEAR:
+		actual = format_properties.linearTilingFeatures;
+		break;
+	}
+
+	return ( actual & required ) == required;
 }
 
 bool vulkan_image::validate( const config& cfg )
@@ -217,70 +515,6 @@ bool vulkan_image::validate( const config& cfg )
 	return false;
 }
 
-vulkan_image::vulkan_image( const config& cfg )
-	: _gpu_mem_metric(
-		  perf::category::GPU_MEM_USAGE,
-		  perf_name( cfg.image_info.usage ) )
-{
-	reallocate( cfg );
-}
-
-vulkan_image::vulkan_image( VkImageUsageFlags usage )
-	: _gpu_mem_metric( perf::category::GPU_MEM_USAGE, perf_name( usage ) )
-{}
-
-void vulkan_image::reallocate( const config& cfg )
-{
-	vulkan_resource::wait_pending_jobs();
-	release();
-
-	_cfg = cfg;
-
-	_image = create_image( cfg );
-	_alloc_info = create_alloc_info( cfg, _image );
-	_device_memory = create_device_memory( cfg, _alloc_info, _image );
-	_image_view = create_image_view( cfg, _image );
-	_sampler = create_sampler( cfg );
-	_gpu_mem_metric.add( _alloc_info.allocationSize );
-
-	vulkan_resource::on_reallocate_gpu_object();
-}
-
-void vulkan_image::release()
-{
-	if ( _sampler )
-	{
-		vkDestroySampler( _cfg.device, _sampler, nullptr );
-	}
-
-	if ( _image_view )
-	{
-		vkDestroyImageView( _cfg.device, _image_view, nullptr );
-	}
-
-	if ( _device_memory )
-	{
-		vkFreeMemory( _cfg.device, _device_memory, nullptr );
-	}
-
-	if ( _image )
-	{
-		vkDestroyImage( _cfg.device, _image, nullptr );
-	}
-
-	_gpu_mem_metric.reset();
-}
-
-const vulkan_image::config& vulkan_image::cfg() const
-{
-	return _cfg;
-}
-
-VkImageView vulkan_image::vk_image_view() const
-{
-	return _image_view;
-}
-
 vulkan_resource::state& vulkan_image::resource_state()
 {
 	return _resource_state;
@@ -291,25 +525,14 @@ const vulkan_resource::state& vulkan_image::resource_state() const
 	return _resource_state;
 }
 
-vulkan_image::~vulkan_image()
-{
-	vulkan_resource::wait_pending_jobs();
-	release();
-}
-
-std::unique_ptr< vulkan_image > vulkan_image::make( const config& cfg )
-{
-	return std::unique_ptr< vulkan_image >( new vulkan_image( cfg ) );
-}
-
 void vulkan_image::update_descriptor_set(
 	VkDescriptorSet descriptor_set,
 	const vulkan_parameter::config& parameter_config,
 	size_t array_element ) const
 {
 	VkDescriptorImageInfo image_descriptor{
-		_sampler,
-		_image_view,
+		_allocation.sampler,
+		_allocation.image_view,
 		parameter_config.vk.image_layout,
 	};
 
@@ -346,7 +569,7 @@ void vulkan_image::push_barrier(
 	barrier.newLayout = dst_layout;
 	barrier.srcQueueFamilyIndex = src_queue_family_index;
 	barrier.dstQueueFamilyIndex = dst_queue_family_index;
-	barrier.image = _image;
+	barrier.image = _allocation.image;
 	barrier.subresourceRange = _cfg.view_info.subresourceRange;
 
 	barrier_manager->push_barrier(
@@ -354,4 +577,9 @@ void vulkan_image::push_barrier(
 		src_scope.stages,
 		dst_scope.stages,
 		barrier );
+}
+
+std::unique_ptr< vulkan_image > vulkan_image::make( const config& cfg )
+{
+	return std::unique_ptr< vulkan_image >( new vulkan_image( cfg ) );
 }

@@ -116,6 +116,11 @@ const vulkan_job_dependencies::state& vulkan_job_primitives::
 	return _state;
 }
 
+vulkan_job& vulkan_job_primitives::job()
+{
+	return *_cfg.job;
+}
+
 const vulkan_job& vulkan_job_primitives::job() const
 {
 	return *_cfg.job;

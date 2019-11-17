@@ -224,13 +224,13 @@ void vulkan_root_batch::start_raster(
 	{
 		LOG_CRITICAL( "command buffer is null" );
 	}
-	else if ( !raster_state.command_buffer->fence() )
+	else if ( !raster_state.fence )
 	{
-		LOG_CRITICAL( "command buffer fence is null" );
+		LOG_CRITICAL( "fence is null" );
 	}
 	else
 	{
-		vulkan_job::fence( raster_state.command_buffer->fence() );
+		vulkan_job::fence( raster_state.fence );
 	}
 }
 

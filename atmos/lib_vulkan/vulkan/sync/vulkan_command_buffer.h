@@ -7,8 +7,8 @@
 
 namespace igpu
 {
+	class vulkan_abandon_manager;
 	class vulkan_queue;
-	class vulkan_fence;
 
 	class vulkan_command_buffer
 	{
@@ -16,25 +16,19 @@ namespace igpu
 		struct config
 		{
 			VkDevice device = nullptr;
+			scoped_ptr< vulkan_abandon_manager > abandon_manager;
 			VkCommandPool command_pool = nullptr;
 			VkCommandBufferLevel level;
 		};
 
 		VkCommandBuffer vk_cmds() const;
 
-		scoped_ptr< vulkan_fence > fence() const;
-
 		~vulkan_command_buffer();
 
 		vulkan_command_buffer( const config& );
 
-		vulkan_command_buffer(
-			const config&,
-			const std::shared_ptr< vulkan_fence >& );
-
 	private:
 		const config _cfg;
 		VkCommandBuffer _command_buffer = nullptr;
-		std::shared_ptr< vulkan_fence > _fence;
 	};
 }

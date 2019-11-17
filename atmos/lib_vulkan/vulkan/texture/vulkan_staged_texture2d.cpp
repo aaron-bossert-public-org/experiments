@@ -12,16 +12,14 @@
 
 using namespace igpu;
 
-vulkan_staged_texture2d::vulkan_staged_texture2d(
-	const config& cfg,
-	const scoped_ptr< vulkan_synchronization >& synchronization )
+
+vulkan_staged_texture2d::vulkan_staged_texture2d( const config& cfg )
 	: _cfg( cfg )
-	, _synchronization( synchronization )
 	, _staging_buffer( {
 		  cfg.memory,
 		  cfg.vk.device,
 		  cfg.vk.device_properties,
-		  synchronization->vma(),
+		  cfg.vk.synchronization,
 		  VMA_MEMORY_USAGE_CPU_ONLY,
 		  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 	  } )
@@ -160,15 +158,15 @@ void vulkan_staged_texture2d::upload(
 
 	if ( vulkan_format )
 	{
-		auto& synchronization = *_synchronization;
-
 		bool generate_mipmaps = false;
+		VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
 		size_t mipmap_count = state.mipmap_count;
 		if ( _cfg.can_auto_generate_mips && state.mipmap_count == 1 )
 		{
-			if ( synchronization.can_generate_mipmaps(
+			if ( vulkan_image::can_generate_mipmaps(
+					 _cfg.vk.physical_device,
 					 vulkan_format,
-					 VK_IMAGE_TILING_OPTIMAL ) )
+					 tiling ) )
 			{
 				generate_mipmaps = true;
 				auto max_dim =
@@ -189,6 +187,7 @@ void vulkan_staged_texture2d::upload(
 				VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
 					VK_IMAGE_USAGE_TRANSFER_DST_BIT |
 					VK_IMAGE_USAGE_SAMPLED_BIT,
+				tiling,
 				VK_SAMPLE_COUNT_1_BIT,
 				VK_SHARING_MODE_EXCLUSIVE,
 				VK_IMAGE_ASPECT_COLOR_BIT,
@@ -200,25 +199,21 @@ void vulkan_staged_texture2d::upload(
 				return;
 			}
 
-			_gpu_image.reallocate( image_cfg );
+			_gpu_image.reset( &image_cfg );
 		}
 
 		_current_state = state;
 		_current_state.mipmap_count = mipmap_count;
 
-		synchronization.copy(
-			_staging_buffer,
-			_gpu_image,
-			(uint32_t)src_offset );
-
+		_gpu_image.copy_from( *_cfg.vk.barrier_manager, _staging_buffer );
 		if ( generate_mipmaps )
 		{
-			synchronization.generate_mipmaps( _gpu_image );
+			_gpu_image.generate_mipmaps( *_cfg.vk.barrier_manager );
 		}
 	}
 
 	if ( _cfg.memory == memory_type::WRITE_COMBINED )
 	{
-		_staging_buffer.release();
+		_staging_buffer.reset();
 	}
 }

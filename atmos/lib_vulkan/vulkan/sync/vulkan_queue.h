@@ -10,6 +10,7 @@
 
 namespace igpu
 {
+	class vulkan_abandon_manager;
 	class vulkan_command_buffer;
 	class vulkan_fence;
 
@@ -19,12 +20,12 @@ namespace igpu
 		struct config
 		{
 			VkDevice device;
+			scoped_ptr< vulkan_abandon_manager > abandon_manager;
 			uint32_t family_index = ~0U;
 			uint32_t index = ~0U;
 		};
 
-		using command_builder_t =
-			std::function< void( vulkan_command_buffer& ) >;
+		using command_builder_t = std::function< void( VkCommandBuffer& ) >;
 
 		static std::unique_ptr< vulkan_queue > make( const config& );
 
@@ -38,11 +39,10 @@ namespace igpu
 			const VkPipelineStageFlags* p_wait_stages,
 			const command_builder_t&,
 			uint32_t signal_count,
-			const VkSemaphore* p_signal_semaphores );
+			const VkSemaphore* p_signal_semaphores,
+			vulkan_fence* fence = nullptr );
 
 		VkQueue vk_queue() const;
-
-		void free_completed_commands();
 
 		~vulkan_queue();
 
@@ -55,7 +55,6 @@ namespace igpu
 	private:
 		VkQueue _vk_queue = nullptr;
 		VkCommandPool _command_pool = nullptr;
-		std::list< std::shared_ptr< vulkan_command_buffer > > _pending_commands;
 		ptrdiff_t _submit_index = 0;
 
 		const config _cfg;

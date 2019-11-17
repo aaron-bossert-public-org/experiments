@@ -19,6 +19,8 @@ namespace
 		case memory_type::PRESERVED:
 			return VMA_MEMORY_USAGE_CPU_ONLY;
 		}
+
+		return VMA_MEMORY_USAGE_UNKNOWN;
 	}
 
 	VkBufferUsageFlags cpu_usage( memory_type memory )
@@ -31,6 +33,8 @@ namespace
 			return VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
 				VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 		}
+
+		return (VkBufferUsageFlagBits)0;
 	}
 
 	VmaMemoryUsage gpu_vma_usage( memory_type memory )
@@ -42,8 +46,9 @@ namespace
 		case memory_type::PRESERVED:
 			return VMA_MEMORY_USAGE_GPU_ONLY;
 		}
-	}
 
+		return VMA_MEMORY_USAGE_UNKNOWN;
+	}
 
 	VkBufferUsageFlags gpu_usage( memory_type memory )
 	{
@@ -57,8 +62,11 @@ namespace
 				VK_BUFFER_USAGE_TRANSFER_DST_BIT |
 				VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 		}
+
+		return (VkBufferUsageFlagBits)0;
 	}
 }
+
 vulkan_staged_buffer::vulkan_staged_buffer( const config& cfg )
 	: _cfg( cfg )
 	, _staging_buffer( {
@@ -97,20 +105,8 @@ void vulkan_staged_buffer::unmap()
 	else
 	{
 		_staging_buffer.unmap();
-		_gpu_buffer.transfer_from( _staging_Buffer );
-	}
-}
-
-void vulkan_staged_buffer::release()
-{
-	if ( _staging_buffer.mapped_view().data() )
-	{
-		LOG_CRITICAL( "cannot release while memory is mapped" );
-	}
-	else
-	{
-		_staging_buffer.release();
-		_gpu_buffer.release();
+		_gpu_buffer.copy_from( *_cfg.barrier_manager, _staging_buffer );
+		_staging_buffer.reset();
 	}
 }
 

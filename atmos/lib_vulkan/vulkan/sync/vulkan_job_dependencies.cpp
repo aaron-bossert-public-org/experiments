@@ -38,12 +38,18 @@ void vulkan_job_dependencies::record_dependencies(
 	auto& state = job_dependency_state();
 	for ( auto& write_dependency : state.write_deps )
 	{
-		barrier_manager->record_dependency( &write_dependency );
+		barrier_manager->record_barrier(
+			&write_dependency.resource(),
+			write_dependency.layout(),
+			write_dependency.job_scope() );
 	}
 
 	for ( auto* read_hazard : state.read_hazards )
 	{
-		barrier_manager->record_dependency( read_hazard );
+		barrier_manager->record_barrier(
+			&read_hazard->resource(),
+			read_hazard->layout(),
+			read_hazard->job_scope() );
 	}
 
 	state.read_hazards.clear();
@@ -74,8 +80,7 @@ bool vulkan_job_dependencies::validate_barriers() const
 	return all_valid;
 }
 
-
-void vulkan_job_dependencies::on_record_cmds(
+void vulkan_job_dependencies::record_cmds(
 	const scoped_ptr< vulkan_command_buffer >& command_buffer )
 {
 	job().on_record_cmds( this );
@@ -90,19 +95,17 @@ void vulkan_job_dependencies::resource_reinitialized(
 	size_t write_index = ( size_t )( dependency - state.write_deps.data() );
 	size_t read_index = ( size_t )( dependency - state.read_deps.data() );
 
-	if ( write_index < state.write_deps.size() )
-	{
-		on_gpu_object_reallocated( dependency );
-	}
-	else if ( read_index < state.read_deps.size() )
+	if ( read_index < state.read_deps.size() )
 	{
 		activate_read_hazard( dependency );
-		on_gpu_object_reallocated( dependency );
 	}
-	else if ( !dependency->active() )
+	else if ( write_index >= state.write_deps.size() )
 	{
 		LOG_CRITICAL( "dependency does not belong to these job dependencies" );
+		return;
 	}
+
+	on_resource_reinitialized( dependency );
 }
 
 void vulkan_job_dependencies::wait_pending_job()

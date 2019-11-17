@@ -22,14 +22,14 @@ void vulkan_job::barrier_recorded_commands(
 	vulkan_barrier_manager* barrier_manager )
 {
 	auto& state = job_state();
-	barrier_manager->start_dependency_barriers();
+	barrier_manager->start_recording_barriers();
 
 	for ( auto* dependencies : state.recorded_dependencies )
 	{
 		dependencies->record_dependencies( barrier_manager );
 	}
 
-	barrier_manager->finish_dependency_barriers( queue );
+	barrier_manager->submit_recorded_barriers( queue );
 
 #if ATMOS_DEBUG
 	for ( auto* dependencies : state.recorded_dependencies )

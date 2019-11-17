@@ -12,6 +12,7 @@ namespace igpu
 		{
 			VkDevice device = nullptr;
 			VmaAllocator vma = nullptr;
+			size_t swap_count = 0;
 		};
 
 		struct payload
@@ -21,27 +22,49 @@ namespace igpu
 		};
 
 		template < typename... ARGS >
-		void abandon( ARGS... );
+		void abandon( ARGS... ) = delete;
 
-		void destroy_abandoned();
+		void swap_frame();
 
-		std::unique_ptr< vulkan_abandon_manager > make( const config& );
+		static std::unique_ptr< vulkan_abandon_manager > make( const config& );
 
 		~vulkan_abandon_manager();
 
 	private:
 		vulkan_abandon_manager( const config& );
 
+		void vulkan_abandon_manager::destroy_abandoned( size_t );
+
+		std::vector< std::vector< payload > >* abandoned_frame();
+
 	private:
 		const config _cfg;
-		std::vector< std::vector< payload > > _abandoned;
+		size_t _swap_index = 0;
+		std::vector< std::vector< std::vector< payload > > > _abandoned;
+
+		vulkan_abandon_manager( const vulkan_abandon_manager& ) = delete;
+		vulkan_abandon_manager& operator=( const vulkan_abandon_manager& ) =
+			delete;
 	};
 
 	template <>
-	void vulkan_abandon_manager::abandon< VkBuffer, VmaAllocation >(
-		VkBuffer,
-		VmaAllocation );
+	void vulkan_abandon_manager::abandon<>( VkBuffer, VmaAllocation );
 
 	template <>
-	void vulkan_abandon_manager::abandon< VkImage >( VkImage );
+	void vulkan_abandon_manager::abandon<>( VkImage );
+
+	template <>
+	void vulkan_abandon_manager::abandon<>( VkSampler );
+
+	template <>
+	void vulkan_abandon_manager::abandon<>( VkImageView );
+
+	template <>
+	void vulkan_abandon_manager::abandon<>( VkDeviceMemory );
+
+	template <>
+	void vulkan_abandon_manager::abandon<>( VkCommandPool, VkCommandBuffer );
+
+	template <>
+	void vulkan_abandon_manager::abandon<>( VkCommandPool );
 }

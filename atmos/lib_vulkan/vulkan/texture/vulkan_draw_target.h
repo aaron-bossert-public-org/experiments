@@ -12,7 +12,11 @@
 
 namespace igpu
 {
+	class vulkan_abandon_manager;
+	class vulkan_barrier_manager;
 	class vulkan_command_buffer;
+	class vulkan_fence;
+	class vulkan_synchronization;
 
 	class vulkan_draw_target : public draw_target
 	{
@@ -22,8 +26,12 @@ namespace igpu
 			struct vulkan
 			{
 				VkDevice device = nullptr;
+				scoped_ptr< vulkan_synchronization > syncronization;
+				scoped_ptr< vulkan_barrier_manager > barrier_manager;
+				scoped_ptr< vulkan_abandon_manager > abandon_manager;
 				std::shared_ptr< vulkan_render_buffer > color = nullptr;
 				std::shared_ptr< vulkan_depth_buffer > depth = nullptr;
+				size_t swap_count = 0;
 			};
 
 			vulkan vk;
@@ -31,11 +39,15 @@ namespace igpu
 
 		const config& cfg() const override;
 
-		void begin_raster() override;
+		virtual void begin_raster() = 0;
 
-		scoped_ptr< vulkan_command_buffer > raster_cmds();
+		virtual scoped_ptr< vulkan_command_buffer > raster_cmds() = 0;
 
-		void end_raster() override;
+		virtual scoped_ptr< vulkan_fence > raster_fence() = 0;
+
+		virtual void end_raster() = 0;
+
+		virtual size_t swap_index() const = 0;
 
 		uint32_t raster_sub_pass() const;
 
@@ -46,12 +58,16 @@ namespace igpu
 		~vulkan_draw_target();
 
 	protected:
+		struct state
+		{
+			uint32_t raster_sub_pass = UINT32_MAX;
+			VkRenderPass render_pass = nullptr;
+		};
+
 		vulkan_draw_target( const config& );
 
 	private:
 		const config _cfg;
-		uint32_t _raster_sub_pass = UINT32_MAX;
-		VkRenderPass _render_pass = nullptr;
-		std::shared_ptr< vulkan_command_buffer > _raster_cmds;
+		const state _state;
 	};
 }

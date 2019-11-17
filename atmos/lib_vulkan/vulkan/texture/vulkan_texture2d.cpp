@@ -81,10 +81,8 @@ VkFormat igpu::to_vulkan_format( texture_format format )
 	return VK_FORMAT_UNDEFINED;
 }
 
-std::unique_ptr< vulkan_texture2d > vulkan_texture2d::make(
-	const config& cfg,
-	const scoped_ptr< vulkan_synchronization >& synchronization )
+std::unique_ptr< vulkan_texture2d > vulkan_texture2d::make( const config& cfg )
 {
 	return std::unique_ptr< vulkan_texture2d >(
-		new vulkan_staged_texture2d( cfg, synchronization ) );
+		new vulkan_staged_texture2d( cfg ) );
 }

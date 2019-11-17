@@ -25,234 +25,25 @@ size_t vulkan_synchronization::compact_queue_family_index(
 const std::vector< scoped_ptr< vulkan_queue > >& vulkan_synchronization::
 	compact_queues() const
 {
-	_compact_queues;
+	return _compact_queues;
 }
 
 VmaAllocator vulkan_synchronization::vma()
 {
-	return _vma;
+	return _cfg.vma;
 }
 
-void vulkan_synchronization::end_frame()
+vulkan_abandon_manager& vulkan_synchronization::abandon_manager() const
 {
-	_abandon_frame = ( _abandon_frame + 1 ) % _abandon_managers.size();
-	_abandon_managers[_abaondon_frame]->destroy_abandoned();
-}
-
-vulkan_abandon_manager& abandon_manager() const
-{
-	return *_abandon_managers[_abaondon_frame];
-}
-
-void vulkan_synchronization::copy(
-	vulkan_buffer& src,
-	vulkan_image& dst,
-	uint32_t src_offset )
-{
-	submit_sync(
-		_cfg.transfer_queue,
-		[&]( VkCommandBuffer command_buffer,
-			 VkBuffer src_buffer,
-			 VkImage dst_image ) {
-			VkBufferImageCopy region = {};
-			region.bufferOffset = src_offset;
-			region.bufferRowLength = 0;
-			region.bufferImageHeight = 0;
-			region.imageSubresource.aspectMask =
-				dst.cfg().view_info.subresourceRange.aspectMask;
-			region.imageSubresource.mipLevel = 0;
-			region.imageSubresource.baseArrayLayer = 0;
-			region.imageSubresource.layerCount = 1;
-			region.imageOffset = {};
-			region.imageExtent = dst.cfg().image_info.extent;
-
-			vkCmdCopyBufferToImage(
-				command_buffer,
-				src_buffer,
-				dst_image,
-				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-				1,
-				&region );
-		},
-		dependency(
-			src,
-			VK_ACCESS_TRANSFER_READ_BIT,
-			VK_PIPELINE_STAGE_TRANSFER_BIT ),
-		dependency(
-			dst,
-			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			VK_ACCESS_TRANSFER_WRITE_BIT,
-			VK_PIPELINE_STAGE_TRANSFER_BIT ) );
-}
-
-
-bool vulkan_synchronization::can_generate_mipmaps(
-	VkFormat format,
-	VkImageTiling tiling )
-{
-	VkFlags required = VK_FORMAT_FEATURE_BLIT_SRC_BIT |
-		VK_FORMAT_FEATURE_BLIT_DST_BIT |
-		VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT;
-
-
-	VkFlags actual = 0;
-	VkFormatProperties format_properties;
-	vkGetPhysicalDeviceFormatProperties(
-		_cfg.physical_device,
-		format,
-		&format_properties );
-	switch ( tiling )
-	{
-	case VK_IMAGE_TILING_OPTIMAL:
-		actual = format_properties.optimalTilingFeatures;
-		break;
-	case VK_IMAGE_TILING_LINEAR:
-		actual = format_properties.linearTilingFeatures;
-		break;
-	}
-
-
-	return ( actual & required ) == required;
-}
-void vulkan_synchronization::generate_mipmaps( vulkan_image& image )
-{
-	if ( false ==
-		 can_generate_mipmaps(
-			 image.cfg().image_info.format,
-			 image.cfg().image_info.tiling ) )
-	{
-		LOG_CRITICAL(
-			"vk format %d does not support linear blitting!",
-			image.cfg().image_info.format );
-	}
-
-	submit_sync(
-		_cfg.graphics_queue,
-		[&]( VkCommandBuffer command_buffer, VkImage vk_image ) {
-			VkImageMemoryBarrier barrier = {};
-			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-			barrier.image = vk_image;
-			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			barrier.subresourceRange.baseArrayLayer = 0;
-			barrier.subresourceRange.layerCount = 1;
-			barrier.subresourceRange.levelCount = 1;
-
-			int32_t mip_width = image.cfg().image_info.extent.width;
-			int32_t mip_height = image.cfg().image_info.extent.height;
-
-			// setting by hand, currently there isn't a way to represent per-mip
-			// ownership so we do the barriers by hand and track ownership
-			// manually. In the future support should be added to track
-			// ownership on the mip level
-			image.owner( {
-				VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-				VK_ACCESS_TRANSFER_READ_BIT,
-				VK_PIPELINE_STAGE_TRANSFER_BIT,
-				0,
-				_cfg.graphics_queue,
-			} );
-
-			for ( uint32_t i = 1;
-				  i < image.cfg().view_info.subresourceRange.levelCount;
-				  i++ )
-			{
-				barrier.subresourceRange.baseMipLevel = i;
-				barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-				barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-				barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-				barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-				vkCmdPipelineBarrier(
-					command_buffer,
-					VK_PIPELINE_STAGE_TRANSFER_BIT,
-					VK_PIPELINE_STAGE_TRANSFER_BIT,
-					0,
-					0,
-					nullptr,
-					0,
-					nullptr,
-					1,
-					&barrier );
-
-				VkImageBlit blit = {};
-				blit.srcOffsets[0] = {};
-				blit.srcOffsets[1] = {
-					mip_width,
-					mip_height,
-					1,
-				};
-				blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-				blit.srcSubresource.mipLevel = i - 1;
-				blit.srcSubresource.baseArrayLayer = 0;
-				blit.srcSubresource.layerCount = 1;
-				blit.dstOffsets[0] = {};
-				blit.dstOffsets[1] = {
-					mip_width > 1 ? mip_width / 2 : 1,
-					mip_height > 1 ? mip_height / 2 : 1,
-					1,
-				};
-				blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-				blit.dstSubresource.mipLevel = i;
-				blit.dstSubresource.baseArrayLayer = 0;
-				blit.dstSubresource.layerCount = 1;
-
-				vkCmdBlitImage(
-					command_buffer,
-					vk_image,
-					VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-					vk_image,
-					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-					1,
-					&blit,
-					VK_FILTER_LINEAR );
-
-				barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-				barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-				barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-				barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-
-				vkCmdPipelineBarrier(
-					command_buffer,
-					VK_PIPELINE_STAGE_TRANSFER_BIT,
-					VK_PIPELINE_STAGE_TRANSFER_BIT,
-					0,
-					0,
-					nullptr,
-					0,
-					nullptr,
-					1,
-					&barrier );
-
-				if ( mip_width > 1 )
-					mip_width /= 2;
-				if ( mip_height > 1 )
-					mip_height /= 2;
-			}
-		},
-		dependency(
-			image,
-			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-			VK_ACCESS_TRANSFER_READ_BIT,
-			VK_PIPELINE_STAGE_TRANSFER_BIT ) );
+	return *_cfg.abandon_manager;
 }
 
 vulkan_synchronization::~vulkan_synchronization()
-{
-	vmaDestroyAllocator( _vma );
-}
+{}
 
 std::unique_ptr< vulkan_synchronization > vulkan_synchronization::make(
 	const config& cfg )
 {
-	VmaAllocatorCreateInfo allocatorInfo = {};
-	allocatorInfo.physicalDevice = cfg.physical_device;
-	allocatorInfo.device = cfg.device;
-
-	VmaAllocator vma;
-	vmaCreateAllocator( &allocatorInfo, &vma );
-
 	std::vector< size_t > compact;
 	std::vector< scoped_ptr< vulkan_queue > > compact_queues;
 
@@ -282,28 +73,17 @@ std::unique_ptr< vulkan_synchronization > vulkan_synchronization::make(
 	}
 
 	return std::unique_ptr< vulkan_synchronization >(
-		new vulkan_synchronization( cfg, vma, compact, compact_queues ) );
+		new vulkan_synchronization( cfg, compact, compact_queues ) );
 }
 
 vulkan_synchronization::vulkan_synchronization(
 	const config& cfg,
-	VmaAllocator vma,
 	const std::vector< size_t >& compact_queue_family_indices,
 	const std::vector< scoped_ptr< vulkan_queue > >& compact_queues )
 	: _cfg( cfg )
-	, _vma( vma )
-	, _queue_family_count( queue_family_count )
 	, _compact_queue_family_indices( compact_queue_family_indices )
 	, _compact_queues( compact_queues )
-{
-	while ( _abandon_managers.size() < _cfg.swap_count )
-	{
-		_abandon_managers.push_back( vulkan_abandon_manager::make( {
-			_cfg.device,
-			_vma,
-		} ) );
-	}
-}
+{}
 
 #include "vulkan/context/vulkan_context.h"
 #include "vulkan/defines/vulkan_includes.h"
@@ -399,10 +179,11 @@ class HelloTriangleApplication
 {
 private:
 	scoped_ptr< vulkan_context > _context;
+
+	vulkan_back_buffer* vk_bb = nullptr;
 	const vulkan_window* _window = nullptr;
 
 	VkInstance _instance = nullptr;
-	VkPhysicalDevice _physical_device = nullptr;
 	VkDevice _device = nullptr;
 
 	scoped_ptr< vulkan_queue > _graphics_queue;
@@ -426,24 +207,12 @@ private:
 				sampler::address::WRAP,
 			};
 			texture_cfg.can_auto_generate_mips = true;
-			texture = app->_context->make_texture( texture_cfg );
+			texture = app->_context->make_shared( texture_cfg );
 
 			if ( false == app->load_buffer( TEXTURE_PATH, texture.get() ) )
 			{
 				return false;
 			}
-
-			// transition layout for use by graphics pipeline
-			auto* vulkan = (vulkan_texture2d*)texture.get();
-			submit_sync(
-				app->_context->synchronization().cfg().graphics_queue,
-				[&]( VkCommandBuffer, VkImage ) {},
-				dependency(
-					vulkan->gpu_object(),
-					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-					VK_ACCESS_SHADER_READ_BIT,
-					VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT |
-						VK_PIPELINE_STAGE_VERTEX_SHADER_BIT ) );
 
 			return true;
 		}
@@ -455,11 +224,10 @@ private:
 
 			VkDescriptorImageInfo info = {};
 			info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			info.imageView = image.image_view();
-			info.sampler = image.sampler();
+			info.imageView = image.vk_image_view();
+			info.sampler = image.vk_sampler();
 			return info;
 		}
-
 		void destroy()
 		{
 			texture = nullptr;
@@ -474,15 +242,21 @@ private:
 	{
 		[[nodiscard]] bool create()
 		{
-			index_buffer = app->_context->make_index_buffer( {
+			index_buffer = app->_context->make_shared( index_buffer::config{
 				index_format::UNSIGNED_INT,
 			} );
 
-			vertex_buffer = app->_context->make_vertex_buffer( {
-				IGPU_VERT_CFG_OF( Vertex, pos, col, uv0 ),
-			} );
+			vertex_buffer::attribute attr = {
+				"pos",
+				to_components( ( *( (Vertex*)0 ) ).pos ),
+				( ( size_t ) & ( ( (Vertex*)0 )->pos ) ),
+			};
 
-			geometry = app->_context->make_geometry( {
+
+			vertex_buffer = app->_context->make_shared(
+				IGPU_VERT_CFG_OF( Vertex, pos, col, uv0 ) );
+
+			geometry = app->_context->make_shared( geometry::config{
 				MODEL_PATH,
 				topology::TRIANGLE_LIST,
 				index_buffer,
@@ -552,14 +326,14 @@ private:
 			{
 				offsets[i] = 0;
 				vertex_buffers[i] =
-					vulkan->vertex_buffer( i ).gpu_object().get();
+					vulkan->vertex_buffer( i ).gpu_object().vk_buffer();
 			}
 
 			vkCmdBindIndexBuffer(
 				command_buffer,
-				vulkan_indices.gpu_object().get(),
+				vulkan_indices.gpu_object().vk_buffer(),
 				0,
-				vulkan_indices.cfg().vk.format );
+				vulkan_indices.cfg().vk.index_type );
 			vkCmdBindVertexBuffers(
 				command_buffer,
 				0,
@@ -583,7 +357,7 @@ private:
 		}
 
 		HelloTriangleApplication* app;
-		std::unique_ptr< geometry > geometry;
+		std::shared_ptr< geometry > geometry;
 		std::shared_ptr< vertex_buffer > vertex_buffer;
 		std::shared_ptr< index_buffer > index_buffer;
 	};
@@ -602,7 +376,8 @@ private:
 
 			for ( uint32_t i = 0; i < app->_swap_image_count; i++ )
 			{
-				_compute_buffers[i] = app->_context->make_compute_buffer( {} );
+				_compute_buffers[i] =
+					app->_context->make_shared( compute_buffer::config{} );
 
 				if ( !_compute_buffers[i] )
 				{
@@ -619,7 +394,7 @@ private:
 		{
 			auto vulkan =
 				(vulkan_compute_buffer*)_compute_buffers[swap_index].get();
-			VkBuffer buffer = vulkan->gpu_object().get();
+			VkBuffer buffer = vulkan->gpu_object().vk_buffer();
 			VkDescriptorBufferInfo buffer_info = {};
 			buffer_info.buffer = buffer;
 			buffer_info.offset = 0;
@@ -629,7 +404,7 @@ private:
 
 		void update( uint32_t swap_index )
 		{
-			auto res = app->_context->back_buffer().cfg().res;
+			auto res = app->_context->back_buffer()->res();
 
 			auto view = buffer_view< UniformBufferBatch >( 1, nullptr );
 			_compute_buffers[swap_index]->map( &view );
@@ -703,9 +478,9 @@ private:
 		[[nodiscard]] bool create()
 		{
 			std::shared_ptr< vertex_shader > vertex =
-				app->_context->make_vertex_shader();
+				app->_context->make_shared( vertex_shader::config{} );
 			std::shared_ptr< fragment_shader > fragment =
-				app->_context->make_fragment_shader();
+				app->_context->make_shared( fragment_shader::config{} );
 
 
 			if ( !app->load_buffer( VERTEX_PATH, vertex.get() ) )
@@ -717,7 +492,7 @@ private:
 			{
 				return false;
 			}
-			program = app->_context->make_program( {
+			program = app->_context->make_shared( program::config{
 				"test program",
 				vertex,
 				fragment,
@@ -752,7 +527,7 @@ private:
 		}
 
 		HelloTriangleApplication* app;
-		std::unique_ptr< program > program;
+		std::shared_ptr< program > program;
 		std::array< VkDescriptorSetLayout, 3 > descriptor_set_layouts;
 		VkPipelineLayout pipeline_layout;
 		std::vector< VkPipelineShaderStageCreateInfo > shader_stages;
@@ -787,7 +562,7 @@ private:
 				compare::LESS,
 			};
 
-			_render_states = app->_context->make_render_states( {
+			_render_states = app->_context->make_shared( {
 				color_write_mask,
 				c,
 				b,
@@ -826,7 +601,7 @@ private:
 		}
 
 		HelloTriangleApplication* app;
-		std::unique_ptr< render_states > _render_states;
+		std::shared_ptr< render_states > _render_states;
 	};
 
 	new_render_states_impl render_states_impl = {
@@ -864,10 +639,10 @@ private:
 					ASSERT_CAST( vulkan_primitives*, primitives.get() );
 
 				vulkan_primitives_descriptor primitives_descriptor;
-				if ( primitives_descriptor
-						 .reset( _descriptor_set, parameters, *vulkan ) )
+				if ( primitives_descriptor.reset( parameters, *vulkan ) )
 				{
-					update_descriptor_sets( device, primitives_descriptor );
+					primitives_descriptor.bind_descriptor_set(
+						_descriptor_set );
 				}
 			}
 
@@ -959,18 +734,6 @@ private:
 				return set;
 			}
 
-			static void update_descriptor_sets(
-				VkDevice device,
-				const vulkan_primitives_descriptor& primitives_descriptor )
-			{
-				vkUpdateDescriptorSets(
-					device,
-					(uint32_t)primitives_descriptor.parameters()->count(),
-					primitives_descriptor.write_descriptors().data(),
-					0,
-					nullptr );
-			}
-
 			void destroy()
 			{
 				vkDestroyDescriptorPool( device, _descriptor_pool, nullptr );
@@ -990,21 +753,21 @@ private:
 				_batch_inputs.emplace_back().setup(
 					program.batch_parameters(),
 					app->_device,
-					app->_context->make_primitives( { {
+					app->_context->make_shared( primitives::config{ {
 						{ "batch_data", app->batch._compute_buffers[i] },
 					} } ) );
 
 				_material_inputs.emplace_back().setup(
 					program.material_parameters(),
 					app->_device,
-					app->_context->make_primitives( { {
+					app->_context->make_shared( primitives::config{ {
 						{ "texSampler", app->texture_impl.texture },
 					} } ) );
 
 				_instance_inputs.emplace_back().setup(
 					program.instance_parameters(),
 					app->_device,
-					app->_context->make_primitives( { {
+					app->_context->make_shared( primitives::config{ {
 						{ "instance_data", app->instance._compute_buffers[i] },
 					} } ) );
 			}
@@ -1060,15 +823,15 @@ public:
 	{
 		_context = context;
 
+		vk_bb =
+			ASSERT_CAST( vulkan_back_buffer*, _context->back_buffer().get() );
+
 		_window = &_context->window();
-		_instance = _context->instance();
-		_physical_device = _context->physical_device();
-		_device = _context->device();
-		_present_queue = _context->synchronization().cfg().present_queue;
-		_graphics_queue = _context->synchronization().cfg().graphics_queue;
-		_swap_image_count =
-			(uint32_t)_context->back_buffer().framebuffers().size();
-		_msaa_samples = _context->back_buffer().cfg().vk.sample_count;
+		_device = vk_bb->cfg().vk.device;
+		_present_queue = vk_bb->cfg().vk.syncronization->cfg().present_queue;
+		_graphics_queue = vk_bb->cfg().vk.syncronization->cfg().graphics_queue;
+		_swap_image_count = _context->cfg().vk.swap_count;
+		_msaa_samples = _context->cfg().vk.sample_count;
 
 		if ( batch.create() && instance.create() && texture_impl.create() &&
 			 program_impl.create() && render_states_impl.create() &&
@@ -1157,7 +920,7 @@ private:
 			std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
 		}
 
-		_context->resize_back_buffer( window_res );
+		_context->recreate_back_buffer();
 
 		on_cleanup_swap_chain();
 		create_graphics_pipeline();
@@ -1178,16 +941,16 @@ private:
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
-		viewport.width = (float)_context->back_buffer().cfg().res.x;
-		viewport.height = (float)_context->back_buffer().cfg().res.y;
+		viewport.width = (float)_context->back_buffer()->res().x;
+		viewport.height = (float)_context->back_buffer()->res().y;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 
 		VkRect2D scissor = {};
 		scissor.offset = {};
 		scissor.extent = {
-			(uint32_t)_context->back_buffer().cfg().res.x,
-			(uint32_t)_context->back_buffer().cfg().res.y,
+			(uint32_t)_context->back_buffer()->res().x,
+			(uint32_t)_context->back_buffer()->res().y,
 		};
 
 		VkPipelineViewportStateCreateInfo viewport_state = {};
@@ -1236,15 +999,14 @@ private:
 		vulkan_geometry* geometry =
 			ASSERT_CAST( vulkan_geometry*, geo_impl.geometry.get() );
 
-
-		vulkan_attributes_decriptor attributes_descriptor;
-		if ( !attributes_descriptor.reset(
-				 program->vertex_parameters(),
-				 *geometry ) )
+		attribute_indexer indexer;
+		if ( !indexer.reset( program->vertex_parameters(), *geometry ) )
 		{
 			return;
 		}
 
+		vulkan_attributes_decriptor attributes_descriptor;
+		attributes_descriptor.reset( indexer );
 
 		VkGraphicsPipelineCreateInfo pipeline_info = {};
 		pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -1260,7 +1022,8 @@ private:
 		pipeline_info.pDepthStencilState = render_states_impl.depth_stencil();
 		pipeline_info.pColorBlendState = &color_blending;
 		pipeline_info.layout = program_impl.pipeline_layout;
-		pipeline_info.renderPass = _context->back_buffer().render_pass();
+		pipeline_info.renderPass = vk_bb->render_pass();
+
 		;
 		pipeline_info.subpass = 0;
 		pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
@@ -1417,13 +1180,12 @@ private:
 
 			VkRenderPassBeginInfo render_pass_info = {};
 			render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			render_pass_info.renderPass = _context->back_buffer().render_pass();
-			render_pass_info.framebuffer =
-				_context->back_buffer().framebuffers()[i];
+			render_pass_info.renderPass = vk_bb->render_pass();
+			render_pass_info.framebuffer = vk_bb->framebuffer( i );
 			render_pass_info.renderArea.offset = {};
 			render_pass_info.renderArea.extent = {
-				(uint32_t)_context->back_buffer().cfg().res.x,
-				(uint32_t)_context->back_buffer().cfg().res.y,
+				(uint32_t)_context->back_buffer()->res().x,
+				(uint32_t)_context->back_buffer()->res().y,
 			};
 
 			std::array< VkClearValue, 2 > clear_values = {};
@@ -1522,7 +1284,7 @@ private:
 
 		switch ( vkAcquireNextImageKHR(
 			_device,
-			_context->back_buffer().swap_chain(),
+			vk_bb->swap_chain(),
 			std::numeric_limits< uint64_t >::max(),
 			_image_available_semaphores[_current_frame],
 			VK_NULL_HANDLE,
@@ -1537,7 +1299,7 @@ private:
 			break;
 		}
 
-		vkQueueWaitIdle( _present_queue->get() );
+		vkQueueWaitIdle( _present_queue->vk_queue() );
 
 		VkSubmitInfo submit_info = {};
 		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1570,7 +1332,7 @@ private:
 		vkResetFences( _device, 1, &_in_flight_fences[_current_frame] );
 
 		vkQueueSubmit(
-			_graphics_queue->get(),
+			_graphics_queue->vk_queue(),
 			1,
 			&submit_info,
 			_in_flight_fences[_current_frame] );
@@ -1582,7 +1344,7 @@ private:
 		present_info.pWaitSemaphores = signal_semaphores;
 
 		VkSwapchainKHR swap_chains[] = {
-			_context->back_buffer().swap_chain(),
+			vk_bb->swap_chain(),
 		};
 
 		present_info.swapchainCount = 1;
@@ -1590,7 +1352,8 @@ private:
 
 		present_info.pImageIndices = &image_index;
 
-		switch ( vkQueuePresentKHR( _present_queue->get(), &present_info ) )
+		switch (
+			vkQueuePresentKHR( _present_queue->vk_queue(), &present_info ) )
 		{
 		case VK_SUBOPTIMAL_KHR:
 			LOG_WARNING( "vkAcquireNextImageKHR: VK_SUBOPTIMAL_KHR" );

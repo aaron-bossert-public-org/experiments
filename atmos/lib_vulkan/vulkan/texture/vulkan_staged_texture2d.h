@@ -18,9 +18,7 @@ namespace igpu
 	public:
 		const config& cfg() const override;
 
-		vulkan_staged_texture2d(
-			const config& cfg,
-			const scoped_ptr< vulkan_synchronization >& );
+		vulkan_staged_texture2d( const config& cfg );
 
 		~vulkan_staged_texture2d() override;
 
@@ -42,7 +40,6 @@ namespace igpu
 	private:
 		const config _cfg;
 		texture2d::state _current_state = {};
-		scoped_ptr< vulkan_synchronization > _synchronization;
 		buffer_view< char > _mapped_view = {};
 		vulkan_buffer _staging_buffer;
 		vulkan_image _gpu_image;

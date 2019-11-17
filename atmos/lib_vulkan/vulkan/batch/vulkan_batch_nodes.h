@@ -34,6 +34,7 @@ namespace igpu
 	struct vulkan_batch_raster_state : batch::raster_state
 	{
 		scoped_ptr< vulkan_command_buffer > command_buffer;
+		scoped_ptr< vulkan_fence > fence;
 
 		struct
 		{

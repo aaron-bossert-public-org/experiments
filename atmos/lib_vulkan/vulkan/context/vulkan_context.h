@@ -12,6 +12,7 @@
 
 namespace igpu
 {
+	class vulkan_abandon_manager;
 	class vulkan_barrier_manager;
 	class vulkan_synchronization;
 	class vulkan_pipeline_cache;
@@ -24,6 +25,8 @@ namespace igpu
 			struct vulkan
 			{
 				VkPhysicalDeviceProperties physical_device_properties;
+				VkSampleCountFlagBits sample_count = (VkSampleCountFlagBits)0;
+				uint32_t swap_count = 0;
 			};
 
 			vulkan vk;
@@ -39,7 +42,7 @@ namespace igpu
 
 		scoped_ptr< draw_target > back_buffer() override;
 
-		void resize_back_buffer( const glm::ivec2& screen_res );
+		void recreate_back_buffer();
 
 		~vulkan_context();
 
@@ -95,8 +98,6 @@ namespace igpu
 		std::unique_ptr< transparent_batch > make(
 			const transparent_batch::config& ) override;
 
-		void end_frame();
-
 	protected:
 		vulkan_context(
 			const config&,
@@ -104,11 +105,12 @@ namespace igpu
 			VkDebugUtilsMessengerEXT,
 			VkPhysicalDevice,
 			VkDevice,
-			VkSampleCountFlagBits sample_count,
+			VmaAllocator,
 			const std::shared_ptr< vulkan_queue >& present_queue,
 			const std::shared_ptr< vulkan_queue >& graphics_queue,
 			const std::shared_ptr< vulkan_queue >& compute_queue,
 			const std::shared_ptr< vulkan_queue >& transfer_queue,
+			const std::shared_ptr< vulkan_abandon_manager >&,
 			const std::shared_ptr< vulkan_barrier_manager >&,
 			const std::shared_ptr< vulkan_synchronization >&,
 			const std::shared_ptr< vulkan_pipeline_cache >&,
@@ -125,17 +127,17 @@ namespace igpu
 			VkDebugUtilsMessengerEXT debug_messenger = nullptr;
 			VkPhysicalDevice physical_device = nullptr;
 			VkDevice device = nullptr;
+			VmaAllocator vma = nullptr;
 		} _state;
 
-		VkSampleCountFlagBits _sample_count = (VkSampleCountFlagBits)0;
-
-		std::shared_ptr< vulkan_queue > _present_queue;
-		std::shared_ptr< vulkan_queue > _graphics_queue;
-		std::shared_ptr< vulkan_queue > _compute_queue;
-		std::shared_ptr< vulkan_queue > _transfer_queue;
-		std::shared_ptr< vulkan_barrier_manager > _barrier_manager;
-		std::shared_ptr< vulkan_synchronization > _synchronization;
-		std::shared_ptr< vulkan_pipeline_cache > _pipeline_cache;
+		const std::shared_ptr< vulkan_queue > _present_queue;
+		const std::shared_ptr< vulkan_queue > _graphics_queue;
+		const std::shared_ptr< vulkan_queue > _compute_queue;
+		const std::shared_ptr< vulkan_queue > _transfer_queue;
+		const std::shared_ptr< vulkan_abandon_manager > _abandon_manager;
+		const std::shared_ptr< vulkan_barrier_manager > _barrier_manager;
+		const std::shared_ptr< vulkan_synchronization > _synchronization;
+		const std::shared_ptr< vulkan_pipeline_cache > _pipeline_cache;
 		std::shared_ptr< vulkan_back_buffer > _back_buffer;
 
 		std::unique_ptr< vulkan_window > _window;

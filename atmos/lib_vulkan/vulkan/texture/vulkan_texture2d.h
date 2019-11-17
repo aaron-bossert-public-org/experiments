@@ -11,6 +11,7 @@ namespace igpu
 {
 	VkFormat to_vulkan_format( texture_format );
 
+	class vulkan_barrier_manager;
 	class vulkan_synchronization;
 	class vulkan_image;
 
@@ -24,6 +25,8 @@ namespace igpu
 				const VkPhysicalDeviceProperties* device_properties = nullptr;
 				VkPhysicalDevice physical_device = nullptr;
 				VkDevice device = nullptr;
+				scoped_ptr< vulkan_synchronization > synchronization;
+				scoped_ptr< vulkan_barrier_manager > barrier_manager;
 			};
 
 			vulkan vk;
@@ -32,8 +35,6 @@ namespace igpu
 
 		virtual const vulkan_image& gpu_object() const = 0;
 
-		static std::unique_ptr< vulkan_texture2d > make(
-			const config&,
-			const scoped_ptr< vulkan_synchronization >& );
+		static std::unique_ptr< vulkan_texture2d > make( const config& );
 	};
 }

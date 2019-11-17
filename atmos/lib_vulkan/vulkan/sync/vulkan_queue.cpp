@@ -5,6 +5,8 @@
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_fence.h"
 
+#include "framework/logging/log.h"
+
 using namespace igpu;
 
 std::unique_ptr< vulkan_queue > vulkan_queue::make( const config& cfg )
@@ -12,16 +14,31 @@ std::unique_ptr< vulkan_queue > vulkan_queue::make( const config& cfg )
 	VkQueue vk_queue = nullptr;
 	vkGetDeviceQueue( cfg.device, cfg.family_index, cfg.index, &vk_queue );
 
-	VkCommandPool command_pool;
-	VkCommandPoolCreateInfo pool_info = {};
-	pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	pool_info.queueFamilyIndex = cfg.family_index;
-	pool_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+	if ( !vk_queue )
+	{
+		LOG_CRITICAL( "queue is null" );
+	}
+	else
+	{
+		VkCommandPoolCreateInfo pool_info = {};
+		pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		pool_info.queueFamilyIndex = cfg.family_index;
+		pool_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
 
-	vkCreateCommandPool( cfg.device, &pool_info, nullptr, &command_pool );
+		VkCommandPool command_pool = nullptr;
+		vkCreateCommandPool( cfg.device, &pool_info, nullptr, &command_pool );
+		if ( !command_pool )
+		{
+			LOG_CRITICAL( "command_pool is null" );
+		}
+		else
+		{
+			return std::unique_ptr< vulkan_queue >(
+				new vulkan_queue( cfg, vk_queue, command_pool ) );
+		}
+	}
 
-	return std::unique_ptr< vulkan_queue >(
-		new vulkan_queue( cfg, vk_queue, command_pool ) );
+	return nullptr;
 }
 
 const vulkan_queue::config& vulkan_queue::cfg() const
@@ -39,32 +56,25 @@ void vulkan_queue::one_time_command(
 	const VkPipelineStageFlags* p_wait_stages,
 	const command_builder_t& builder,
 	uint32_t signal_count,
-	const VkSemaphore* p_signal_semaphores )
+	const VkSemaphore* p_signal_semaphores,
+	vulkan_fence* fence )
 {
-	free_completed_commands();
+	vulkan_command_buffer command_buffer( {
 
-	std::shared_ptr< vulkan_fence > fence = vulkan_fence::make( {
 		_cfg.device,
+		_cfg.abandon_manager,
+		_command_pool,
+		VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 	} );
-
-	_pending_commands.push_back( std::make_shared< vulkan_command_buffer >(
-
-		vulkan_command_buffer::config{
-			_cfg.device,
-			_command_pool,
-			VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-		},
-		fence ) );
-
 
 	VkCommandBufferBeginInfo begin_info = {};
 	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-	VkCommandBuffer vk_cmds = _pending_commands.back()->vk_cmds();
+	VkCommandBuffer vk_cmds = command_buffer.vk_cmds();
 
 	vkBeginCommandBuffer( vk_cmds, &begin_info );
-	builder( *_pending_commands.back() );
+	builder( vk_cmds );
 	vkEndCommandBuffer( vk_cmds );
 
 	VkSubmitInfo info = {
@@ -79,23 +89,18 @@ void vulkan_queue::one_time_command(
 		p_signal_semaphores,
 	};
 
-	vkQueueSubmit( _vk_queue, 1, &info, fence->vk_fence() );
+	VkFence vk_fence = fence ? fence->vk_fence() : nullptr;
+	vkQueueSubmit( _vk_queue, 1, &info, vk_fence );
 }
 
-void vulkan_queue::free_completed_commands()
+VkQueue vulkan_queue::vk_queue() const
 {
-	// free front chunk of oldest command buffers
-	while ( _pending_commands.size() &&
-			_pending_commands.front()->fence()->is_ready() )
-	{
-		_pending_commands.erase( _pending_commands.begin() );
-	}
+	return _vk_queue;
 }
 
 vulkan_queue::~vulkan_queue()
 {
-	_pending_commands.clear();
-
+	vkQueueWaitIdle( _vk_queue );
 	vkDestroyCommandPool( _cfg.device, _command_pool, nullptr );
 }
 

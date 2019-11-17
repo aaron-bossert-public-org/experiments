@@ -11,7 +11,9 @@
 namespace igpu
 {
 	class vulkan_context;
+	class vulkan_fence;
 	class vulkan_queue;
+	class vulkan_semaphore;
 
 	class vulkan_back_buffer : public vulkan_draw_target
 	{
@@ -23,6 +25,7 @@ namespace igpu
 				vulkan_context* context = nullptr;
 				VkPhysicalDevice physical_device = nullptr;
 				VkSurfaceKHR surface = nullptr;
+				VkSurfaceCapabilitiesKHR surface_caps;
 				VkColorSpaceKHR color_space;
 				uint32_t present_queue_family = 0;
 				uint32_t graphics_queue_family = 0;
@@ -33,33 +36,53 @@ namespace igpu
 
 		const config& cfg() const override;
 
+		void begin_raster() override;
+
+		scoped_ptr< vulkan_command_buffer > raster_cmds() override;
+
+		scoped_ptr< vulkan_fence > raster_fence() override;
+
 		void end_raster() override;
+
+		size_t swap_index() const override;
 
 		VkSwapchainKHR swap_chain() const;
 
-		const std::vector< VkFramebuffer >& framebuffers() const;
+		VkFramebuffer framebuffer( size_t swap_index ) const;
 
 		static std::unique_ptr< vulkan_back_buffer > make( const config& );
 
 		~vulkan_back_buffer();
 
 	private:
-		vulkan_back_buffer(
-			const config&,
-			VkSwapchainKHR,
-			const std::vector< VkImage >&,
-			const std::vector< VkImageView >& );
+		struct swap_state
+		{
+			VkImage image = nullptr;
+			VkImageView image_view = nullptr;
+			VkFramebuffer framebuffer = nullptr;
+			std::shared_ptr< vulkan_command_buffer > raster_cmds;
+			std::shared_ptr< vulkan_semaphore > aquire_sem;
+			std::shared_ptr< vulkan_semaphore > raster_sem;
+			std::shared_ptr< vulkan_fence > raster_fence;
+		};
+
+		struct state
+		{
+			VkSwapchainKHR swap_chain;
+			VkCommandPool command_pool;
+			std::vector< vulkan_back_buffer::swap_state > swap_states;
+			uint32_t swap_index = 0;
+			uint32_t image_index = 0;
+		};
+
+		vulkan_back_buffer( const config&, const state& );
+
+		swap_state& frame_swap_state();
+
+		VkResult do_end_raster();
 
 	private:
 		const config _cfg;
-
-		VkSwapchainKHR _swap_chain;
-
-		std::vector< VkImage > _images;
-		std::vector< VkImageView > _image_views;
-		std::vector< VkFramebuffer > _framebuffers;
-
-		std::unique_ptr< vulkan_render_buffer > _color;
-		std::unique_ptr< vulkan_depth_buffer > _depth;
+		state _st;
 	};
 }

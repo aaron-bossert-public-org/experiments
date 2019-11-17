@@ -28,6 +28,11 @@ const vulkan_job_dependencies::state& vulkan_job_attributes::
 	return _state;
 }
 
+vulkan_job& vulkan_job_attributes::job()
+{
+	return *_cfg.job;
+}
+
 const vulkan_job& vulkan_job_attributes::job() const
 {
 	return *_cfg.job;

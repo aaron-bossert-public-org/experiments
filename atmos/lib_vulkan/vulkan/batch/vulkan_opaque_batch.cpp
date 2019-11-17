@@ -31,6 +31,7 @@ void vulkan_opaque_batch::raster(
 	vulkan_batch_raster_state raster_state = {
 		base_raster_state,
 		vulkan_draw_target->raster_cmds(),
+		vulkan_draw_target->raster_fence(),
 	};
 
 	batch_utility::raster_opaque( *_root_batch, raster_state );

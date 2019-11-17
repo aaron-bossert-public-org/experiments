@@ -69,6 +69,7 @@ std::unique_ptr< vulkan_render_buffer > vulkan_render_buffer::make(
 		vulkan_format,
 		VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT |
 			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+		VK_IMAGE_TILING_OPTIMAL,
 		cfg.vk.sample_count,
 		cfg.vk.sharing_mode,
 		VK_IMAGE_ASPECT_COLOR_BIT,

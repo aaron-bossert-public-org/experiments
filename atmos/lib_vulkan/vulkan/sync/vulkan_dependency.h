@@ -20,7 +20,7 @@ namespace igpu
 			const vulkan_job_scope&,
 			const scoped_ptr< vulkan_job_dependencies >& );
 
-		vulkan_dependency();
+		~vulkan_dependency();
 
 		bool active() const;
 
@@ -43,6 +43,7 @@ namespace igpu
 		const vulkan_resource::link _link;
 		const VkImageLayout _layout;
 		const vulkan_job_scope _job_scope;
-		scoped_ptr< vulkan_job_dependencies > _job;
+		scoped_ptr< vulkan_job_dependencies > _job_dependencies;
+		bool _active = false;
 	};
 }

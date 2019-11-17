@@ -38,6 +38,7 @@ std::unique_ptr< vulkan_depth_texture2d > vulkan_depth_texture2d::make(
 		vulkan_format,
 		VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT |
 			VK_IMAGE_USAGE_SAMPLED_BIT,
+		VK_IMAGE_TILING_OPTIMAL,
 		cfg.vk.sample_count,
 		cfg.vk.sharing_mode,
 		VK_IMAGE_ASPECT_DEPTH_BIT,

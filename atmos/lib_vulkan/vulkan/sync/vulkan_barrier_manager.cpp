@@ -1,12 +1,14 @@
 
 #include "vulkan/sync/vulkan_barrier_manager.h"
 
+#include "vulkan/buffer/vulkan_buffer.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_dependency.h"
 #include "vulkan/sync/vulkan_queue.h"
 #include "vulkan/sync/vulkan_resource.h"
 #include "vulkan/sync/vulkan_semaphore.h"
 #include "vulkan/sync/vulkan_synchronization.h"
+#include "vulkan/texture/vulkan_image.h"
 
 #include "framework/logging/log.h"
 
@@ -14,7 +16,26 @@
 
 using namespace igpu;
 
-void vulkan_barrier_manager::start_dependency_barriers()
+
+void vulkan_barrier_manager::submit_frame_job(
+	const scoped_ptr< vulkan_queue > queue,
+	const std::initializer_list< frame_job_barrier >& frame_job_barriers,
+	const std::function< void( VkCommandBuffer ) >& builder )
+{
+	start_recording_barriers();
+
+	for ( const auto& barrier : frame_job_barriers )
+	{
+		record_barrier( barrier.resource, barrier.layout, barrier.job_scope );
+	}
+
+	submit_recorded_barriers( queue );
+
+	queue->one_time_command( builder );
+}
+
+
+void vulkan_barrier_manager::start_recording_barriers()
 {
 	if ( _recording_barriers )
 	{
@@ -32,11 +53,14 @@ void vulkan_barrier_manager::start_dependency_barriers()
 	_recording_barriers = true;
 }
 
-void vulkan_barrier_manager::record_dependency( vulkan_dependency* dependency )
+void vulkan_barrier_manager::record_barrier(
+	vulkan_resource* resource,
+	VkImageLayout layout,
+	const vulkan_job_scope& job_scope )
 {
-	if ( !dependency )
+	if ( !resource )
 	{
-		LOG_CRITICAL( "dependency is null" );
+		LOG_CRITICAL( "resource is null" );
 	}
 	else if ( !_recording_barriers )
 	{
@@ -46,22 +70,20 @@ void vulkan_barrier_manager::record_dependency( vulkan_dependency* dependency )
 	}
 	else
 	{
-		vulkan_resource& resource = dependency->resource();
-
-		if ( !resource.barrier_manager_record() )
+		if ( !resource->barrier_manager_record() )
 		{
 			_pending_records.push_back( {
-				&resource,
-				dependency->layout(),
-				dependency->job_scope(),
+				resource,
+				layout,
+				job_scope,
 			} );
 
-			resource.barrier_manager_record( &_pending_records.back() );
+			resource->barrier_manager_record( &_pending_records.back() );
 		}
 		else if (
-			record* record = resolve( resource.barrier_manager_record() ) )
+			record* record = resolve( resource->barrier_manager_record() ) )
 		{
-			if ( record->layout != dependency->layout() )
+			if ( record->layout != layout )
 			{
 				LOG_CRITICAL(
 					"all dependencies on the same image resource in a job must "
@@ -69,12 +91,12 @@ void vulkan_barrier_manager::record_dependency( vulkan_dependency* dependency )
 					"on the same image layout. current layout(%s)\nrequested "
 					"layout(%s)",
 					debug::to_string( record->layout ).c_str(),
-					debug::to_string( dependency->layout() ).c_str() );
+					debug::to_string( layout ).c_str() );
 			}
 			else
 			{
 				if ( record->job_scope.is_writable() ||
-					 dependency->job_scope().is_writable() )
+					 job_scope.is_writable() )
 				{
 					LOG_CRITICAL(
 						"dependency requests writable access to a resource "
@@ -85,16 +107,14 @@ void vulkan_barrier_manager::record_dependency( vulkan_dependency* dependency )
 						"will not be synchronized." );
 				}
 
-				record->job_scope =
-					record->job_scope.combined( dependency->job_scope() );
+				record->job_scope = record->job_scope.combined( job_scope );
 			}
 		}
 	}
 }
 
-void vulkan_barrier_manager::finish_dependency_barriers(
-	const scoped_ptr< vulkan_queue >& queue,
-	scoped_ptr< vulkan_fence >* out_fence )
+void vulkan_barrier_manager::submit_recorded_barriers(
+	const scoped_ptr< vulkan_queue >& queue )
 {
 	if ( !_recording_barriers )
 	{
@@ -167,9 +187,9 @@ void vulkan_barrier_manager::finish_dependency_barriers(
 						wait ? 1 : 0,
 						&wait,
 						&top_of_pipe,
-						[&]( const vulkan_command_buffer& command_buffer ) {
+						[&]( VkCommandBuffer vk_cmds ) {
 							vkCmdPipelineBarrier(
-								command_buffer.vk_cmds(),
+								vk_cmds,
 								barrier.src_stages,
 								barrier.dst_stages,
 								(VkDependencyFlags)0,
@@ -191,9 +211,9 @@ void vulkan_barrier_manager::finish_dependency_barriers(
 			(uint32_t)q,
 			signal_sem.data(),
 			transfer_stages.data(),
-			[&]( const vulkan_command_buffer& command_buffer ) {
+			[&]( VkCommandBuffer vk_cmds ) {
 				vkCmdPipelineBarrier(
-					command_buffer.vk_cmds(),
+					vk_cmds,
 					barrier.src_stages,
 					barrier.dst_stages,
 					(VkDependencyFlags)0,
@@ -203,11 +223,6 @@ void vulkan_barrier_manager::finish_dependency_barriers(
 					barrier.buffer_memory_barriers.data(),
 					(uint32_t)barrier.image_memory_barriers.size(),
 					barrier.image_memory_barriers.data() );
-
-				if ( out_fence )
-				{
-					*out_fence = command_buffer.fence();
-				}
 			},
 			(uint32_t)q,
 			wait_sem.data() );
@@ -367,3 +382,20 @@ vulkan_barrier_manager::transfer_semaphores& vulkan_barrier_manager::
 	return _transfer_semaphores[src_compact_queue_index]
 							   [dst_compact_queue_index];
 }
+
+
+frame_job_barrier::frame_job_barrier(
+	vulkan_buffer* buffer,
+	const vulkan_job_scope& scope )
+	: resource( buffer )
+	, job_scope( scope )
+{}
+
+frame_job_barrier::frame_job_barrier(
+	vulkan_image* image,
+	VkImageLayout layout_,
+	const vulkan_job_scope& scope )
+	: resource( image )
+	, layout( layout_ )
+	, job_scope( scope )
+{}

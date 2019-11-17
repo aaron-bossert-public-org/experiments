@@ -9,24 +9,26 @@
 
 using namespace igpu;
 
-vulkan_resource::link vulkan_resource::add_read_only_dependency(
+vulkan_resource::link vulkan_resource::add_dependency(
 	vulkan_dependency* dependency )
 {
 	if ( !dependency )
 	{
 		LOG_CRITICAL( "dependency is null" );
 	}
+	else if ( dependency->job_scope().is_writable() )
+	{
+		auto& dependencies = resource_state().write_deps;
+
+		dependencies.push_front( dependency );
+		return dependencies.begin();
+	}
 	else
 	{
 		auto& dependencies = resource_state().read_deps;
 		auto& dep_scope = resource_state().combined_read_scope;
-		const auto& job_scope = dependency->job_scope();
 
-		ASSERT_CONTEXT(
-			!job_scope.is_writable(),
-			"attemping to add writeable dependency as read only" );
-
-		if ( !dep_scope.contains( job_scope ) )
+		if ( !dep_scope.contains( dependency->job_scope() ) )
 		{
 			dependency->job_dependencies().activate_read_hazard( dependency );
 		}
@@ -38,56 +40,21 @@ vulkan_resource::link vulkan_resource::add_read_only_dependency(
 	return {};
 }
 
-vulkan_resource::link vulkan_resource::add_writeable_dependency(
-	vulkan_dependency* dependency )
-{
-	if ( !dependency )
-	{
-		LOG_CRITICAL( "dependency is null" );
-	}
-	else
-	{
-		auto& dependencies = resource_state().write_deps;
-		const auto& job_scope = dependency->job_scope();
-
-		ASSERT_CONTEXT(
-			job_scope.is_writable(),
-			"attemping to add read only dependency as writable" );
-
-		dependencies.push_front( dependency );
-		return dependencies.begin();
-	}
-
-	return {};
-}
-
-void vulkan_resource::remove_read_only_dependency(
-	const vulkan_resource::link& link )
+void vulkan_resource::remove_dependency( const vulkan_resource::link& link )
 {
 	auto& state = resource_state();
 	auto dependency = *link;
 	if ( !dependency )
 	{
 		LOG_CRITICAL( "link points to null dependency" );
+	}
+	else if ( dependency->job_scope().is_writable() )
+	{
+		state.write_deps.erase( link );
 	}
 	else
 	{
 		state.read_deps.erase( link );
-	}
-}
-
-void vulkan_resource::remove_writeable_dependency(
-	const vulkan_resource::link& link )
-{
-	auto& state = resource_state();
-	auto dependency = *link;
-	if ( !dependency )
-	{
-		LOG_CRITICAL( "link points to null dependency" );
-	}
-	else
-	{
-		state.write_deps.erase( link );
 	}
 }
 
@@ -121,7 +88,7 @@ void vulkan_resource::wait_pending_jobs() const
 	}
 }
 
-void vulkan_resource::reinitialize(
+void vulkan_resource::reinitialized(
 	const scoped_ptr< vulkan_queue >& queue,
 	const vulkan_job_scope& job_scope,
 	VkImageLayout layout )

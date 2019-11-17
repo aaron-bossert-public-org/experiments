@@ -42,14 +42,9 @@ namespace igpu
 		};
 
 
-		link add_read_only_dependency( vulkan_dependency* );
+		link add_dependency( vulkan_dependency* );
 
-		link add_writeable_dependency( vulkan_dependency* );
-
-
-		void remove_read_only_dependency( const link& );
-
-		void remove_writeable_dependency( const link& );
+		void remove_dependency( const link& );
 
 
 		const vulkan_barrier_manager::record* barrier_manager_record();
@@ -75,10 +70,10 @@ namespace igpu
 			const vulkan_parameter::config&,
 			size_t array_element ) const = 0;
 
-		virtual ~vulkan_resource() = 0;
+		virtual ~vulkan_resource() = default;
 
 	protected:
-		void reinitialize(
+		void reinitialized(
 			const scoped_ptr< vulkan_queue >&,
 			const vulkan_job_scope&,
 			VkImageLayout layout );
