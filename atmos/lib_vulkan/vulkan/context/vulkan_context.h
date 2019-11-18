@@ -32,6 +32,10 @@ namespace igpu
 				VkPhysicalDeviceProperties physical_device_properties;
 				VkSampleCountFlagBits sample_count = (VkSampleCountFlagBits)0;
 				uint32_t swap_count = 0;
+
+				// scoped_ptr acts like a weak pointer to detect life time
+				// issues, but can't turned into a shared pointer and therefore
+				// cant be used to extend lifetimes
 				scoped_ptr< vulkan_queue > present_queue;
 				scoped_ptr< vulkan_queue > graphics_queue;
 				scoped_ptr< vulkan_queue > compute_queue;
@@ -112,7 +116,7 @@ namespace igpu
 	protected:
 		struct state
 		{
-			std::unique_ptr< vulkan_window > window;
+			std::shared_ptr< vulkan_window > window;
 			std::shared_ptr< vulkan_queue > present_queue;
 			std::shared_ptr< vulkan_queue > graphics_queue;
 			std::shared_ptr< vulkan_queue > compute_queue;

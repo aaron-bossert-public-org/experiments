@@ -30,14 +30,13 @@ implement deferred upload. when uploading data to gpu, wait until resource to be
 
 run exanple through new batching system
 
-avoid building vulkan configs in context, instead pass cfg and st into make functions of vulkan objects and allow them to help themselves
-
-combine vulkan context member fields into config struct
 
 //////////////////////////////////////
 (CURRENT PROGRESS POINT)
 //////////////////////////////////////
 
+
+combine vulkan context member fields into config struct
 
 add virtual validate_layout to resource, which should be called when dependencies are added, this way images can validate but buffers can ignore. use this in on_barrier when queue is null
 

@@ -1019,6 +1019,15 @@ std::unique_ptr< vulkan_context > vulkan_context::make(
 	}
 	else
 	{
+		cfg.vk.present_queue = st.present_queue;
+		cfg.vk.graphics_queue = st.graphics_queue;
+		cfg.vk.compute_queue = st.compute_queue;
+		cfg.vk.transfer_queue = st.transfer_queue;
+		cfg.vk.abandon_manager = st.abandon_manager;
+		cfg.vk.barrier_manager = st.barrier_manager;
+		cfg.vk.synchronization = st.synchronization;
+		cfg.vk.pipeline_cache = st.pipeline_cache;
+
 		return std::unique_ptr< vulkan_context >(
 			new vulkan_context( std::move( cfg ), std::move( st ) ) );
 	}
