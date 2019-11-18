@@ -36,6 +36,8 @@ run exanple through new batching system
 //////////////////////////////////////
 
 
+add virtual validate_layout to resource, which should be called when dependencies are added, this way images can validate but buffers can ignore. use this in on_barrier when queue is null
+
 implement abandoning for write combined buffers, remove device wait idle, wait queues etc. when uploading write combined, abandon previous gpu buffer and clear resource job state.
 
 implement build mipmaps as vulkan job

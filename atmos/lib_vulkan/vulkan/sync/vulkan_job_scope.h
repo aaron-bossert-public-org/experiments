@@ -9,9 +9,11 @@ namespace igpu
 	struct vulkan_job_scope
 	{
 		decorator decorators = decorator::NOTHING;
-		VkPipelineStageFlags stages = VK_PIPELINE_STAGE_FLAG_BITS_MAX_ENUM;
-		VkAccessFlags access = VK_ACCESS_FLAG_BITS_MAX_ENUM;
+		VkPipelineStageFlags stages = 0;
+		VkAccessFlags access = 0;
 
+		bool is_empty() const;
+		bool is_valid() const;
 		bool is_readable() const;
 		bool is_writable() const;
 		bool contains( const vulkan_job_scope& ) const;

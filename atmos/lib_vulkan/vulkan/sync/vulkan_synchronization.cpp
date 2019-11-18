@@ -113,6 +113,7 @@ vulkan_synchronization::vulkan_synchronization(
 #include "vulkan/shader/vulkan_program.h"
 #include "vulkan/shader/vulkan_render_states.h"
 #include "vulkan/shader/vulkan_vertex_shader.h"
+#include "vulkan/sync/vulkan_barrier_manager.h"
 #include "vulkan/texture/vulkan_texture2d.h"
 #include "vulkan/window/vulkan_back_buffer.h"
 
@@ -828,8 +829,8 @@ public:
 
 		_window = &_context->window();
 		_device = vk_bb->cfg().vk.device;
-		_present_queue = vk_bb->cfg().vk.syncronization->cfg().present_queue;
-		_graphics_queue = vk_bb->cfg().vk.syncronization->cfg().graphics_queue;
+		_present_queue = vk_bb->cfg().vk.synchronization->cfg().present_queue;
+		_graphics_queue = vk_bb->cfg().vk.synchronization->cfg().graphics_queue;
 		_swap_image_count = _context->cfg().vk.swap_count;
 		_msaa_samples = _context->cfg().vk.sample_count;
 
@@ -851,6 +852,7 @@ public:
 			}
 		}
 
+		LOG_CRITICAL( "failed to initialize" );
 		return false;
 	}
 
@@ -1170,8 +1172,55 @@ private:
 			&alloc_info,
 			_command_buffers.data() );
 
+
+		auto* texture =
+			ASSERT_CAST( vulkan_texture2d*, texture_impl.texture.get() );
+
+		vk_bb->cfg().vk.barrier_manager->submit_frame_job(
+			_graphics_queue,
+			{
+				frame_job_barrier(
+					&texture->gpu_object(),
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+					{
+						decorator::READABLE,
+						VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+						VK_ACCESS_SHADER_READ_BIT,
+					} ),
+			},
+			[]( auto&& ) {} );
+
+
 		for ( size_t i = 0; i < _command_buffers.size(); i++ )
 		{
+			auto* batch_buff = ASSERT_CAST(
+				vulkan_compute_buffer*,
+				batch._compute_buffers[i].get() );
+
+			auto* instance_buff = ASSERT_CAST(
+				vulkan_compute_buffer*,
+				instance._compute_buffers[i].get() );
+
+			vk_bb->cfg().vk.barrier_manager->submit_frame_job(
+				_graphics_queue,
+				{
+					frame_job_barrier(
+						&batch_buff->gpu_object(),
+						{
+							decorator::READABLE,
+							VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+							VK_ACCESS_SHADER_READ_BIT,
+						} ),
+					frame_job_barrier(
+						&instance_buff->gpu_object(),
+						{
+							decorator::READABLE,
+							VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+							VK_ACCESS_SHADER_READ_BIT,
+						} ),
+				},
+				[]( auto&& ) {} );
+
 			VkCommandBufferBeginInfo begin_info = {};
 			begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 			begin_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -1316,8 +1365,8 @@ private:
 		submit_info.pWaitDstStageMask = wait_stages;
 
 
-		batch.update( image_index );
-		instance.update( image_index );
+		// batch.update( image_index );
+		// instance.update( image_index );
 
 		submit_info.commandBufferCount = 1;
 		submit_info.pCommandBuffers = &_command_buffers[image_index];

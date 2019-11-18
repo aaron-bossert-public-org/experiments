@@ -57,6 +57,7 @@ std::unique_ptr< vulkan_depth_buffer > vulkan_depth_buffer::make(
 
 	vulkan_image::config image_cfg = to_vulkan_image_info(
 		cfg,
+		memory_type::WRITE_COMBINED,
 		cfg.res,
 		vulkan_format,
 		VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,

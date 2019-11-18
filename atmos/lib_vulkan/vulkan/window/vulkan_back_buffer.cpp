@@ -313,7 +313,7 @@ VkResult vulkan_back_buffer::do_end_raster()
 	vkEndCommandBuffer( vk_cmds );
 
 	vkQueueSubmit(
-		_cfg.vk.syncronization->cfg().graphics_queue->vk_queue(),
+		_cfg.vk.synchronization->cfg().graphics_queue->vk_queue(),
 		1,
 		&submit_info,
 		vk_fence );
@@ -327,7 +327,7 @@ VkResult vulkan_back_buffer::do_end_raster()
 	present_info.pImageIndices = &image_index;
 
 	if ( VkResult result = vkQueuePresentKHR(
-			 _cfg.vk.syncronization->cfg().present_queue->vk_queue(),
+			 _cfg.vk.synchronization->cfg().present_queue->vk_queue(),
 			 &present_info ) )
 	{
 		return result;
@@ -375,7 +375,7 @@ std::unique_ptr< vulkan_back_buffer > vulkan_back_buffer::make(
 		pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 		pool_info.queueFamilyIndex =
-			cfg.vk.syncronization->cfg().graphics_queue->cfg().family_index;
+			cfg.vk.synchronization->cfg().graphics_queue->cfg().family_index;
 
 		vkCreateCommandPool(
 			cfg.vk.device,

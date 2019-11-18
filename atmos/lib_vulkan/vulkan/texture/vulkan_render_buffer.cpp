@@ -65,6 +65,7 @@ std::unique_ptr< vulkan_render_buffer > vulkan_render_buffer::make(
 
 	vulkan_image::config image_cfg = to_vulkan_image_info(
 		cfg,
+		memory_type::WRITE_COMBINED,
 		cfg.res,
 		vulkan_format,
 		VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT |

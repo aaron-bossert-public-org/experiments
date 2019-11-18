@@ -182,6 +182,7 @@ void vulkan_staged_texture2d::upload(
 		{
 			vulkan_image::config image_cfg = to_vulkan_image_info(
 				_cfg,
+				_cfg.memory,
 				state.res,
 				vulkan_format,
 				VK_IMAGE_USAGE_TRANSFER_SRC_BIT |

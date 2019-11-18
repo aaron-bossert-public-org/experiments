@@ -110,8 +110,7 @@ void vulkan_buffer::map( buffer_view_base* out_buffer_view )
 		{
 			LOG_CRITICAL( "failed to create buffer" );
 
-			_allocation.mapped_view = *out_buffer_view =
-				buffer_view_base( 0, nullptr, out_buffer_view->stride() );
+			_allocation.mapped_view = buffer_view< char >( 0, nullptr );
 		}
 		else
 		{
@@ -128,6 +127,10 @@ void vulkan_buffer::map( buffer_view_base* out_buffer_view )
 			size_t stride = out_buffer_view->stride();
 			*out_buffer_view =
 				buffer_view_base( out_buffer_view->size(), mapped, stride );
+
+			_allocation.mapped_view = buffer_view< char >(
+				out_buffer_view->byte_size(),
+				(char*)mapped );
 		}
 	}
 	else
@@ -160,11 +163,7 @@ const buffer_view< char >& vulkan_buffer::mapped_view() const
 
 void vulkan_buffer::reset( size_t byte_size )
 {
-	if ( byte_size && _cfg.memory == memory_type::PRESERVED )
-	{
-		LOG_CRITICAL( "reset preserved is not implemented" );
-	}
-	else
+	if ( !byte_size || _cfg.memory == memory_type::WRITE_COMBINED )
 	{
 		auto& abandon_manager = _cfg.vk.synchronization->abandon_manager();
 
@@ -182,6 +181,8 @@ void vulkan_buffer::reset( size_t byte_size )
 			_allocation.memory_size = {
 				byte_size,
 			};
+			_allocation.mapped_view = buffer_view< char >( byte_size, nullptr );
+
 			_mem_metric.add( byte_size );
 
 			VmaAllocationCreateInfo vma_info = {};
@@ -215,8 +216,12 @@ void vulkan_buffer::reset( size_t byte_size )
 
 		vulkan_resource::reinitialized(
 			nullptr,
-			{},
-			VK_IMAGE_LAYOUT_UNDEFINED );
+			VK_IMAGE_LAYOUT_MAX_ENUM,
+			{ decorator::NOTHING, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT } );
+	}
+	else
+	{
+		LOG_CRITICAL( "%s not handled", to_string( _cfg.memory ).data() );
 	}
 }
 
@@ -224,11 +229,7 @@ void vulkan_buffer::copy_from(
 	vulkan_barrier_manager& barrier_manager,
 	vulkan_buffer& other )
 {
-	if ( _cfg.memory == memory_type::PRESERVED )
-	{
-		LOG_CRITICAL( "preserved copy_from buffer is not implemented" );
-	}
-	else
+	if ( _cfg.memory == memory_type::WRITE_COMBINED )
 	{
 		reset( other.mapped_view().byte_size() );
 
@@ -261,12 +262,21 @@ void vulkan_buffer::copy_from(
 
 				vkCmdCopyBuffer(
 					command_buffer,
-					_allocation.buffer,
 					other._allocation.buffer,
+					_allocation.buffer,
 					1,
 					&region );
 			} );
 	}
+	else
+	{
+		LOG_CRITICAL( "%s not handled", to_string( _cfg.memory ).data() );
+	}
+}
+
+bool vulkan_buffer::is_valid_layout( VkImageLayout layout ) const
+{
+	return layout == VK_IMAGE_LAYOUT_MAX_ENUM;
 }
 
 vulkan_resource::state& vulkan_buffer::resource_state()

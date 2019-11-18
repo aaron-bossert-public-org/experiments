@@ -25,8 +25,8 @@ namespace igpu
 		{
 			VkPhysicalDevice physical_device = nullptr;
 			VkDevice device = nullptr;
-			memory_type memory = memory_type::UNDEFINED;
 			scoped_ptr< vulkan_synchronization > synchronization;
+			memory_type memory = memory_type::UNDEFINED;
 			VkMemoryPropertyFlagBits memory_properties;
 			VkImageCreateInfo image_info = {};
 			VkImageViewCreateInfo view_info = {};
@@ -57,6 +57,8 @@ namespace igpu
 			VkImageTiling tiling );
 
 		static bool validate( const config& );
+
+		bool is_valid_layout( VkImageLayout ) const override;
 
 	private:
 		vulkan_resource::state& resource_state() override;

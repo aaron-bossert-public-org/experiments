@@ -26,7 +26,7 @@ namespace igpu
 			struct vulkan
 			{
 				VkDevice device = nullptr;
-				scoped_ptr< vulkan_synchronization > syncronization;
+				scoped_ptr< vulkan_synchronization > synchronization;
 				scoped_ptr< vulkan_barrier_manager > barrier_manager;
 				scoped_ptr< vulkan_abandon_manager > abandon_manager;
 				std::shared_ptr< vulkan_render_buffer > color = nullptr;

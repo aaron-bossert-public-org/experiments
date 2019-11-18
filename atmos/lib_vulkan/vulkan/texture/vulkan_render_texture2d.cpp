@@ -34,6 +34,7 @@ std::unique_ptr< vulkan_render_texture2d > vulkan_render_texture2d::make(
 
 	vulkan_image::config image_cfg = to_vulkan_image_info(
 		cfg,
+		memory_type::WRITE_COMBINED,
 		cfg.res,
 		vulkan_format,
 		VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,

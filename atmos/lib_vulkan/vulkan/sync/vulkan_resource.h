@@ -37,8 +37,7 @@ namespace igpu
 			vulkan_job_scope last_write_scope;
 			vulkan_job_scope combined_read_scope;
 
-			const vulkan_barrier_manager::record* barrier_manager_record =
-				nullptr;
+			vulkan_barrier_manager::record_ref barrier_record_ref;
 		};
 
 
@@ -47,9 +46,10 @@ namespace igpu
 		void remove_dependency( const link& );
 
 
-		const vulkan_barrier_manager::record* barrier_manager_record();
+		const vulkan_barrier_manager::record_ref& barrier_record_ref() const;
 
-		void barrier_manager_record( const vulkan_barrier_manager::record* );
+		void barrier_record_ref( const vulkan_barrier_manager::record_ref& );
+
 
 		ptrdiff_t write_count() const;
 
@@ -57,9 +57,13 @@ namespace igpu
 
 		void on_barrier(
 			vulkan_barrier_manager*,
-			const scoped_ptr< vulkan_queue >& );
+			const scoped_ptr< vulkan_queue >&,
+			VkImageLayout,
+			const vulkan_job_scope& );
 
 		bool validate_barrier( VkImageLayout, const vulkan_job_scope& ) const;
+
+		virtual bool is_valid_layout( VkImageLayout ) const = 0;
 
 		virtual vulkan_resource::state& resource_state() = 0;
 
@@ -75,8 +79,8 @@ namespace igpu
 	protected:
 		void reinitialized(
 			const scoped_ptr< vulkan_queue >&,
-			const vulkan_job_scope&,
-			VkImageLayout layout );
+			VkImageLayout layout,
+			const vulkan_job_scope& );
 
 		virtual void push_barrier(
 			uint32_t target_queue_family_index,

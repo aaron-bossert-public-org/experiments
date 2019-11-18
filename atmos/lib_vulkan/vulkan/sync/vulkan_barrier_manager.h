@@ -42,9 +42,15 @@ namespace igpu
 
 		struct record
 		{
-			vulkan_resource* resource;
+			vulkan_resource* resource = nullptr;
 			VkImageLayout layout = VK_IMAGE_LAYOUT_MAX_ENUM;
 			vulkan_job_scope job_scope;
+		};
+
+		struct record_ref
+		{
+			const vulkan_barrier_manager* recording_manager = nullptr;
+			size_t record_index = SIZE_MAX;
 		};
 
 		void submit_frame_job(
@@ -90,7 +96,7 @@ namespace igpu
 			const config&,
 			std::vector< std::vector< transfer_semaphores > >&& );
 
-		record* resolve( const record* );
+		record* resolve( const record_ref& );
 
 		pipeline_barrier& barrier( uint32_t queue_family_index );
 

@@ -60,7 +60,7 @@ void vulkan_attributes_decriptor::reset( const attribute_indexer& indexer )
 		nullptr,
 		(VkFlags)0,
 		_input_assembly.topology = _geometry->cfg().vk.topology,
-		(bool)"primitiveRestartEnable",
+		!"primitiveRestartEnable",
 	};
 }
 

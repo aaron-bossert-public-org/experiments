@@ -56,6 +56,7 @@ namespace igpu
 	template < typename CONFIG >
 	vulkan_image::config to_vulkan_image_info(
 		const CONFIG& cfg,
+		memory_type memory,
 		const glm::ivec2& res,
 		VkFormat format,
 		VkImageUsageFlags usage,
@@ -65,10 +66,13 @@ namespace igpu
 		VkImageAspectFlags aspect_mask,
 		size_t mipmap_count )
 	{
-		vulkan_image::config image_cfg = {};
-		image_cfg.physical_device = cfg.vk.physical_device;
-		image_cfg.device = cfg.vk.device;
-		image_cfg.memory_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+		vulkan_image::config image_cfg = {
+			cfg.vk.physical_device,
+			cfg.vk.device,
+			cfg.vk.synchronization,
+			memory,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		};
 
 		VkImageCreateInfo& image_info = image_cfg.image_info;
 		image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;

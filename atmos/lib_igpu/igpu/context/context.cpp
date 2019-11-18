@@ -98,32 +98,6 @@ namespace
 	std::vector< std::function< std::shared_ptr< tracker >() > >
 		s_tracker_generators;
 
-	template < typename T >
-	T* get_tracker( std::vector< std::shared_ptr< tracker > >* trackers )
-	{
-		// use static variable to track type as a compact index, use index to
-		// look up tracker and possibly add a new one to trackers
-		static size_t s_type_index = s_next_type_index++;
-		if ( s_type_index < s_tracker_generators.size() )
-		{
-			LOG_CRITICAL( "unexpected missing type index" );
-		}
-		else if ( s_type_index == s_tracker_generators.size() )
-		{
-			s_tracker_generators.push_back( []() -> std::shared_ptr< tracker > {
-				return std::make_shared< T >();
-			} );
-		}
-
-		std::shared_ptr< tracker >* pp_tracker = &trackers->at( s_type_index );
-
-		if ( !pp_tracker )
-		{
-			*pp_tracker = s_tracker_generators[s_type_index]();
-		}
-
-		return ASSERT_CAST( T*, pp_tracker->get() );
-	}
 
 	template < typename T >
 	size_t type_index()
@@ -135,46 +109,40 @@ namespace
 	}
 
 	template < typename T >
+	T* get_tracker( std::vector< std::shared_ptr< tracker > >* trackers )
+	{
+		size_t type_index = ::type_index< T >();
+		if ( type_index >= trackers->size() )
+		{
+			trackers->resize( type_index + 1 );
+		}
+
+		std::shared_ptr< tracker >* pp_tracker = &trackers->at( type_index );
+
+		if ( !*pp_tracker )
+		{
+			*pp_tracker = std::make_shared< T >();
+		}
+
+		return ASSERT_CAST( T*, pp_tracker->get() );
+	}
+
+	template < typename T >
 	void visit(
 		const std::vector< std::shared_ptr< tracker > >& trackers,
 		const std::function< void( T* ) >& visitor )
 	{
-		static size_t s_type_index = type_index< T >();
+		size_t type_index = ::type_index< T >();
 
-		if ( s_type_index < trackers.size() )
+		if ( type_index < trackers.size() )
 		{
 			if ( auto* tracker = ASSERT_CAST(
 					 visitable< T >*,
-					 trackers[s_type_index].get() ) )
+					 trackers[type_index].get() ) )
 			{
 				tracker->visit( visitor );
 			}
 		}
-	}
-
-	template < typename T, typename TRACKER_T >
-	T* get_tracker( std::vector< std::shared_ptr< tracker > >* trackers )
-	{
-		static size_t s_type_index = type_index< T >();
-		if ( s_type_index < s_tracker_generators.size() )
-		{
-			LOG_CRITICAL( "unexpected missing type index" );
-		}
-		else if ( s_type_index == s_tracker_generators.size() )
-		{
-			s_tracker_generators.push_back( []() -> std::shared_ptr< tracker > {
-				return std::make_shared< T >();
-			} );
-		}
-
-		std::shared_ptr< tracker >* pp_tracker = &trackers->at( s_type_index );
-
-		if ( !pp_tracker )
-		{
-			*pp_tracker = s_tracker_generators[s_type_index]();
-		}
-
-		return ASSERT_CAST( T*, pp_tracker->get() );
 	}
 
 	template <
@@ -243,6 +211,7 @@ namespace
 			return tracker->emplace( t, std::move( unique ) );
 		}
 
+		LOG_CRITICAL( "failed to find tracker" );
 		return nullptr;
 	}
 }

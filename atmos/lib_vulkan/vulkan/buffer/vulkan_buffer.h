@@ -57,6 +57,8 @@ namespace igpu
 		void copy_from( vulkan_barrier_manager&, vulkan_buffer& );
 
 	private:
+		bool is_valid_layout( VkImageLayout ) const override;
+
 		vulkan_resource::state& resource_state() override;
 
 		const vulkan_resource::state& resource_state() const override;

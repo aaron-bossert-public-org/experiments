@@ -98,16 +98,9 @@ void vulkan_staged_buffer::map( buffer_view_base* out_buffer_view )
 
 void vulkan_staged_buffer::unmap()
 {
-	if ( !_staging_buffer.mapped_view().data() )
-	{
-		LOG_CRITICAL( "map/unmap mismatch" );
-	}
-	else
-	{
-		_staging_buffer.unmap();
-		_gpu_buffer.copy_from( *_cfg.barrier_manager, _staging_buffer );
-		_staging_buffer.reset();
-	}
+	_staging_buffer.unmap();
+	_gpu_buffer.copy_from( *_cfg.barrier_manager, _staging_buffer );
+	_staging_buffer.reset();
 }
 
 vulkan_buffer& vulkan_staged_buffer::gpu_buffer()

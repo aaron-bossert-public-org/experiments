@@ -74,7 +74,10 @@ size_t geometry::config::hash( const config& cfg )
 	for ( size_t i = 0; i < cfg.vertex_buffers.size(); ++i )
 	{
 		hash_utils::hash_combine( &h, cfg.vertex_buffers[i] );
-		hash_utils::hash_combine( &h, cfg.vbuff_byte_offsets[i] );
+		if ( i < cfg.vbuff_byte_offsets.size() )
+		{
+			hash_utils::hash_combine( &h, cfg.vbuff_byte_offsets[i] );
+		}
 	}
 
 	return h;

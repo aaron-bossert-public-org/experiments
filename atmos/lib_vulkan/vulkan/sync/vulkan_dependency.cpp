@@ -15,7 +15,12 @@ vulkan_dependency::vulkan_dependency(
 	, _layout( layout )
 	, _job_scope( job_scope )
 	, _job_dependencies( job_dependencies )
-{}
+{
+	ASSERT_CONTEXT( resource );
+	ASSERT_CONTEXT( (bool)job_dependencies );
+	ASSERT_CONTEXT( job_scope.is_valid() );
+	ASSERT_CONTEXT( resource->is_valid_layout( layout ) );
+}
 
 vulkan_dependency ::~vulkan_dependency()
 {
