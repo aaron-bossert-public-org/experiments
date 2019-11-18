@@ -2,20 +2,20 @@
 #pragma once
 
 #include "vulkan/defines/vulkan_includes.h"
-#include "vulkan/window/vulkan_back_buffer.h"
-#include "vulkan/window/vulkan_window.h"
 
 #include "igpu/context/context.h"
-#include "igpu/utility/utility_types.h"
 
 #include "framework/perf/metrics.h"
 
 namespace igpu
 {
+	class vulkan_back_buffer;
 	class vulkan_abandon_manager;
 	class vulkan_barrier_manager;
-	class vulkan_synchronization;
 	class vulkan_pipeline_cache;
+	class vulkan_queue;
+	class vulkan_synchronization;
+	class vulkan_window;
 
 	class vulkan_context : public context
 	{
@@ -24,9 +24,22 @@ namespace igpu
 		{
 			struct vulkan
 			{
+				VkInstance instance = nullptr;
+				VkDebugUtilsMessengerEXT debug_messenger = nullptr;
+				VkPhysicalDevice physical_device = nullptr;
+				VkDevice device = nullptr;
+				VmaAllocator vma = nullptr;
 				VkPhysicalDeviceProperties physical_device_properties;
 				VkSampleCountFlagBits sample_count = (VkSampleCountFlagBits)0;
 				uint32_t swap_count = 0;
+				scoped_ptr< vulkan_queue > present_queue;
+				scoped_ptr< vulkan_queue > graphics_queue;
+				scoped_ptr< vulkan_queue > compute_queue;
+				scoped_ptr< vulkan_queue > transfer_queue;
+				scoped_ptr< vulkan_abandon_manager > abandon_manager;
+				scoped_ptr< vulkan_barrier_manager > barrier_manager;
+				scoped_ptr< vulkan_synchronization > synchronization;
+				scoped_ptr< vulkan_pipeline_cache > pipeline_cache;
 			};
 
 			vulkan vk;
@@ -37,8 +50,6 @@ namespace igpu
 			const glm::ivec2& screen_res );
 
 		const config& cfg() const override;
-
-		const vulkan_window& window() const override;
 
 		scoped_ptr< draw_target > back_buffer() override;
 
@@ -99,49 +110,25 @@ namespace igpu
 			const transparent_batch::config& ) override;
 
 	protected:
-		vulkan_context(
-			const config&,
-			VkInstance,
-			VkDebugUtilsMessengerEXT,
-			VkPhysicalDevice,
-			VkDevice,
-			VmaAllocator,
-			const std::shared_ptr< vulkan_queue >& present_queue,
-			const std::shared_ptr< vulkan_queue >& graphics_queue,
-			const std::shared_ptr< vulkan_queue >& compute_queue,
-			const std::shared_ptr< vulkan_queue >& transfer_queue,
-			const std::shared_ptr< vulkan_abandon_manager >&,
-			const std::shared_ptr< vulkan_barrier_manager >&,
-			const std::shared_ptr< vulkan_synchronization >&,
-			const std::shared_ptr< vulkan_pipeline_cache >&,
-			std::unique_ptr< vulkan_window > );
+		struct state
+		{
+			std::unique_ptr< vulkan_window > window;
+			std::shared_ptr< vulkan_queue > present_queue;
+			std::shared_ptr< vulkan_queue > graphics_queue;
+			std::shared_ptr< vulkan_queue > compute_queue;
+			std::shared_ptr< vulkan_queue > transfer_queue;
+			std::shared_ptr< vulkan_abandon_manager > abandon_manager;
+			std::shared_ptr< vulkan_barrier_manager > barrier_manager;
+			std::shared_ptr< vulkan_synchronization > synchronization;
+			std::shared_ptr< vulkan_pipeline_cache > pipeline_cache;
+		};
+
+		vulkan_context( config&&, state&& );
 
 	private:
 		const config _cfg;
-
-		struct auto_destroy
-		{
-			~auto_destroy();
-
-			VkInstance instance = nullptr;
-			VkDebugUtilsMessengerEXT debug_messenger = nullptr;
-			VkPhysicalDevice physical_device = nullptr;
-			VkDevice device = nullptr;
-			VmaAllocator vma = nullptr;
-		} _state;
-
-		const std::shared_ptr< vulkan_queue > _present_queue;
-		const std::shared_ptr< vulkan_queue > _graphics_queue;
-		const std::shared_ptr< vulkan_queue > _compute_queue;
-		const std::shared_ptr< vulkan_queue > _transfer_queue;
-		const std::shared_ptr< vulkan_abandon_manager > _abandon_manager;
-		const std::shared_ptr< vulkan_barrier_manager > _barrier_manager;
-		const std::shared_ptr< vulkan_synchronization > _synchronization;
-		const std::shared_ptr< vulkan_pipeline_cache > _pipeline_cache;
+		state _st;
 		std::shared_ptr< vulkan_back_buffer > _back_buffer;
-
-		std::unique_ptr< vulkan_window > _window;
-
 #if ATMOS_PERFORMANCE_TRACKING
 		perf::metric _renderstate_switch_metric;
 		perf::metric _draw_target_clears_metric;

@@ -439,6 +439,20 @@ private:
 
 	struct instance_buffer_impl : batch_buffer_impl
 	{
+		[[nodiscard]] bool create()
+		{
+			if ( batch_buffer_impl::create() )
+			{
+				for ( uint32_t i = 0; i < app->_swap_image_count; i++ )
+				{
+					update( i );
+				}
+
+				return true;
+			}
+			return false;
+		}
+
 		void update( uint32_t swap_index )
 		{
 			static auto start_time = std::chrono::high_resolution_clock::now();

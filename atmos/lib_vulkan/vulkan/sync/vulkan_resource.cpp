@@ -99,8 +99,9 @@ void vulkan_resource::reinitialized(
 
 	auto& state = resource_state();
 	state.queue = queue;
-	state.last_write_scope = job_scope;
 	state.layout = layout;
+	state.last_write_scope = job_scope;
+	state.combined_read_scope = {};
 
 	for ( auto* deps : {
 			  &resource_state().read_deps,

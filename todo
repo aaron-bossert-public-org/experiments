@@ -30,6 +30,9 @@ implement deferred upload. when uploading data to gpu, wait until resource to be
 
 run exanple through new batching system
 
+avoid building vulkan configs in context, instead pass cfg and st into make functions of vulkan objects and allow them to help themselves
+
+combine vulkan context member fields into config struct
 
 //////////////////////////////////////
 (CURRENT PROGRESS POINT)
