@@ -40,7 +40,9 @@ namespace igpu
 
 		scoped_ptr< vulkan_command_buffer > raster_cmds() override;
 
-		scoped_ptr< vulkan_fence > raster_fence() override;
+		scoped_ptr< vulkan_fence > raster_fence() const override;
+
+		scoped_ptr< vulkan_queue > raster_queue() const override;
 
 		void end_raster() override;
 

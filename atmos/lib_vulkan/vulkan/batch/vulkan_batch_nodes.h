@@ -75,6 +75,8 @@ namespace igpu
 		vulkan_material_batch( vulkan_material_batch&& ) = default;
 		vulkan_material_batch& operator=( vulkan_material_batch&& ) = default;
 
+		vulkan_primitives& item() const override;
+
 		void start_raster( const vulkan_batch_raster_state& );
 
 		void stop_raster();
@@ -105,6 +107,8 @@ namespace igpu
 		~vulkan_geometry_batch();
 		vulkan_geometry_batch( vulkan_geometry_batch&& ) = default;
 		vulkan_geometry_batch& operator=( vulkan_geometry_batch&& ) = default;
+
+		vulkan_geometry& item() const override;
 
 		[[nodiscard]] bool pre_raster( vulkan_batch_raster_state* );
 
@@ -139,6 +143,8 @@ namespace igpu
 		vulkan_states_batch( vulkan_states_batch&& ) = default;
 		vulkan_states_batch& operator=( vulkan_states_batch&& ) = default;
 
+		vulkan_render_states& item() const override;
+
 		void start_raster( const vulkan_batch_raster_state& );
 
 		void stop_raster();
@@ -162,6 +168,8 @@ namespace igpu
 		~vulkan_program_batch();
 		vulkan_program_batch( vulkan_program_batch&& ) = default;
 		vulkan_program_batch& operator=( vulkan_program_batch&& ) = default;
+
+		vulkan_program& item() const override;
 
 		void start_raster( const vulkan_batch_raster_state& );
 
@@ -192,6 +200,8 @@ namespace igpu
 		};
 
 		const vulkan& vk() const;
+
+		vulkan_primitives& item() const override;
 
 		void start_raster( const vulkan_batch_raster_state& );
 

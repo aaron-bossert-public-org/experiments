@@ -16,11 +16,15 @@ void vulkan_job_dependencies::activate_read_hazard(
 	size_t write_index = ( size_t )( dependency - state.write_deps.data() );
 	size_t read_index = ( size_t )( dependency - state.read_deps.data() );
 
-	if ( write_index < state.write_deps.size() )
+	// use capacity here because we need to be able to activeate read hazards
+	// while we are emplacing dependencies into read_deps and write_deps. also
+	// read_deps and write_deps do not get resized after they are initially
+	// filled.
+	if ( write_index < state.write_deps.capacity() )
 	{
 		LOG_CRITICAL( "cannot activate write dependency as read dependency" );
 	}
-	else if ( read_index >= state.read_deps.size() )
+	else if ( read_index >= state.read_deps.capacity() )
 	{
 		LOG_CRITICAL(
 			"read dependency does not belong to these job dependencies" );
@@ -83,7 +87,7 @@ bool vulkan_job_dependencies::validate_barriers() const
 void vulkan_job_dependencies::record_cmds(
 	const scoped_ptr< vulkan_command_buffer >& command_buffer )
 {
-	job().on_record_cmds( this );
+	job().record_barriers( this );
 	on_record_cmds( command_buffer );
 }
 

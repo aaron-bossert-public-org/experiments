@@ -11,10 +11,10 @@ vulkan_dependency::vulkan_dependency(
 	const vulkan_job_scope& job_scope,
 	const scoped_ptr< vulkan_job_dependencies >& job_dependencies )
 	: _resource( resource )
-	, _link( resource->add_dependency( this ) )
 	, _layout( layout )
 	, _job_scope( job_scope )
 	, _job_dependencies( job_dependencies )
+	, _link( resource->add_dependency( this ) )
 {
 	ASSERT_CONTEXT( resource );
 	ASSERT_CONTEXT( (bool)job_dependencies );

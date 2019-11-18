@@ -20,7 +20,7 @@ namespace igpu
 		struct config
 		{
 			scoped_ptr< draw_target > draw_target;
-			primitives::config primitives;
+			std::shared_ptr< igpu::primitives > primitives;
 		};
 
 		struct raster_state

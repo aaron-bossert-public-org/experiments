@@ -29,18 +29,28 @@ namespace
 	};
 
 	void build_vertex_assembly(
+		VkPrimitiveTopology vk_topology,
 		const vulkan_vertex_parameters& parameters,
 		const std::vector< vertex_buffer::config >& compact_vertex_format,
 		vertex_assembly* out_assembly )
 	{
-		out_assembly->vertex_input_info.vertexAttributeDescriptionCount = 0;
-		out_assembly->vertex_input_info.pVertexAttributeDescriptions =
-			out_assembly->attribute_descriptions.data();
+		out_assembly->vertex_input_info = {
+			VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+			nullptr,
+			(VkPipelineVertexInputStateCreateFlags)0,
+			(uint32_t)compact_vertex_format.size(),
+			out_assembly->binding_descriptions.data(),
+			0,
+			out_assembly->attribute_descriptions.data(),
+		};
 
-		out_assembly->vertex_input_info.vertexBindingDescriptionCount =
-			(uint32_t)compact_vertex_format.size();
-		out_assembly->vertex_input_info.pVertexBindingDescriptions =
-			out_assembly->binding_descriptions.data();
+		out_assembly->input_assembly = {
+			VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+			nullptr,
+			(VkPipelineInputAssemblyStateCreateFlags)0,
+			vk_topology,
+			!"primitiveRestartEnable",
+		};
 
 		uint32_t* p_attrib_index =
 			&out_assembly->vertex_input_info.vertexAttributeDescriptionCount;
@@ -178,6 +188,7 @@ namespace
 
 			vertex_assembly assembly;
 			build_vertex_assembly(
+				cfg.vk.topology,
 				cfg.vk.program->vertex_parameters(),
 				cfg.compact_vertex_format,
 				&assembly );
@@ -210,7 +221,7 @@ namespace
 				&pipeline_info,
 				nullptr,
 				&pipeline );
-			return nullptr;
+			return pipeline;
 		}
 
 		return nullptr;

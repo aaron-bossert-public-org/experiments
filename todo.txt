@@ -15,7 +15,6 @@ add support for primitive arrays
 write unit tests
 add new examples
 remove raw vulkan type accessors (vulkan_context->device etc...)
-migrate example to use purely atmos
 
 
 implement composite context for profiling, constructs profiler_texture2d which owns vulkan_texture and forward all calls to wrapping them with callstack timers
@@ -28,13 +27,16 @@ implement reserved memory type for vulkan_buffer and vulkan image
 
 implement deferred upload. when uploading data to gpu, wait until resource to be used by a readable job before uploading. combined with implicit read back this should allow for gpu write only buffers to be synchronized properly using just storage buffer decorators in shader and memory_type on cpu side.
 
-run exanple through new batching system
 
 
 //////////////////////////////////////
 (CURRENT PROGRESS POINT)
 //////////////////////////////////////
 
+
+migrate example to use purely atmos
+
+run exanple through new batching system
 
 combine vulkan context member fields into config struct
 

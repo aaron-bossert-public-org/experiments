@@ -12,6 +12,8 @@ namespace igpu
 	class vulkan_job_primitives : public vulkan_job_dependencies
 	{
 	public:
+		struct private_ctor;
+
 		struct config
 		{
 			VkDevice device = nullptr;
@@ -27,11 +29,11 @@ namespace igpu
 
 		static std::shared_ptr< vulkan_job_primitives > make( const config& );
 
+		vulkan_job_primitives( const private_ctor& );
+
 		const config& cfg() const;
 
 	protected:
-		vulkan_job_primitives( const config& );
-
 		vulkan_job& job() override;
 
 		const vulkan_job& job() const override;

@@ -129,22 +129,6 @@ namespace igpu
 			using key_t = typename child_t::item_t*;
 			using map_t = associative_vector< key_t, child_t >;
 
-			template < typename INSTANCE_CONFIG >
-			batch_impl_t( const INSTANCE_CONFIG& instance_cfg )
-			{
-				get_key( instance_cfg, &_item );
-			}
-
-			template < typename... ARGS >
-			batch_impl_t( ARGS&&... args )
-				: T( std::forward< ARGS >( args )... )
-			{}
-
-			item_t& item() const override
-			{
-				return *_item;
-			}
-
 			size_t child_count() const override
 			{
 				return _map.size();
@@ -202,7 +186,6 @@ namespace igpu
 			batch_impl_t& operator=( batch_impl_t&& ) = default;
 
 		private:
-			item_t* _item;
 			map_t _map;
 		};
 

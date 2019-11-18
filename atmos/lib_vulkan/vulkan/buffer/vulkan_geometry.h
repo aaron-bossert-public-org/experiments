@@ -74,7 +74,7 @@ namespace igpu
 		size_t _instance_start = 0;
 		size_t _instance_count = 1;
 		size_t _element_start = 0;
-		std::optional< size_t > _element_count = 0;
+		std::optional< size_t > _element_count;
 		igpu::vulkan_index_buffer* const _index_buffer = nullptr;
 		const std::vector< vulkan_vertex_buffer* > _vertex_buffers;
 	};

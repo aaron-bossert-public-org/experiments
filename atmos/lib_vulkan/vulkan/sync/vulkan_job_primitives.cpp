@@ -99,6 +99,10 @@ namespace
 		return set;
 	}
 }
+struct vulkan_job_primitives::private_ctor
+{
+	const config& cfg;
+};
 
 const vulkan_job_primitives::config& vulkan_job_primitives::cfg() const
 {
@@ -151,8 +155,8 @@ std::shared_ptr< vulkan_job_primitives > vulkan_job_primitives::make(
 
 		if ( primitives_descriptor.reset( *cfg.parameters, *cfg.primitives ) )
 		{
-			auto shared = std::shared_ptr< vulkan_job_primitives >(
-				new vulkan_job_primitives( cfg ) );
+			auto shared = std::make_shared< vulkan_job_primitives >(
+				private_ctor{ cfg } );
 
 			auto& descriptor_pool = shared->_descriptor_pool;
 			auto& descriptor_sets = shared->_descriptor_sets;
@@ -163,11 +167,11 @@ std::shared_ptr< vulkan_job_primitives > vulkan_job_primitives::make(
 
 			bool success = true;
 
+			descriptor_sets.resize( cfg.swap_count );
 			descriptor_pool = create_descriptor_pool(
 				cfg.device,
 				*cfg.parameters,
 				(uint32_t)cfg.swap_count );
-
 			for ( size_t i = 0; i < cfg.swap_count; ++i )
 			{
 				descriptor_sets[i] = allocate_descriptor_set(
@@ -187,6 +191,26 @@ std::shared_ptr< vulkan_job_primitives > vulkan_job_primitives::make(
 			if ( success )
 			{
 				const auto& indexer = primitives_descriptor.indexer();
+
+				size_t writable_count = 0;
+				size_t readable_count = 0;
+				for ( size_t i = 0; i < cfg.parameters->count(); ++i )
+				{
+					const vulkan_parameter& parameter =
+						cfg.parameters->parameter( i );
+					if ( 0 !=
+						 ( parameter.cfg().decorators & decorator::WRITABLE ) )
+					{
+						++writable_count;
+					}
+					else
+					{
+						++readable_count;
+					}
+				}
+
+				write_deps.reserve( writable_count );
+				read_deps.reserve( readable_count );
 
 				for ( size_t i = 0; i < cfg.parameters->count(); ++i )
 				{
@@ -259,6 +283,15 @@ std::shared_ptr< vulkan_job_primitives > vulkan_job_primitives::make(
 					cfgs.push_back( parameter.cfg() );
 				}
 
+				ASSERT_CONTEXT(
+					write_deps.size() == writable_count,
+					"vector cannot be reallocated once dependencies are "
+					"created" );
+				ASSERT_CONTEXT(
+					read_deps.size() == readable_count,
+					"vector cannot be reallocated once dependencies are "
+					"created" );
+
 				return shared;
 			}
 		}
@@ -272,8 +305,8 @@ vulkan_job_primitives ::~vulkan_job_primitives()
 	vkDestroyDescriptorPool( _cfg.device, _descriptor_pool, nullptr );
 }
 
-vulkan_job_primitives::vulkan_job_primitives( const config& cfg )
-	: _cfg( cfg )
+vulkan_job_primitives::vulkan_job_primitives( const private_ctor& priv )
+	: _cfg( priv.cfg )
 {}
 
 void vulkan_job_primitives::on_record_cmds(

@@ -241,18 +241,52 @@ const vulkan_back_buffer::config& vulkan_back_buffer::cfg() const
 void vulkan_back_buffer::begin_raster()
 {
 	swap_state& frame_state = frame_swap_state();
-	VkFence vk_fence = frame_state.raster_fence->vk_fence();
+
+	if ( !frame_state.raster_fence )
+	{
+		frame_state.raster_fence = vulkan_fence::make( {
+			_cfg.vk.device,
+		} );
+	}
+
 	VkCommandBuffer vk_cmds = frame_state.raster_cmds->vk_cmds();
 	VkCommandBufferBeginInfo begin_info = {};
 
 	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-	frame_state.raster_fence->wait();
-	_cfg.vk.abandon_manager->swap_frame();
-
-	vkResetFences( _cfg.vk.device, 1, &vk_fence );
 	vkBeginCommandBuffer( vk_cmds, &begin_info );
+
+	VkRenderPassBeginInfo render_pass_info = {
+		VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+	};
+
+	render_pass_info.renderPass = render_pass();
+	render_pass_info.framebuffer = frame_state.framebuffer;
+	render_pass_info.renderArea.offset = {};
+	render_pass_info.renderArea.extent = {
+		(uint32_t)res().x,
+		(uint32_t)res().y,
+	};
+
+	std::array< VkClearValue, 2 > clear_values = {};
+	clear_values[0].color = {
+		0.0f,
+		0.0f,
+		0.0f,
+		1.0f,
+	};
+	clear_values[1].depthStencil = {
+		1.0f,
+		0,
+	};
+
+	render_pass_info.clearValueCount = (uint32_t)clear_values.size();
+	render_pass_info.pClearValues = clear_values.data();
+	vkCmdBeginRenderPass(
+		vk_cmds,
+		&render_pass_info,
+		VK_SUBPASS_CONTENTS_INLINE );
 }
 
 scoped_ptr< vulkan_command_buffer > vulkan_back_buffer::raster_cmds()
@@ -260,9 +294,14 @@ scoped_ptr< vulkan_command_buffer > vulkan_back_buffer::raster_cmds()
 	return _st.swap_states[_st.swap_index].raster_cmds;
 }
 
-scoped_ptr< vulkan_fence > vulkan_back_buffer::raster_fence()
+scoped_ptr< vulkan_fence > vulkan_back_buffer::raster_fence() const
 {
 	return _st.swap_states[_st.swap_index].raster_fence;
+}
+
+scoped_ptr< vulkan_queue > vulkan_back_buffer::raster_queue() const
+{
+	return _cfg.vk.synchronization->cfg().graphics_queue;
 }
 
 void vulkan_back_buffer::end_raster()
@@ -281,12 +320,15 @@ VkResult vulkan_back_buffer::do_end_raster()
 {
 	uint32_t image_index = 0;
 	swap_state& frame_state = frame_swap_state();
-	VkFence vk_fence = frame_state.raster_fence->vk_fence();
+
 	VkCommandBuffer vk_cmds = frame_state.raster_cmds->vk_cmds();
 	VkSemaphore aquire_sem = frame_state.aquire_sem->vk_semaphore();
 	VkSemaphore raster_sem = frame_state.aquire_sem->vk_semaphore();
 	VkPipelineStageFlags aquire_stage =
 		VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+	vkCmdEndRenderPass( vk_cmds );
+	vkEndCommandBuffer( vk_cmds );
 
 	if ( VkResult result = vkAcquireNextImageKHR(
 			 _cfg.vk.device,
@@ -309,14 +351,11 @@ VkResult vulkan_back_buffer::do_end_raster()
 	submit_info.signalSemaphoreCount = 1;
 	submit_info.pSignalSemaphores = &raster_sem;
 
-
-	vkEndCommandBuffer( vk_cmds );
-
 	vkQueueSubmit(
 		_cfg.vk.synchronization->cfg().graphics_queue->vk_queue(),
 		1,
 		&submit_info,
-		vk_fence );
+		frame_state.raster_fence->vk_fence() );
 
 	VkPresentInfoKHR present_info = {};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -334,6 +373,16 @@ VkResult vulkan_back_buffer::do_end_raster()
 	}
 
 	_st.swap_index = ( _st.swap_index + 1 ) % _cfg.vk.swap_count;
+
+	swap_state& next_frame_state = frame_swap_state();
+
+	if ( const auto& fence = next_frame_state.raster_fence )
+	{
+		fence->wait();
+		VkFence vk_fence = fence->vk_fence();
+		vkResetFences( _cfg.vk.device, 1, &vk_fence );
+	}
+	_cfg.vk.abandon_manager->swap_frame();
 	return VK_SUCCESS;
 }
 
@@ -411,7 +460,6 @@ std::unique_ptr< vulkan_back_buffer > vulkan_back_buffer::make(
 
 			ss.aquire_sem = vulkan_semaphore::make( { cfg.vk.device } );
 			ss.raster_sem = vulkan_semaphore::make( { cfg.vk.device } );
-			ss.raster_fence = vulkan_fence::make( { cfg.vk.device } );
 			ss.raster_cmds.reset( new vulkan_command_buffer( {
 				cfg.vk.device,
 				cfg.vk.abandon_manager,

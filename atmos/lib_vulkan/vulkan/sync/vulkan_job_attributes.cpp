@@ -12,6 +12,11 @@
 
 using namespace igpu;
 
+struct vulkan_job_attributes::private_ctor
+{
+	const config& cfg;
+};
+
 const vulkan_job_attributes::config& vulkan_job_attributes::cfg() const
 {
 	return _cfg;
@@ -55,8 +60,12 @@ std::shared_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
 	}
 	else
 	{
-		auto shared = std::shared_ptr< vulkan_job_attributes >(
-			new vulkan_job_attributes( cfg ) );
+		auto shared =
+			std::make_shared< vulkan_job_attributes >( private_ctor{ cfg } );
+
+		VkImageLayout layout = VK_IMAGE_LAYOUT_MAX_ENUM;
+		scoped_ptr< vulkan_job_dependencies > scoped_ptr = shared;
+		vulkan_geometry* geometry = cfg.geometry;
 
 		auto& index_buffer = shared->_index_buffer;
 		auto& index_buffer_offset = shared->_index_buffer_offset;
@@ -64,10 +73,7 @@ std::shared_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
 		auto& vertex_buffers = shared->_vertex_buffers;
 		auto& vertex_buffer_offsets = shared->_vertex_buffer_offsets;
 		auto& read_deps = shared->_state.read_deps;
-
-		VkImageLayout layout = VK_IMAGE_LAYOUT_MAX_ENUM;
-		scoped_ptr< vulkan_job_dependencies > scoped_ptr = shared;
-		vulkan_geometry* geometry = cfg.geometry;
+		auto& vbuff_byte_offsets = geometry->cfg().vbuff_byte_offsets;
 
 		vertex_buffers.reserve( cfg.active_vertex_buffers.size() );
 		vertex_buffer_offsets.reserve( cfg.active_vertex_buffers.size() );
@@ -77,8 +83,15 @@ std::shared_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
 		{
 			vulkan_vertex_buffer& vertex_buffer = geometry->vertex_buffer( i );
 			vertex_buffers.push_back( vertex_buffer.gpu_object().vk_buffer() );
-			vertex_buffer_offsets.push_back(
-				geometry->cfg().vbuff_byte_offsets[i] );
+
+			if ( 1 < vbuff_byte_offsets.size() )
+			{
+				vertex_buffer_offsets.push_back( vbuff_byte_offsets[i] );
+			}
+			else
+			{
+				vertex_buffer_offsets.push_back( 0 );
+			}
 
 			vulkan_resource* resource = &vertex_buffer.gpu_object();
 			vulkan_job_scope job_scope = {
@@ -110,8 +123,8 @@ std::shared_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
 vulkan_job_attributes ::~vulkan_job_attributes()
 {}
 
-vulkan_job_attributes::vulkan_job_attributes( const config& cfg )
-	: _cfg( cfg )
+vulkan_job_attributes::vulkan_job_attributes( const private_ctor& priv )
+	: _cfg( priv.cfg )
 {}
 
 void vulkan_job_attributes::on_record_cmds(

@@ -183,7 +183,10 @@ namespace
 			{
 				return shared;
 			}
-			return tracker->emplace( &cfg, make() );
+			if ( auto unique = make() )
+			{
+				return tracker->emplace( &cfg, std::move( unique ) );
+			}
 		}
 
 		return nullptr;
@@ -194,24 +197,27 @@ namespace
 		std::vector< std::shared_ptr< tracker > >* trackers,
 		std::unique_ptr< T >&& unique )
 	{
-		struct keyifier : std::equal_to< const T* >
+		if ( unique )
 		{
-			static const T* keyify( const T* t )
+			struct keyifier : std::equal_to< const T* >
 			{
-				return t;
+				static const T* keyify( const T* t )
+				{
+					return t;
+				}
+			};
+
+			using tracker_t =
+				tracker_impl< T, const T*, std::hash< const T* >, keyifier >;
+
+			if ( tracker_t* tracker = get_tracker< tracker_t >( trackers ) )
+			{
+				const T* t = unique.get();
+				return tracker->emplace( t, std::move( unique ) );
 			}
-		};
 
-		using tracker_t =
-			tracker_impl< T, const T*, std::hash< const T* >, keyifier >;
-
-		if ( tracker_t* tracker = get_tracker< tracker_t >( trackers ) )
-		{
-			const T* t = unique.get();
-			return tracker->emplace( t, std::move( unique ) );
+			LOG_CRITICAL( "failed to find tracker" );
 		}
-
-		LOG_CRITICAL( "failed to find tracker" );
 		return nullptr;
 	}
 }

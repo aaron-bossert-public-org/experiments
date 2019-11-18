@@ -21,6 +21,7 @@
 #include "igpu/texture/render_buffer.h"
 #include "igpu/texture/render_texture2d.h"
 #include "igpu/texture/texture2d.h"
+#include "igpu/window/window.h"
 
 #include <functional>
 #include <memory>
@@ -54,7 +55,9 @@ namespace igpu
 
 		virtual const config& cfg() const = 0;
 
-		virtual scoped_ptr< draw_target > back_buffer() = 0;
+		virtual scoped_ptr< draw_target > back_buffer() const = 0;
+
+		virtual scoped_ptr< window > window() const = 0;
 
 		virtual ~context() = default;
 

@@ -99,6 +99,11 @@ vulkan_material_batch::vulkan_material_batch( const config& cfg )
 	}
 }
 
+vulkan_primitives& vulkan_material_batch::item() const
+{
+	return *_cfg.primitives;
+}
+
 vulkan_material_batch::~vulkan_material_batch()
 {}
 
@@ -133,7 +138,7 @@ vulkan_geometry_batch::vulkan_geometry_batch( const config& cfg )
 				cfg.root_batch,
 				cfg.root_batch->vk().swap_count,
 				0,
-				&cfg.program->material_parameters(),
+				&cfg.program->batch_parameters(),
 				cfg.batch_primitives.get(),
 			} );
 	}
@@ -141,6 +146,11 @@ vulkan_geometry_batch::vulkan_geometry_batch( const config& cfg )
 
 vulkan_geometry_batch::~vulkan_geometry_batch()
 {}
+
+vulkan_geometry& vulkan_geometry_batch::item() const
+{
+	return *_cfg.geometry;
+}
 
 bool vulkan_geometry_batch::pre_raster(
 	vulkan_batch_raster_state* raster_state )
@@ -193,6 +203,11 @@ vulkan_states_batch::vulkan_states_batch( const config& cfg )
 vulkan_states_batch::~vulkan_states_batch()
 {}
 
+vulkan_render_states& vulkan_states_batch::item() const
+{
+	return *_cfg.states;
+}
+
 void vulkan_states_batch::start_raster( const vulkan_batch_raster_state& )
 {}
 
@@ -206,6 +221,11 @@ vulkan_program_batch::vulkan_program_batch( const config& cfg )
 vulkan_program_batch::~vulkan_program_batch()
 {}
 
+vulkan_program& vulkan_program_batch::item() const
+{
+	return *_cfg.program;
+}
+
 void vulkan_program_batch::start_raster( const vulkan_batch_raster_state& )
 {}
 
@@ -217,6 +237,11 @@ const vulkan_root_batch::vulkan& vulkan_root_batch::vk() const
 	return _vk;
 }
 
+vulkan_primitives& vulkan_root_batch::item() const
+{
+	return *_vk.primitives;
+}
+
 void vulkan_root_batch::start_raster(
 	const vulkan_batch_raster_state& raster_state )
 {
@@ -224,7 +249,7 @@ void vulkan_root_batch::start_raster(
 	{
 		LOG_CRITICAL( "command buffer is null" );
 	}
-	else if ( !raster_state.fence )
+	if ( !raster_state.fence )
 	{
 		LOG_CRITICAL( "fence is null" );
 	}
@@ -232,10 +257,16 @@ void vulkan_root_batch::start_raster(
 	{
 		vulkan_job::fence( raster_state.fence );
 	}
+
+	vulkan_job::start_recording_barriers();
 }
 
 void vulkan_root_batch::stop_raster()
-{}
+{
+	vulkan_job::submit_recorded_barriers(
+		_vk.draw_target->raster_queue(),
+		_vk.draw_target->cfg().vk.barrier_manager.get() );
+}
 
 void vulkan_root_batch::rebind_draw_target(
 	const scoped_ptr< vulkan_draw_target >& vulkan_draw_target )

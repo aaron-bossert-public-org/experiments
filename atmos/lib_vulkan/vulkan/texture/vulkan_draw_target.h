@@ -16,6 +16,7 @@ namespace igpu
 	class vulkan_barrier_manager;
 	class vulkan_command_buffer;
 	class vulkan_fence;
+	class vulkan_queue;
 	class vulkan_synchronization;
 
 	class vulkan_draw_target : public draw_target
@@ -43,7 +44,9 @@ namespace igpu
 
 		virtual scoped_ptr< vulkan_command_buffer > raster_cmds() = 0;
 
-		virtual scoped_ptr< vulkan_fence > raster_fence() = 0;
+		virtual scoped_ptr< vulkan_fence > raster_fence() const = 0;
+
+		virtual scoped_ptr< vulkan_queue > raster_queue() const = 0;
 
 		virtual void end_raster() = 0;
 

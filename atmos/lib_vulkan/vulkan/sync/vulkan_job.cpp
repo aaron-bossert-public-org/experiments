@@ -8,20 +8,28 @@
 
 using namespace igpu;
 
-void vulkan_job::begin_record_cmds()
+void vulkan_job::start_recording_barriers()
 {
-	job_state().recorded_dependencies.clear();
+	auto& state = job_state();
+
+	ASSERT_CONTEXT( !state.recording );
+	state.recording = true;
+	state.recorded_dependencies.clear();
 }
 
-void vulkan_job::on_record_cmds( vulkan_job_dependencies* dependencies )
+void vulkan_job::record_barriers( vulkan_job_dependencies* dependencies )
 {
-	job_state().recorded_dependencies.push_back( dependencies );
+	auto& state = job_state();
+	ASSERT_CONTEXT( state.recording );
+	state.recorded_dependencies.push_back( dependencies );
 }
-void vulkan_job::barrier_recorded_commands(
+
+void vulkan_job::submit_recorded_barriers(
 	const scoped_ptr< vulkan_queue >& queue,
 	vulkan_barrier_manager* barrier_manager )
 {
 	auto& state = job_state();
+	ASSERT_CONTEXT( state.recording );
 	barrier_manager->start_recording_barriers();
 
 	for ( auto* dependencies : state.recorded_dependencies )

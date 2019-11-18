@@ -55,7 +55,9 @@ namespace igpu
 
 		const config& cfg() const override;
 
-		scoped_ptr< draw_target > back_buffer() override;
+		scoped_ptr< igpu::draw_target > back_buffer() const override;
+
+		scoped_ptr< igpu::window > window() const override;
 
 		void recreate_back_buffer();
 
@@ -121,6 +123,7 @@ namespace igpu
 			std::shared_ptr< vulkan_queue > graphics_queue;
 			std::shared_ptr< vulkan_queue > compute_queue;
 			std::shared_ptr< vulkan_queue > transfer_queue;
+			std::shared_ptr< vulkan_back_buffer > back_buffer;
 			std::shared_ptr< vulkan_abandon_manager > abandon_manager;
 			std::shared_ptr< vulkan_barrier_manager > barrier_manager;
 			std::shared_ptr< vulkan_synchronization > synchronization;
@@ -132,7 +135,6 @@ namespace igpu
 	private:
 		const config _cfg;
 		state _st;
-		std::shared_ptr< vulkan_back_buffer > _back_buffer;
 #if ATMOS_PERFORMANCE_TRACKING
 		perf::metric _renderstate_switch_metric;
 		perf::metric _draw_target_clears_metric;

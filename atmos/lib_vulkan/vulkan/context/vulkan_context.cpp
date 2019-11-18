@@ -630,6 +630,7 @@ std::unique_ptr< graphics_pipeline > vulkan_context::make(
 		draw_target,
 		program,
 		render_states,
+		to_vulkan_topology( base_cfg.topology ),
 	} );
 }
 
@@ -833,6 +834,10 @@ std::unique_ptr< opaque_batch > vulkan_context::make(
 	auto draw_target =
 		base_cfg.draw_target.dynamic_ptr_cast< vulkan_draw_target >();
 
+	auto primitives =
+		std::dynamic_pointer_cast< vulkan_primitives, igpu::primitives >(
+			base_cfg.primitives );
+
 	return vulkan_opaque_batch::make( {
 		base_cfg,
 		_cfg.vk.device,
@@ -840,7 +845,7 @@ std::unique_ptr< opaque_batch > vulkan_context::make(
 		_cfg.vk.swap_count,
 		draw_target,
 		_cfg.vk.pipeline_cache,
-		vulkan_primitives::make( base_cfg.primitives ),
+		primitives,
 	} );
 }
 
@@ -850,6 +855,10 @@ std::unique_ptr< transparent_batch > vulkan_context::make(
 	auto draw_target =
 		base_cfg.draw_target.dynamic_ptr_cast< vulkan_draw_target >();
 
+	auto primitives =
+		std::dynamic_pointer_cast< vulkan_primitives, igpu::primitives >(
+			base_cfg.primitives );
+
 	return vulkan_transparent_batch::make( {
 		base_cfg,
 		_cfg.vk.device,
@@ -857,13 +866,18 @@ std::unique_ptr< transparent_batch > vulkan_context::make(
 		_cfg.vk.swap_count,
 		draw_target,
 		_cfg.vk.pipeline_cache,
-		vulkan_primitives::make( base_cfg.primitives ),
+		primitives,
 	} );
 }
 
-scoped_ptr< draw_target > vulkan_context::back_buffer()
+scoped_ptr< draw_target > vulkan_context::back_buffer() const
 {
-	return _back_buffer;
+	return _st.back_buffer;
+}
+
+scoped_ptr< window > vulkan_context::window() const
+{
+	return _st.window;
 }
 
 std::unique_ptr< vulkan_context > vulkan_context::make(
@@ -1056,7 +1070,7 @@ vulkan_context::vulkan_context( config&& cfg, state&& st )
 	, _polycount_metric( perf::category::POLY_COUNT, "Polycount" )
 #endif
 {
-	_back_buffer = create_back_buffer(
+	_st.back_buffer = create_back_buffer(
 		this,
 		_st.synchronization,
 		_st.barrier_manager,
@@ -1092,8 +1106,8 @@ void vulkan_context::recreate_back_buffer()
 {
 	vkDeviceWaitIdle( _cfg.vk.device );
 
-	_back_buffer = nullptr;
-	_back_buffer = ::create_back_buffer(
+	_st.back_buffer = nullptr;
+	_st.back_buffer = ::create_back_buffer(
 		this,
 		_st.synchronization,
 		_st.barrier_manager,

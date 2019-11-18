@@ -28,6 +28,7 @@ namespace igpu
 				scoped_ptr< vulkan_draw_target > draw_target;
 				scoped_ptr< vulkan_program > program;
 				scoped_ptr< vulkan_render_states > render_states;
+				VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_MAX_ENUM;
 			};
 
 			vulkan vk;

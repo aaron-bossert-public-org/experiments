@@ -38,9 +38,9 @@ namespace igpu
 
 		glm::ivec2 res() const override;
 
-		~vulkan_window() override;
+		bool poll_events() const override;
 
-		bool poll_events() const;
+		~vulkan_window() override;
 
 		VkSurfaceKHR surface();
 

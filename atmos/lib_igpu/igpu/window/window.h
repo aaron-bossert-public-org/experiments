@@ -20,6 +20,8 @@ namespace igpu
 
 		virtual glm::ivec2 res() const = 0;
 
+		virtual bool poll_events() const = 0;
+
 		virtual ~window() = default;
 	};
 }
