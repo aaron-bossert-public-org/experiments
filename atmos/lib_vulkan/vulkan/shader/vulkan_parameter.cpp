@@ -61,7 +61,7 @@ namespace
 		return VK_IMAGE_LAYOUT_MAX_ENUM;
 	}
 
-	VkShaderStageFlags to_vulkan_shader_stage_flags( shader_stages stages )
+	VkShaderStageFlagBits to_vulkan_shader_stage_flags( shader_stages stages )
 	{
 		static_assert(
 			(size_t)VK_SHADER_STAGE_VERTEX_BIT ==
@@ -85,10 +85,11 @@ namespace
 			shader_stages::ALL ==
 			shader_stages( int( shader_stages::COMPUTE << 1 ) - 1 ) );
 
-		return (VkShaderStageFlags)stages;
+		return (VkShaderStageFlagBits)stages;
 	}
 
-	VkPipelineStageFlags to_vulkan_pipeline_stage_flags( shader_stages stages )
+	VkPipelineStageFlagBits to_vulkan_pipeline_stage_flags(
+		shader_stages stages )
 	{
 		auto error_stages = stages & ~shader_stages::ALL;
 		if ( 0 != error_stages )
@@ -123,7 +124,7 @@ namespace
 			vulkan |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
 		}
 
-		return vulkan;
+		return (VkPipelineStageFlagBits)vulkan;
 	}
 }
 

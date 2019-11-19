@@ -16,7 +16,6 @@
 
 using namespace igpu;
 
-
 void vulkan_barrier_manager::submit_frame_job(
 	const scoped_ptr< vulkan_queue > queue,
 	const std::initializer_list< frame_job_barrier >& frame_job_barriers,
@@ -292,6 +291,7 @@ void vulkan_barrier_manager::push_barrier(
 		}
 	}
 }
+
 void vulkan_barrier_manager::push_barrier(
 	uint32_t target_queue_family_index,
 	VkPipelineStageFlags src_stages,
@@ -427,21 +427,25 @@ vulkan_barrier_manager::transfer_semaphores& vulkan_barrier_manager::
 
 frame_job_barrier::frame_job_barrier(
 	vulkan_buffer* buffer,
-	const vulkan_job_scope& scope )
+	decorator decorators,
+	VkPipelineStageFlagBits stage,
+	VkAccessFlagBits access )
 	: resource( buffer )
-	, job_scope( scope )
+	, job_scope( { decorators, stage, access } )
 {
-	ASSERT_CONTEXT( job_scope.is_valid() );
+	ASSERT_CONTEXT( job_scope.validate() );
 }
 
 frame_job_barrier::frame_job_barrier(
 	vulkan_image* image,
 	VkImageLayout layout_,
-	const vulkan_job_scope& scope )
+	decorator decorators,
+	VkPipelineStageFlagBits stage,
+	VkAccessFlagBits access )
 	: resource( image )
 	, layout( layout_ )
-	, job_scope( scope )
+	, job_scope( { decorators, stage, access } )
 {
 	ASSERT_CONTEXT( image->is_valid_layout( layout ) );
-	ASSERT_CONTEXT( job_scope.is_valid() );
+	ASSERT_CONTEXT( job_scope.validate() );
 }

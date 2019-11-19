@@ -26,9 +26,9 @@ vulkan_resource::link vulkan_resource::add_dependency(
 	else
 	{
 		auto& dependencies = resource_state().read_deps;
-		auto& dep_scope = resource_state().combined_read_scope;
+		auto& read_scope = resource_state().combined_read_scope;
 
-		if ( !dep_scope.contains( dependency->job_scope() ) )
+		if ( !read_scope.contains( dependency->job_scope() ) )
 		{
 			dependency->job_dependencies().activate_read_hazard( dependency );
 		}
@@ -124,7 +124,7 @@ void vulkan_resource::on_barrier(
 	auto& state = this->resource_state();
 
 	ASSERT_CONTEXT( (bool)queue );
-	ASSERT_CONTEXT( job_scope.is_valid() );
+	ASSERT_CONTEXT( job_scope.validate() );
 	ASSERT_CONTEXT( is_valid_layout( layout ) );
 
 
@@ -170,7 +170,7 @@ void vulkan_resource::on_barrier(
 			vulkan_job_scope transfer_job = {
 				job_scope.decorators,
 				VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-				0,
+				(VkAccessFlagBits)0,
 			};
 
 			// hold layout transition until destination queue takes

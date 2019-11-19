@@ -97,7 +97,7 @@ std::shared_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
 			vulkan_job_scope job_scope = {
 				decorator::READABLE,
 				VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
-				VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT,
+				VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT,
 			};
 			read_deps.emplace_back( resource, layout, job_scope, scoped_ptr );
 		}
@@ -109,7 +109,7 @@ std::shared_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
 		vulkan_job_scope job_scope = {
 			decorator::READABLE,
 			VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
-			VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_INDEX_READ_BIT,
+			VK_ACCESS_INDEX_READ_BIT,
 		};
 
 		read_deps.emplace_back( resource, layout, job_scope, scoped_ptr );

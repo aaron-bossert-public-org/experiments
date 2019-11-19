@@ -306,20 +306,16 @@ void vulkan_image::copy_from(
 			{
 				frame_job_barrier(
 					&buffer,
-					{
-						decorator::READABLE,
-						VK_PIPELINE_STAGE_TRANSFER_BIT,
-						VK_ACCESS_TRANSFER_READ_BIT,
-					} ),
+					decorator::READABLE,
+					VK_PIPELINE_STAGE_TRANSFER_BIT,
+					VK_ACCESS_TRANSFER_READ_BIT ),
 
 				frame_job_barrier(
 					this,
 					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-					{
-						decorator::WRITABLE,
-						VK_PIPELINE_STAGE_TRANSFER_BIT,
-						VK_ACCESS_TRANSFER_WRITE_BIT,
-					} ),
+					decorator::WRITABLE,
+					VK_PIPELINE_STAGE_TRANSFER_BIT,
+					VK_ACCESS_TRANSFER_WRITE_BIT ),
 			},
 			[&]( VkCommandBuffer command_buffer ) {
 				VkBufferImageCopy region = {};
@@ -374,11 +370,9 @@ void vulkan_image::generate_mipmaps( vulkan_barrier_manager& barrier_manager )
 				frame_job_barrier(
 					this,
 					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-					{
-						decorator::WRITABLE,
-						VK_ACCESS_TRANSFER_WRITE_BIT,
-						VK_PIPELINE_STAGE_TRANSFER_BIT,
-					} ),
+					decorator::WRITABLE,
+					VK_PIPELINE_STAGE_TRANSFER_BIT,
+					VK_ACCESS_TRANSFER_WRITE_BIT ),
 			},
 			[&]( VkCommandBuffer command_buffer ) {
 				int32_t mip_width = _cfg.image_info.extent.width;

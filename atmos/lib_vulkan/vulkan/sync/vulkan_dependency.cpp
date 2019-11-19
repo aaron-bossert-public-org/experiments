@@ -18,7 +18,7 @@ vulkan_dependency::vulkan_dependency(
 {
 	ASSERT_CONTEXT( resource );
 	ASSERT_CONTEXT( (bool)job_dependencies );
-	ASSERT_CONTEXT( job_scope.is_valid() );
+	ASSERT_CONTEXT( job_scope.validate() );
 	ASSERT_CONTEXT( resource->is_valid_layout( layout ) );
 }
 

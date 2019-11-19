@@ -22,9 +22,9 @@ namespace igpu
 					descriptor_type = VK_DESCRIPTOR_TYPE_MAX_ENUM;			//
 				VkImageLayout												//
 					image_layout = VK_IMAGE_LAYOUT_MAX_ENUM;				//
-				VkShaderStageFlags											//
+				VkShaderStageFlagBits										//
 					shader_stages = VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;		//
-				VkPipelineStageFlags										//
+				VkPipelineStageFlagBits										//
 					pipeline_stages = VK_PIPELINE_STAGE_FLAG_BITS_MAX_ENUM; //
 			};
 

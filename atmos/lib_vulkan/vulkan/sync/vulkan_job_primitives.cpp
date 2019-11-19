@@ -236,36 +236,40 @@ std::shared_ptr< vulkan_job_primitives > vulkan_job_primitives::make(
 					const vulkan_primitive& primitive =
 						cfg.primitives->primitive( prim_idx );
 
-					vulkan_job_scope job_scope = {
-						parameter.cfg().decorators,
-						parameter.cfg().vk.pipeline_stages,
-					};
-
-					if ( job_scope.is_readable() )
+					VkAccessFlags access = 0;
+					if ( 0 !=
+						 ( parameter.cfg().decorators & decorator::READABLE ) )
 					{
-						job_scope.access |= VK_ACCESS_SHADER_READ_BIT;
+						access |= VK_ACCESS_SHADER_READ_BIT;
 					}
-					if ( job_scope.is_writable() )
+					if ( 0 !=
+						 ( parameter.cfg().decorators & decorator::WRITABLE ) )
 					{
-						job_scope.access |= VK_ACCESS_SHADER_WRITE_BIT;
+						access |= VK_ACCESS_SHADER_WRITE_BIT;
 					}
 					if ( parameter.cfg().type ==
 						 parameter::type::UNIFORM_BUFFER )
 					{
-						job_scope.access |= VK_ACCESS_UNIFORM_READ_BIT;
+						access |= VK_ACCESS_UNIFORM_READ_BIT;
 					}
 					if ( std::holds_alternative<
 							 std::shared_ptr< vertex_buffer > >(
 							 primitive.cfg().value ) )
 					{
-						job_scope.access |= VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
+						access |= VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
 					}
 					if ( std::holds_alternative<
 							 std::shared_ptr< index_buffer > >(
 							 primitive.cfg().value ) )
 					{
-						job_scope.access |= VK_ACCESS_INDEX_READ_BIT;
+						access |= VK_ACCESS_INDEX_READ_BIT;
 					}
+
+					vulkan_job_scope job_scope = {
+						parameter.cfg().decorators,
+						parameter.cfg().vk.pipeline_stages,
+						(VkAccessFlagBits)access,
+					};
 
 
 					bool is_writable = job_scope.is_writable();

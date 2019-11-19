@@ -45,6 +45,8 @@ void vulkan_job::submit_recorded_barriers(
 		dependencies->validate_barriers();
 	}
 #endif
+
+	state.recording = false;
 }
 
 void vulkan_job::wait_on_fence()

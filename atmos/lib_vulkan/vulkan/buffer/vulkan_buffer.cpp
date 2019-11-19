@@ -239,19 +239,15 @@ void vulkan_buffer::copy_from(
 			{
 				frame_job_barrier(
 					&other,
-					{
-						decorator::READABLE,
-						VK_PIPELINE_STAGE_TRANSFER_BIT,
-						VK_ACCESS_TRANSFER_READ_BIT,
-					} ),
+					decorator::READABLE,
+					VK_PIPELINE_STAGE_TRANSFER_BIT,
+					VK_ACCESS_TRANSFER_READ_BIT ),
 
 				frame_job_barrier(
 					this,
-					{
-						decorator::WRITABLE,
-						VK_PIPELINE_STAGE_TRANSFER_BIT,
-						VK_ACCESS_TRANSFER_WRITE_BIT,
-					} ),
+					decorator::WRITABLE,
+					VK_PIPELINE_STAGE_TRANSFER_BIT,
+					VK_ACCESS_TRANSFER_WRITE_BIT ),
 			},
 			[&]( VkCommandBuffer command_buffer ) {
 				VkBufferCopy region = {};

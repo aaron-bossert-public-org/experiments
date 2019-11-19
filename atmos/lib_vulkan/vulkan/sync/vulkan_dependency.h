@@ -39,11 +39,11 @@ namespace igpu
 		const vulkan_job_scope& job_scope() const;
 
 	private:
-		vulkan_resource* _resource;
+		bool _active = false;
+		vulkan_resource* const _resource;
 		const VkImageLayout _layout;
 		const vulkan_job_scope _job_scope;
 		const scoped_ptr< vulkan_job_dependencies > _job_dependencies;
 		const vulkan_resource::link _link;
-		bool _active = false;
 	};
 }

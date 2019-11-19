@@ -119,12 +119,16 @@ namespace igpu
 	public:
 		frame_job_barrier(
 			vulkan_buffer* buffer,
-			const vulkan_job_scope& scope );
+			decorator decorators,
+			VkPipelineStageFlagBits stage,
+			VkAccessFlagBits access );
 
 		frame_job_barrier(
 			vulkan_image* image,
 			VkImageLayout layout_,
-			const vulkan_job_scope& scope );
+			decorator decorators,
+			VkPipelineStageFlagBits stage,
+			VkAccessFlagBits access );
 
 	private:
 		friend class vulkan_barrier_manager;

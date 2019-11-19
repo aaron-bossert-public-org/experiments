@@ -22,7 +22,7 @@ namespace hash_utils
 	size_t hash_combine( ARGS&&... args )
 	{
 		size_t seed = 0;
-		size_t seeds[] = { hash_combine( &seed, hash( args ) )... };
+		( hash_combine( &seed, hash( args ) ), ... );
 		return seed;
 	}
 

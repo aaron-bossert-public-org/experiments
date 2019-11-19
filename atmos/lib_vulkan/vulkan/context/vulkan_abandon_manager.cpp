@@ -48,12 +48,20 @@ namespace
 		std::vector< std::vector< payload > >* p_abandoned,
 		ARGS... args )
 	{
-		if ( p_abandoned->size() <= type_index )
+		if ( ( args && ... ) )
 		{
-			p_abandoned->resize( type_index + 1 );
-		}
+			if ( p_abandoned->size() <= type_index )
+			{
+				p_abandoned->resize( type_index + 1 );
+			}
 
-		p_abandoned->at( type_index ).push_back( { args... } );
+			p_abandoned->at( type_index ).push_back( { args... } );
+		}
+		else if ( ( args || ... ) )
+		{
+			LOG_CRITICAL(
+				"args for abandon must all be null or all be non null" );
+		}
 	}
 }
 
@@ -102,6 +110,7 @@ void vulkan_abandon_manager::destroy_abandoned( size_t swap_index )
 			s_destroyers[i]( _cfg, p );
 		}
 	}
+	abandoned.clear();
 }
 
 std::vector< std::vector< vulkan_abandon_manager::payload > >*
