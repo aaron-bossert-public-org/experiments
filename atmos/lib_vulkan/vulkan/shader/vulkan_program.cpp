@@ -106,14 +106,31 @@ std::unique_ptr< vulkan_program > vulkan_program::make( const config& cfg )
 	std::array< std::array< uint8_t, parameters::MAX_COUNT >, 3 > indices = {};
 	memset( &indices, -1, sizeof indices );
 
-	vulkan_shader* raw_shaders[] = {
-		cfg.vk.vertex.get(),
-		cfg.vk.fragment.get(),
-	};
-
-	for ( vulkan_shader* shader : raw_shaders )
+	bool shaders_valid = false;
+	if ( !cfg.vk.vertex )
 	{
-		merge_parameters( *shader, &indices, &base_parameter_cfgs );
+		LOG_CRITICAL( "vertex shader is null" );
+	}
+	else if ( !cfg.vk.fragment )
+	{
+		LOG_CRITICAL( "fragment shader is null" );
+	}
+	else
+	{
+		shaders_valid = true;
+		merge_parameters(
+			*cfg.vk.vertex.get(),
+			&indices,
+			&base_parameter_cfgs );
+		merge_parameters(
+			*cfg.vk.fragment.get(),
+			&indices,
+			&base_parameter_cfgs );
+	}
+
+	if ( !shaders_valid )
+	{
+		return nullptr;
 	}
 
 	// create shader parameters, descriptor set layouts, and pipeline layout

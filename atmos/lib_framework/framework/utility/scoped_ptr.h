@@ -51,7 +51,8 @@ public:
 	scoped_ptr& operator=( scoped_ptr&& other ) noexcept
 	{
 		weak_t::operator=( std::move( other ) );
-		std::swap( _ptr, other._ptr );
+		_ptr = other._ptr;
+		other._ptr = nullptr;
 		return *this;
 	}
 
@@ -59,7 +60,8 @@ public:
 	scoped_ptr& operator=( scoped_ptr< T2 >&& other ) noexcept
 	{
 		weak_t::operator=( std::move( other ) );
-		std::swap( _ptr, other._ptr );
+		_ptr = other._ptr;
+		other._ptr = nullptr;
 		return *this;
 	}
 

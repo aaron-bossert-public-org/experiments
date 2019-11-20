@@ -262,20 +262,18 @@ std::unique_ptr< dcs_test > dcs_test::make( const config& cfg )
 	{
 		state st;
 
-		auto v_shader =
-			nullptr; // cfg.context->make_shared( vertex_shader::config{} );
-		auto f_shader =
-			nullptr; // cfg.context->make_shared( fragment_shader::config{} );
+		auto v_shader = cfg.context->make_shared( vertex_shader::config{} );
+		auto f_shader = cfg.context->make_shared( fragment_shader::config{} );
 		st.batch_data = cfg.context->make_shared( compute_buffer::config{} );
 		st.instance_data = cfg.context->make_shared( compute_buffer::config{} );
 
-		// st.render_states = cfg.context->make_shared( render_states::config{
-		//	0b1111, // color write mask
-		//	{ "cull_enabled", cull::BACK },
-		//	{ !"blend_enabled" },
-		//	{ !"stencil_enabled" },
-		//	{ "depth_enabled", "depth_write", compare::LESS },
-		//} );
+		st.render_states = cfg.context->make_shared( render_states::config{
+			0b1111, // color write mask
+			{ "cull_enabled", cull::BACK },
+			{ !"blend_enabled" },
+			{ !"stencil_enabled" },
+			{ "depth_enabled", "depth_write", compare::LESS },
+		} );
 
 		st.texture = cfg.context->make_shared( texture2d::config{
 			cfg.texture_path.c_str(),
@@ -290,11 +288,11 @@ std::unique_ptr< dcs_test > dcs_test::make( const config& cfg )
 		// load_buffer( cfg.vertex_path.c_str(), v_shader.get() );
 		// load_buffer( cfg.fragment_path.c_str(), f_shader.get() );
 
-		// st.program = cfg.context->make_shared( program::config{
-		//	"test program",
-		//	v_shader,
-		//	f_shader,
-		//} );
+		st.program = cfg.context->make_shared( program::config{
+			"test program",
+			v_shader,
+			f_shader,
+		} );
 
 		// st.geometry = load_model( cfg );
 
