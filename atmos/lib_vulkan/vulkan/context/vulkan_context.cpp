@@ -1055,7 +1055,10 @@ vulkan_context::vulkan_context( config&& cfg, state&& st )
 
 vulkan_context::~vulkan_context()
 {
-	_st = {};
+	{
+		state st;
+		std::swap( _st, st );
+	}
 
 	vmaDestroyAllocator( _cfg.vk.vma );
 
