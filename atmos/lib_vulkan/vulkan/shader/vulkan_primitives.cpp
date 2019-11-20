@@ -57,6 +57,28 @@ namespace
 			dynamic_pointer_cast< vulkan_render_texture2d, render_texture2d >(
 				ptr );
 	}
+
+	bool validate( const char* name, const vulkan_buffer& buffer )
+	{
+		if ( !buffer.vk_buffer() )
+		{
+			LOG_CRITICAL( "%s is empty", name );
+			return false;
+		}
+
+		return true;
+	}
+
+	bool validate( const char* name, const vulkan_image& image )
+	{
+		if ( !image.vk_image_view() )
+		{
+			LOG_CRITICAL( "%s is empty", name );
+			return false;
+		}
+
+		return true;
+	}
 }
 
 const vulkan_primitives::config& vulkan_primitives::cfg() const
@@ -90,23 +112,45 @@ std::unique_ptr< vulkan_primitives > vulkan_primitives::make(
 	std::vector< vulkan_primitive > primitives;
 	primitives.reserve( cfg.primitives.size() );
 
+	bool success = true;
+
 	for ( const auto& prim_cfg : cfg.primitives )
 	{
 		std::visit(
 			[&]( auto&& ptr ) {
 				auto vulkan = to_vulkan_variant( ptr );
-				vulkan_primitive::config vulkan_cfg = {
-					prim_cfg,
-					&vulkan->gpu_object(),
-					vulkan,
-				};
-				primitives.emplace_back( vulkan_cfg );
+
+				if ( !vulkan )
+				{
+					success = false;
+					LOG_CRITICAL( "%s is null", prim_cfg.name.c_str() );
+				}
+				else if ( !validate(
+							  prim_cfg.name.c_str(),
+							  vulkan->gpu_object() ) )
+				{
+					success = false;
+				}
+				else
+				{
+					vulkan_primitive::config vulkan_cfg = {
+						prim_cfg,
+						&vulkan->gpu_object(),
+						vulkan,
+					};
+					primitives.emplace_back( vulkan_cfg );
+				}
 			},
 			prim_cfg.value );
 	}
 
-	return std::unique_ptr< vulkan_primitives >(
-		new vulkan_primitives( cfg, std::move( primitives ) ) );
+	if ( success )
+	{
+		return std::unique_ptr< vulkan_primitives >(
+			new vulkan_primitives( cfg, std::move( primitives ) ) );
+	}
+
+	return nullptr;
 }
 
 vulkan_primitives::vulkan_primitives(

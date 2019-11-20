@@ -304,6 +304,38 @@ std::unique_ptr< vulkan_batch_binding > vulkan_root_batch::make_binding(
 	auto inst = std::dynamic_pointer_cast< vulkan_primitives, primitives >(
 		cfg.instance );
 
+
+	bool valid_args = false;
+	if ( !prog )
+	{
+		LOG_CRITICAL( "program is null" );
+	}
+	else if ( !states )
+	{
+		LOG_CRITICAL( "render states is null" );
+	}
+	else if ( !geo )
+	{
+		LOG_CRITICAL( "geometry is null" );
+	}
+	else if ( !mat )
+	{
+		LOG_CRITICAL( "material parameters is null" );
+	}
+	else if ( !inst )
+	{
+		LOG_CRITICAL( "instance parameters is null" );
+	}
+	else
+	{
+		valid_args = true;
+	}
+
+	if ( !valid_args )
+	{
+		return nullptr;
+	}
+
 	vulkan_program_batch* program_batch = nullptr;
 	{
 		auto& map = this->map();

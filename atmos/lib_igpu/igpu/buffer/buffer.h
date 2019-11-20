@@ -24,5 +24,17 @@ namespace igpu
 		virtual void map( buffer_view_base* ) = 0;
 
 		virtual void unmap() = 0;
+
+		template < typename T >
+		void map( T** );
 	};
+
+	template < typename T >
+	void buffer::map( T** ppt )
+	{
+		buffer_view< T > view( 1, nullptr );
+		map( &view );
+
+		*ppt = view.data();
+	}
 }

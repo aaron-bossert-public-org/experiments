@@ -5,7 +5,7 @@
 #include "vulkan/context/vulkan_abandon_manager.h"
 #include "vulkan/shader/vulkan_parameter.h"
 #include "vulkan/sync/vulkan_barrier_manager.h"
-#include "vulkan/sync/vulkan_synchronization.h"
+#include "vulkan/sync/vulkan_queues.h"
 
 #include <algorithm>
 
@@ -241,15 +241,13 @@ void vulkan_image::reset( const config* p_cfg )
 	{
 		if ( _allocation.image )
 		{
-			auto& abandon_manager = _cfg.synchronization->abandon_manager();
+			const auto& queue = vulkan_resource::pending_queue();
 
-			abandon_manager.abandon( _allocation.sampler );
-			abandon_manager.abandon( _allocation.image_view );
-			abandon_manager.abandon( _allocation.device_memory );
-			abandon_manager.abandon( _allocation.image );
+			abandon( queue, _cfg.device, _allocation.sampler );
+			abandon( queue, _cfg.device, _allocation.image_view );
+			abandon( queue, _cfg.device, _allocation.device_memory );
+			abandon( queue, _cfg.device, _allocation.image );
 		}
-		else
-		{}
 
 		if ( !p_cfg )
 		{
@@ -302,7 +300,7 @@ void vulkan_image::copy_from(
 	if ( _cfg.memory == memory_type::WRITE_COMBINED )
 	{
 		barrier_manager.submit_frame_job(
-			_cfg.synchronization->cfg().transfer_queue,
+			_cfg.queues->cfg().transfer_queue,
 			{
 				frame_job_barrier(
 					&buffer,
@@ -365,7 +363,7 @@ void vulkan_image::generate_mipmaps( vulkan_barrier_manager& barrier_manager )
 	{
 		barrier_manager.submit_frame_job(
 
-			_cfg.synchronization->cfg().graphics_queue,
+			_cfg.queues->cfg().graphics_queue,
 			{
 				frame_job_barrier(
 					this,

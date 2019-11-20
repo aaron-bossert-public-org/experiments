@@ -5,6 +5,8 @@
 
 namespace igpu
 {
+	class vulkan_queue;
+
 	class vulkan_fence
 	{
 	public:
@@ -24,9 +26,15 @@ namespace igpu
 
 		VkFence vk_fence() const;
 
-		bool is_ready( uint64_t wait_nanosecnods = 0 );
+		bool is_ready( ptrdiff_t submit_index, uint64_t wait_nanosecnods = 0 );
 
-		void wait( uint64_t err_msg_nanosecnods = 1000 * 1000 * 1000 );
+		void wait(
+			ptrdiff_t submit_index,
+			uint64_t err_msg_nanosecnods = 1000 * 1000 * 1000 );
+
+		void on_submit( const vulkan_queue& );
+
+		ptrdiff_t submit_index() const;
 
 		vulkan_fence( const config& );
 
@@ -35,5 +43,6 @@ namespace igpu
 	private:
 		const config _cfg;
 		const VkFence _fence;
+		ptrdiff_t _submit_index = 0;
 	};
 }

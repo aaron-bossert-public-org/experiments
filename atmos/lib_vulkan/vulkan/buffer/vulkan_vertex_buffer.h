@@ -10,8 +10,8 @@
 namespace igpu
 {
 	class vulkan_buffer;
-	class vulkan_synchronization;
 	class vulkan_barrier_manager;
+	class vulkan_queues;
 
 	class vulkan_vertex_buffer : public vertex_buffer
 	{
@@ -22,6 +22,7 @@ namespace igpu
 			{
 				VkDevice device = nullptr;
 				const VkPhysicalDeviceProperties* device_properties = nullptr;
+				VmaAllocator vma = nullptr;
 			};
 
 			vulkan vk;
@@ -37,7 +38,7 @@ namespace igpu
 
 		static std::unique_ptr< vulkan_vertex_buffer > make(
 			const config&,
-			const scoped_ptr< vulkan_synchronization >&,
+			const scoped_ptr< vulkan_queues >&,
 			const scoped_ptr< vulkan_barrier_manager >& );
 
 	protected:

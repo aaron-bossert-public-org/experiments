@@ -5,8 +5,8 @@
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_fence.h"
 #include "vulkan/sync/vulkan_queue.h"
+#include "vulkan/sync/vulkan_queues.h"
 #include "vulkan/sync/vulkan_semaphore.h"
-#include "vulkan/sync/vulkan_synchronization.h"
 #include "vulkan/texture/vulkan_image.h"
 
 #include "framework/logging/log.h"
@@ -301,7 +301,7 @@ scoped_ptr< vulkan_fence > vulkan_back_buffer::raster_fence() const
 
 scoped_ptr< vulkan_queue > vulkan_back_buffer::raster_queue() const
 {
-	return _cfg.vk.synchronization->cfg().graphics_queue;
+	return _cfg.vk.queues->cfg().graphics_queue;
 }
 
 void vulkan_back_buffer::end_raster()
@@ -341,21 +341,27 @@ VkResult vulkan_back_buffer::do_end_raster()
 		return result;
 	}
 
-	VkSubmitInfo submit_info = {};
-	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submit_info.waitSemaphoreCount = 1;
-	submit_info.pWaitSemaphores = &aquire_sem;
-	submit_info.pWaitDstStageMask = &aquire_stage;
-	submit_info.commandBufferCount = 1;
-	submit_info.pCommandBuffers = &vk_cmds;
-	submit_info.signalSemaphoreCount = 1;
-	submit_info.pSignalSemaphores = &raster_sem;
+	// after triggering abandon, the next submit will generate a fence if one is
+	// not provided. Trigger abandon right before the graphics submit since it
+	// always provides a fence.
+	for ( const auto& queue : _cfg.vk.queues->cfg().queue_family_table )
+	{
+		if ( queue )
+		{
+			queue->trigger_abandon();
+		}
+	}
 
-	vkQueueSubmit(
-		_cfg.vk.synchronization->cfg().graphics_queue->vk_queue(),
+	const auto& graphics_queue = _cfg.vk.queues->cfg().graphics_queue;
+	graphics_queue->submit_commands(
 		1,
-		&submit_info,
-		frame_state.raster_fence->vk_fence() );
+		&aquire_sem,
+		&aquire_stage,
+		1,
+		frame_state.raster_cmds.get(),
+		1,
+		&raster_sem,
+		frame_state.raster_fence );
 
 	VkPresentInfoKHR present_info = {};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -365,11 +371,13 @@ VkResult vulkan_back_buffer::do_end_raster()
 	present_info.pSwapchains = &_st.swap_chain;
 	present_info.pImageIndices = &image_index;
 
-	if ( VkResult result = vkQueuePresentKHR(
-			 _cfg.vk.synchronization->cfg().present_queue->vk_queue(),
-			 &present_info ) )
+
+	VkResult present_errors =
+		_cfg.vk.queues->cfg().present_queue->submit_present( present_info );
+
+	if ( present_errors )
 	{
-		return result;
+		return present_errors;
 	}
 
 	_st.swap_index = ( _st.swap_index + 1 ) % _cfg.vk.swap_count;
@@ -378,11 +386,14 @@ VkResult vulkan_back_buffer::do_end_raster()
 
 	if ( const auto& fence = next_frame_state.raster_fence )
 	{
-		fence->wait();
+		fence->wait( fence->submit_index() );
 		VkFence vk_fence = fence->vk_fence();
 		vkResetFences( _cfg.vk.device, 1, &vk_fence );
+		vkResetCommandBuffer(
+			next_frame_state.raster_cmds->vk_cmds(),
+			(VkCommandBufferResetFlags)0 );
 	}
-	_cfg.vk.abandon_manager->swap_frame();
+
 	return VK_SUCCESS;
 }
 
@@ -424,7 +435,7 @@ std::unique_ptr< vulkan_back_buffer > vulkan_back_buffer::make(
 		pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 		pool_info.queueFamilyIndex =
-			cfg.vk.synchronization->cfg().graphics_queue->cfg().family_index;
+			cfg.vk.queues->cfg().graphics_queue->cfg().family_index;
 
 		vkCreateCommandPool(
 			cfg.vk.device,
@@ -461,8 +472,7 @@ std::unique_ptr< vulkan_back_buffer > vulkan_back_buffer::make(
 			ss.aquire_sem = vulkan_semaphore::make( { cfg.vk.device } );
 			ss.raster_sem = vulkan_semaphore::make( { cfg.vk.device } );
 			ss.raster_cmds.reset( new vulkan_command_buffer( {
-				cfg.vk.device,
-				cfg.vk.abandon_manager,
+				cfg.vk.queues->cfg().graphics_queue,
 				st.command_pool,
 				VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 			} ) );

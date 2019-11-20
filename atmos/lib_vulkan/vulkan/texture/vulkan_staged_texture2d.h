@@ -11,7 +11,7 @@
 
 namespace igpu
 {
-	class vulkan_synchronization;
+	class vulkan_queues;
 
 	class vulkan_staged_texture2d : public vulkan_texture2d
 	{

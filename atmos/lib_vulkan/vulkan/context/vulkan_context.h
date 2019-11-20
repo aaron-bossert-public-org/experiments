@@ -10,11 +10,10 @@
 namespace igpu
 {
 	class vulkan_back_buffer;
-	class vulkan_abandon_manager;
 	class vulkan_barrier_manager;
 	class vulkan_pipeline_cache;
 	class vulkan_queue;
-	class vulkan_synchronization;
+	class vulkan_queues;
 	class vulkan_window;
 
 	class vulkan_context : public context
@@ -36,14 +35,9 @@ namespace igpu
 				// scoped_ptr acts like a weak pointer to detect life time
 				// issues, but can't turned into a shared pointer and therefore
 				// cant be used to extend lifetimes
-				scoped_ptr< vulkan_queue > present_queue;
-				scoped_ptr< vulkan_queue > graphics_queue;
-				scoped_ptr< vulkan_queue > compute_queue;
-				scoped_ptr< vulkan_queue > transfer_queue;
-				scoped_ptr< vulkan_abandon_manager > abandon_manager;
 				scoped_ptr< vulkan_barrier_manager > barrier_manager;
-				scoped_ptr< vulkan_synchronization > synchronization;
 				scoped_ptr< vulkan_pipeline_cache > pipeline_cache;
+				scoped_ptr< vulkan_queues > queues;
 			};
 
 			vulkan vk;
@@ -124,10 +118,9 @@ namespace igpu
 			std::shared_ptr< vulkan_queue > compute_queue;
 			std::shared_ptr< vulkan_queue > transfer_queue;
 			std::shared_ptr< vulkan_back_buffer > back_buffer;
-			std::shared_ptr< vulkan_abandon_manager > abandon_manager;
 			std::shared_ptr< vulkan_barrier_manager > barrier_manager;
-			std::shared_ptr< vulkan_synchronization > synchronization;
 			std::shared_ptr< vulkan_pipeline_cache > pipeline_cache;
+			std::shared_ptr< vulkan_queues > queues;
 		};
 
 		vulkan_context( config&&, state&& );

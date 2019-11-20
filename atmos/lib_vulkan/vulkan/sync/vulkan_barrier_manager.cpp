@@ -5,9 +5,9 @@
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_dependency.h"
 #include "vulkan/sync/vulkan_queue.h"
+#include "vulkan/sync/vulkan_queues.h"
 #include "vulkan/sync/vulkan_resource.h"
 #include "vulkan/sync/vulkan_semaphore.h"
-#include "vulkan/sync/vulkan_synchronization.h"
 #include "vulkan/texture/vulkan_image.h"
 
 #include "framework/logging/log.h"
@@ -15,6 +15,49 @@
 #include <array>
 
 using namespace igpu;
+
+
+namespace
+{
+	template < typename T >
+	void one_time_command(
+		const scoped_ptr< vulkan_queue > queue,
+		T&& builder,
+		uint32_t wait_count = 0,
+		const VkSemaphore* p_wait_semaphores = nullptr,
+		const VkPipelineStageFlags* p_wait_stages = nullptr,
+		uint32_t signal_count = 0,
+		const VkSemaphore* p_signal_semaphores = nullptr,
+		std::shared_ptr< vulkan_fence > fence = nullptr )
+	{
+		vulkan_command_buffer command_buffer( {
+
+			queue,
+			queue->command_pool(),
+			VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+		} );
+
+		VkCommandBufferBeginInfo begin_info = {};
+		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		VkCommandBuffer vk_cmds = command_buffer.vk_cmds();
+
+		vkBeginCommandBuffer( vk_cmds, &begin_info );
+		builder( vk_cmds );
+		vkEndCommandBuffer( vk_cmds );
+
+		queue->submit_commands(
+			wait_count,
+			p_wait_semaphores,
+			p_wait_stages,
+			1,
+			&command_buffer,
+			signal_count,
+			p_signal_semaphores,
+			fence );
+	}
+}
 
 void vulkan_barrier_manager::submit_frame_job(
 	const scoped_ptr< vulkan_queue > queue,
@@ -30,7 +73,7 @@ void vulkan_barrier_manager::submit_frame_job(
 
 	submit_recorded_barriers( queue );
 
-	queue->one_time_command( builder );
+	one_time_command( queue, builder );
 }
 
 
@@ -135,8 +178,7 @@ void vulkan_barrier_manager::submit_recorded_barriers(
 
 		_pending_records.clear();
 
-		size_t compact_dst = _cfg.synchronization->compact_queue_family_index(
-			queue->cfg().family_index );
+		size_t dst_family = queue->cfg().family_index;
 
 		// currently there is not an expectation to have more than 4 queues
 		// (graphics/present/transfer/compute)
@@ -145,17 +187,17 @@ void vulkan_barrier_manager::submit_recorded_barriers(
 		std::array< VkSemaphore, 4 > signal_sem;
 		std::array< VkPipelineStageFlags, 4 > transfer_stages;
 
-		for ( size_t i = 1; i < _barriers.size(); ++i )
+		for ( size_t i = 1; i < _barrier_family_table.size(); ++i )
 		{
-			auto compact_src = ( compact_dst + i ) % _barriers.size();
-			auto release = _barriers[compact_src];
+			auto src_family = ( dst_family + i ) % _barrier_family_table.size();
+			auto release = _barrier_family_table[src_family];
 
 			if ( release.buffer_memory_barriers.size() ||
 				 release.image_memory_barriers.size() )
 			{
 				// delayed initialization of transfer semaphores
 				transfer_semaphores& trans_sem =
-					transfer_semaphores_for_queues( compact_src, compact_dst );
+					_semaphore_family_tables[src_family][dst_family];
 
 				if ( !trans_sem.signal )
 				{
@@ -182,38 +224,37 @@ void vulkan_barrier_manager::submit_recorded_barriers(
 				VkPipelineStageFlags top_of_pipe =
 					VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 
-				_cfg.synchronization->compact_queues()[compact_src]
-					->one_time_command(
-						wait ? 1 : 0,
-						&wait,
-						&top_of_pipe,
-						[&]( VkCommandBuffer vk_cmds ) {
-							vkCmdPipelineBarrier(
-								vk_cmds,
-								release.src_stages,
-								release.dst_stages,
-								(VkDependencyFlags)0,
-								0,
-								nullptr,
-								(uint32_t)release.buffer_memory_barriers.size(),
-								release.buffer_memory_barriers.data(),
-								(uint32_t)release.image_memory_barriers.size(),
-								release.image_memory_barriers.data() );
-						},
-						1,
-						&signal_sem[queue_transfers] );
+				one_time_command(
+					_cfg.queues->cfg().queue_family_table[src_family],
+					[&]( VkCommandBuffer vk_cmds ) {
+						vkCmdPipelineBarrier(
+							vk_cmds,
+							release.src_stages,
+							release.dst_stages,
+							(VkDependencyFlags)0,
+							0,
+							nullptr,
+							(uint32_t)release.buffer_memory_barriers.size(),
+							release.buffer_memory_barriers.data(),
+							(uint32_t)release.image_memory_barriers.size(),
+							release.image_memory_barriers.data() );
+					},
+					wait ? 1 : 0,
+					&wait,
+					&top_of_pipe,
+					1,
+					&signal_sem[queue_transfers] );
+
 				++queue_transfers;
 			}
 		}
 
-		auto barrier = _barriers[compact_dst];
+		auto barrier = _barrier_family_table[dst_family];
 		if ( barrier.buffer_memory_barriers.size() ||
 			 barrier.image_memory_barriers.size() )
 		{
-			queue->one_time_command(
-				(uint32_t)queue_transfers,
-				signal_sem.data(),
-				transfer_stages.data(),
+			one_time_command(
+				queue,
 				[&]( VkCommandBuffer vk_cmds ) {
 					vkCmdPipelineBarrier(
 						vk_cmds,
@@ -228,11 +269,14 @@ void vulkan_barrier_manager::submit_recorded_barriers(
 						barrier.image_memory_barriers.data() );
 				},
 				(uint32_t)queue_transfers,
+				signal_sem.data(),
+				transfer_stages.data(),
+				(uint32_t)queue_transfers,
 				wait_sem.data() );
 		}
 
 
-		for ( auto& queue_barrier : _barriers )
+		for ( auto& queue_barrier : _barrier_family_table )
 		{
 			queue_barrier = {};
 		}
@@ -268,16 +312,13 @@ void vulkan_barrier_manager::push_barrier(
 		ASSERT_CONTEXT( barrier.subresourceRange.layerCount );
 		ASSERT_CONTEXT( barrier.subresourceRange.levelCount );
 		ASSERT_CONTEXT(
-			_cfg.synchronization->compact_queue_family_index(
-				target_queue_family_index ) < _barriers.size() );
+			target_queue_family_index < _barrier_family_table.size() );
 		ASSERT_CONTEXT(
-			_cfg.synchronization->compact_queue_family_index(
-				barrier.srcQueueFamilyIndex ) < _barriers.size() );
+			barrier.srcQueueFamilyIndex < _barrier_family_table.size() );
 		ASSERT_CONTEXT(
-			_cfg.synchronization->compact_queue_family_index(
-				barrier.dstQueueFamilyIndex ) < _barriers.size() );
+			barrier.dstQueueFamilyIndex < _barrier_family_table.size() );
 
-		auto& queue_barrier = this->barrier( target_queue_family_index );
+		auto& queue_barrier = _barrier_family_table[target_queue_family_index];
 
 		queue_barrier.src_stages |= src_stages;
 		queue_barrier.dst_stages |= dst_stages;
@@ -286,7 +327,8 @@ void vulkan_barrier_manager::push_barrier(
 		if ( barrier.srcQueueFamilyIndex != target_queue_family_index )
 		{
 			auto& src_queue_barrier =
-				this->barrier( barrier.srcQueueFamilyIndex );
+				_barrier_family_table[barrier.srcQueueFamilyIndex];
+
 			src_queue_barrier.transfer_stages |= dst_stages;
 		}
 	}
@@ -318,16 +360,13 @@ void vulkan_barrier_manager::push_barrier(
 		ASSERT_CONTEXT( barrier.buffer );
 		ASSERT_CONTEXT( barrier.size );
 		ASSERT_CONTEXT(
-			_cfg.synchronization->compact_queue_family_index(
-				target_queue_family_index ) < _barriers.size() );
+			target_queue_family_index < _barrier_family_table.size() );
 		ASSERT_CONTEXT(
-			_cfg.synchronization->compact_queue_family_index(
-				barrier.srcQueueFamilyIndex ) < _barriers.size() );
+			barrier.srcQueueFamilyIndex < _barrier_family_table.size() );
 		ASSERT_CONTEXT(
-			_cfg.synchronization->compact_queue_family_index(
-				barrier.dstQueueFamilyIndex ) < _barriers.size() );
+			barrier.dstQueueFamilyIndex < _barrier_family_table.size() );
 
-		auto& queue_barrier = this->barrier( target_queue_family_index );
+		auto& queue_barrier = _barrier_family_table[target_queue_family_index];
 
 		queue_barrier.src_stages |= src_stages;
 		queue_barrier.dst_stages |= dst_stages;
@@ -336,7 +375,7 @@ void vulkan_barrier_manager::push_barrier(
 		if ( barrier.srcQueueFamilyIndex != target_queue_family_index )
 		{
 			auto& src_queue_barrier =
-				this->barrier( barrier.srcQueueFamilyIndex );
+				_barrier_family_table[barrier.srcQueueFamilyIndex];
 			src_queue_barrier.transfer_stages |= dst_stages;
 		}
 	}
@@ -345,26 +384,27 @@ void vulkan_barrier_manager::push_barrier(
 std::unique_ptr< vulkan_barrier_manager > vulkan_barrier_manager::make(
 	const config& cfg )
 {
-	if ( !cfg.synchronization )
+	if ( !cfg.queues )
 	{
-		LOG_CRITICAL( "synchronization is null" );
+		LOG_CRITICAL( "queues is null" );
 	}
 	else
 	{
-		const auto& queues = cfg.synchronization->compact_queues();
-
 		// construct vector of vector of null pointers, semaphores will be
 		// constructed lazily on demand
-		std::vector< std::vector< transfer_semaphores > > trans_semaphores(
-			queues.size() );
+		std::vector< std::vector< transfer_semaphores > >
+			semaphore_family_tables(
+				cfg.queues->cfg().queue_family_table.size() );
 
-		for ( auto& vec : trans_semaphores )
+		for ( auto& vec : semaphore_family_tables )
 		{
-			vec.resize( queues.size() );
+			vec.resize( semaphore_family_tables.size() );
 		}
 
 		auto barrier_manager = std::unique_ptr< vulkan_barrier_manager >(
-			new vulkan_barrier_manager( cfg, std::move( trans_semaphores ) ) );
+			new vulkan_barrier_manager(
+				cfg,
+				std::move( semaphore_family_tables ) ) );
 
 		return barrier_manager;
 	}
@@ -377,10 +417,11 @@ vulkan_barrier_manager ::~vulkan_barrier_manager()
 
 vulkan_barrier_manager::vulkan_barrier_manager(
 	const config& cfg,
-	std::vector< std::vector< transfer_semaphores > >&& trans_semaphores )
+	std::vector< std::vector< transfer_semaphores > >&&
+		semaphore_family_tables )
 	: _cfg( cfg )
-	, _transfer_semaphores( std::move( trans_semaphores ) )
-	, _barriers( cfg.synchronization->compact_queues().size() )
+	, _semaphore_family_tables( std::move( semaphore_family_tables ) )
+	, _barrier_family_table( cfg.queues->cfg().queue_family_table.size() )
 {}
 
 vulkan_barrier_manager::record* vulkan_barrier_manager::resolve(
@@ -396,33 +437,6 @@ vulkan_barrier_manager::record* vulkan_barrier_manager::resolve(
 	}
 
 	return nullptr;
-}
-
-vulkan_barrier_manager::pipeline_barrier& vulkan_barrier_manager::barrier(
-	uint32_t queue_family_index )
-{
-	size_t compact_index =
-		_cfg.synchronization->compact_queue_family_index( queue_family_index );
-
-	return _barriers[compact_index];
-}
-
-const vulkan_barrier_manager::pipeline_barrier& vulkan_barrier_manager::barrier(
-	uint32_t queue_family_index ) const
-{
-	size_t compact_index =
-		_cfg.synchronization->compact_queue_family_index( queue_family_index );
-
-	return _barriers[compact_index];
-}
-
-vulkan_barrier_manager::transfer_semaphores& vulkan_barrier_manager::
-	transfer_semaphores_for_queues(
-		size_t src_compact_queue_index,
-		size_t dst_compact_queue_index )
-{
-	return _transfer_semaphores[src_compact_queue_index]
-							   [dst_compact_queue_index];
 }
 
 frame_job_barrier::frame_job_barrier(

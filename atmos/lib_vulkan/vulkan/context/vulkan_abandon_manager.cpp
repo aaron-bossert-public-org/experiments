@@ -1,194 +1,271 @@
 
 #include "vulkan/context/vulkan_abandon_manager.h"
 
+#include "vulkan/sync/vulkan_fence.h"
+#include "vulkan/sync/vulkan_queue.h"
+
 #include "framework/logging/log.h"
 
 using namespace igpu;
 
 namespace
 {
-	using config = vulkan_abandon_manager::config;
-	using payload = vulkan_abandon_manager::payload;
-	using destroyer_t = std::function< void( const config&, payload& ) >;
+	using payload_t = vulkan_abandon_manager::payload_t;
+	using destroyer_t = std::function< void( payload_t& ) >;
 
 	std::vector< destroyer_t > s_destroyers;
 
-	template <
-		typename T,
-		typename DESTROYER_T = std::function< void( const config&, T ) > >
-	size_t register_destroyer( T, const DESTROYER_T& destroyer )
+	bool null_check( VmaAllocator )
 	{
-		size_t index = s_destroyers.size();
-
-		s_destroyers.push_back( [destroyer]( const config& cfg, payload& p ) {
-			destroyer( cfg, (T)p._0 );
-		} );
-
-		return index;
+		return false;
 	}
 
-	template <
-		typename T,
-		typename U,
-		typename DESTROYER_T = std::function< void( const config&, T, U ) > >
-	size_t register_destroyer( T, U, const DESTROYER_T& destroyer )
+	bool null_check( VkDevice )
 	{
-		size_t index = s_destroyers.size();
+		return false;
+	}
 
-		s_destroyers.push_back( [destroyer]( const config& cfg, payload& p ) {
-			destroyer( cfg, (T)p._0, (U)p._1 );
-		} );
-
-		return index;
+	bool null_check( void* ptr )
+	{
+		return ptr != nullptr;
 	}
 
 	template < typename... ARGS >
-	void abandon(
-		size_t type_index,
-		std::vector< std::vector< payload > >* p_abandoned,
+	struct abandon_impl
+	{
+		size_t type_index;
+
+		void operator()( vulkan_queue* queue, ARGS... args )
+		{
+			if ( ( args && ... ) )
+			{
+				auto tup = std::make_tuple( args... );
+				payload_t& p = *( (payload_t*)&tup );
+				static_assert( sizeof( tup ) <= sizeof( p ) );
+
+				if ( queue )
+				{
+					auto& pending = queue->abandon_manager().pending();
+
+					if ( pending.size() <= type_index )
+					{
+						pending.resize( type_index + 1 );
+					}
+
+					pending.at( type_index ).push( p );
+				}
+				else
+				{
+					s_destroyers[type_index]( p );
+				}
+			}
+			else if ( ( null_check( args ) || ... ) )
+			{
+				LOG_CRITICAL(
+					"args for abandon must all be null or all be non null" );
+			}
+		}
+	};
+
+	template <
+		typename... ARGS,
+		typename DESTROYER_T = std::function< void( ARGS... ) > >
+	abandon_impl< ARGS... > register_destroyer(
+		const DESTROYER_T& destroyer,
 		ARGS... args )
 	{
-		if ( ( args && ... ) )
-		{
-			if ( p_abandoned->size() <= type_index )
-			{
-				p_abandoned->resize( type_index + 1 );
-			}
+		size_t index = s_destroyers.size();
 
-			p_abandoned->at( type_index ).push_back( { args... } );
-		}
-		else if ( ( args || ... ) )
+		s_destroyers.push_back( [destroyer]( payload_t& p ) {
+			using tuple_t = std::tuple< ARGS... >;
+			static_assert( sizeof( tuple_t ) <= sizeof( payload_t ) );
+
+			auto tuple = (tuple_t*)&p;
+
+			destroyer( std::get< decltype( args ) >( *tuple )... );
+		} );
+
+		return { index };
+	}
+
+}
+
+template <>
+void igpu::abandon<>(
+	const scoped_ptr< vulkan_queue >& queue,
+	VmaAllocator vma,
+	VkBuffer buff,
+	VmaAllocation alloc )
+{
+	static auto impl = register_destroyer(
+		[]( auto vma, auto buff, auto alloc ) {
+			vmaDestroyBuffer( vma, buff, alloc );
+		},
+		vma,
+		buff,
+		alloc );
+
+	impl( queue.get(), vma, buff, alloc );
+}
+
+template <>
+void igpu::abandon<>(
+	const scoped_ptr< vulkan_queue >& queue,
+	VkDevice device,
+	VkImage obj )
+{
+	static auto impl = register_destroyer(
+		[]( auto device, auto obj ) { vkDestroyImage( device, obj, nullptr ); },
+		device,
+		obj );
+
+	impl( queue.get(), device, obj );
+}
+
+template <>
+void igpu::abandon<>(
+	const scoped_ptr< vulkan_queue >& queue,
+	VkDevice device,
+	VkSampler obj )
+{
+	static auto impl = register_destroyer(
+		[]( auto device, auto obj ) {
+			vkDestroySampler( device, obj, nullptr );
+		},
+		device,
+		obj );
+
+	impl( queue.get(), device, obj );
+}
+
+template <>
+void igpu::abandon<>(
+	const scoped_ptr< vulkan_queue >& queue,
+	VkDevice device,
+	VkImageView obj )
+{
+	static auto impl = register_destroyer(
+		[]( auto device, auto obj ) {
+			vkDestroyImageView( device, obj, nullptr );
+		},
+		device,
+		obj );
+
+	impl( queue.get(), device, obj );
+}
+
+template <>
+void igpu::abandon<>(
+	const scoped_ptr< vulkan_queue >& queue,
+	VkDevice device,
+	VkDeviceMemory obj )
+{
+	static auto impl = register_destroyer(
+		[]( auto device, auto obj ) { vkFreeMemory( device, obj, nullptr ); },
+		device,
+		obj );
+
+	impl( queue.get(), device, obj );
+}
+
+template <>
+void igpu::abandon<>(
+	const scoped_ptr< vulkan_queue >& queue,
+	VkDevice device,
+	VkCommandPool pool,
+	VkCommandBuffer cb )
+{
+	static auto impl = register_destroyer(
+		[]( auto device, auto pool, auto cb ) {
+			vkFreeCommandBuffers( device, pool, 1, &cb );
+		},
+		device,
+		pool,
+		cb );
+
+	impl( queue.get(), device, pool, cb );
+}
+
+void vulkan_abandon_manager::trigger_abandon(
+	const std::shared_ptr< vulkan_fence >& fence )
+{
+	if ( !fence )
+	{
+		LOG_CRITICAL( "fence is null" );
+	}
+	else
+	{
+		abandoned abandon;
+		for ( size_t type_index = 0; type_index < _pending.size();
+			  ++type_index )
 		{
-			LOG_CRITICAL(
-				"args for abandon must all be null or all be non null" );
+			if ( !_pending[type_index].empty() )
+			{
+				abandon.categories.push_back( { type_index } );
+				abandon.categories.back().payloads =
+					std::move( _pending[type_index] );
+			}
 		}
+
+		if ( abandon.categories.size() )
+		{
+			abandon.fence = fence;
+			abandon.submit_index = fence->submit_index();
+			_abandoned.push( std::move( abandon ) );
+		}
+	}
+
+	while ( !_abandoned.empty() )
+	{
+		abandoned& abandon = _abandoned.front();
+
+		if ( !abandon.fence->is_ready( abandon.submit_index ) )
+		{
+			break;
+		}
+
+		for ( auto& category : abandon.categories )
+		{
+			while ( !category.payloads.empty() )
+			{
+				s_destroyers[category.type_index]( category.payloads.front() );
+
+				category.payloads.pop();
+			}
+		}
+
+		_abandoned.pop();
 	}
 }
 
-void vulkan_abandon_manager::swap_frame()
+vulkan_abandon_manager::pending_t& vulkan_abandon_manager::pending()
 {
-	_swap_index = ( _swap_index + 1 ) % _abandoned.size();
-	destroy_abandoned( _swap_index );
+	return _pending;
 }
 
 vulkan_abandon_manager::~vulkan_abandon_manager()
 {
-	for ( size_t i = 0; i < _abandoned.size(); ++i )
+	while ( !_abandoned.empty() )
 	{
-		destroy_abandoned( i );
-	}
-}
-
-std::unique_ptr< vulkan_abandon_manager > vulkan_abandon_manager::make(
-	const config& cfg )
-{
-	if ( !cfg.device )
-	{
-		LOG_CRITICAL( "device is nulll" );
-	}
-	else
-	{
-		return std::unique_ptr< vulkan_abandon_manager >(
-			new vulkan_abandon_manager( cfg ) );
-	}
-
-	return nullptr;
-}
-
-vulkan_abandon_manager::vulkan_abandon_manager( const config& cfg )
-	: _cfg( cfg )
-	, _abandoned( cfg.swap_count )
-{}
-
-void vulkan_abandon_manager::destroy_abandoned( size_t swap_index )
-{
-	auto& abandoned = _abandoned[swap_index];
-	for ( size_t i = 0; i < abandoned.size(); ++i )
-	{
-		for ( payload& p : abandoned[i] )
+		abandoned& abandon = _abandoned.front();
+		abandon.fence->wait( abandon.submit_index );
+		for ( auto& category : abandon.categories )
 		{
-			s_destroyers[i]( _cfg, p );
+			while ( !category.payloads.empty() )
+			{
+				s_destroyers[category.type_index]( category.payloads.front() );
+
+				category.payloads.pop();
+			}
 		}
 	}
-	abandoned.clear();
 }
 
-std::vector< std::vector< vulkan_abandon_manager::payload > >*
-	vulkan_abandon_manager::abandoned_frame()
+std::unique_ptr< vulkan_abandon_manager > vulkan_abandon_manager::make()
 {
-	return &_abandoned[_swap_index];
+	return std::unique_ptr< vulkan_abandon_manager >(
+		new vulkan_abandon_manager() );
 }
 
-template <>
-void vulkan_abandon_manager::abandon<>(
-	VkBuffer buffer,
-	VmaAllocation vma_allocation )
-{
-	static size_t s_type_index = register_destroyer(
-		buffer,
-		vma_allocation,
-		[]( const config& cfg, VkBuffer buff, VmaAllocation alloc ) {
-			vmaDestroyBuffer( cfg.vma, buff, alloc );
-		} );
-
-	::abandon( s_type_index, abandoned_frame(), buffer, vma_allocation );
-}
-
-template <>
-void vulkan_abandon_manager::abandon<>( VkImage obj )
-{
-	static size_t s_type_index =
-		register_destroyer( obj, []( const config& cfg, auto obj ) {
-			vkDestroyImage( cfg.device, obj, nullptr );
-		} );
-
-	::abandon( s_type_index, abandoned_frame(), obj );
-}
-
-template <>
-void vulkan_abandon_manager::abandon<>( VkSampler obj )
-{
-	static size_t s_type_index =
-		register_destroyer( obj, []( const config& cfg, auto obj ) {
-			vkDestroySampler( cfg.device, obj, nullptr );
-		} );
-
-	::abandon( s_type_index, abandoned_frame(), obj );
-}
-
-template <>
-void vulkan_abandon_manager::abandon<>( VkImageView obj )
-{
-	static size_t s_type_index =
-		register_destroyer( obj, []( const config& cfg, auto obj ) {
-			vkDestroyImageView( cfg.device, obj, nullptr );
-		} );
-
-	::abandon( s_type_index, abandoned_frame(), obj );
-}
-
-template <>
-void vulkan_abandon_manager::abandon<>( VkDeviceMemory obj )
-{
-	static size_t s_type_index =
-		register_destroyer( obj, []( const config& cfg, auto obj ) {
-			vkFreeMemory( cfg.device, obj, nullptr );
-		} );
-
-	::abandon( s_type_index, abandoned_frame(), obj );
-}
-
-template <>
-void vulkan_abandon_manager::abandon<>(
-	VkCommandPool pool,
-	VkCommandBuffer command_buffer )
-{
-	static size_t s_type_index = register_destroyer(
-		pool,
-		command_buffer,
-		[]( const config& cfg, auto pool, auto command_buffer ) {
-			vkFreeCommandBuffers( cfg.device, pool, 1, &command_buffer );
-		} );
-
-	::abandon( s_type_index, abandoned_frame(), pool, command_buffer );
-}
+vulkan_abandon_manager::vulkan_abandon_manager()
+{}

@@ -5,7 +5,7 @@
 #include "vulkan/shader/vulkan_parameter.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_queue.h"
-#include "vulkan/sync/vulkan_synchronization.h"
+#include "vulkan/sync/vulkan_queues.h"
 
 using namespace igpu;
 
@@ -115,10 +115,7 @@ void vulkan_buffer::map( buffer_view_base* out_buffer_view )
 		else
 		{
 			void* mapped;
-			vmaMapMemory(
-				_cfg.vk.synchronization->vma(),
-				_allocation.vma_allocation,
-				&mapped );
+			vmaMapMemory( _cfg.vk.vma, _allocation.vma_allocation, &mapped );
 
 			_allocation.mapped_view = buffer_view< char >(
 				_allocation.mapped_view.size(),
@@ -147,9 +144,7 @@ void vulkan_buffer::unmap()
 	}
 	else
 	{
-		vmaUnmapMemory(
-			_cfg.vk.synchronization->vma(),
-			_allocation.vma_allocation );
+		vmaUnmapMemory( _cfg.vk.vma, _allocation.vma_allocation );
 
 		_allocation.mapped_view =
 			buffer_view< char >( _allocation.mapped_view.size(), nullptr );
@@ -165,18 +160,16 @@ void vulkan_buffer::reset( size_t byte_size )
 {
 	if ( !byte_size || _cfg.memory == memory_type::WRITE_COMBINED )
 	{
-		auto& abandon_manager = _cfg.vk.synchronization->abandon_manager();
-
-		abandon_manager.abandon(
+		abandon(
+			vulkan_resource::pending_queue(),
+			_cfg.vk.vma,
 			_allocation.buffer,
 			_allocation.vma_allocation );
 
-		if ( !byte_size )
-		{
-			_allocation = {};
-			_mem_metric.reset();
-		}
-		else
+		_allocation = {};
+		_mem_metric.reset();
+
+		if ( byte_size )
 		{
 			_allocation.memory_size = {
 				byte_size,
@@ -204,7 +197,7 @@ void vulkan_buffer::reset( size_t byte_size )
 			}
 
 			vmaCreateBuffer(
-				_cfg.vk.synchronization->vma(),
+				_cfg.vk.vma,
 				&info,
 				&vma_info,
 				&_allocation.buffer,
@@ -235,7 +228,7 @@ void vulkan_buffer::copy_from(
 
 		barrier_manager.submit_frame_job(
 
-			_cfg.vk.synchronization->cfg().transfer_queue,
+			_cfg.vk.queues->cfg().transfer_queue,
 			{
 				frame_job_barrier(
 					&other,

@@ -156,6 +156,8 @@ IncludeCategories:
     Priority:        3
   - Regex:           '^["<]framework/'
     Priority:        4
+  - Regex:           '^["<]framework_tests/'
+    Priority:        5
 # Regular expressions denoting the different #include categories used for ordering #includes
 
 IndentCaseLabels: false

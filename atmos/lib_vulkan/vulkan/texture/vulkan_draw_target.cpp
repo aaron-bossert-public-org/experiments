@@ -1,9 +1,8 @@
 
 #include "vulkan/texture/vulkan_draw_target.h"
 
-#include "vulkan/context/vulkan_abandon_manager.h"
 #include "vulkan/sync/vulkan_barrier_manager.h"
-#include "vulkan/sync/vulkan_synchronization.h"
+#include "vulkan/sync/vulkan_queues.h"
 
 #include "framework/logging/log.h"
 

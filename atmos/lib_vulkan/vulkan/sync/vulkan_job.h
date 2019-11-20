@@ -23,6 +23,7 @@ namespace igpu
 			friend class vulkan_job;
 
 			bool recording = false;
+			ptrdiff_t fence_submit_index = 0;
 			scoped_ptr< vulkan_fence > fence;
 			std::vector< vulkan_job_dependencies* > recorded_dependencies;
 		};

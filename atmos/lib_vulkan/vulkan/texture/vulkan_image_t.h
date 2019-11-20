@@ -69,7 +69,7 @@ namespace igpu
 		vulkan_image::config image_cfg = {
 			cfg.vk.physical_device,
 			cfg.vk.device,
-			cfg.vk.synchronization,
+			cfg.vk.queues,
 			memory,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 		};

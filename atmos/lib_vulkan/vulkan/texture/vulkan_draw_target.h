@@ -12,12 +12,11 @@
 
 namespace igpu
 {
-	class vulkan_abandon_manager;
 	class vulkan_barrier_manager;
 	class vulkan_command_buffer;
 	class vulkan_fence;
 	class vulkan_queue;
-	class vulkan_synchronization;
+	class vulkan_queues;
 
 	class vulkan_draw_target : public draw_target
 	{
@@ -27,9 +26,8 @@ namespace igpu
 			struct vulkan
 			{
 				VkDevice device = nullptr;
-				scoped_ptr< vulkan_synchronization > synchronization;
+				scoped_ptr< vulkan_queues > queues;
 				scoped_ptr< vulkan_barrier_manager > barrier_manager;
-				scoped_ptr< vulkan_abandon_manager > abandon_manager;
 				std::shared_ptr< vulkan_render_buffer > color = nullptr;
 				std::shared_ptr< vulkan_depth_buffer > depth = nullptr;
 				size_t swap_count = 0;

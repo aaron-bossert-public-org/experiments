@@ -3,7 +3,6 @@
 
 #include "vulkan/shader/vulkan_parameter.h"
 #include "vulkan/sync/vulkan_barrier_manager.h"
-#include "vulkan/sync/vulkan_gpu_object.h"
 #include "vulkan/sync/vulkan_job_scope.h"
 
 #include "framework/utility/scoped_ptr.h"
@@ -15,30 +14,11 @@ namespace igpu
 	class vulkan_dependency;
 	class vulkan_queue;
 
-	class vulkan_resource : public vulkan_gpu_object
+	class vulkan_resource
 	{
 	public:
 		using list = std::list< vulkan_dependency* >;
 		using link = list::iterator;
-
-		struct state
-		{
-		private:
-			friend vulkan_resource;
-
-			scoped_ptr< vulkan_queue > queue;
-			VkImageLayout layout = VK_IMAGE_LAYOUT_MAX_ENUM;
-
-			list read_deps;
-			list write_deps;
-
-			size_t write_count = 0;
-
-			vulkan_job_scope last_write_scope;
-			vulkan_job_scope combined_read_scope;
-
-			vulkan_barrier_manager::record_ref barrier_record_ref;
-		};
 
 
 		link add_dependency( vulkan_dependency* );
@@ -65,10 +45,6 @@ namespace igpu
 
 		virtual bool is_valid_layout( VkImageLayout ) const = 0;
 
-		virtual vulkan_resource::state& resource_state() = 0;
-
-		virtual const vulkan_resource::state& resource_state() const = 0;
-
 		virtual void update_descriptor_set(
 			VkDescriptorSet descriptor_set,
 			const vulkan_parameter::config&,
@@ -77,6 +53,30 @@ namespace igpu
 		virtual ~vulkan_resource() = default;
 
 	protected:
+		class state
+		{
+			friend class vulkan_resource;
+			scoped_ptr< vulkan_queue > queue;
+
+			VkImageLayout layout = VK_IMAGE_LAYOUT_MAX_ENUM;
+
+			list read_deps;
+			list write_deps;
+
+			size_t write_count = 0;
+
+			vulkan_job_scope last_write_scope;
+			vulkan_job_scope combined_read_scope;
+
+			vulkan_barrier_manager::record_ref barrier_record_ref;
+		};
+
+		virtual vulkan_resource::state& resource_state() = 0;
+
+		virtual const vulkan_resource::state& resource_state() const = 0;
+
+		const scoped_ptr< vulkan_queue >& pending_queue() const;
+
 		void reinitialized(
 			const scoped_ptr< vulkan_queue >&,
 			VkImageLayout layout,

@@ -3,7 +3,7 @@
 
 #include "vulkan/buffer/vulkan_buffer.h"
 #include "vulkan/defines/vulkan_includes.h"
-#include "vulkan/sync/vulkan_synchronization.h"
+#include "vulkan/sync/vulkan_queues.h"
 
 #include "framework/utility/buffer_view.h"
 using namespace igpu;
@@ -73,7 +73,8 @@ vulkan_staged_buffer::vulkan_staged_buffer( const config& cfg )
 		  cfg.memory,
 		  cfg.device,
 		  cfg.device_properties,
-		  cfg.synchronization,
+		  cfg.vma,
+		  cfg.queues,
 		  cpu_vma_usage( cfg.memory ),
 		  cpu_usage( cfg.memory ),
 	  } )
@@ -81,7 +82,8 @@ vulkan_staged_buffer::vulkan_staged_buffer( const config& cfg )
 		  memory_type::WRITE_COMBINED,
 		  cfg.device,
 		  cfg.device_properties,
-		  cfg.synchronization,
+		  cfg.vma,
+		  cfg.queues,
 		  gpu_vma_usage( cfg.memory ),
 		  gpu_usage( cfg.memory ) | cfg.vk_usage_flags,
 	  } )

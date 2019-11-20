@@ -14,9 +14,8 @@
 namespace igpu
 {
 	class vulkan_buffer;
-	class vulkan_queue;
 	class vulkan_barrier_manager;
-	class vulkan_synchronization;
+	class vulkan_queues;
 
 	class vulkan_image : public vulkan_resource
 	{
@@ -25,7 +24,7 @@ namespace igpu
 		{
 			VkPhysicalDevice physical_device = nullptr;
 			VkDevice device = nullptr;
-			scoped_ptr< vulkan_synchronization > synchronization;
+			scoped_ptr< vulkan_queues > queues;
 			memory_type memory = memory_type::UNDEFINED;
 			VkMemoryPropertyFlagBits memory_properties;
 			VkImageCreateInfo image_info = {};

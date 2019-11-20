@@ -89,6 +89,11 @@ void vulkan_resource::wait_pending_jobs() const
 	}
 }
 
+const scoped_ptr< vulkan_queue >& vulkan_resource::pending_queue() const
+{
+	return resource_state().queue;
+}
+
 void vulkan_resource::reinitialized(
 	const scoped_ptr< vulkan_queue >& queue,
 	VkImageLayout layout,

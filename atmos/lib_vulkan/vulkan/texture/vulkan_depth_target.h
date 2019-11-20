@@ -7,7 +7,7 @@
 namespace igpu
 {
 	class vulkan_image;
-	class vulkan_synchronization;
+	class vulkan_queues;
 
 	class vulkan_depth_target
 	{
@@ -16,7 +16,8 @@ namespace igpu
 		{
 			VkPhysicalDevice physical_device = nullptr;
 			VkDevice device = nullptr;
-			scoped_ptr< vulkan_synchronization > synchronization;
+			VmaAllocator vma = nullptr;
+			scoped_ptr< vulkan_queues > queues;
 			VkFormat format = VK_FORMAT_UNDEFINED;
 			VkSampleCountFlagBits sample_count = (VkSampleCountFlagBits)0;
 			VkSharingMode sharing_mode;

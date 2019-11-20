@@ -7,7 +7,6 @@
 #include "vulkan/buffer/vulkan_geometry.h"
 #include "vulkan/buffer/vulkan_index_buffer.h"
 #include "vulkan/buffer/vulkan_vertex_buffer.h"
-#include "vulkan/context/vulkan_abandon_manager.h"
 #include "vulkan/defines/vulkan_includes.h"
 #include "vulkan/shader/vulkan_fragment_shader.h"
 #include "vulkan/shader/vulkan_graphics_pipeline.h"
@@ -18,7 +17,7 @@
 #include "vulkan/shader/vulkan_vertex_shader.h"
 #include "vulkan/sync/vulkan_barrier_manager.h"
 #include "vulkan/sync/vulkan_queue.h"
-#include "vulkan/sync/vulkan_synchronization.h"
+#include "vulkan/sync/vulkan_queues.h"
 #include "vulkan/texture/vulkan_depth_buffer.h"
 #include "vulkan/texture/vulkan_depth_texture2d.h"
 #include "vulkan/texture/vulkan_draw_target.h"
@@ -444,6 +443,9 @@ namespace
 
 		VkPhysicalDeviceFeatures device_features = {};
 		device_features.samplerAnisotropy = VK_TRUE;
+#if ATMOS_DEBUG
+		device_features.robustBufferAccess = VK_TRUE;
+#endif
 
 		VkDeviceCreateInfo create_info = {};
 		create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -526,22 +528,14 @@ namespace
 
 	std::unique_ptr< vulkan_back_buffer > create_back_buffer(
 		vulkan_context* context,
-		const scoped_ptr< vulkan_synchronization >& synchronization,
-		const scoped_ptr< vulkan_barrier_manager >& barrier_manager,
-		const scoped_ptr< vulkan_abandon_manager >& abandon_manager,
-		VkPhysicalDevice physical_device,
-		VkSurfaceKHR surface,
-		VkDevice device,
-		const glm::ivec2& res,
-		uint32_t present_queue_family,
-		uint32_t graphics_queue_family )
+		vulkan_window* window )
 	{
 		const vulkan_context::config& cfg = context->cfg();
 
 		VkSurfaceCapabilitiesKHR surface_caps = {};
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-			physical_device,
-			surface,
+			cfg.vk.physical_device,
+			window->surface(),
 			&surface_caps );
 
 		sampler samp = {
@@ -557,15 +551,15 @@ namespace
 				"back buffer color",
 				cfg.color_format,
 				samp,
-				res,
-				{
-					physical_device,
-					device,
-					synchronization,
-					to_vulkan_format( cfg.color_format ),
-					context->cfg().vk.sample_count,
-					VK_SHARING_MODE_EXCLUSIVE,
-				},
+				window->res(),
+				cfg.vk.physical_device,
+				cfg.vk.device,
+				cfg.vk.vma,
+				cfg.vk.queues,
+				to_vulkan_format( cfg.color_format ),
+				cfg.vk.sample_count,
+				VK_SHARING_MODE_EXCLUSIVE,
+
 			} );
 
 		std::shared_ptr< vulkan_depth_buffer > depth =
@@ -573,15 +567,15 @@ namespace
 				"back buffer depth",
 				cfg.depth_format,
 				samp,
-				res,
-				{
-					physical_device,
-					device,
-					synchronization,
-					to_vulkan_format( cfg.depth_format ),
-					context->cfg().vk.sample_count,
-					VK_SHARING_MODE_EXCLUSIVE,
-				},
+				window->res(),
+				cfg.vk.physical_device,
+				cfg.vk.device,
+				cfg.vk.vma,
+				cfg.vk.queues,
+				to_vulkan_format( cfg.depth_format ),
+				cfg.vk.sample_count,
+				VK_SHARING_MODE_EXCLUSIVE,
+
 			} );
 
 		return vulkan_back_buffer::make( {
@@ -589,20 +583,17 @@ namespace
 				color ),
 			std::static_pointer_cast< depth_buffer, vulkan_depth_buffer >(
 				depth ),
-			device,
-			synchronization,
-			barrier_manager,
-			abandon_manager,
+			cfg.vk.device,
+			cfg.vk.queues,
+			cfg.vk.barrier_manager,
 			color,
 			depth,
-			context->cfg().vk.swap_count,
+			cfg.vk.swap_count,
 			context,
-			physical_device,
-			surface,
+			cfg.vk.physical_device,
+			window->surface(),
 			surface_caps,
 			VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-			present_queue_family,
-			graphics_queue_family,
 		} );
 	}
 }
@@ -648,9 +639,8 @@ std::unique_ptr< draw_target > vulkan_context::make(
 	return vulkan_draw_target::make( {
 		base_cfg,
 		_cfg.vk.device,
-		_cfg.vk.synchronization,
+		_cfg.vk.queues,
 		_cfg.vk.barrier_manager,
-		_cfg.vk.abandon_manager,
 		color,
 		depth,
 		_cfg.vk.swap_count,
@@ -664,7 +654,8 @@ std::unique_ptr< render_buffer > vulkan_context::make(
 		base_cfg,
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
-		_cfg.vk.synchronization,
+		_cfg.vk.vma,
+		_cfg.vk.queues,
 		to_vulkan_format( base_cfg.format ),
 		_cfg.vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
@@ -678,7 +669,8 @@ std::unique_ptr< render_texture2d > vulkan_context::make(
 		base_cfg,
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
-		_cfg.vk.synchronization,
+		_cfg.vk.vma,
+		_cfg.vk.queues,
 		to_vulkan_format( base_cfg.format ),
 		_cfg.vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
@@ -692,7 +684,8 @@ std::unique_ptr< depth_buffer > vulkan_context::make(
 		base_cfg,
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
-		_cfg.vk.synchronization,
+		_cfg.vk.vma,
+		_cfg.vk.queues,
 		to_vulkan_format( base_cfg.format ),
 		_cfg.vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
@@ -706,7 +699,8 @@ std::unique_ptr< depth_texture2d > vulkan_context::make(
 		base_cfg,
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
-		_cfg.vk.synchronization,
+		_cfg.vk.vma,
+		_cfg.vk.queues,
 		to_vulkan_format( base_cfg.format ),
 		_cfg.vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
@@ -777,8 +771,9 @@ std::unique_ptr< vertex_buffer > vulkan_context::make(
 			cfg,
 			_cfg.vk.device,
 			&_cfg.vk.physical_device_properties,
+			_cfg.vk.vma,
 		},
-		_cfg.vk.synchronization,
+		_cfg.vk.queues,
 		_cfg.vk.barrier_manager );
 }
 
@@ -790,9 +785,10 @@ std::unique_ptr< index_buffer > vulkan_context::make(
 			base_cfg,
 			_cfg.vk.device,
 			&_cfg.vk.physical_device_properties,
+			_cfg.vk.vma,
 			to_vulkan_format( base_cfg.format ),
 		},
-		_cfg.vk.synchronization,
+		_cfg.vk.queues,
 		_cfg.vk.barrier_manager );
 }
 
@@ -804,8 +800,9 @@ std::unique_ptr< compute_buffer > vulkan_context::make(
 			cfg,
 			_cfg.vk.device,
 			&_cfg.vk.physical_device_properties,
+			_cfg.vk.vma,
 		},
-		_cfg.vk.synchronization,
+		_cfg.vk.queues,
 		_cfg.vk.barrier_manager );
 }
 
@@ -817,7 +814,8 @@ std::unique_ptr< texture2d > vulkan_context::make(
 		&_cfg.vk.physical_device_properties,
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
-		_cfg.vk.synchronization,
+		_cfg.vk.vma,
+		_cfg.vk.queues,
 		_cfg.vk.barrier_manager,
 	} );
 }
@@ -946,84 +944,71 @@ std::unique_ptr< vulkan_context > vulkan_context::make(
 
 	vmaCreateAllocator( &allocator_info, &cfg.vk.vma );
 
-	st.abandon_manager = vulkan_abandon_manager::make( {
-		cfg.vk.device,
-		cfg.vk.vma,
-		cfg.vk.swap_count,
-	} );
-
-	st.present_queue = vulkan_queue::make(
-		{ cfg.vk.device,
-		  st.abandon_manager,
-		  families.present.family_index.value(),
-		  0 } );
-	st.graphics_queue = vulkan_queue::make(
-		{ cfg.vk.device,
-		  st.abandon_manager,
-		  families.graphics.family_index.value(),
-		  0 } );
-	st.compute_queue = vulkan_queue::make(
-		{ cfg.vk.device,
-		  st.abandon_manager,
-		  families.compute.family_index.value(),
-		  0 } );
-	st.transfer_queue = vulkan_queue::make(
-		{ cfg.vk.device,
-		  st.abandon_manager,
-		  families.transfer.family_index.value(),
-		  0 } );
-
 	st.pipeline_cache = vulkan_pipeline_cache::make( {
 		cfg.vk.device,
 	} );
 
-
-	if ( !st.present_queue )
-	{
-		LOG_CRITICAL( "failed to create present_queue" );
-	}
-	else if ( !st.graphics_queue )
-	{
-		LOG_CRITICAL( "failed to create graphics_queue" );
-	}
-	else if ( !st.compute_queue )
-	{
-		LOG_CRITICAL( "failed to create compute_queue" );
-	}
-	else if ( !st.transfer_queue )
-	{
-		LOG_CRITICAL( "failed to create transfer_queue" );
-	}
-	else if ( !st.pipeline_cache )
+	if ( !st.pipeline_cache )
 	{
 		LOG_CRITICAL( "failed to create pipeline_cache" );
 	}
 	else
 	{
-		vulkan_synchronization::config synchronization_cfg = {};
+		std::vector< std::shared_ptr< vulkan_queue > > queue_family_table;
+		for ( const std::optional< uint32_t >* family : {
+				  &families.present.family_index,
+				  &families.graphics.family_index,
+				  &families.compute.family_index,
+				  &families.transfer.family_index,
+			  } )
+		{
+			if ( family->has_value() )
+			{
+				if ( queue_family_table.size() <= family->value() )
+				{
+					queue_family_table.resize( size_t( family->value() ) + 1 );
+				}
+				queue_family_table[family->value()] = vulkan_queue::make( {
+					cfg.vk.device,
+					family->value(),
+				} );
+			}
+		}
 
-		synchronization_cfg.physical_device = cfg.vk.physical_device;
-		synchronization_cfg.device = cfg.vk.device;
-		synchronization_cfg.vma = cfg.vk.vma;
-		synchronization_cfg.abandon_manager = st.abandon_manager;
-		synchronization_cfg.present_queue = st.present_queue;
-		synchronization_cfg.graphics_queue = st.graphics_queue;
-		synchronization_cfg.compute_queue = st.compute_queue;
-		synchronization_cfg.transfer_queue = st.transfer_queue;
+		st.present_queue = families.present.family_index.has_value()
+			? queue_family_table[families.present.family_index.value()]
+			: nullptr;
+		st.graphics_queue = families.graphics.family_index.has_value()
+			? queue_family_table[families.graphics.family_index.value()]
+			: nullptr;
+		st.compute_queue = families.compute.family_index.has_value()
+			? queue_family_table[families.compute.family_index.value()]
+			: nullptr;
+		st.transfer_queue = families.transfer.family_index.has_value()
+			? queue_family_table[families.transfer.family_index.value()]
+			: nullptr;
 
-		st.synchronization =
-			vulkan_synchronization::make( synchronization_cfg );
+		vulkan_queues::config queues_cfg = {};
+		queues_cfg.present_queue = st.present_queue;
+		queues_cfg.graphics_queue = st.graphics_queue;
+		queues_cfg.compute_queue = st.compute_queue;
+		queues_cfg.transfer_queue = st.transfer_queue;
+		queues_cfg.queue_family_table.assign(
+			queue_family_table.begin(),
+			queue_family_table.end() );
+
+		st.queues = vulkan_queues::make( queues_cfg );
 	}
 
-	if ( !st.synchronization )
+	if ( !st.queues )
 	{
-		LOG_CRITICAL( "failed to create synchronization" );
+		LOG_CRITICAL( "failed to create queues" );
 	}
 	else
 	{
 		st.barrier_manager = vulkan_barrier_manager::make( {
 			cfg.vk.device,
-			st.synchronization,
+			st.queues,
 		} );
 	}
 
@@ -1033,13 +1018,8 @@ std::unique_ptr< vulkan_context > vulkan_context::make(
 	}
 	else
 	{
-		cfg.vk.present_queue = st.present_queue;
-		cfg.vk.graphics_queue = st.graphics_queue;
-		cfg.vk.compute_queue = st.compute_queue;
-		cfg.vk.transfer_queue = st.transfer_queue;
-		cfg.vk.abandon_manager = st.abandon_manager;
 		cfg.vk.barrier_manager = st.barrier_manager;
-		cfg.vk.synchronization = st.synchronization;
+		cfg.vk.queues = st.queues;
 		cfg.vk.pipeline_cache = st.pipeline_cache;
 
 		return std::unique_ptr< vulkan_context >(
@@ -1070,17 +1050,7 @@ vulkan_context::vulkan_context( config&& cfg, state&& st )
 	, _polycount_metric( perf::category::POLY_COUNT, "Polycount" )
 #endif
 {
-	_st.back_buffer = create_back_buffer(
-		this,
-		_st.synchronization,
-		_st.barrier_manager,
-		_st.abandon_manager,
-		_cfg.vk.physical_device,
-		_st.window->surface(),
-		_cfg.vk.device,
-		_st.window->res(),
-		_st.present_queue->cfg().family_index,
-		_st.graphics_queue->cfg().family_index );
+	_st.back_buffer = create_back_buffer( this, _st.window.get() );
 }
 
 vulkan_context::~vulkan_context()
@@ -1107,15 +1077,5 @@ void vulkan_context::recreate_back_buffer()
 	vkDeviceWaitIdle( _cfg.vk.device );
 
 	_st.back_buffer = nullptr;
-	_st.back_buffer = ::create_back_buffer(
-		this,
-		_st.synchronization,
-		_st.barrier_manager,
-		_st.abandon_manager,
-		_cfg.vk.physical_device,
-		_st.window->surface(),
-		_cfg.vk.device,
-		_st.window->res(),
-		_st.present_queue->cfg().family_index,
-		_st.graphics_queue->cfg().family_index );
+	_st.back_buffer = ::create_back_buffer( this, _st.window.get() );
 }

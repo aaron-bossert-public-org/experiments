@@ -51,14 +51,17 @@ void vulkan_job::submit_recorded_barriers(
 
 void vulkan_job::wait_on_fence()
 {
-	if ( const auto& fence = job_state().fence )
+	auto& state = job_state();
+	if ( const auto& fence = state.fence )
 	{
-		fence->wait();
+		fence->wait( state.fence_submit_index );
 	}
 
-	job_state().fence = nullptr;
+	state.fence = nullptr;
 }
 void vulkan_job::fence( const scoped_ptr< vulkan_fence >& fence )
 {
-	job_state().fence = fence;
+	auto& state = job_state();
+	state.fence = fence;
+	state.fence_submit_index = fence->submit_index();
 }

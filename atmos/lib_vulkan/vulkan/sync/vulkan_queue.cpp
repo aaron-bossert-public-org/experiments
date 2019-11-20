@@ -2,17 +2,66 @@
 #include "vulkan/sync/vulkan_queue.h"
 
 #include "vulkan/buffer/vulkan_buffer.h"
+#include "vulkan/context/vulkan_abandon_manager.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_fence.h"
 
 #include "framework/logging/log.h"
 
+#include <array>
+
 using namespace igpu;
 
-std::unique_ptr< vulkan_queue > vulkan_queue::make( const config& cfg )
+namespace
+{
+	void submit(
+		VkQueue vk_queue,
+		uint32_t wait_count,
+		const VkSemaphore* p_wait_semaphores,
+		const VkPipelineStageFlags* p_wait_stages,
+		uint32_t command_buffer_count,
+		const vulkan_command_buffer* command_buffers,
+		VkCommandBuffer* command_buffers_backing,
+		uint32_t signal_count,
+		const VkSemaphore* p_signal_semaphores,
+		VkFence fence )
+	{
+		// copy vulkan command buffer vk pointers to backing
+		VkCommandBuffer* at = command_buffers_backing;
+		while ( at < command_buffers_backing + command_buffer_count )
+		{
+			*at = command_buffers->vk_cmds();
+			++at;
+			++command_buffers;
+		}
+
+		VkSubmitInfo info = {
+			VK_STRUCTURE_TYPE_SUBMIT_INFO,
+			nullptr,
+			wait_count,
+			p_wait_semaphores,
+			p_wait_stages,
+			command_buffer_count,
+			command_buffers_backing,
+			signal_count,
+			p_signal_semaphores,
+		};
+
+		vkQueueSubmit( vk_queue, 1, &info, fence );
+	}
+}
+
+struct vulkan_queue::priv_ctor
+{
+	const config& cfg;
+	const VkQueue vk_queue;
+	const VkCommandPool command_pool;
+};
+
+std::shared_ptr< vulkan_queue > vulkan_queue::make( const config& cfg )
 {
 	VkQueue vk_queue = nullptr;
-	vkGetDeviceQueue( cfg.device, cfg.family_index, cfg.index, &vk_queue );
+	vkGetDeviceQueue( cfg.device, cfg.family_index, 0, &vk_queue );
 
 	if ( !vk_queue )
 	{
@@ -27,14 +76,18 @@ std::unique_ptr< vulkan_queue > vulkan_queue::make( const config& cfg )
 
 		VkCommandPool command_pool = nullptr;
 		vkCreateCommandPool( cfg.device, &pool_info, nullptr, &command_pool );
+
 		if ( !command_pool )
 		{
 			LOG_CRITICAL( "command_pool is null" );
 		}
 		else
 		{
-			return std::unique_ptr< vulkan_queue >(
-				new vulkan_queue( cfg, vk_queue, command_pool ) );
+			return std::make_shared< vulkan_queue >( priv_ctor{
+				cfg,
+				vk_queue,
+				command_pool,
+			} );
 		}
 	}
 
@@ -45,57 +98,98 @@ const vulkan_queue::config& vulkan_queue::cfg() const
 {
 	return _cfg;
 }
-void vulkan_queue::one_time_command( const command_builder_t& builder )
+
+VkCommandPool vulkan_queue::command_pool() const
 {
-	one_time_command( 0, nullptr, nullptr, builder, 0, nullptr );
+	return _command_pool;
 }
 
-void vulkan_queue::one_time_command(
+ptrdiff_t vulkan_queue::submit_index() const
+{
+	return _submit_index;
+}
+
+vulkan_abandon_manager& vulkan_queue::abandon_manager() const
+{
+	return *_abandon_manager;
+}
+
+void vulkan_queue::trigger_abandon()
+{
+	_trigger_abandon = true;
+}
+
+void vulkan_queue::submit_command( const vulkan_command_buffer& command_buffer )
+{
+	submit_commands( 0, nullptr, nullptr, 0, &command_buffer, 0, nullptr );
+}
+
+void vulkan_queue::submit_commands(
 	uint32_t wait_count,
 	const VkSemaphore* p_wait_semaphores,
 	const VkPipelineStageFlags* p_wait_stages,
-	const command_builder_t& builder,
+	uint32_t command_buffer_count,
+	const vulkan_command_buffer* command_buffers,
 	uint32_t signal_count,
 	const VkSemaphore* p_signal_semaphores,
-	vulkan_fence* fence )
+	std::shared_ptr< vulkan_fence > fence )
 {
-	vulkan_command_buffer command_buffer( {
-
-		_cfg.device,
-		_cfg.abandon_manager,
-		_command_pool,
-		VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-	} );
-
-	VkCommandBufferBeginInfo begin_info = {};
-	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-	VkCommandBuffer vk_cmds = command_buffer.vk_cmds();
-
-	vkBeginCommandBuffer( vk_cmds, &begin_info );
-	builder( vk_cmds );
-	vkEndCommandBuffer( vk_cmds );
-
-	VkSubmitInfo info = {
-		VK_STRUCTURE_TYPE_SUBMIT_INFO,
-		nullptr,
-		wait_count,
-		p_wait_semaphores,
-		p_wait_stages,
-		1,
-		&vk_cmds,
-		signal_count,
-		p_signal_semaphores,
-	};
+	if ( _trigger_abandon && !fence )
+	{
+		fence = vulkan_fence::make( { _cfg.device } );
+	}
 
 	VkFence vk_fence = fence ? fence->vk_fence() : nullptr;
-	vkQueueSubmit( _vk_queue, 1, &info, vk_fence );
+
+	// avoid dynamic allocation if there are fewer than 16 command buffers
+	if ( command_buffer_count <= 16 )
+	{
+		std::array< VkCommandBuffer, 16 > backing;
+		submit(
+			_vk_queue,
+			wait_count,
+			p_wait_semaphores,
+			p_wait_stages,
+			command_buffer_count,
+			command_buffers,
+			backing.data(),
+			signal_count,
+			p_signal_semaphores,
+			vk_fence );
+	}
+	else
+	{
+		std::vector< VkCommandBuffer > backing( command_buffer_count );
+		submit(
+			_vk_queue,
+			wait_count,
+			p_wait_semaphores,
+			p_wait_stages,
+			command_buffer_count,
+			command_buffers,
+			backing.data(),
+			signal_count,
+			p_signal_semaphores,
+			vk_fence );
+	}
+
+	++_submit_index;
+
+	if ( fence )
+	{
+		fence->on_submit( *this );
+	}
+
+	if ( _trigger_abandon )
+	{
+		_trigger_abandon = false;
+		_abandon_manager->trigger_abandon( fence );
+	}
 }
 
-VkQueue vulkan_queue::vk_queue() const
+VkResult vulkan_queue::submit_present( const VkPresentInfoKHR& present_info )
 {
-	return _vk_queue;
+	return vkQueuePresentKHR( _vk_queue, &present_info );
 }
 
 vulkan_queue::~vulkan_queue()
@@ -104,11 +198,9 @@ vulkan_queue::~vulkan_queue()
 	vkDestroyCommandPool( _cfg.device, _command_pool, nullptr );
 }
 
-vulkan_queue::vulkan_queue(
-	const config& cfg,
-	VkQueue vk_queue,
-	VkCommandPool command_pool )
-	: _cfg( cfg )
-	, _vk_queue( vk_queue )
-	, _command_pool( command_pool )
+vulkan_queue::vulkan_queue( const priv_ctor& priv )
+	: _cfg( priv.cfg )
+	, _vk_queue( priv.vk_queue )
+	, _command_pool( priv.command_pool )
+	, _abandon_manager( vulkan_abandon_manager::make() )
 {}

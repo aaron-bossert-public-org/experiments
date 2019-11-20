@@ -14,7 +14,7 @@
 
 namespace igpu
 {
-	class vulkan_synchronization;
+	class vulkan_queues;
 
 	class vulkan_buffer
 		: public buffer
@@ -27,7 +27,8 @@ namespace igpu
 			{
 				VkDevice device = nullptr;
 				const VkPhysicalDeviceProperties* device_properties;
-				scoped_ptr< vulkan_synchronization > synchronization;
+				VmaAllocator vma = nullptr;
+				scoped_ptr< vulkan_queues > queues;
 				VmaMemoryUsage vma_usage;
 				VkBufferUsageFlags usage;
 				VmaAllocationCreateFlagBits vma_flags = {};

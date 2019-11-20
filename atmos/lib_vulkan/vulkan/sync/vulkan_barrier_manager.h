@@ -20,7 +20,7 @@ namespace igpu
 	class vulkan_queue;
 	class vulkan_resource;
 	class vulkan_semaphore;
-	class vulkan_synchronization;
+	class vulkan_queues;
 
 	class vulkan_barrier_manager
 	{
@@ -28,7 +28,7 @@ namespace igpu
 		struct config
 		{
 			VkDevice device = nullptr;
-			scoped_ptr< vulkan_synchronization > synchronization;
+			scoped_ptr< vulkan_queues > queues;
 		};
 
 		struct pipeline_barrier
@@ -98,20 +98,13 @@ namespace igpu
 
 		record* resolve( const record_ref& );
 
-		pipeline_barrier& barrier( uint32_t queue_family_index );
-
-		const pipeline_barrier& barrier( uint32_t queue_family_index ) const;
-
-		transfer_semaphores& transfer_semaphores_for_queues(
-			size_t src_compact_queue_index,
-			size_t dst_compact_queue_index );
-
 	private:
 		const config _cfg;
 		bool _recording_barriers = false;
 		std::vector< record > _pending_records;
-		std::vector< pipeline_barrier > _barriers;
-		std::vector< std::vector< transfer_semaphores > > _transfer_semaphores;
+		std::vector< pipeline_barrier > _barrier_family_table;
+		std::vector< std::vector< transfer_semaphores > >
+			_semaphore_family_tables;
 	};
 
 	class frame_job_barrier

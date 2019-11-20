@@ -27,12 +27,16 @@ implement reserved memory type for vulkan_buffer and vulkan image
 
 implement deferred upload. when uploading data to gpu, wait until resource to be used by a readable job before uploading. combined with implicit read back this should allow for gpu write only buffers to be synchronized properly using just storage buffer decorators in shader and memory_type on cpu side.
 
+move vulkan abandon manager. cpp/h to /sync/
 
 
 //////////////////////////////////////
 (CURRENT PROGRESS POINT)
 //////////////////////////////////////
 
+
+fix abandon manager so it separates objects by queue and respects queue execution progress 
+wrap ability to submit to vulkan_queue behind a member function so that fences can be automatically/periodically be inserted into the command stream. add ability to pass in fences, which will be inserted into the abandon queue. add a generation to fences so it is possible to tell if the fence was reset.
 
 migrate example to use purely atmos
 

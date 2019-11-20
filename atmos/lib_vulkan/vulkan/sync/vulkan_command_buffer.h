@@ -7,7 +7,6 @@
 
 namespace igpu
 {
-	class vulkan_abandon_manager;
 	class vulkan_queue;
 
 	class vulkan_command_buffer
@@ -15,8 +14,7 @@ namespace igpu
 	public:
 		struct config
 		{
-			VkDevice device = nullptr;
-			scoped_ptr< vulkan_abandon_manager > abandon_manager;
+			scoped_ptr< vulkan_queue > queue;
 			VkCommandPool command_pool = nullptr;
 			VkCommandBufferLevel level;
 		};
