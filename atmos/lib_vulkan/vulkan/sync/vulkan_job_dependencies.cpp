@@ -29,9 +29,9 @@ void vulkan_job_dependencies::activate_read_hazard(
 		LOG_CRITICAL(
 			"read dependency does not belong to these job dependencies" );
 	}
-	else if ( !dependency->active() )
+	else if ( !dependency->is_hazard() )
 	{
-		dependency->active( true );
+		dependency->is_hazard( true );
 		state.read_hazards.push_back( dependency );
 	}
 }
@@ -54,9 +54,27 @@ void vulkan_job_dependencies::record_dependencies(
 			&read_hazard->resource(),
 			read_hazard->layout(),
 			read_hazard->job_scope() );
+		read_hazard->is_hazard( false );
 	}
 
 	state.read_hazards.clear();
+}
+
+bool vulkan_job_dependencies::validate_hazards() const
+{
+	auto& state = job_dependency_state();
+	bool all_valid = true;
+
+	for ( const vulkan_dependency& dep : state.read_deps )
+	{
+		if ( false ==
+			 dep.resource().validate_hazard( &dep, state.read_hazards ) )
+		{
+			all_valid = false;
+		}
+	}
+
+	return all_valid;
 }
 
 bool vulkan_job_dependencies::validate_barriers() const
@@ -118,6 +136,4 @@ void vulkan_job_dependencies::wait_pending_job()
 }
 
 vulkan_job_dependencies::~vulkan_job_dependencies()
-{
-	wait_pending_job();
-}
+{}

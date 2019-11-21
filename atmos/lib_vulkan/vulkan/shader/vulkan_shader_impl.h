@@ -85,6 +85,11 @@ namespace igpu
 			return _shader.parameter( i );
 		}
 
+		VkShaderModule shader_module() const override
+		{
+			return _shader.shader_module();
+		}
+
 		size_t vertex_parameter_count() const
 		{
 			return _shader.vertex_parameter_count();

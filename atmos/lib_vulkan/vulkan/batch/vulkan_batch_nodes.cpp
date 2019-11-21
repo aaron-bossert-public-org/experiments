@@ -14,6 +14,7 @@
 #include "vulkan/sync/vulkan_job_attributes.h"
 #include "vulkan/sync/vulkan_job_primitives.h"
 #include "vulkan/sync/vulkan_job_scope.h"
+#include "vulkan/sync/vulkan_queues.h"
 #include "vulkan/texture/vulkan_depth_texture2d.h"
 #include "vulkan/texture/vulkan_draw_target.h"
 #include "vulkan/texture/vulkan_image.h"
@@ -88,7 +89,7 @@ vulkan_material_batch::vulkan_material_batch( const config& cfg )
 	{
 		_job_primitives =
 			vulkan_job_primitives::make( vulkan_job_primitives::config{
-				cfg.root_batch->vk().device,
+				cfg.root_batch->vk().draw_target->raster_queue(),
 				cfg.program->pipeline_layout(),
 				cfg.root_batch,
 				cfg.root_batch->vk().swap_count,
@@ -122,7 +123,7 @@ void vulkan_material_batch::stop_raster()
 vulkan_geometry_batch::vulkan_geometry_batch( const config& cfg )
 	: _cfg( cfg )
 	, _job_attributes( vulkan_job_attributes::make( {
-		  cfg.root_batch->vk().device,
+		  cfg.root_batch->vk().context->cfg().vk.device,
 		  cfg.root_batch,
 		  cfg.root_batch->vk().swap_count,
 		  cfg.active_vertex_buffers,
@@ -133,7 +134,7 @@ vulkan_geometry_batch::vulkan_geometry_batch( const config& cfg )
 	{
 		_job_primitives =
 			vulkan_job_primitives::make( vulkan_job_primitives::config{
-				cfg.root_batch->vk().device,
+				cfg.root_batch->vk().draw_target->raster_queue(),
 				cfg.program->pipeline_layout(),
 				cfg.root_batch,
 				cfg.root_batch->vk().swap_count,
@@ -252,6 +253,17 @@ void vulkan_root_batch::start_raster(
 	if ( !raster_state.fence )
 	{
 		LOG_CRITICAL( "fence is null" );
+	}
+	else if (
+		raster_state.command_buffer->queue() !=
+		_vk.draw_target->raster_queue() )
+	{
+		// resources are abandoned to a predetermined queue to streamline
+		// destruction, as a result they can only safely be recorded into
+		// command buffers that will be submitted to that queue
+		LOG_CRITICAL(
+			"command buffer does not belong to expected queue unexpected "
+			"queue" );
 	}
 	else
 	{
@@ -403,11 +415,11 @@ std::unique_ptr< vulkan_batch_binding > vulkan_root_batch::make_binding(
 							   this,
 							   prog,
 							   _vk.primitives,
+							   geo,
+							   std::move( active_vertex_buffers ),
 							   std::dynamic_pointer_cast<
 								   vulkan_graphics_pipeline,
 								   graphics_pipeline >( pipeline ),
-							   geo,
-							   std::move( active_vertex_buffers ),
 						   } )
 						.first;
 		}
@@ -448,9 +460,9 @@ std::unique_ptr< vulkan_batch_binding > vulkan_root_batch::make_binding(
 
 std::unique_ptr< vulkan_root_batch > vulkan_root_batch::make( const vulkan& vk )
 {
-	if ( !vk.device )
+	if ( !vk.context )
 	{
-		LOG_CRITICAL( "device is null" );
+		LOG_CRITICAL( "context is null" );
 	}
 	else if ( !vk.draw_target )
 	{

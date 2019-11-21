@@ -235,7 +235,10 @@ namespace igpu
 
 			~batch_binding_t() override
 			{
+				_instance_ptr = nullptr;
+
 				material_batch_t& material = _material_ptr->val();
+				_material_ptr = nullptr;
 				{
 					auto& map = material.map();
 
@@ -247,6 +250,7 @@ namespace igpu
 				}
 
 				geometry_batch_t& geometry = _geometry_ptr->val();
+				_geometry_ptr = nullptr;
 				{
 					auto& map = geometry.map();
 					map.erase( map.find( &material.item() ) );
@@ -257,6 +261,7 @@ namespace igpu
 				}
 
 				states_batch_t& states = _states_ptr->val();
+				_states_ptr = nullptr;
 				{
 					auto& map = states.map();
 					map.erase( map.find( &geometry.item() ) );
@@ -267,6 +272,7 @@ namespace igpu
 				}
 
 				program_batch_t& program = _program_ptr->val();
+				_program_ptr = nullptr;
 				{
 					auto& map = program.map();
 					map.erase( map.find( &states.item() ) );

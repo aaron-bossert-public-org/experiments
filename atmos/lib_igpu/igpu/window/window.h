@@ -3,7 +3,7 @@
 
 #include "framework/meta_programming/va_macro.h"
 
-#include "glm/glm.hpp"
+#include "glm/vec2.hpp"
 #include <memory>
 
 namespace igpu

@@ -106,32 +106,35 @@ std::unique_ptr< vulkan_program > vulkan_program::make( const config& cfg )
 	std::array< std::array< uint8_t, parameters::MAX_COUNT >, 3 > indices = {};
 	memset( &indices, -1, sizeof indices );
 
-	bool shaders_valid = false;
+	bool shaders_valid = true;
 	if ( !cfg.vk.vertex )
 	{
 		LOG_CRITICAL( "vertex shader is null" );
+		shaders_valid = false;
 	}
-	else if ( !cfg.vk.fragment )
+	else if ( !cfg.vk.vertex->shader_module() )
+	{
+		LOG_CRITICAL( "vertex shader module has not been loaded" );
+		shaders_valid = false;
+	}
+	if ( !cfg.vk.fragment )
 	{
 		LOG_CRITICAL( "fragment shader is null" );
+		shaders_valid = false;
 	}
-	else
+	else if ( !cfg.vk.fragment->shader_module() )
 	{
-		shaders_valid = true;
-		merge_parameters(
-			*cfg.vk.vertex.get(),
-			&indices,
-			&base_parameter_cfgs );
-		merge_parameters(
-			*cfg.vk.fragment.get(),
-			&indices,
-			&base_parameter_cfgs );
+		LOG_CRITICAL( "fragment shader module has not been loaded" );
+		shaders_valid = false;
 	}
 
 	if ( !shaders_valid )
 	{
 		return nullptr;
 	}
+
+	merge_parameters( *cfg.vk.vertex.get(), &indices, &base_parameter_cfgs );
+	merge_parameters( *cfg.vk.fragment.get(), &indices, &base_parameter_cfgs );
 
 	// create shader parameters, descriptor set layouts, and pipeline layout
 	std::array< vulkan_parameters::config, 3 > parameters_cfgs;

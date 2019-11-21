@@ -1,5 +1,6 @@
 #include "vulkan/sync/vulkan_job_primitives.h"
 
+#include "vulkan/shader/vulkan_descriptor_pool.h"
 #include "vulkan/shader/vulkan_parameters.h"
 #include "vulkan/shader/vulkan_primitives.h"
 #include "vulkan/shader/vulkan_primitives_descriptor.h"
@@ -8,101 +9,7 @@
 
 #include "framework/logging/log.h"
 
-#include <array>
-
 using namespace igpu;
-
-namespace
-{
-	static VkDescriptorPool create_descriptor_pool(
-		VkDevice device,
-		const parameters& parameters,
-		uint32_t max_sets )
-	{
-		uint32_t uniform_buffers = 0;
-		uint32_t storage_buffers = 0;
-		uint32_t samplers = 0;
-
-		for ( int i = 0; i < parameters.count(); ++i )
-		{
-			const auto& cfg = parameters.parameter( i ).cfg();
-			switch ( cfg.type )
-			{
-			case parameter::type::UNIFORM_BUFFER:
-				uniform_buffers += (uint32_t)cfg.array_size;
-				break;
-
-			case parameter::type::STORAGE_BUFFER:
-				storage_buffers += (uint32_t)cfg.array_size;
-				break;
-
-			case parameter::type::SAMPLER2D:
-				samplers += (uint32_t)cfg.array_size;
-				break;
-			}
-		}
-
-		uint32_t pool_type_count = 0;
-
-		// size == 3
-		// uniforms, storage buffers, samplers
-		std::array< VkDescriptorPoolSize, 3 > pool_sizes = {};
-
-		if ( uniform_buffers )
-		{
-			pool_sizes[pool_type_count++] = {
-				VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-				uniform_buffers * max_sets,
-			};
-		}
-
-		if ( storage_buffers )
-		{
-			pool_sizes[pool_type_count++] = {
-				VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-				storage_buffers * max_sets,
-			};
-		}
-
-		if ( samplers )
-		{
-			pool_sizes[pool_type_count++] = {
-				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-				samplers * max_sets,
-			};
-		}
-
-		VkDescriptorPoolCreateInfo pool_info = {};
-		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		pool_info.poolSizeCount = pool_type_count;
-		pool_info.pPoolSizes = pool_sizes.data();
-		pool_info.maxSets = static_cast< uint32_t >( max_sets );
-
-		VkDescriptorPool descriptor_pool = nullptr;
-		vkCreateDescriptorPool( device, &pool_info, nullptr, &descriptor_pool );
-		return descriptor_pool;
-	}
-
-	static VkDescriptorSet allocate_descriptor_set(
-		VkDevice device,
-		VkDescriptorPool descriptor_pool,
-		VkDescriptorSetLayout layout )
-	{
-		VkDescriptorSetAllocateInfo alloc_info = {};
-		alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		alloc_info.descriptorPool = descriptor_pool;
-		alloc_info.descriptorSetCount = 1;
-		alloc_info.pSetLayouts = &layout;
-
-		VkDescriptorSet set = nullptr;
-		vkAllocateDescriptorSets( device, &alloc_info, &set );
-		return set;
-	}
-}
-struct vulkan_job_primitives::private_ctor
-{
-	const config& cfg;
-};
 
 const vulkan_job_primitives::config& vulkan_job_primitives::cfg() const
 {
@@ -130,12 +37,12 @@ const vulkan_job& vulkan_job_primitives::job() const
 	return *_cfg.job;
 }
 
-std::shared_ptr< vulkan_job_primitives > vulkan_job_primitives::make(
+std::unique_ptr< vulkan_job_primitives > vulkan_job_primitives::make(
 	const config& cfg )
 {
-	if ( !cfg.device )
+	if ( !cfg.queue )
 	{
-		LOG_CRITICAL( "device is null" );
+		LOG_CRITICAL( "queue is null" );
 	}
 	else if ( !cfg.swap_count )
 	{
@@ -155,29 +62,28 @@ std::shared_ptr< vulkan_job_primitives > vulkan_job_primitives::make(
 
 		if ( primitives_descriptor.reset( *cfg.parameters, *cfg.primitives ) )
 		{
-			auto shared = std::make_shared< vulkan_job_primitives >(
-				private_ctor{ cfg } );
+			auto unique = std::unique_ptr< vulkan_job_primitives >(
+				new vulkan_job_primitives( cfg ) );
 
-			auto& descriptor_pool = shared->_descriptor_pool;
-			auto& descriptor_sets = shared->_descriptor_sets;
-			auto& read_deps = shared->_state.read_deps;
-			auto& write_deps = shared->_state.write_deps;
-			auto& read_parameter_cfgs = shared->_read_parameter_cfgs;
-			auto& write_parameter_cfgs = shared->_write_parameter_cfgs;
+			auto& descriptor_pool = unique->_descriptor_pool;
+			auto& descriptor_sets = unique->_descriptor_sets;
+			auto& read_deps = unique->_state.read_deps;
+			auto& write_deps = unique->_state.write_deps;
+			auto& read_parameter_cfgs = unique->_read_parameter_cfgs;
+			auto& write_parameter_cfgs = unique->_write_parameter_cfgs;
 
 			bool success = true;
 
 			descriptor_sets.resize( cfg.swap_count );
-			descriptor_pool = create_descriptor_pool(
-				cfg.device,
+			descriptor_pool = vulkan_descriptor_pool::make(
+				cfg.queue,
+				(VkDescriptorPoolCreateFlags)0,
 				*cfg.parameters,
 				(uint32_t)cfg.swap_count );
+
 			for ( size_t i = 0; i < cfg.swap_count; ++i )
 			{
-				descriptor_sets[i] = allocate_descriptor_set(
-					cfg.device,
-					descriptor_pool,
-					cfg.parameters->cfg().vk.layout );
+				descriptor_sets[i] = descriptor_pool->allocate_descriptor_set();
 
 				if ( false ==
 					 primitives_descriptor.bind_descriptor_set(
@@ -280,9 +186,9 @@ std::shared_ptr< vulkan_job_primitives > vulkan_job_primitives::make(
 
 					deps.emplace_back(
 						primitive.cfg().vk.resource,
+						unique.get(),
 						parameter.cfg().vk.image_layout,
-						job_scope,
-						shared );
+						job_scope );
 
 					cfgs.push_back( parameter.cfg() );
 				}
@@ -296,7 +202,7 @@ std::shared_ptr< vulkan_job_primitives > vulkan_job_primitives::make(
 					"vector cannot be reallocated once dependencies are "
 					"created" );
 
-				return shared;
+				return unique;
 			}
 		}
 	}
@@ -305,12 +211,10 @@ std::shared_ptr< vulkan_job_primitives > vulkan_job_primitives::make(
 }
 
 vulkan_job_primitives ::~vulkan_job_primitives()
-{
-	vkDestroyDescriptorPool( _cfg.device, _descriptor_pool, nullptr );
-}
+{}
 
-vulkan_job_primitives::vulkan_job_primitives( const private_ctor& priv )
-	: _cfg( priv.cfg )
+vulkan_job_primitives::vulkan_job_primitives( const config& cfg )
+	: _cfg( cfg )
 {}
 
 void vulkan_job_primitives::on_record_cmds(

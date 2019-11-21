@@ -1,6 +1,7 @@
 
 #include "vulkan/shader/vulkan_graphics_pipeline.h"
 
+#include "vulkan/context/vulkan_abandon_manager.h"
 #include "vulkan/shader/vulkan_fragment_shader.h"
 #include "vulkan/shader/vulkan_pipeline_cache.h"
 #include "vulkan/shader/vulkan_program.h"
@@ -129,9 +130,9 @@ namespace
 
 			VkViewport viewport = {};
 			viewport.x = 0.0f;
-			viewport.y = 0.0f;
+			viewport.y = (float)res.y;
 			viewport.width = (float)res.x;
-			viewport.height = (float)res.x;
+			viewport.height = (float)-res.y;
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 
@@ -158,7 +159,7 @@ namespace
 			rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 			rasterizer.lineWidth = 1.0f;
 			rasterizer.cullMode = cfg.vk.render_states->cfg().vk.cull;
-			rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+			rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
 			rasterizer.depthBiasEnable = VK_FALSE;
 
 			VkPipelineMultisampleStateCreateInfo multisampling = {};
@@ -245,7 +246,7 @@ void vulkan_graphics_pipeline::rebind_draw_target(
 		_cfg.draw_target = scoped_ptr< igpu::draw_target >( draw_target );
 		_cfg.vk.draw_target = draw_target;
 
-		vkDestroyPipeline( _cfg.vk.device, _vk_pipeline, nullptr );
+		abandon( _cfg.vk.queue, _cfg.vk.device, _vk_pipeline );
 		_vk_pipeline = build_pipeline( _cfg );
 	}
 }
@@ -263,7 +264,7 @@ std::unique_ptr< vulkan_graphics_pipeline > vulkan_graphics_pipeline::make(
 
 vulkan_graphics_pipeline::~vulkan_graphics_pipeline()
 {
-	vkDestroyPipeline( _cfg.vk.device, _vk_pipeline, nullptr );
+	abandon( _cfg.vk.queue, _cfg.vk.device, _vk_pipeline );
 }
 
 vulkan_graphics_pipeline::vulkan_graphics_pipeline(

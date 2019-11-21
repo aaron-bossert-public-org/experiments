@@ -55,7 +55,7 @@ namespace igpu
 
 		virtual const config& cfg() const = 0;
 
-		virtual scoped_ptr< draw_target > back_buffer() const = 0;
+		virtual scoped_ptr< draw_target > back_buffer() = 0;
 
 		virtual scoped_ptr< window > window() const = 0;
 

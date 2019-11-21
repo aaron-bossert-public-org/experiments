@@ -6,17 +6,17 @@
 #include "vulkan/sync/vulkan_job_dependencies.h"
 namespace igpu
 {
+	class vulkan_descriptor_pool;
 	class vulkan_parameters;
 	class vulkan_primitives;
+	class vulkan_queue;
 
 	class vulkan_job_primitives : public vulkan_job_dependencies
 	{
 	public:
-		struct private_ctor;
-
 		struct config
 		{
-			VkDevice device = nullptr;
+			scoped_ptr< vulkan_queue > queue;
 			VkPipelineLayout pipeline_layout = nullptr;
 			vulkan_job* job = nullptr;
 			size_t swap_count = 0;
@@ -27,13 +27,12 @@ namespace igpu
 
 		~vulkan_job_primitives();
 
-		static std::shared_ptr< vulkan_job_primitives > make( const config& );
-
-		vulkan_job_primitives( const private_ctor& );
+		static std::unique_ptr< vulkan_job_primitives > make( const config& );
 
 		const config& cfg() const;
 
 	protected:
+		vulkan_job_primitives( const config& );
 		vulkan_job& job() override;
 
 		const vulkan_job& job() const override;
@@ -51,7 +50,7 @@ namespace igpu
 		const config _cfg;
 		state _state;
 
-		VkDescriptorPool _descriptor_pool = nullptr;
+		std::shared_ptr< vulkan_descriptor_pool > _descriptor_pool;
 		std::vector< VkDescriptorSet > _descriptor_sets;
 		std::vector< vulkan_parameter::config > _read_parameter_cfgs;
 		std::vector< vulkan_parameter::config > _write_parameter_cfgs;

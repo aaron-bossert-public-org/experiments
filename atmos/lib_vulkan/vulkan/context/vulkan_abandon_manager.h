@@ -40,6 +40,12 @@ namespace igpu
 	void abandon<>(
 		const scoped_ptr< vulkan_queue >&,
 		VkDevice,
+		VkDescriptorPool );
+
+	template <>
+	void abandon<>(
+		const scoped_ptr< vulkan_queue >&,
+		VkDevice,
 		VkDeviceMemory );
 
 	template <>
@@ -50,6 +56,9 @@ namespace igpu
 
 	template <>
 	void abandon<>( const scoped_ptr< vulkan_queue >&, VkDevice, VkImageView );
+
+	template <>
+	void abandon<>( const scoped_ptr< vulkan_queue >&, VkDevice, VkPipeline );
 
 	class vulkan_abandon_manager
 	{
@@ -63,6 +72,8 @@ namespace igpu
 		static std::unique_ptr< vulkan_abandon_manager > make();
 
 		pending_t& pending();
+
+		bool empty();
 
 		~vulkan_abandon_manager();
 

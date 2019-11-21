@@ -12,11 +12,6 @@
 
 using namespace igpu;
 
-struct vulkan_job_attributes::private_ctor
-{
-	const config& cfg;
-};
-
 const vulkan_job_attributes::config& vulkan_job_attributes::cfg() const
 {
 	return _cfg;
@@ -43,7 +38,7 @@ const vulkan_job& vulkan_job_attributes::job() const
 	return *_cfg.job;
 }
 
-std::shared_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
+std::unique_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
 	const config& cfg )
 {
 	if ( !cfg.device )
@@ -60,19 +55,18 @@ std::shared_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
 	}
 	else
 	{
-		auto shared =
-			std::make_shared< vulkan_job_attributes >( private_ctor{ cfg } );
+		auto unique = std::unique_ptr< vulkan_job_attributes >(
+			new vulkan_job_attributes( cfg ) );
 
 		VkImageLayout layout = VK_IMAGE_LAYOUT_MAX_ENUM;
-		scoped_ptr< vulkan_job_dependencies > scoped_ptr = shared;
 		vulkan_geometry* geometry = cfg.geometry;
 
-		auto& index_buffer = shared->_index_buffer;
-		auto& index_buffer_offset = shared->_index_buffer_offset;
-		auto& index_type = shared->_index_type;
-		auto& vertex_buffers = shared->_vertex_buffers;
-		auto& vertex_buffer_offsets = shared->_vertex_buffer_offsets;
-		auto& read_deps = shared->_state.read_deps;
+		auto& index_buffer = unique->_index_buffer;
+		auto& index_buffer_offset = unique->_index_buffer_offset;
+		auto& index_type = unique->_index_type;
+		auto& vertex_buffers = unique->_vertex_buffers;
+		auto& vertex_buffer_offsets = unique->_vertex_buffer_offsets;
+		auto& read_deps = unique->_state.read_deps;
 		auto& vbuff_byte_offsets = geometry->cfg().vbuff_byte_offsets;
 
 		vertex_buffers.reserve( cfg.active_vertex_buffers.size() );
@@ -99,7 +93,7 @@ std::shared_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
 				VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
 				VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT,
 			};
-			read_deps.emplace_back( resource, layout, job_scope, scoped_ptr );
+			read_deps.emplace_back( resource, unique.get(), layout, job_scope );
 		}
 
 		index_buffer = geometry->index_buffer().gpu_object().vk_buffer();
@@ -112,9 +106,9 @@ std::shared_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
 			VK_ACCESS_INDEX_READ_BIT,
 		};
 
-		read_deps.emplace_back( resource, layout, job_scope, scoped_ptr );
+		read_deps.emplace_back( resource, unique.get(), layout, job_scope );
 
-		return shared;
+		return unique;
 	}
 
 	return nullptr;
@@ -123,8 +117,8 @@ std::shared_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
 vulkan_job_attributes ::~vulkan_job_attributes()
 {}
 
-vulkan_job_attributes::vulkan_job_attributes( const private_ctor& priv )
-	: _cfg( priv.cfg )
+vulkan_job_attributes::vulkan_job_attributes( const config& cfg )
+	: _cfg( cfg )
 {}
 
 void vulkan_job_attributes::on_record_cmds(

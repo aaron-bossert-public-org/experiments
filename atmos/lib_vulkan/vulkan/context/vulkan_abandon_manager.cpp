@@ -112,6 +112,56 @@ template <>
 void igpu::abandon<>(
 	const scoped_ptr< vulkan_queue >& queue,
 	VkDevice device,
+	VkCommandPool pool,
+	VkCommandBuffer cb )
+{
+	static auto impl = register_destroyer(
+		[]( auto device, auto pool, auto cb ) {
+			vkFreeCommandBuffers( device, pool, 1, &cb );
+		},
+		device,
+		pool,
+		cb );
+
+	impl( queue.get(), device, pool, cb );
+}
+
+template <>
+void igpu::abandon<>(
+	const scoped_ptr< vulkan_queue >& queue,
+	VkDevice device,
+	VkCommandPool pool )
+{
+	static auto impl = register_destroyer(
+		[]( auto device, auto pool ) {
+			vkDestroyCommandPool( device, pool, nullptr );
+		},
+		device,
+		pool );
+
+	impl( queue.get(), device, pool );
+}
+
+template <>
+void igpu::abandon<>(
+	const scoped_ptr< vulkan_queue >& queue,
+	VkDevice device,
+	VkDescriptorPool pool )
+{
+	static auto impl = register_destroyer(
+		[]( auto device, auto pool ) {
+			vkDestroyDescriptorPool( device, pool, nullptr );
+		},
+		device,
+		pool );
+
+	impl( queue.get(), device, pool );
+}
+
+template <>
+void igpu::abandon<>(
+	const scoped_ptr< vulkan_queue >& queue,
+	VkDevice device,
 	VkImage obj )
 {
 	static auto impl = register_destroyer(
@@ -172,34 +222,16 @@ template <>
 void igpu::abandon<>(
 	const scoped_ptr< vulkan_queue >& queue,
 	VkDevice device,
-	VkCommandPool pool,
-	VkCommandBuffer cb )
+	VkPipeline obj )
 {
 	static auto impl = register_destroyer(
-		[]( auto device, auto pool, auto cb ) {
-			vkFreeCommandBuffers( device, pool, 1, &cb );
+		[]( auto device, auto obj ) {
+			vkDestroyPipeline( device, obj, nullptr );
 		},
 		device,
-		pool,
-		cb );
+		obj );
 
-	impl( queue.get(), device, pool, cb );
-}
-
-template <>
-void igpu::abandon<>(
-	const scoped_ptr< vulkan_queue >& queue,
-	VkDevice device,
-	VkCommandPool pool )
-{
-	static auto impl = register_destroyer(
-		[]( auto device, auto pool ) {
-			vkDestroyCommandPool( device, pool, nullptr );
-		},
-		device,
-		pool );
-
-	impl( queue.get(), device, pool );
+	impl( queue.get(), device, obj );
 }
 
 void vulkan_abandon_manager::trigger_abandon(
@@ -257,6 +289,11 @@ void vulkan_abandon_manager::trigger_abandon(
 vulkan_abandon_manager::pending_t& vulkan_abandon_manager::pending()
 {
 	return _pending;
+}
+
+bool vulkan_abandon_manager::empty()
+{
+	return _pending.empty() && _abandoned.empty();
 }
 
 vulkan_abandon_manager::~vulkan_abandon_manager()

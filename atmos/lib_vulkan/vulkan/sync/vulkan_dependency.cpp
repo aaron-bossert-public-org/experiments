@@ -7,9 +7,9 @@ using namespace igpu;
 
 vulkan_dependency::vulkan_dependency(
 	vulkan_resource* resource,
+	vulkan_job_dependencies* job_dependencies,
 	const VkImageLayout layout,
-	const vulkan_job_scope& job_scope,
-	const scoped_ptr< vulkan_job_dependencies >& job_dependencies )
+	const vulkan_job_scope& job_scope )
 	: _resource( resource )
 	, _layout( layout )
 	, _job_scope( job_scope )
@@ -27,14 +27,14 @@ vulkan_dependency ::~vulkan_dependency()
 	_resource->remove_dependency( _link );
 }
 
-bool vulkan_dependency::active() const
+bool vulkan_dependency::is_hazard() const
 {
-	return _active;
+	return _is_hazard;
 }
 
-void vulkan_dependency::active( bool active )
+void vulkan_dependency::is_hazard( bool is_hazard )
 {
-	_active = active;
+	_is_hazard = is_hazard;
 }
 
 VkImageLayout vulkan_dependency::layout() const

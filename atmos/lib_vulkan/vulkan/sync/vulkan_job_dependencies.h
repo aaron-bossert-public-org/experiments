@@ -29,6 +29,8 @@ namespace igpu
 
 		void record_dependencies( vulkan_barrier_manager* );
 
+		bool validate_hazards() const;
+
 		bool validate_barriers() const;
 
 		void wait_pending_job();

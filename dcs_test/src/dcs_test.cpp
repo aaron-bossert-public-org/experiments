@@ -1,4 +1,6 @@
 
+#define GLM_ENABLE_EXPERIMENTAL 1
+
 #include "dcs_test/include/dcs_test.h"
 
 #include "igpu/context/context.h"
@@ -23,8 +25,6 @@
 #include <unordered_map>
 #include <vector>
 
-#define GLM_FORCE_LEFT_HANDED
-#define GLM_ENABLE_EXPERIMENTAL 1
 #define TINYOBJLOADER_IMPLEMENTATION
 
 #include "glm/glm.hpp"
@@ -41,6 +41,7 @@ struct Vertex
 
 	bool operator==( const Vertex& other ) const
 	{
+		utility::center( {} );
 		return pos == other.pos && col == other.col && uv0 == other.uv0;
 	}
 };
@@ -285,8 +286,8 @@ std::unique_ptr< dcs_test > dcs_test::make( const config& cfg )
 		} );
 
 		load_buffer( st.texture->cfg().name, st.texture.get() );
-		// load_buffer( cfg.vertex_path.c_str(), v_shader.get() );
-		// load_buffer( cfg.fragment_path.c_str(), f_shader.get() );
+		load_buffer( cfg.vertex_path.c_str(), v_shader.get() );
+		load_buffer( cfg.fragment_path.c_str(), f_shader.get() );
 
 		st.program = cfg.context->make_shared( program::config{
 			"test program",
@@ -294,7 +295,7 @@ std::unique_ptr< dcs_test > dcs_test::make( const config& cfg )
 			f_shader,
 		} );
 
-		// st.geometry = load_model( cfg );
+		st.geometry = load_model( cfg );
 
 		struct
 		{
@@ -409,7 +410,7 @@ void dcs_test::handle_input()
 
 void dcs_test::render()
 {
-	auto back_buffer = _cfg.context->back_buffer();
+	const auto& back_buffer = _cfg.context->back_buffer();
 
 	back_buffer->begin_raster();
 

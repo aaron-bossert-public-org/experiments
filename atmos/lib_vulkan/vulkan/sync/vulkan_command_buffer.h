@@ -19,6 +19,8 @@ namespace igpu
 			VkCommandBufferLevel level;
 		};
 
+		const scoped_ptr< vulkan_queue > queue() const;
+
 		VkCommandBuffer vk_cmds() const;
 
 		~vulkan_command_buffer();

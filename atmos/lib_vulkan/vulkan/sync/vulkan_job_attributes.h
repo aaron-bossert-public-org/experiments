@@ -12,8 +12,6 @@ namespace igpu
 	class vulkan_job_attributes : public vulkan_job_dependencies
 	{
 	public:
-		struct private_ctor;
-
 		struct config
 		{
 			VkDevice device = nullptr;
@@ -25,13 +23,13 @@ namespace igpu
 
 		const config& cfg() const;
 
-		static std::shared_ptr< vulkan_job_attributes > make( const config& );
-
-		vulkan_job_attributes( const private_ctor& );
+		static std::unique_ptr< vulkan_job_attributes > make( const config& );
 
 		~vulkan_job_attributes();
 
 	protected:
+		vulkan_job_attributes( const config& cfg );
+
 		vulkan_job& job() override;
 
 		const vulkan_job& job() const override;

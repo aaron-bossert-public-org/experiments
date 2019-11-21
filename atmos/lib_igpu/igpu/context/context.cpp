@@ -185,7 +185,9 @@ namespace
 			}
 			if ( auto unique = make() )
 			{
-				return tracker->emplace( &cfg, std::move( unique ) );
+				return tracker->emplace(
+					keyifier().keyify( unique.get() ),
+					std::move( unique ) );
 			}
 		}
 

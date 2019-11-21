@@ -83,7 +83,7 @@ namespace
 		app_info.applicationVersion = VK_MAKE_VERSION( 1, 0, 0 );
 		app_info.pEngineName = "No Engine";
 		app_info.engineVersion = VK_MAKE_VERSION( 1, 0, 0 );
-		app_info.apiVersion = VK_API_VERSION_1_0;
+		app_info.apiVersion = VK_API_VERSION_1_1;
 
 
 		std::vector< const char* > extensions =
@@ -617,6 +617,7 @@ std::unique_ptr< graphics_pipeline > vulkan_context::make(
 	return vulkan_graphics_pipeline::make( {
 		base_cfg,
 		_cfg.vk.device,
+		_st.back_buffer->raster_queue(),
 		_st.pipeline_cache,
 		draw_target,
 		program,
@@ -838,7 +839,6 @@ std::unique_ptr< opaque_batch > vulkan_context::make(
 
 	return vulkan_opaque_batch::make( {
 		base_cfg,
-		_cfg.vk.device,
 		this,
 		_cfg.vk.swap_count,
 		draw_target,
@@ -859,7 +859,6 @@ std::unique_ptr< transparent_batch > vulkan_context::make(
 
 	return vulkan_transparent_batch::make( {
 		base_cfg,
-		_cfg.vk.device,
 		this,
 		_cfg.vk.swap_count,
 		draw_target,
@@ -868,8 +867,16 @@ std::unique_ptr< transparent_batch > vulkan_context::make(
 	} );
 }
 
-scoped_ptr< draw_target > vulkan_context::back_buffer() const
+scoped_ptr< draw_target > vulkan_context::back_buffer()
 {
+	if ( _st.back_buffer_out_of_date )
+	{
+		_st.back_buffer_out_of_date = false;
+		vkDeviceWaitIdle( _cfg.vk.device );
+
+		_st.back_buffer = nullptr;
+		_st.back_buffer = ::create_back_buffer( this, _st );
+	}
 	return _st.back_buffer;
 }
 
@@ -1074,10 +1081,7 @@ vulkan_context::~vulkan_context()
 	vkDestroyInstance( _cfg.vk.instance, nullptr );
 }
 
-void vulkan_context::recreate_back_buffer()
+void vulkan_context::back_buffer_out_of_date()
 {
-	vkDeviceWaitIdle( _cfg.vk.device );
-
-	_st.back_buffer = nullptr;
-	_st.back_buffer = ::create_back_buffer( this, _st );
+	_st.back_buffer_out_of_date = true;
 }

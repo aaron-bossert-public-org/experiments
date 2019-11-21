@@ -313,7 +313,7 @@ void vulkan_back_buffer::end_raster()
 		LOG_WARNING( "vkAcquireNextImageKHR: VK_SUBOPTIMAL_KHR" );
 		[[fallthrough]];
 	case VK_ERROR_OUT_OF_DATE_KHR:
-		_cfg.back_buffer.context->recreate_back_buffer();
+		_cfg.back_buffer.context->back_buffer_out_of_date();
 	}
 }
 

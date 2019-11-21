@@ -16,15 +16,15 @@ namespace igpu
 	public:
 		vulkan_dependency(
 			vulkan_resource*,
+			vulkan_job_dependencies*,
 			const VkImageLayout,
-			const vulkan_job_scope&,
-			const scoped_ptr< vulkan_job_dependencies >& );
+			const vulkan_job_scope& );
 
 		~vulkan_dependency();
 
-		bool active() const;
+		bool is_hazard() const;
 
-		void active( bool );
+		void is_hazard( bool );
 
 		VkImageLayout layout() const;
 
@@ -39,11 +39,11 @@ namespace igpu
 		const vulkan_job_scope& job_scope() const;
 
 	private:
-		bool _active = false;
+		bool _is_hazard = false;
 		vulkan_resource* const _resource;
+		vulkan_job_dependencies* const _job_dependencies;
 		const VkImageLayout _layout;
 		const vulkan_job_scope _job_scope;
-		const scoped_ptr< vulkan_job_dependencies > _job_dependencies;
 		const vulkan_resource::link _link;
 	};
 }

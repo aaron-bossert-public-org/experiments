@@ -11,6 +11,7 @@
 
 namespace igpu
 {
+	class vulkan_queue;
 	class vulkan_draw_target;
 	class vulkan_pipeline_cache;
 	class vulkan_program;
@@ -24,6 +25,7 @@ namespace igpu
 			struct vulkan
 			{
 				VkDevice device;
+				scoped_ptr< vulkan_queue > queue;
 				scoped_ptr< vulkan_pipeline_cache > pipeline_cache;
 				scoped_ptr< vulkan_draw_target > draw_target;
 				scoped_ptr< vulkan_program > program;

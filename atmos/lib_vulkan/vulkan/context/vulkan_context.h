@@ -46,6 +46,7 @@ namespace igpu
 			std::shared_ptr< vulkan_barrier_manager > barrier_manager;
 			std::shared_ptr< vulkan_back_buffer > back_buffer;
 			std::shared_ptr< vulkan_pipeline_cache > pipeline_cache;
+			bool back_buffer_out_of_date = false;
 		};
 
 		static std::unique_ptr< vulkan_context > make(
@@ -54,11 +55,11 @@ namespace igpu
 
 		const config& cfg() const override;
 
-		scoped_ptr< igpu::draw_target > back_buffer() const override;
+		scoped_ptr< igpu::draw_target > back_buffer() override;
 
 		scoped_ptr< igpu::window > window() const override;
 
-		void recreate_back_buffer();
+		void back_buffer_out_of_date();
 
 		~vulkan_context();
 

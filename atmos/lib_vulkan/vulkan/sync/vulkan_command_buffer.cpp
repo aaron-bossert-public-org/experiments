@@ -12,6 +12,11 @@ VkCommandBuffer vulkan_command_buffer::vk_cmds() const
 	return _vk_cmds;
 }
 
+const scoped_ptr< vulkan_queue > vulkan_command_buffer::queue() const
+{
+	return _cfg.command_pool->cfg().queue;
+}
+
 void vulkan_command_buffer::vk_pool( VkCommandPool vk_pool )
 {
 	_vk_pool = vk_pool;

@@ -271,6 +271,54 @@ void vulkan_resource::on_barrier(
 	}
 }
 
+bool vulkan_resource::validate_hazard(
+	const vulkan_dependency* read_dependency,
+	const std::vector< vulkan_dependency* >& read_hazards ) const
+{
+	bool is_valid = true;
+	auto& state = this->resource_state();
+	bool needs_layout = state.layout != read_dependency->layout();
+	bool needs_barrier =
+		!state.combined_read_scope.contains( read_dependency->job_scope() );
+
+	bool is_hazard = read_dependency->is_hazard();
+	bool in_hazards = std::find(
+						  read_hazards.begin(),
+						  read_hazards.end(),
+						  read_dependency ) != read_hazards.end();
+
+	if ( is_hazard != in_hazards )
+	{
+		LOG_CRITICAL(
+			is_hazard
+				? "resource is marked as a hazard but is not in hazards list"
+				: "resource is in hazards list but is not marked as a hazard" );
+	}
+
+	if ( needs_layout || needs_barrier )
+	{
+		if ( !is_hazard || !in_hazards )
+		{
+			const char* hazard_request = ( needs_layout && needs_barrier )
+				? "needs barrier and layout transition"
+				: ( needs_layout ? "needs layout transition"
+								 : "needs barrier" );
+
+
+			const char* hazard_state = ( !is_hazard && !in_hazards )
+				? "is not marked as a hazard and is not in hazards list"
+				: !is_hazard ? "is not marked as a hazard"
+							 : "is not added to hazards list";
+
+			LOG_CRITICAL( "resource %s but %s", hazard_request, hazard_state );
+
+			is_valid = false;
+		}
+	}
+
+	return is_valid;
+}
+
 bool vulkan_resource::validate_barrier(
 	VkImageLayout layout,
 	const vulkan_job_scope& job_scope ) const

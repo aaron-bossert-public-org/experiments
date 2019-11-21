@@ -8,6 +8,8 @@
 
 using namespace igpu;
 
+#define ATMOS_DEBUG_BARRIERS ATMOS_DEBUG
+
 void vulkan_job::start_recording_barriers()
 {
 	auto& state = job_state();
@@ -30,6 +32,14 @@ void vulkan_job::submit_recorded_barriers(
 {
 	auto& state = job_state();
 	ASSERT_CONTEXT( state.recording );
+
+#if ATMOS_DEBUG_BARRIERS
+	for ( auto* dependencies : state.recorded_dependencies )
+	{
+		dependencies->validate_hazards();
+	}
+#endif
+
 	barrier_manager->start_recording_barriers();
 
 	for ( auto* dependencies : state.recorded_dependencies )
@@ -39,7 +49,7 @@ void vulkan_job::submit_recorded_barriers(
 
 	barrier_manager->submit_recorded_barriers( queue );
 
-#if ATMOS_DEBUG
+#if ATMOS_DEBUG_BARRIERS
 	for ( auto* dependencies : state.recorded_dependencies )
 	{
 		dependencies->validate_barriers();

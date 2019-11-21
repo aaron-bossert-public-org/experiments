@@ -29,6 +29,7 @@ implement deferred upload. when uploading data to gpu, wait until resource to be
 
 move vulkan abandon manager. cpp/h to /sync/
 
+get release and relwithdebinfo working
 fix shutdown crashes
 
 

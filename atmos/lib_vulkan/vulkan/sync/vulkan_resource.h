@@ -41,6 +41,10 @@ namespace igpu
 			VkImageLayout,
 			const vulkan_job_scope& );
 
+		bool validate_hazard(
+			const vulkan_dependency* read_dependency,
+			const std::vector< vulkan_dependency* >& read_hazards ) const;
+
 		bool validate_barrier( VkImageLayout, const vulkan_job_scope& ) const;
 
 		virtual bool is_valid_layout( VkImageLayout ) const = 0;

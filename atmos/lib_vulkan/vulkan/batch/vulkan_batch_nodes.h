@@ -98,9 +98,9 @@ namespace igpu
 			vulkan_root_batch* root_batch = nullptr;
 			std::shared_ptr< vulkan_program > program;
 			std::shared_ptr< vulkan_primitives > batch_primitives;
-			std::shared_ptr< vulkan_graphics_pipeline > pipeline;
 			std::shared_ptr< vulkan_geometry > geometry;
 			std::vector< size_t > active_vertex_buffers;
+			std::shared_ptr< vulkan_graphics_pipeline > pipeline;
 		};
 
 		vulkan_geometry_batch( const config& );
@@ -191,7 +191,6 @@ namespace igpu
 
 		struct vulkan
 		{
-			VkDevice device = nullptr;
 			vulkan_context* context = nullptr;
 			size_t swap_count = 0;
 			scoped_ptr< vulkan_draw_target > draw_target;
