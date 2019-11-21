@@ -12,13 +12,12 @@ namespace igpu
 {
 	class vulkan_abandon_manager;
 	class vulkan_command_buffer;
+	class vulkan_command_pool;
 	class vulkan_fence;
 
-	class vulkan_queue : public std::enable_shared_from_this< vulkan_queue >
+	class vulkan_queue
 	{
 	public:
-		struct priv_ctor;
-
 		struct config
 		{
 			VkDevice device;
@@ -29,11 +28,10 @@ namespace igpu
 
 		static std::shared_ptr< vulkan_queue > make( const config& );
 
-		vulkan_queue( const priv_ctor& );
 
 		const config& cfg() const;
 
-		VkCommandPool command_pool() const;
+		scoped_ptr< vulkan_command_pool > command_pool() const;
 
 		ptrdiff_t submit_index() const;
 
@@ -58,11 +56,13 @@ namespace igpu
 		~vulkan_queue();
 
 	private:
-		bool _trigger_abandon = false;
-		VkQueue _vk_queue = nullptr;
-		VkCommandPool _command_pool = nullptr;
-		std::shared_ptr< vulkan_abandon_manager > _abandon_manager;
-		ptrdiff_t _submit_index = 0;
+		vulkan_queue( const config&, VkQueue );
 		const config _cfg;
+		VkQueue _vk_queue = nullptr;
+		std::shared_ptr< vulkan_abandon_manager > _abandon_manager;
+		std::shared_ptr< vulkan_command_pool > _command_pool;
+
+		bool _trigger_abandon = false;
+		ptrdiff_t _submit_index = 0;
 	};
 }

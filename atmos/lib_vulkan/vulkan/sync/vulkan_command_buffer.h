@@ -8,14 +8,14 @@
 namespace igpu
 {
 	class vulkan_queue;
+	class vulkan_command_pool;
 
 	class vulkan_command_buffer
 	{
 	public:
 		struct config
 		{
-			scoped_ptr< vulkan_queue > queue;
-			VkCommandPool command_pool = nullptr;
+			scoped_ptr< vulkan_command_pool > command_pool;
 			VkCommandBufferLevel level;
 		};
 
@@ -26,7 +26,13 @@ namespace igpu
 		vulkan_command_buffer( const config& );
 
 	private:
+		friend class vulkan_command_pool;
+
+		void vk_pool( VkCommandPool );
+
+	private:
 		const config _cfg;
-		VkCommandBuffer _command_buffer = nullptr;
+		VkCommandPool _vk_pool = nullptr;
+		VkCommandBuffer _vk_cmds = nullptr;
 	};
 }

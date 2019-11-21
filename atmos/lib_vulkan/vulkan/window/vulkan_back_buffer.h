@@ -14,6 +14,7 @@ namespace igpu
 	class vulkan_fence;
 	class vulkan_queue;
 	class vulkan_semaphore;
+	class vulkan_command_pool;
 
 	class vulkan_back_buffer : public vulkan_draw_target
 	{
@@ -71,7 +72,7 @@ namespace igpu
 		struct state
 		{
 			VkSwapchainKHR swap_chain;
-			VkCommandPool command_pool;
+			std::shared_ptr< vulkan_command_pool > command_pool;
 			std::vector< vulkan_back_buffer::swap_state > swap_states;
 			uint32_t swap_index = 0;
 			uint32_t image_index = 0;

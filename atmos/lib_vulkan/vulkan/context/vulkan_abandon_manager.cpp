@@ -186,6 +186,22 @@ void igpu::abandon<>(
 	impl( queue.get(), device, pool, cb );
 }
 
+template <>
+void igpu::abandon<>(
+	const scoped_ptr< vulkan_queue >& queue,
+	VkDevice device,
+	VkCommandPool pool )
+{
+	static auto impl = register_destroyer(
+		[]( auto device, auto pool ) {
+			vkDestroyCommandPool( device, pool, nullptr );
+		},
+		device,
+		pool );
+
+	impl( queue.get(), device, pool );
+}
+
 void vulkan_abandon_manager::trigger_abandon(
 	const std::shared_ptr< vulkan_fence >& fence )
 {

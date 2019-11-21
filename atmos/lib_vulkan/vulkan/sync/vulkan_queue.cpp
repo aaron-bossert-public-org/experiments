@@ -4,6 +4,7 @@
 #include "vulkan/buffer/vulkan_buffer.h"
 #include "vulkan/context/vulkan_abandon_manager.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
+#include "vulkan/sync/vulkan_command_pool.h"
 #include "vulkan/sync/vulkan_fence.h"
 
 #include "framework/logging/log.h"
@@ -51,13 +52,6 @@ namespace
 	}
 }
 
-struct vulkan_queue::priv_ctor
-{
-	const config& cfg;
-	const VkQueue vk_queue;
-	const VkCommandPool command_pool;
-};
-
 std::shared_ptr< vulkan_queue > vulkan_queue::make( const config& cfg )
 {
 	VkQueue vk_queue = nullptr;
@@ -69,25 +63,17 @@ std::shared_ptr< vulkan_queue > vulkan_queue::make( const config& cfg )
 	}
 	else
 	{
-		VkCommandPoolCreateInfo pool_info = {};
-		pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		pool_info.queueFamilyIndex = cfg.family_index;
-		pool_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+		auto shared = std::shared_ptr< vulkan_queue >(
+			new vulkan_queue( cfg, vk_queue ) );
 
-		VkCommandPool command_pool = nullptr;
-		vkCreateCommandPool( cfg.device, &pool_info, nullptr, &command_pool );
+		shared->_command_pool = vulkan_command_pool ::make( {
+			shared,
+			VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
+		} );
 
-		if ( !command_pool )
+		if ( shared->_command_pool )
 		{
-			LOG_CRITICAL( "command_pool is null" );
-		}
-		else
-		{
-			return std::make_shared< vulkan_queue >( priv_ctor{
-				cfg,
-				vk_queue,
-				command_pool,
-			} );
+			return shared;
 		}
 	}
 
@@ -99,7 +85,7 @@ const vulkan_queue::config& vulkan_queue::cfg() const
 	return _cfg;
 }
 
-VkCommandPool vulkan_queue::command_pool() const
+scoped_ptr< vulkan_command_pool > vulkan_queue::command_pool() const
 {
 	return _command_pool;
 }
@@ -195,12 +181,17 @@ VkResult vulkan_queue::submit_present( const VkPresentInfoKHR& present_info )
 vulkan_queue::~vulkan_queue()
 {
 	vkQueueWaitIdle( _vk_queue );
-	vkDestroyCommandPool( _cfg.device, _command_pool, nullptr );
+
+	_abandon_manager = nullptr;
+
+	// if the scoped_ptr<vulkan_queue> is destroyed inside vulkan_queue it
+	// asserts.
+	_command_pool->_cfg.queue = nullptr;
+	_command_pool = nullptr;
 }
 
-vulkan_queue::vulkan_queue( const priv_ctor& priv )
-	: _cfg( priv.cfg )
-	, _vk_queue( priv.vk_queue )
-	, _command_pool( priv.command_pool )
+vulkan_queue::vulkan_queue( const config& cfg, VkQueue vk_queue )
+	: _cfg( cfg )
+	, _vk_queue( vk_queue )
 	, _abandon_manager( vulkan_abandon_manager::make() )
 {}

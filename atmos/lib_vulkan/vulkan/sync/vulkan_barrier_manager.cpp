@@ -31,8 +31,6 @@ namespace
 		std::shared_ptr< vulkan_fence > fence = nullptr )
 	{
 		vulkan_command_buffer command_buffer( {
-
-			queue,
 			queue->command_pool(),
 			VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 		} );

@@ -3,6 +3,7 @@
 #include "vulkan/context/vulkan_abandon_manager.h"
 #include "vulkan/context/vulkan_context.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
+#include "vulkan/sync/vulkan_command_pool.h"
 #include "vulkan/sync/vulkan_fence.h"
 #include "vulkan/sync/vulkan_queue.h"
 #include "vulkan/sync/vulkan_queues.h"
@@ -421,6 +422,16 @@ std::unique_ptr< vulkan_back_buffer > vulkan_back_buffer::make(
 		cfg.back_buffer.color_space,
 	};
 
+	st.command_pool = vulkan_command_pool::make( {
+		cfg.vk.queues->cfg().graphics_queue,
+		VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+	} );
+
+	if ( validate_swap_surface_format( cfg, surface_format ) )
+	{
+		st.swap_chain = create_swap_chain( cfg, surface_format );
+	}
+
 	if ( !cfg.vk.color )
 	{
 		LOG_CRITICAL( "render target is null" );
@@ -429,31 +440,11 @@ std::unique_ptr< vulkan_back_buffer > vulkan_back_buffer::make(
 	{
 		LOG_CRITICAL( "depth target is null" );
 	}
-	else
-	{
-		VkCommandPoolCreateInfo pool_info = {};
-		pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-		pool_info.queueFamilyIndex =
-			cfg.vk.queues->cfg().graphics_queue->cfg().family_index;
-
-		vkCreateCommandPool(
-			cfg.vk.device,
-			&pool_info,
-			nullptr,
-			&st.command_pool );
-	}
-
-	if ( !st.command_pool )
+	else if ( !st.command_pool )
 	{
 		LOG_CRITICAL( "command_pool is null" );
 	}
-	else if ( validate_swap_surface_format( cfg, surface_format ) )
-	{
-		st.swap_chain = create_swap_chain( cfg, surface_format );
-	}
-
-	if ( !st.swap_chain )
+	else if ( !st.swap_chain )
 	{
 		LOG_CRITICAL( "swap_chain is null" );
 	}
@@ -472,7 +463,6 @@ std::unique_ptr< vulkan_back_buffer > vulkan_back_buffer::make(
 			ss.aquire_sem = vulkan_semaphore::make( { cfg.vk.device } );
 			ss.raster_sem = vulkan_semaphore::make( { cfg.vk.device } );
 			ss.raster_cmds.reset( new vulkan_command_buffer( {
-				cfg.vk.queues->cfg().graphics_queue,
 				st.command_pool,
 				VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 			} ) );
@@ -496,8 +486,6 @@ vulkan_back_buffer::~vulkan_back_buffer()
 	}
 
 	vkDestroySwapchainKHR( _cfg.vk.device, _st.swap_chain, nullptr );
-
-	vkDestroyCommandPool( _cfg.vk.device, _st.command_pool, nullptr );
 }
 
 vulkan_back_buffer::vulkan_back_buffer( const config& cfg, const state& st )

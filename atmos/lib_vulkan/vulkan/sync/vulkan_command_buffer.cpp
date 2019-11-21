@@ -2,18 +2,23 @@
 #include "vulkan/sync/vulkan_command_buffer.h"
 
 #include "vulkan/context/vulkan_abandon_manager.h"
+#include "vulkan/sync/vulkan_command_pool.h"
 #include "vulkan/sync/vulkan_queue.h"
 
 using namespace igpu;
 
 VkCommandBuffer vulkan_command_buffer::vk_cmds() const
 {
-	return _command_buffer;
+	return _vk_cmds;
+}
+
+void vulkan_command_buffer::vk_pool( VkCommandPool vk_pool )
+{
+	_vk_pool = vk_pool;
 }
 
 vulkan_command_buffer::vulkan_command_buffer( const config& cfg )
 	: _cfg( cfg )
-	, _command_buffer( nullptr )
 {
 	if ( !_cfg.command_pool )
 	{
@@ -21,27 +26,28 @@ vulkan_command_buffer::vulkan_command_buffer( const config& cfg )
 	}
 	else
 	{
+		_cfg.command_pool->get_vk_pool( this );
+
+		ASSERT_CONTEXT( (bool)_vk_pool );
+
 		VkCommandBufferAllocateInfo alloc_info = {};
 		alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		alloc_info.commandPool = _cfg.command_pool;
+		alloc_info.level = _cfg.level;
+		alloc_info.commandPool = _vk_pool;
 		alloc_info.commandBufferCount = 1;
 
 		vkAllocateCommandBuffers(
-			_cfg.queue->cfg().device,
+			_cfg.command_pool->cfg().queue->cfg().device,
 			&alloc_info,
-			&_command_buffer );
+			&_vk_cmds );
 	}
 }
 
 vulkan_command_buffer::~vulkan_command_buffer()
 {
-	if ( _command_buffer )
+	if ( _vk_cmds )
 	{
-		abandon(
-			_cfg.queue,
-			_cfg.queue->cfg().device,
-			_cfg.command_pool,
-			_command_buffer );
+		auto queue = _cfg.command_pool->cfg().queue;
+		abandon( queue, queue->cfg().device, _vk_pool, _vk_cmds );
 	}
 }
