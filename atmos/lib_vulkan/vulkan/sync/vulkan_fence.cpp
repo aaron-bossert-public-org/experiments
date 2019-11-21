@@ -64,7 +64,10 @@ ptrdiff_t vulkan_fence::submit_index() const
 
 vulkan_fence::~vulkan_fence()
 {
-	wait( _submit_index );
+	if ( _submit_index )
+	{
+		wait( _submit_index );
+	}
 
 	vkDestroyFence( _cfg.device, _fence, nullptr );
 }

@@ -22,7 +22,9 @@ std::unique_ptr< vulkan_semaphore > vulkan_semaphore::make( const config& cfg )
 }
 
 vulkan_semaphore::~vulkan_semaphore()
-{}
+{
+	vkDestroySemaphore( _cfg.device, _semaphore, nullptr );
+}
 
 vulkan_semaphore::vulkan_semaphore( const config& cfg, VkSemaphore semaphore )
 	: _cfg( cfg )

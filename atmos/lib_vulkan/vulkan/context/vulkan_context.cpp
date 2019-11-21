@@ -528,14 +528,14 @@ namespace
 
 	std::unique_ptr< vulkan_back_buffer > create_back_buffer(
 		vulkan_context* context,
-		vulkan_window* window )
+		const vulkan_context::state& st )
 	{
 		const vulkan_context::config& cfg = context->cfg();
 
 		VkSurfaceCapabilitiesKHR surface_caps = {};
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
 			cfg.vk.physical_device,
-			window->surface(),
+			st.window->surface(),
 			&surface_caps );
 
 		sampler samp = {
@@ -551,11 +551,11 @@ namespace
 				"back buffer color",
 				cfg.color_format,
 				samp,
-				window->res(),
+				st.window->res(),
 				cfg.vk.physical_device,
 				cfg.vk.device,
 				cfg.vk.vma,
-				cfg.vk.queues,
+				st.queues,
 				to_vulkan_format( cfg.color_format ),
 				cfg.vk.sample_count,
 				VK_SHARING_MODE_EXCLUSIVE,
@@ -567,11 +567,11 @@ namespace
 				"back buffer depth",
 				cfg.depth_format,
 				samp,
-				window->res(),
+				st.window->res(),
 				cfg.vk.physical_device,
 				cfg.vk.device,
 				cfg.vk.vma,
-				cfg.vk.queues,
+				st.queues,
 				to_vulkan_format( cfg.depth_format ),
 				cfg.vk.sample_count,
 				VK_SHARING_MODE_EXCLUSIVE,
@@ -584,14 +584,14 @@ namespace
 			std::static_pointer_cast< depth_buffer, vulkan_depth_buffer >(
 				depth ),
 			cfg.vk.device,
-			cfg.vk.queues,
-			cfg.vk.barrier_manager,
+			st.queues,
+			st.barrier_manager,
 			color,
 			depth,
 			cfg.vk.swap_count,
 			context,
 			cfg.vk.physical_device,
-			window->surface(),
+			st.window->surface(),
 			surface_caps,
 			VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
 		} );
@@ -617,7 +617,7 @@ std::unique_ptr< graphics_pipeline > vulkan_context::make(
 	return vulkan_graphics_pipeline::make( {
 		base_cfg,
 		_cfg.vk.device,
-		_cfg.vk.pipeline_cache,
+		_st.pipeline_cache,
 		draw_target,
 		program,
 		render_states,
@@ -639,8 +639,8 @@ std::unique_ptr< draw_target > vulkan_context::make(
 	return vulkan_draw_target::make( {
 		base_cfg,
 		_cfg.vk.device,
-		_cfg.vk.queues,
-		_cfg.vk.barrier_manager,
+		_st.queues,
+		_st.barrier_manager,
 		color,
 		depth,
 		_cfg.vk.swap_count,
@@ -655,7 +655,7 @@ std::unique_ptr< render_buffer > vulkan_context::make(
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
 		_cfg.vk.vma,
-		_cfg.vk.queues,
+		_st.queues,
 		to_vulkan_format( base_cfg.format ),
 		_cfg.vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
@@ -670,7 +670,7 @@ std::unique_ptr< render_texture2d > vulkan_context::make(
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
 		_cfg.vk.vma,
-		_cfg.vk.queues,
+		_st.queues,
 		to_vulkan_format( base_cfg.format ),
 		_cfg.vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
@@ -685,7 +685,7 @@ std::unique_ptr< depth_buffer > vulkan_context::make(
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
 		_cfg.vk.vma,
-		_cfg.vk.queues,
+		_st.queues,
 		to_vulkan_format( base_cfg.format ),
 		_cfg.vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
@@ -700,7 +700,7 @@ std::unique_ptr< depth_texture2d > vulkan_context::make(
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
 		_cfg.vk.vma,
-		_cfg.vk.queues,
+		_st.queues,
 		to_vulkan_format( base_cfg.format ),
 		_cfg.vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
@@ -773,8 +773,8 @@ std::unique_ptr< vertex_buffer > vulkan_context::make(
 			&_cfg.vk.physical_device_properties,
 			_cfg.vk.vma,
 		},
-		_cfg.vk.queues,
-		_cfg.vk.barrier_manager );
+		_st.queues,
+		_st.barrier_manager );
 }
 
 std::unique_ptr< index_buffer > vulkan_context::make(
@@ -788,8 +788,8 @@ std::unique_ptr< index_buffer > vulkan_context::make(
 			_cfg.vk.vma,
 			to_vulkan_format( base_cfg.format ),
 		},
-		_cfg.vk.queues,
-		_cfg.vk.barrier_manager );
+		_st.queues,
+		_st.barrier_manager );
 }
 
 std::unique_ptr< compute_buffer > vulkan_context::make(
@@ -802,8 +802,8 @@ std::unique_ptr< compute_buffer > vulkan_context::make(
 			&_cfg.vk.physical_device_properties,
 			_cfg.vk.vma,
 		},
-		_cfg.vk.queues,
-		_cfg.vk.barrier_manager );
+		_st.queues,
+		_st.barrier_manager );
 }
 
 std::unique_ptr< texture2d > vulkan_context::make(
@@ -815,8 +815,8 @@ std::unique_ptr< texture2d > vulkan_context::make(
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
 		_cfg.vk.vma,
-		_cfg.vk.queues,
-		_cfg.vk.barrier_manager,
+		_st.queues,
+		_st.barrier_manager,
 	} );
 }
 
@@ -842,7 +842,7 @@ std::unique_ptr< opaque_batch > vulkan_context::make(
 		this,
 		_cfg.vk.swap_count,
 		draw_target,
-		_cfg.vk.pipeline_cache,
+		_st.pipeline_cache,
 		primitives,
 	} );
 }
@@ -863,7 +863,7 @@ std::unique_ptr< transparent_batch > vulkan_context::make(
 		this,
 		_cfg.vk.swap_count,
 		draw_target,
-		_cfg.vk.pipeline_cache,
+		_st.pipeline_cache,
 		primitives,
 	} );
 }
@@ -968,10 +968,13 @@ std::unique_ptr< vulkan_context > vulkan_context::make(
 				{
 					queue_family_table.resize( size_t( family->value() ) + 1 );
 				}
-				queue_family_table[family->value()] = vulkan_queue::make( {
-					cfg.vk.device,
-					family->value(),
-				} );
+				if ( !queue_family_table[family->value()] )
+				{
+					queue_family_table[family->value()] = vulkan_queue::make( {
+						cfg.vk.device,
+						family->value(),
+					} );
+				}
 			}
 		}
 
@@ -1018,10 +1021,6 @@ std::unique_ptr< vulkan_context > vulkan_context::make(
 	}
 	else
 	{
-		cfg.vk.barrier_manager = st.barrier_manager;
-		cfg.vk.queues = st.queues;
-		cfg.vk.pipeline_cache = st.pipeline_cache;
-
 		return std::unique_ptr< vulkan_context >(
 			new vulkan_context( std::move( cfg ), std::move( st ) ) );
 	}
@@ -1050,7 +1049,7 @@ vulkan_context::vulkan_context( config&& cfg, state&& st )
 	, _polycount_metric( perf::category::POLY_COUNT, "Polycount" )
 #endif
 {
-	_st.back_buffer = create_back_buffer( this, _st.window.get() );
+	_st.back_buffer = create_back_buffer( this, _st );
 }
 
 vulkan_context::~vulkan_context()
@@ -1080,5 +1079,5 @@ void vulkan_context::recreate_back_buffer()
 	vkDeviceWaitIdle( _cfg.vk.device );
 
 	_st.back_buffer = nullptr;
-	_st.back_buffer = ::create_back_buffer( this, _st.window.get() );
+	_st.back_buffer = ::create_back_buffer( this, _st );
 }

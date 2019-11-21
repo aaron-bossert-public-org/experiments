@@ -34,6 +34,12 @@ namespace igpu
 	void abandon<>(
 		const scoped_ptr< vulkan_queue >&,
 		VkDevice,
+		VkCommandPool );
+
+	template <>
+	void abandon<>(
+		const scoped_ptr< vulkan_queue >&,
+		VkDevice,
 		VkDeviceMemory );
 
 	template <>

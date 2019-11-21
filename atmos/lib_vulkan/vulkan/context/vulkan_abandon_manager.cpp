@@ -274,6 +274,17 @@ vulkan_abandon_manager::~vulkan_abandon_manager()
 				category.payloads.pop();
 			}
 		}
+		_abandoned.pop();
+	}
+
+	for ( size_t type_index = 0; type_index < _pending.size(); ++type_index )
+	{
+		auto& payloads = _pending[type_index];
+		while ( !payloads.empty() )
+		{
+			s_destroyers[type_index]( payloads.front() );
+			payloads.pop();
+		}
 	}
 }
 

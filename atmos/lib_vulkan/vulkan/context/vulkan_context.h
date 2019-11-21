@@ -31,16 +31,21 @@ namespace igpu
 				VkPhysicalDeviceProperties physical_device_properties;
 				VkSampleCountFlagBits sample_count = (VkSampleCountFlagBits)0;
 				uint32_t swap_count = 0;
-
-				// scoped_ptr acts like a weak pointer to detect life time
-				// issues, but can't turned into a shared pointer and therefore
-				// cant be used to extend lifetimes
-				scoped_ptr< vulkan_barrier_manager > barrier_manager;
-				scoped_ptr< vulkan_pipeline_cache > pipeline_cache;
-				scoped_ptr< vulkan_queues > queues;
 			};
 
 			vulkan vk;
+		};
+		struct state
+		{
+			std::shared_ptr< vulkan_window > window;
+			std::shared_ptr< vulkan_queue > present_queue;
+			std::shared_ptr< vulkan_queue > graphics_queue;
+			std::shared_ptr< vulkan_queue > compute_queue;
+			std::shared_ptr< vulkan_queue > transfer_queue;
+			std::shared_ptr< vulkan_queues > queues;
+			std::shared_ptr< vulkan_barrier_manager > barrier_manager;
+			std::shared_ptr< vulkan_back_buffer > back_buffer;
+			std::shared_ptr< vulkan_pipeline_cache > pipeline_cache;
 		};
 
 		static std::unique_ptr< vulkan_context > make(
@@ -110,24 +115,11 @@ namespace igpu
 			const transparent_batch::config& ) override;
 
 	protected:
-		struct state
-		{
-			std::shared_ptr< vulkan_window > window;
-			std::shared_ptr< vulkan_queue > present_queue;
-			std::shared_ptr< vulkan_queue > graphics_queue;
-			std::shared_ptr< vulkan_queue > compute_queue;
-			std::shared_ptr< vulkan_queue > transfer_queue;
-			std::shared_ptr< vulkan_back_buffer > back_buffer;
-			std::shared_ptr< vulkan_barrier_manager > barrier_manager;
-			std::shared_ptr< vulkan_pipeline_cache > pipeline_cache;
-			std::shared_ptr< vulkan_queues > queues;
-		};
-
 		vulkan_context( config&&, state&& );
 
 	private:
-		const config _cfg;
 		state _st;
+		const config _cfg;
 #if ATMOS_PERFORMANCE_TRACKING
 		perf::metric _renderstate_switch_metric;
 		perf::metric _draw_target_clears_metric;
