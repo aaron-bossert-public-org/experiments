@@ -494,9 +494,7 @@ vulkan_root_batch::vulkan_root_batch( const vulkan& vk )
 {}
 
 vulkan_root_batch::~vulkan_root_batch()
-{
-	vulkan_job::wait_on_fence();
-}
+{}
 
 vulkan_job::state& vulkan_root_batch::job_state()
 {

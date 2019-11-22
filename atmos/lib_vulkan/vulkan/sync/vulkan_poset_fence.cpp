@@ -44,8 +44,7 @@ bool vulkan_poset_fence::is_ready( ptrdiff_t submit_index )
 
 void vulkan_poset_fence::wait_or_skip( ptrdiff_t submit_index )
 {
-	// if submit_index > _submit_index, but with int wrapping
-	if ( 0 >= submit_index - _submit_index )
+	if (!is_ready(submit_index))
 	{
 		int seconds_waited = 0;
 		while (

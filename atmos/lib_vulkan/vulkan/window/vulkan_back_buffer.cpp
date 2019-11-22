@@ -385,10 +385,7 @@ VkResult vulkan_back_buffer::do_end_raster()
 
 	if ( const auto& fence = next_frame_state.raster_fence )
 	{
-		if ( !_cfg.back_buffer.vsync )
-		{
-			fence->wait_or_skip( fence->submit_index() );
-		}
+		fence->wait_or_skip( fence->submit_index() );
 		VkFence vk_fence = fence->vk_fence();
 		vkResetFences( _cfg.vk.device, 1, &vk_fence );
 		vkResetCommandBuffer(
