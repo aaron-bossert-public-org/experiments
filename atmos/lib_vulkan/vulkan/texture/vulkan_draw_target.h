@@ -16,7 +16,7 @@ namespace igpu
 	class vulkan_command_buffer;
 	class vulkan_poset_fence;
 	class vulkan_queue;
-	class vulkan_queues;
+	class vulkan_queue_manager;
 
 	class vulkan_draw_target : public draw_target
 	{
@@ -26,7 +26,7 @@ namespace igpu
 			struct vulkan
 			{
 				VkDevice device = nullptr;
-				scoped_ptr< vulkan_queues > queues;
+				scoped_ptr< vulkan_queue_manager > queue_manager;
 				scoped_ptr< vulkan_barrier_manager > barrier_manager;
 				std::shared_ptr< vulkan_render_buffer > color = nullptr;
 				std::shared_ptr< vulkan_depth_buffer > depth = nullptr;

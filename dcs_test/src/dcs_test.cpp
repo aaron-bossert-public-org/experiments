@@ -63,9 +63,7 @@ namespace std
 
 namespace
 {
-	[[nodiscard]] bool load_buffer(
-		const std::string& path,
-		buffer* out_buffer )
+	bool load_buffer( const std::string& path, buffer* out_buffer )
 	{
 		const char* err = nullptr;
 		std::ifstream ifs( path.c_str(), std::ios::binary | std::ios::ate );
@@ -270,10 +268,10 @@ std::unique_ptr< dcs_test > dcs_test::make( const config& cfg )
 
 		st.render_states = cfg.context->make_shared( render_states::config{
 			0b1111, // color write mask
-			{ "cull_enabled", cull::BACK },
-			{ !"blend_enabled" },
-			{ !"stencil_enabled" },
-			{ "depth_enabled", "depth_write", compare::LESS },
+			{ (bool)"cull_enabled", cull::BACK },
+			{ !(bool)"blend_enabled" },
+			{ !(bool)"stencil_enabled" },
+			{ (bool)"depth_enabled", (bool)"depth_write", compare::LESS },
 		} );
 
 		st.texture = cfg.context->make_shared( texture2d::config{
@@ -282,10 +280,10 @@ std::unique_ptr< dcs_test > dcs_test::make( const config& cfg )
 			sampler::filter::LINEAR,
 			sampler::address::WRAP,
 			sampler::address::WRAP,
-			"can_auto_generate_mips",
+			(bool)"can_auto_generate_mips",
 		} );
 
-		load_buffer( st.texture->cfg().name, st.texture.get() );
+		load_buffer( cfg.texture_path.c_str(), st.texture.get() );
 		load_buffer( cfg.vertex_path.c_str(), v_shader.get() );
 		load_buffer( cfg.fragment_path.c_str(), f_shader.get() );
 
@@ -297,35 +295,6 @@ std::unique_ptr< dcs_test > dcs_test::make( const config& cfg )
 
 		st.geometry = load_model( cfg );
 
-		struct
-		{
-		}* test = nullptr;
-
-		st.batch_data->map( &test );
-		st.batch_data->unmap();
-
-		st.instance_data->map( &test );
-		st.instance_data->unmap();
-
-		st.opaque_batch = cfg.context->make_shared( opaque_batch::config{
-			cfg.context->back_buffer(),
-			cfg.context->make_shared( primitives::config{ {
-				{ "batch_data", st.batch_data },
-			} } ),
-		} );
-
-		st.batch_binding = st.opaque_batch->make_binding( {
-			st.program,
-			st.render_states,
-			st.geometry,
-			cfg.context->make_shared( primitives::config{ {
-				{ "texSampler", st.texture },
-			} } ),
-			cfg.context->make_shared( primitives::config{ {
-				{ "instance_data", st.instance_data },
-			} } ),
-		} );
-
 		return std::unique_ptr< dcs_test >(
 			new dcs_test( cfg, std::move( st ) ) );
 	}
@@ -336,14 +305,35 @@ std::unique_ptr< dcs_test > dcs_test::make( const config& cfg )
 dcs_test::dcs_test( const config& cfg, state&& st )
 	: _cfg( cfg )
 	, _st( std::move( st ) )
-{}
+{
+	update();
+
+	_st.opaque_batch = cfg.context->make_shared( opaque_batch::config{
+		cfg.context->back_buffer(),
+		cfg.context->make_shared( primitives::config{ {
+			{ "batch_data", _st.batch_data },
+		} } ),
+	} );
+
+	_st.batch_binding = _st.opaque_batch->make_binding( {
+		_st.program,
+		_st.render_states,
+		_st.geometry,
+		cfg.context->make_shared( primitives::config{ {
+			{ "texSampler", _st.texture },
+		} } ),
+		cfg.context->make_shared( primitives::config{ {
+			{ "instance_data", _st.instance_data },
+		} } ),
+	} );
+}
 
 dcs_test::~dcs_test()
 {}
 
 bool dcs_test::advance()
 {
-	update( _cfg, _st );
+	update();
 
 	if ( _cfg.context->window()->poll_events() )
 	{
@@ -357,11 +347,11 @@ bool dcs_test::advance()
 	return false;
 }
 
-void dcs_test::update( const config& cfg, const state& st )
+void dcs_test::update()
 {
 	// update view matrices
-	auto back_buffer = cfg.context->back_buffer();
-	auto res = cfg.context->back_buffer()->res();
+	auto back_buffer = _cfg.context->back_buffer();
+	auto res = back_buffer->res();
 
 	struct
 	{
@@ -369,7 +359,7 @@ void dcs_test::update( const config& cfg, const state& st )
 		alignas( 16 ) glm::mat4 proj;
 	}* batch_ubo = nullptr;
 
-	st.batch_data->map( &batch_ubo );
+	_st.batch_data->map( &batch_ubo );
 
 	batch_ubo->view = glm::lookAt(
 		glm::vec3( 2.0f, 2.0f, 2.0f ),
@@ -381,7 +371,7 @@ void dcs_test::update( const config& cfg, const state& st )
 		0.1f,
 		10.0f );
 
-	st.batch_data->unmap();
+	_st.batch_data->unmap();
 
 	// update model transform
 	static auto start_time = std::chrono::high_resolution_clock::now();
@@ -395,14 +385,14 @@ void dcs_test::update( const config& cfg, const state& st )
 		alignas( 16 ) glm::mat4 model;
 	}* instance_ubo = nullptr;
 
-	st.instance_data->map( &instance_ubo );
+	_st.instance_data->map( &instance_ubo );
 
 	instance_ubo->model = glm::rotate(
 		glm::mat4( 1.0f ),
 		time * glm::radians( 90.0f ),
 		glm::vec3( 0.0f, 0.0f, 1.0f ) );
 
-	st.instance_data->unmap();
+	_st.instance_data->unmap();
 }
 
 void dcs_test::handle_input()

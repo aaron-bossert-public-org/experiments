@@ -22,17 +22,16 @@ namespace igpu
 		{
 			friend class vulkan_job;
 
-			bool recording = false;
 			ptrdiff_t fence_submit_index = 0;
 			scoped_ptr< vulkan_poset_fence > fence;
-			std::vector< vulkan_job_dependencies* > recorded_dependencies;
+			std::vector< vulkan_job_dependencies* > activated_dependencies;
 		};
 
-		void start_recording_barriers();
+		void activate_dependencies( vulkan_job_dependencies* );
 
-		void record_barriers( vulkan_job_dependencies* );
+		void deactivate_dependencies( vulkan_job_dependencies* );
 
-		void submit_recorded_barriers(
+		void submit_activated_dependency_barriers(
 			const scoped_ptr< vulkan_queue >&,
 			vulkan_barrier_manager* );
 

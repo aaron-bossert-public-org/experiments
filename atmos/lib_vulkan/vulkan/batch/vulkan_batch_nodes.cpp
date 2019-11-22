@@ -7,6 +7,7 @@
 #include "vulkan/buffer/vulkan_compute_buffer.h"
 #include "vulkan/buffer/vulkan_index_buffer.h"
 #include "vulkan/context/vulkan_context.h"
+#include "vulkan/manager/vulkan_queue_manager.h"
 #include "vulkan/shader/vulkan_graphics_pipeline.h"
 #include "vulkan/shader/vulkan_pipeline_cache.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
@@ -14,7 +15,6 @@
 #include "vulkan/sync/vulkan_job_primitives.h"
 #include "vulkan/sync/vulkan_job_scope.h"
 #include "vulkan/sync/vulkan_poset_fence.h"
-#include "vulkan/sync/vulkan_queues.h"
 #include "vulkan/texture/vulkan_depth_texture2d.h"
 #include "vulkan/texture/vulkan_draw_target.h"
 #include "vulkan/texture/vulkan_image.h"
@@ -270,15 +270,13 @@ void vulkan_root_batch::start_raster(
 		vulkan_job::fence( raster_state.fence );
 	}
 
-	vulkan_job::start_recording_barriers();
-}
-
-void vulkan_root_batch::stop_raster()
-{
-	vulkan_job::submit_recorded_barriers(
+	vulkan_job::submit_activated_dependency_barriers(
 		_vk.draw_target->raster_queue(),
 		_vk.draw_target->cfg().vk.barrier_manager.get() );
 }
+
+void vulkan_root_batch::stop_raster()
+{}
 
 void vulkan_root_batch::rebind_draw_target(
 	const scoped_ptr< vulkan_draw_target >& vulkan_draw_target )

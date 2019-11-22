@@ -1,8 +1,8 @@
 
 #pragma once
 
+#include "vulkan/manager/vulkan_barrier_manager.h"
 #include "vulkan/shader/vulkan_parameter.h"
-#include "vulkan/sync/vulkan_barrier_manager.h"
 #include "vulkan/sync/vulkan_job_scope.h"
 
 #include "framework/utility/scoped_ptr.h"

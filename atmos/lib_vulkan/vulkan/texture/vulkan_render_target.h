@@ -7,7 +7,7 @@
 namespace igpu
 {
 	class vulkan_image;
-	class vulkan_queues;
+	class vulkan_queue_manager;
 
 	class vulkan_render_target
 	{
@@ -17,7 +17,7 @@ namespace igpu
 			VkPhysicalDevice physical_device = nullptr;
 			VkDevice device = nullptr;
 			VmaAllocator vma = nullptr;
-			scoped_ptr< vulkan_queues > queues;
+			scoped_ptr< vulkan_queue_manager > queue_manager;
 			VkFormat format = VK_FORMAT_UNDEFINED;
 			VkSampleCountFlagBits sample_count = (VkSampleCountFlagBits)0;
 			VkSharingMode sharing_mode;

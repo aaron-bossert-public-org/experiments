@@ -2,7 +2,7 @@
 #include "vulkan/texture/vulkan_staged_texture2d.h"
 
 #include "vulkan/buffer/vulkan_buffer.h"
-#include "vulkan/sync/vulkan_queues.h"
+#include "vulkan/manager/vulkan_queue_manager.h"
 #include "vulkan/texture/vulkan_image.h"
 #include "vulkan/texture/vulkan_image_t.h"
 
@@ -20,7 +20,7 @@ vulkan_staged_texture2d::vulkan_staged_texture2d( const config& cfg )
 		  cfg.vk.device,
 		  cfg.vk.device_properties,
 		  cfg.vk.vma,
-		  cfg.vk.queues,
+		  cfg.vk.queue_manager,
 		  VMA_MEMORY_USAGE_CPU_ONLY,
 		  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 	  } )

@@ -3,7 +3,7 @@
 
 #include "vulkan/buffer/vulkan_buffer.h"
 #include "vulkan/defines/vulkan_includes.h"
-#include "vulkan/sync/vulkan_queues.h"
+#include "vulkan/manager/vulkan_queue_manager.h"
 
 #include "framework/utility/buffer_view.h"
 using namespace igpu;
@@ -74,7 +74,7 @@ vulkan_staged_buffer::vulkan_staged_buffer( const config& cfg )
 		  cfg.device,
 		  cfg.device_properties,
 		  cfg.vma,
-		  cfg.queues,
+		  cfg.queue_manager,
 		  cpu_vma_usage( cfg.memory ),
 		  cpu_usage( cfg.memory ),
 	  } )
@@ -83,7 +83,7 @@ vulkan_staged_buffer::vulkan_staged_buffer( const config& cfg )
 		  cfg.device,
 		  cfg.device_properties,
 		  cfg.vma,
-		  cfg.queues,
+		  cfg.queue_manager,
 		  gpu_vma_usage( cfg.memory ),
 		  gpu_usage( cfg.memory ) | cfg.vk_usage_flags,
 	  } )

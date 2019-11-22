@@ -1,12 +1,12 @@
 #include "vulkan/window/vulkan_back_buffer.h"
 
 #include "vulkan/context/vulkan_context.h"
-#include "vulkan/sync/vulkan_abandon_manager.h"
+#include "vulkan/manager/vulkan_abandon_manager.h"
+#include "vulkan/manager/vulkan_queue_manager.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_command_pool.h"
 #include "vulkan/sync/vulkan_poset_fence.h"
 #include "vulkan/sync/vulkan_queue.h"
-#include "vulkan/sync/vulkan_queues.h"
 #include "vulkan/sync/vulkan_semaphore.h"
 #include "vulkan/texture/vulkan_image.h"
 
@@ -142,8 +142,8 @@ namespace
 			cfg.back_buffer.surface_caps.currentTransform;
 
 		uint32_t queue_family_indices[2] = {
-			cfg.vk.queues->cfg().graphics_queue->cfg().family_index,
-			cfg.vk.queues->cfg().present_queue->cfg().family_index,
+			cfg.vk.queue_manager->cfg().graphics_queue->cfg().family_index,
+			cfg.vk.queue_manager->cfg().present_queue->cfg().family_index,
 		};
 
 		if ( queue_family_indices[0] != queue_family_indices[1] )
@@ -343,7 +343,7 @@ VkResult vulkan_back_buffer::do_end_raster()
 	// after triggering abandon, the next submit will generate a fence if one is
 	// not provided. Trigger abandon right before the graphics submit since it
 	// always provides a fence.
-	for ( const auto& queue : _cfg.vk.queues->cfg().queue_family_table )
+	for ( const auto& queue : _cfg.vk.queue_manager->cfg().queue_family_table )
 	{
 		if ( queue )
 		{
@@ -372,7 +372,8 @@ VkResult vulkan_back_buffer::do_end_raster()
 
 
 	VkResult present_errors =
-		_cfg.vk.queues->cfg().present_queue->submit_present( present_info );
+		_cfg.vk.queue_manager->cfg().present_queue->submit_present(
+			present_info );
 
 	if ( present_errors )
 	{
@@ -421,7 +422,7 @@ std::unique_ptr< vulkan_back_buffer > vulkan_back_buffer::make(
 	};
 
 	st.command_pool = vulkan_command_pool::make( {
-		cfg.vk.queues->cfg().graphics_queue,
+		cfg.vk.queue_manager->cfg().graphics_queue,
 		VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
 	} );
 

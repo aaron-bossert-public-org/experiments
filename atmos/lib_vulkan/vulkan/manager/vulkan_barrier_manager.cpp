@@ -1,11 +1,11 @@
 
-#include "vulkan/sync/vulkan_barrier_manager.h"
+#include "vulkan/manager/vulkan_barrier_manager.h"
 
 #include "vulkan/buffer/vulkan_buffer.h"
+#include "vulkan/manager/vulkan_queue_manager.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_dependency.h"
 #include "vulkan/sync/vulkan_queue.h"
-#include "vulkan/sync/vulkan_queues.h"
 #include "vulkan/sync/vulkan_resource.h"
 #include "vulkan/sync/vulkan_semaphore.h"
 #include "vulkan/texture/vulkan_image.h"
@@ -80,14 +80,14 @@ void vulkan_barrier_manager::start_recording_barriers()
 	if ( _recording_barriers )
 	{
 		LOG_CRITICAL(
-			"finish_dependency_barriers has not been called since last "
-			"start_dependency_barriers" );
+			"submit_recorded_barriers has not been called since last "
+			"start_recording_barriers" );
 	}
 	else if ( 0 != _pending_records.size() )
 	{
 		LOG_CRITICAL(
 			"_pending_records has not been cleared since last "
-			"start_dependency_barriers" );
+			"start_recording_barriers" );
 	}
 
 	_recording_barriers = true;
@@ -105,8 +105,8 @@ void vulkan_barrier_manager::record_barrier(
 	else if ( !_recording_barriers )
 	{
 		LOG_CRITICAL(
-			"start_dependency_barriers has not been called since last "
-			"finish_dependency_barriers" );
+			"start_recording_barriers has not been called since last "
+			"submit_recorded_barriers" );
 	}
 	else
 	{
@@ -159,8 +159,8 @@ void vulkan_barrier_manager::submit_recorded_barriers(
 	if ( !_recording_barriers )
 	{
 		LOG_CRITICAL(
-			"start_dependency_barriers has not been called since last "
-			"finish_dependency_barriers" );
+			"start_recording_barriers has not been called since last "
+			"submit_recorded_barriers" );
 	}
 	else
 	{
@@ -223,7 +223,7 @@ void vulkan_barrier_manager::submit_recorded_barriers(
 					VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 
 				one_time_command(
-					_cfg.queues->cfg().queue_family_table[src_family],
+					_cfg.queue_manager->cfg().queue_family_table[src_family],
 					[&]( VkCommandBuffer vk_cmds ) {
 						vkCmdPipelineBarrier(
 							vk_cmds,
@@ -290,14 +290,14 @@ void vulkan_barrier_manager::push_barrier(
 	if ( _recording_barriers )
 	{
 		LOG_CRITICAL(
-			"start_dependency_barriers has not been called since last "
-			"finish_dependency_barriers" );
+			"start_recording_barriers has not been called since last "
+			"submit_recorded_barriers" );
 	}
 	else if ( 0 == _pending_records.size() )
 	{
 		LOG_CRITICAL(
 			"push_barrier must be called indirectly via "
-			"finish_dependency_barriers" );
+			"submit_recorded_barriers" );
 	}
 	else
 	{
@@ -341,14 +341,14 @@ void vulkan_barrier_manager::push_barrier(
 	if ( _recording_barriers )
 	{
 		LOG_CRITICAL(
-			"start_dependency_barriers has not been called since last "
-			"finish_dependency_barriers" );
+			"start_recording_barriers has not been called since last "
+			"submit_recorded_barriers" );
 	}
 	else if ( 0 == _pending_records.size() )
 	{
 		LOG_CRITICAL(
 			"push_barrier must be called indirectly via "
-			"finish_dependency_barriers" );
+			"submit_recorded_barriers" );
 	}
 	else
 	{
@@ -382,9 +382,9 @@ void vulkan_barrier_manager::push_barrier(
 std::unique_ptr< vulkan_barrier_manager > vulkan_barrier_manager::make(
 	const config& cfg )
 {
-	if ( !cfg.queues )
+	if ( !cfg.queue_manager )
 	{
-		LOG_CRITICAL( "queues is null" );
+		LOG_CRITICAL( "queue manager is null" );
 	}
 	else
 	{
@@ -392,7 +392,7 @@ std::unique_ptr< vulkan_barrier_manager > vulkan_barrier_manager::make(
 		// constructed lazily on demand
 		std::vector< std::vector< transfer_semaphores > >
 			semaphore_family_tables(
-				cfg.queues->cfg().queue_family_table.size() );
+				cfg.queue_manager->cfg().queue_family_table.size() );
 
 		for ( auto& vec : semaphore_family_tables )
 		{
@@ -419,7 +419,8 @@ vulkan_barrier_manager::vulkan_barrier_manager(
 		semaphore_family_tables )
 	: _cfg( cfg )
 	, _semaphore_family_tables( std::move( semaphore_family_tables ) )
-	, _barrier_family_table( cfg.queues->cfg().queue_family_table.size() )
+	, _barrier_family_table(
+		  cfg.queue_manager->cfg().queue_family_table.size() )
 {}
 
 vulkan_barrier_manager::record* vulkan_barrier_manager::resolve(

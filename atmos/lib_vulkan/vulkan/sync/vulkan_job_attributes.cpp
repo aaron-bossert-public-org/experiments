@@ -108,6 +108,11 @@ std::unique_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
 
 		read_deps.emplace_back( resource, unique.get(), layout, job_scope );
 
+		if ( unique->is_activated() )
+		{
+			unique->job().activate_dependencies( unique.get() );
+		}
+
 		return unique;
 	}
 
@@ -115,13 +120,18 @@ std::unique_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
 }
 
 vulkan_job_attributes ::~vulkan_job_attributes()
-{}
+{
+	if ( is_activated() )
+	{
+		job().deactivate_dependencies( this );
+	}
+}
 
 vulkan_job_attributes::vulkan_job_attributes( const config& cfg )
 	: _cfg( cfg )
 {}
 
-void vulkan_job_attributes::on_record_cmds(
+void vulkan_job_attributes::record_cmds(
 	const scoped_ptr< vulkan_command_buffer >& command_buffer )
 {
 	vkCmdBindVertexBuffers(

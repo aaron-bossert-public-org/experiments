@@ -7,11 +7,18 @@
 
 using namespace igpu;
 
+bool vulkan_job_dependencies::is_activated()
+{
+	auto& state = job_dependency_state();
+
+	return state.read_hazards.size() || state.write_deps.size();
+}
 
 void vulkan_job_dependencies::activate_read_hazard(
 	vulkan_dependency* dependency )
 {
 	auto& state = job_dependency_state();
+	auto was_activated = is_activated();
 
 	size_t write_index = ( size_t )( dependency - state.write_deps.data() );
 	size_t read_index = ( size_t )( dependency - state.read_deps.data() );
@@ -33,6 +40,11 @@ void vulkan_job_dependencies::activate_read_hazard(
 	{
 		dependency->is_hazard( true );
 		state.read_hazards.push_back( dependency );
+
+		if ( !was_activated )
+		{
+			job().activate_dependencies( this );
+		}
 	}
 }
 
@@ -100,13 +112,6 @@ bool vulkan_job_dependencies::validate_barriers() const
 	}
 
 	return all_valid;
-}
-
-void vulkan_job_dependencies::record_cmds(
-	const scoped_ptr< vulkan_command_buffer >& command_buffer )
-{
-	job().record_barriers( this );
-	on_record_cmds( command_buffer );
 }
 
 void vulkan_job_dependencies::resource_reinitialized(

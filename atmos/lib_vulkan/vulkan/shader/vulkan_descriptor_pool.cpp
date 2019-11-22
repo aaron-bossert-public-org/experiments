@@ -1,8 +1,8 @@
 
 #include "vulkan/shader/vulkan_descriptor_pool.h"
 
+#include "vulkan/manager/vulkan_abandon_manager.h"
 #include "vulkan/shader/vulkan_parameters.h"
-#include "vulkan/sync/vulkan_abandon_manager.h"
 #include "vulkan/sync/vulkan_queue.h"
 
 #include <array>

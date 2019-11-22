@@ -1,11 +1,11 @@
 
 #include "vulkan/buffer/vulkan_buffer.h"
 
+#include "vulkan/manager/vulkan_abandon_manager.h"
+#include "vulkan/manager/vulkan_queue_manager.h"
 #include "vulkan/shader/vulkan_parameter.h"
-#include "vulkan/sync/vulkan_abandon_manager.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_queue.h"
-#include "vulkan/sync/vulkan_queues.h"
 
 using namespace igpu;
 
@@ -228,7 +228,7 @@ void vulkan_buffer::copy_from(
 
 		barrier_manager.submit_frame_job(
 
-			_cfg.vk.queues->cfg().transfer_queue,
+			_cfg.vk.queue_manager->cfg().transfer_queue,
 			{
 				frame_job_barrier(
 					&other,

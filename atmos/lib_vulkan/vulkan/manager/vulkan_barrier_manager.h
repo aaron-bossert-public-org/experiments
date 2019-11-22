@@ -20,7 +20,7 @@ namespace igpu
 	class vulkan_queue;
 	class vulkan_resource;
 	class vulkan_semaphore;
-	class vulkan_queues;
+	class vulkan_queue_manager;
 
 	class vulkan_barrier_manager
 	{
@@ -28,7 +28,7 @@ namespace igpu
 		struct config
 		{
 			VkDevice device = nullptr;
-			scoped_ptr< vulkan_queues > queues;
+			scoped_ptr< vulkan_queue_manager > queue_manager;
 		};
 
 		struct pipeline_barrier
@@ -57,6 +57,7 @@ namespace igpu
 			const scoped_ptr< vulkan_queue >,
 			const std::initializer_list< frame_job_barrier >&,
 			const std::function< void( VkCommandBuffer ) >& );
+
 
 		void start_recording_barriers();
 

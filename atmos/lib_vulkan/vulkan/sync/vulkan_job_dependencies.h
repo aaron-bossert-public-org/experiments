@@ -25,6 +25,8 @@ namespace igpu
 			std::vector< vulkan_dependency* > read_hazards;
 		};
 
+		bool is_activated();
+
 		void activate_read_hazard( vulkan_dependency* );
 
 		void record_dependencies( vulkan_barrier_manager* );
@@ -35,7 +37,8 @@ namespace igpu
 
 		void wait_pending_job();
 
-		void record_cmds( const scoped_ptr< vulkan_command_buffer >& );
+		virtual void record_cmds(
+			const scoped_ptr< vulkan_command_buffer >& ) = 0;
 
 		void resource_reinitialized( vulkan_dependency* );
 
@@ -49,9 +52,6 @@ namespace igpu
 		virtual state& job_dependency_state() = 0;
 
 		virtual const state& job_dependency_state() const = 0;
-
-		virtual void on_record_cmds(
-			const scoped_ptr< vulkan_command_buffer >& ) = 0;
 
 		virtual void on_resource_reinitialized( vulkan_dependency* ) = 0;
 	};

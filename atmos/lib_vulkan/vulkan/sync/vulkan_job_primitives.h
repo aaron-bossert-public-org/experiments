@@ -31,8 +31,11 @@ namespace igpu
 
 		const config& cfg() const;
 
+		void record_cmds( const scoped_ptr< vulkan_command_buffer >& ) override;
+
 	protected:
 		vulkan_job_primitives( const config& );
+
 		vulkan_job& job() override;
 
 		const vulkan_job& job() const override;
@@ -41,8 +44,6 @@ namespace igpu
 
 		const state& job_dependency_state() const override;
 
-		void on_record_cmds(
-			const scoped_ptr< vulkan_command_buffer >& ) override;
 
 		void on_resource_reinitialized( vulkan_dependency* ) override;
 

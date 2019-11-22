@@ -11,7 +11,7 @@ namespace igpu
 {
 	class vulkan_buffer;
 	class vulkan_barrier_manager;
-	class vulkan_queues;
+	class vulkan_queue_manager;
 
 	class vulkan_compute_buffer : public compute_buffer
 	{
@@ -36,7 +36,7 @@ namespace igpu
 
 		static std::unique_ptr< vulkan_compute_buffer > make(
 			const config&,
-			const scoped_ptr< vulkan_queues >&,
+			const scoped_ptr< vulkan_queue_manager >&,
 			const scoped_ptr< vulkan_barrier_manager >& );
 	};
 }

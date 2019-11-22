@@ -18,7 +18,7 @@ namespace igpu
 	class vulkan_image;
 	class vulkan_queue;
 
-	class vulkan_queues
+	class vulkan_queue_manager
 	{
 	public:
 		struct config
@@ -32,12 +32,12 @@ namespace igpu
 
 		const config& cfg() const;
 
-		~vulkan_queues();
+		~vulkan_queue_manager();
 
-		static std::unique_ptr< vulkan_queues > make( const config& );
+		static std::unique_ptr< vulkan_queue_manager > make( const config& );
 
 	protected:
-		vulkan_queues( const config& );
+		vulkan_queue_manager( const config& );
 
 	private:
 		const config _cfg;

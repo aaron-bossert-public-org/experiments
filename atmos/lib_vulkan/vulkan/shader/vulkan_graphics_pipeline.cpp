@@ -1,12 +1,12 @@
 
 #include "vulkan/shader/vulkan_graphics_pipeline.h"
 
+#include "vulkan/manager/vulkan_abandon_manager.h"
 #include "vulkan/shader/vulkan_fragment_shader.h"
 #include "vulkan/shader/vulkan_pipeline_cache.h"
 #include "vulkan/shader/vulkan_program.h"
 #include "vulkan/shader/vulkan_render_states.h"
 #include "vulkan/shader/vulkan_vertex_shader.h"
-#include "vulkan/sync/vulkan_abandon_manager.h"
 #include "vulkan/texture/vulkan_draw_target.h"
 
 using namespace igpu;

@@ -9,7 +9,7 @@
 namespace igpu
 {
 	class vulkan_barrier_manager;
-	class vulkan_queues;
+	class vulkan_queue_manager;
 	class vulkan_queue;
 
 	class vulkan_staged_buffer
@@ -21,7 +21,7 @@ namespace igpu
 			const VkPhysicalDeviceProperties* device_properties = nullptr;
 			VmaAllocator vma = nullptr;
 			VkBufferUsageFlagBits vk_usage_flags = (VkBufferUsageFlagBits)0;
-			scoped_ptr< vulkan_queues > queues;
+			scoped_ptr< vulkan_queue_manager > queue_manager;
 			scoped_ptr< vulkan_barrier_manager > barrier_manager;
 			memory_type memory;
 		};
@@ -94,9 +94,9 @@ namespace igpu
 			{
 				LOG_CRITICAL( "vk_usage_flags is 0" );
 			}
-			else if ( !cfg.queues )
+			else if ( !cfg.queue_manager )
 			{
-				LOG_CRITICAL( "vulkan queues object has expired" );
+				LOG_CRITICAL( "vulkan queue manager object has expired" );
 			}
 			else
 			{

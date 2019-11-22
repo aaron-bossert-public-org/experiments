@@ -1,7 +1,7 @@
 
 #include "vulkan/sync/vulkan_job.h"
 
-#include "vulkan/sync/vulkan_barrier_manager.h"
+#include "vulkan/manager/vulkan_barrier_manager.h"
 #include "vulkan/sync/vulkan_dependency.h"
 #include "vulkan/sync/vulkan_job_dependencies.h"
 #include "vulkan/sync/vulkan_poset_fence.h"
@@ -10,31 +10,38 @@ using namespace igpu;
 
 #define ATMOS_DEBUG_BARRIERS ATMOS_DEBUG
 
-void vulkan_job::start_recording_barriers()
+void vulkan_job::activate_dependencies( vulkan_job_dependencies* dependencies )
 {
 	auto& state = job_state();
-
-	ASSERT_CONTEXT( !state.recording );
-	state.recording = true;
-	state.recorded_dependencies.clear();
+	state.activated_dependencies.push_back( dependencies );
 }
 
-void vulkan_job::record_barriers( vulkan_job_dependencies* dependencies )
+void vulkan_job::deactivate_dependencies(
+	vulkan_job_dependencies* dependencies )
 {
 	auto& state = job_state();
-	ASSERT_CONTEXT( state.recording );
-	state.recorded_dependencies.push_back( dependencies );
+	auto& activated_deps = state.activated_dependencies;
+
+	for ( auto& activated : activated_deps )
+	{
+		if ( activated == dependencies )
+		{
+			activated = activated_deps.back();
+			activated_deps.pop_back();
+			return;
+		}
+	}
 }
 
-void vulkan_job::submit_recorded_barriers(
+void vulkan_job::submit_activated_dependency_barriers(
 	const scoped_ptr< vulkan_queue >& queue,
 	vulkan_barrier_manager* barrier_manager )
 {
 	auto& state = job_state();
-	ASSERT_CONTEXT( state.recording );
+	auto& activated_deps = state.activated_dependencies;
 
 #if ATMOS_DEBUG_BARRIERS
-	for ( auto* dependencies : state.recorded_dependencies )
+	for ( auto* dependencies : activated_deps )
 	{
 		dependencies->validate_hazards();
 	}
@@ -42,7 +49,7 @@ void vulkan_job::submit_recorded_barriers(
 
 	barrier_manager->start_recording_barriers();
 
-	for ( auto* dependencies : state.recorded_dependencies )
+	for ( auto* dependencies : activated_deps )
 	{
 		dependencies->record_dependencies( barrier_manager );
 	}
@@ -50,13 +57,20 @@ void vulkan_job::submit_recorded_barriers(
 	barrier_manager->submit_recorded_barriers( queue );
 
 #if ATMOS_DEBUG_BARRIERS
-	for ( auto* dependencies : state.recorded_dependencies )
+	for ( auto* dependencies : activated_deps )
 	{
 		dependencies->validate_barriers();
 	}
 #endif
 
-	state.recording = false;
+	for ( size_t i = activated_deps.size(); i-- > 0; )
+	{
+		if ( !activated_deps[i]->is_activated() )
+		{
+			activated_deps[i] = activated_deps.back();
+			activated_deps.pop_back();
+		}
+	}
 }
 
 void vulkan_job::wait_on_fence()

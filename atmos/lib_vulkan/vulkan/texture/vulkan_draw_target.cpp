@@ -1,8 +1,8 @@
 
 #include "vulkan/texture/vulkan_draw_target.h"
 
-#include "vulkan/sync/vulkan_barrier_manager.h"
-#include "vulkan/sync/vulkan_queues.h"
+#include "vulkan/manager/vulkan_barrier_manager.h"
+#include "vulkan/manager/vulkan_queue_manager.h"
 
 #include "framework/logging/log.h"
 
@@ -115,7 +115,7 @@ const vulkan_draw_target::config& vulkan_draw_target::cfg() const
 
 const scoped_ptr< vulkan_queue >& vulkan_draw_target::raster_queue() const
 {
-	return _cfg.vk.queues->cfg().graphics_queue;
+	return _cfg.vk.queue_manager->cfg().graphics_queue;
 }
 
 VkRenderPass vulkan_draw_target::render_pass() const

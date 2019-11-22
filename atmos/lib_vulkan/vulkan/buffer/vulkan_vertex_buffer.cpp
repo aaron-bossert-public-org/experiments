@@ -7,7 +7,7 @@ using namespace igpu;
 
 std::unique_ptr< vulkan_vertex_buffer > vulkan_vertex_buffer::make(
 	const config& cfg,
-	const scoped_ptr< vulkan_queues >& queues,
+	const scoped_ptr< vulkan_queue_manager >& queue_manager,
 	const scoped_ptr< vulkan_barrier_manager >& barrier_manager )
 {
 	if ( cfg.attributes.size() == 0 )
@@ -22,7 +22,7 @@ std::unique_ptr< vulkan_vertex_buffer > vulkan_vertex_buffer::make(
 				cfg.vk.device_properties,
 				cfg.vk.vma,
 				VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-				queues,
+				queue_manager,
 				barrier_manager,
 				cfg.memory,
 			},

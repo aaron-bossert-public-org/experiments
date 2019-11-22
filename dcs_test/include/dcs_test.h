@@ -51,7 +51,7 @@ private:
 
 	dcs_test( const config&, state&& );
 
-	static void update( const config&, const state& );
+	void update();
 
 	void handle_input();
 	void render();

@@ -1,9 +1,9 @@
 
-#include "vulkan/sync/vulkan_queues.h"
+#include "vulkan/manager/vulkan_queue_manager.h"
 
 #include "vulkan/buffer/vulkan_buffer.h"
 #include "vulkan/defines/vulkan_includes.h"
-#include "vulkan/sync/vulkan_abandon_manager.h"
+#include "vulkan/manager/vulkan_abandon_manager.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_poset_fence.h"
 #include "vulkan/sync/vulkan_queue.h"
@@ -16,15 +16,16 @@ using namespace igpu;
 namespace
 {}
 
-const vulkan_queues::config& vulkan_queues::cfg() const
+const vulkan_queue_manager::config& vulkan_queue_manager::cfg() const
 {
 	return _cfg;
 }
 
-vulkan_queues::~vulkan_queues()
+vulkan_queue_manager::~vulkan_queue_manager()
 {}
 
-std::unique_ptr< vulkan_queues > vulkan_queues::make( const config& cfg )
+std::unique_ptr< vulkan_queue_manager > vulkan_queue_manager::make(
+	const config& cfg )
 {
 	if ( !cfg.present_queue )
 	{
@@ -44,12 +45,13 @@ std::unique_ptr< vulkan_queues > vulkan_queues::make( const config& cfg )
 	}
 	else
 	{
-		return std::unique_ptr< vulkan_queues >( new vulkan_queues( cfg ) );
+		return std::unique_ptr< vulkan_queue_manager >(
+			new vulkan_queue_manager( cfg ) );
 	}
 
 	return nullptr;
 }
 
-vulkan_queues::vulkan_queues( const config& cfg )
+vulkan_queue_manager::vulkan_queue_manager( const config& cfg )
 	: _cfg( cfg )
 {}

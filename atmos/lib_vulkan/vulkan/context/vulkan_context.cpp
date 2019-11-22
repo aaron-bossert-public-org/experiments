@@ -8,6 +8,10 @@
 #include "vulkan/buffer/vulkan_index_buffer.h"
 #include "vulkan/buffer/vulkan_vertex_buffer.h"
 #include "vulkan/defines/vulkan_includes.h"
+#include "vulkan/manager/vulkan_barrier_manager.h"
+#include "vulkan/manager/vulkan_managers.h"
+#include "vulkan/manager/vulkan_queue_manager.h"
+#include "vulkan/manager/vulkan_staging_manager.h"
 #include "vulkan/shader/vulkan_fragment_shader.h"
 #include "vulkan/shader/vulkan_graphics_pipeline.h"
 #include "vulkan/shader/vulkan_pipeline_cache.h"
@@ -15,9 +19,7 @@
 #include "vulkan/shader/vulkan_program.h"
 #include "vulkan/shader/vulkan_render_states.h"
 #include "vulkan/shader/vulkan_vertex_shader.h"
-#include "vulkan/sync/vulkan_barrier_manager.h"
 #include "vulkan/sync/vulkan_queue.h"
-#include "vulkan/sync/vulkan_queues.h"
 #include "vulkan/texture/vulkan_depth_buffer.h"
 #include "vulkan/texture/vulkan_depth_texture2d.h"
 #include "vulkan/texture/vulkan_draw_target.h"
@@ -555,7 +557,7 @@ namespace
 				cfg.vk.physical_device,
 				cfg.vk.device,
 				cfg.vk.vma,
-				st.queues,
+				st.queue_manager,
 				to_vulkan_format( cfg.color_format ),
 				cfg.vk.sample_count,
 				VK_SHARING_MODE_EXCLUSIVE,
@@ -571,7 +573,7 @@ namespace
 				cfg.vk.physical_device,
 				cfg.vk.device,
 				cfg.vk.vma,
-				st.queues,
+				st.queue_manager,
 				to_vulkan_format( cfg.depth_format ),
 				cfg.vk.sample_count,
 				VK_SHARING_MODE_EXCLUSIVE,
@@ -584,7 +586,7 @@ namespace
 			std::static_pointer_cast< depth_buffer, vulkan_depth_buffer >(
 				depth ),
 			cfg.vk.device,
-			st.queues,
+			st.queue_manager,
 			st.barrier_manager,
 			color,
 			depth,
@@ -641,7 +643,7 @@ std::unique_ptr< draw_target > vulkan_context::make(
 	return vulkan_draw_target::make( {
 		base_cfg,
 		_cfg.vk.device,
-		_st.queues,
+		_st.queue_manager,
 		_st.barrier_manager,
 		color,
 		depth,
@@ -657,7 +659,7 @@ std::unique_ptr< render_buffer > vulkan_context::make(
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
 		_cfg.vk.vma,
-		_st.queues,
+		_st.queue_manager,
 		to_vulkan_format( base_cfg.format ),
 		_cfg.vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
@@ -672,7 +674,7 @@ std::unique_ptr< render_texture2d > vulkan_context::make(
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
 		_cfg.vk.vma,
-		_st.queues,
+		_st.queue_manager,
 		to_vulkan_format( base_cfg.format ),
 		_cfg.vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
@@ -687,7 +689,7 @@ std::unique_ptr< depth_buffer > vulkan_context::make(
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
 		_cfg.vk.vma,
-		_st.queues,
+		_st.queue_manager,
 		to_vulkan_format( base_cfg.format ),
 		_cfg.vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
@@ -702,7 +704,7 @@ std::unique_ptr< depth_texture2d > vulkan_context::make(
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
 		_cfg.vk.vma,
-		_st.queues,
+		_st.queue_manager,
 		to_vulkan_format( base_cfg.format ),
 		_cfg.vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
@@ -775,7 +777,7 @@ std::unique_ptr< vertex_buffer > vulkan_context::make(
 			&_cfg.vk.physical_device_properties,
 			_cfg.vk.vma,
 		},
-		_st.queues,
+		_st.queue_manager,
 		_st.barrier_manager );
 }
 
@@ -790,7 +792,7 @@ std::unique_ptr< index_buffer > vulkan_context::make(
 			_cfg.vk.vma,
 			to_vulkan_format( base_cfg.format ),
 		},
-		_st.queues,
+		_st.queue_manager,
 		_st.barrier_manager );
 }
 
@@ -804,7 +806,7 @@ std::unique_ptr< compute_buffer > vulkan_context::make(
 			&_cfg.vk.physical_device_properties,
 			_cfg.vk.vma,
 		},
-		_st.queues,
+		_st.queue_manager,
 		_st.barrier_manager );
 }
 
@@ -817,7 +819,7 @@ std::unique_ptr< texture2d > vulkan_context::make(
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
 		_cfg.vk.vma,
-		_st.queues,
+		_st.queue_manager,
 		_st.barrier_manager,
 	} );
 }
@@ -944,6 +946,10 @@ std::unique_ptr< vulkan_context > vulkan_context::make(
 			std::min( cfg.vk.swap_count, surface_caps.maxImageCount );
 	}
 
+	st.pipeline_cache = vulkan_pipeline_cache::make( {
+		cfg.vk.device,
+	} );
+
 	VmaAllocatorCreateInfo allocator_info = {
 		{},
 		cfg.vk.physical_device,
@@ -952,81 +958,68 @@ std::unique_ptr< vulkan_context > vulkan_context::make(
 
 	vmaCreateAllocator( &allocator_info, &cfg.vk.vma );
 
-	st.pipeline_cache = vulkan_pipeline_cache::make( {
+	std::vector< std::shared_ptr< vulkan_queue > > queue_family_table;
+	for ( const std::optional< uint32_t >* family : {
+			  &families.present.family_index,
+			  &families.graphics.family_index,
+			  &families.compute.family_index,
+			  &families.transfer.family_index,
+		  } )
+	{
+		if ( family->has_value() )
+		{
+			if ( queue_family_table.size() <= family->value() )
+			{
+				queue_family_table.resize( size_t( family->value() ) + 1 );
+			}
+			if ( !queue_family_table[family->value()] )
+			{
+				queue_family_table[family->value()] = vulkan_queue::make( {
+					cfg.vk.device,
+					family->value(),
+				} );
+			}
+		}
+	}
+
+	st.present_queue = families.present.family_index.has_value()
+		? queue_family_table[families.present.family_index.value()]
+		: nullptr;
+	st.graphics_queue = families.graphics.family_index.has_value()
+		? queue_family_table[families.graphics.family_index.value()]
+		: nullptr;
+	st.compute_queue = families.compute.family_index.has_value()
+		? queue_family_table[families.compute.family_index.value()]
+		: nullptr;
+	st.transfer_queue = families.transfer.family_index.has_value()
+		? queue_family_table[families.transfer.family_index.value()]
+		: nullptr;
+
+	vulkan_queue_manager::config queue_manager_cfg = {};
+	queue_manager_cfg.present_queue = st.present_queue;
+	queue_manager_cfg.graphics_queue = st.graphics_queue;
+	queue_manager_cfg.compute_queue = st.compute_queue;
+	queue_manager_cfg.transfer_queue = st.transfer_queue;
+	queue_manager_cfg.queue_family_table.assign(
+		queue_family_table.begin(),
+		queue_family_table.end() );
+
+	st.queue_manager = vulkan_queue_manager::make( queue_manager_cfg );
+
+	st.barrier_manager = vulkan_barrier_manager::make( {
 		cfg.vk.device,
+		st.queue_manager,
 	} );
+
 
 	if ( !st.pipeline_cache )
 	{
 		LOG_CRITICAL( "failed to create pipeline_cache" );
 	}
-	else
-	{
-		std::vector< std::shared_ptr< vulkan_queue > > queue_family_table;
-		for ( const std::optional< uint32_t >* family : {
-				  &families.present.family_index,
-				  &families.graphics.family_index,
-				  &families.compute.family_index,
-				  &families.transfer.family_index,
-			  } )
-		{
-			if ( family->has_value() )
-			{
-				if ( queue_family_table.size() <= family->value() )
-				{
-					queue_family_table.resize( size_t( family->value() ) + 1 );
-				}
-				if ( !queue_family_table[family->value()] )
-				{
-					queue_family_table[family->value()] = vulkan_queue::make( {
-						cfg.vk.device,
-						family->value(),
-					} );
-				}
-			}
-		}
-
-		st.present_queue = families.present.family_index.has_value()
-			? queue_family_table[families.present.family_index.value()]
-			: nullptr;
-		st.graphics_queue = families.graphics.family_index.has_value()
-			? queue_family_table[families.graphics.family_index.value()]
-			: nullptr;
-		st.compute_queue = families.compute.family_index.has_value()
-			? queue_family_table[families.compute.family_index.value()]
-			: nullptr;
-		st.transfer_queue = families.transfer.family_index.has_value()
-			? queue_family_table[families.transfer.family_index.value()]
-			: nullptr;
-
-		vulkan_queues::config queues_cfg = {};
-		queues_cfg.present_queue = st.present_queue;
-		queues_cfg.graphics_queue = st.graphics_queue;
-		queues_cfg.compute_queue = st.compute_queue;
-		queues_cfg.transfer_queue = st.transfer_queue;
-		queues_cfg.queue_family_table.assign(
-			queue_family_table.begin(),
-			queue_family_table.end() );
-
-		st.queues = vulkan_queues::make( queues_cfg );
-	}
-
-	if ( !st.queues )
-	{
-		LOG_CRITICAL( "failed to create queues" );
-	}
-	else
-	{
-		st.barrier_manager = vulkan_barrier_manager::make( {
-			cfg.vk.device,
-			st.queues,
-		} );
-	}
-
-	if ( !st.barrier_manager )
-	{
-		LOG_CRITICAL( "failed to create barrier_manager" );
-	}
+	// else if ( !st.managers )
+	//{
+	//	LOG_CRITICAL( "failed to create managers container" );
+	//}
 	else
 	{
 		return std::unique_ptr< vulkan_context >(

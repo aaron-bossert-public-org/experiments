@@ -23,12 +23,12 @@ implement implicit readback. when mapping a buffer, check to see if there are pe
 
 add support for compute shaders
 
-implement reserved memory type for vulkan_buffer and vulkan image
 
-implement deferred upload. when uploading data to gpu, wait until resource to be used by a readable job before uploading. combined with implicit read back this should allow for gpu write only buffers to be synchronized properly using just storage buffer decorators in shader and memory_type on cpu side.
+implement deferred upload. when uploading data to gpu, wait until resource to be used by a readable job before uploading, and record/barrier all transfer together for a job into one command buffer.
 
-move vulkan abandon manager. cpp/h to /sync/
+implement actual write combining. buffers smaller than some threshold all share the same 10 mb staging ring buffer. keep fence to track each queues progress 
 
+implement preserved memory type for vulkan_buffer and vulkan image
 
 
 //////////////////////////////////////
@@ -36,6 +36,10 @@ move vulkan abandon manager. cpp/h to /sync/
 //////////////////////////////////////
 
 
+
+add wait for fence back in to back buffer end raster, but view in profiler to see where vsync waits and put fence right after. 
+
+move vulkan abandon manager. cpp/h to /sync/
 
 get release and relwithdebinfo working
 fix shutdown crashes

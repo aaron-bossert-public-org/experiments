@@ -6,6 +6,7 @@
 #include "vulkan/shader/vulkan_primitives_descriptor.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_dependency.h"
+#include "vulkan/sync/vulkan_job.h"
 
 #include "framework/logging/log.h"
 
@@ -202,6 +203,10 @@ std::unique_ptr< vulkan_job_primitives > vulkan_job_primitives::make(
 					"vector cannot be reallocated once dependencies are "
 					"created" );
 
+				if ( unique->is_activated() )
+				{
+					unique->job().activate_dependencies( unique.get() );
+				}
 				return unique;
 			}
 		}
@@ -211,13 +216,18 @@ std::unique_ptr< vulkan_job_primitives > vulkan_job_primitives::make(
 }
 
 vulkan_job_primitives ::~vulkan_job_primitives()
-{}
+{
+	if ( is_activated() )
+	{
+		job().deactivate_dependencies( this );
+	}
+}
 
 vulkan_job_primitives::vulkan_job_primitives( const config& cfg )
 	: _cfg( cfg )
 {}
 
-void vulkan_job_primitives::on_record_cmds(
+void vulkan_job_primitives::record_cmds(
 	const scoped_ptr< vulkan_command_buffer >& command_buffer )
 {
 	VkDescriptorSet descriptor_set = _descriptor_sets[_swap_index];

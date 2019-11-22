@@ -5,8 +5,8 @@
 #include "vulkan/batch/vulkan_instance_batch.h"
 
 #include "vulkan/batch/vulkan_batch_nodes.h"
+#include "vulkan/manager/vulkan_queue_manager.h"
 #include "vulkan/sync/vulkan_job_primitives.h"
-#include "vulkan/sync/vulkan_queues.h"
 #include "vulkan/texture/vulkan_draw_target.h"
 
 using namespace igpu;
@@ -19,7 +19,7 @@ vulkan_instance_batch::vulkan_instance_batch( const config& cfg )
 			vulkan_job_primitives::make( vulkan_job_primitives::config{
 				cfg.vk.root_batch->vk()
 					.draw_target->cfg()
-					.vk.queues->cfg()
+					.vk.queue_manager->cfg()
 					.graphics_queue,
 				cfg.vk.program->pipeline_layout(),
 				cfg.vk.root_batch,
