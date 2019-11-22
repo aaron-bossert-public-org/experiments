@@ -2,8 +2,8 @@
 #include "vulkan/texture/vulkan_image.h"
 
 #include "vulkan/buffer/vulkan_buffer.h"
-#include "vulkan/context/vulkan_abandon_manager.h"
 #include "vulkan/shader/vulkan_parameter.h"
+#include "vulkan/sync/vulkan_abandon_manager.h"
 #include "vulkan/sync/vulkan_barrier_manager.h"
 #include "vulkan/sync/vulkan_queues.h"
 
