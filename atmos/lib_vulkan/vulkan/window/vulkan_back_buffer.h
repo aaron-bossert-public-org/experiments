@@ -64,6 +64,7 @@ namespace igpu
 			std::shared_ptr< vulkan_semaphore > aquire_sem;
 			std::shared_ptr< vulkan_semaphore > raster_sem;
 			std::shared_ptr< vulkan_poset_fence > raster_fence;
+			ptrdiff_t submit_index = 0;
 		};
 
 		struct state

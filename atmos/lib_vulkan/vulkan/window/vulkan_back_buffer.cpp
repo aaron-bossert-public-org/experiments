@@ -362,6 +362,8 @@ VkResult vulkan_back_buffer::do_end_raster()
 		1,
 		&raster_sem );
 	raster_queue->submit_pending( frame_state.raster_fence );
+	frame_state.submit_index =
+		frame_state.raster_fence->submit_index();
 
 	VkPresentInfoKHR present_info = {};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -387,9 +389,7 @@ VkResult vulkan_back_buffer::do_end_raster()
 
 	if ( const auto& fence = next_frame_state.raster_fence )
 	{
-		fence->wait_or_skip( fence->submit_index() );
-		VkFence vk_fence = fence->vk_fence();
-		vkResetFences( _cfg.vk.device, 1, &vk_fence );
+		fence->wait_or_skip( next_frame_state.submit_index );
 		vkResetCommandBuffer(
 			next_frame_state.raster_cmds->vk_cmds(),
 			(VkCommandBufferResetFlags)0 );

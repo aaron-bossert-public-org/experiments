@@ -9,7 +9,7 @@ namespace igpu
 
 	// waiting on a VkFence requires that the fence has not been reset to
 	// its initial state, and has the side effect of flushing/invalidating
-	// gpu caches.
+	// gpu caches. they also are required to be manually reset.
 
 	// partially ordered fence has no such requirements and may not sync caches.
 	// This makes it lighter weight but forces code using it to rely
@@ -35,7 +35,6 @@ namespace igpu
 
 		bool is_ready( ptrdiff_t submit_index );
 
-
 		void wait_or_skip( ptrdiff_t submit_index );
 
 		void on_submit( const vulkan_queue& );
@@ -48,7 +47,7 @@ namespace igpu
 
 	private:
 		const config _cfg;
-		const VkFence _fence;
+		const VkFence _vk_fence;
 		ptrdiff_t _submit_index = 0;
 	};
 }

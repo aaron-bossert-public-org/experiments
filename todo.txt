@@ -23,14 +23,11 @@ implement implicit readback. when mapping a buffer, check to see if there are pe
 
 add support for compute shaders
 
-
-implement deferred upload. when uploading data to gpu, wait until resource to be used by a readable job before uploading, and record/barrier all transfer together for a job into one command buffer.
-
 implement actual write combining. buffers smaller than some threshold all share the same 10 mb staging ring buffer. keep fence to track each queues progress 
 
 implement preserved memory type for vulkan_buffer and vulkan image
 
-poset fence should look at submit index stored in queue, as opposed to storing one locally 
+implement deferred upload. when uploading data to gpu, wait until resource to be used by a readable job before uploading, and record/barrier all transfer together for a job into one command buffer.
 
 
 //////////////////////////////////////

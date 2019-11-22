@@ -164,6 +164,13 @@ void vulkan_queue::submit_pending( std::shared_ptr< vulkan_poset_fence > fence )
 
 	VkFence vk_fence = fence ? fence->vk_fence() : nullptr;
 
+	++_submit_index;
+
+	if ( fence )
+	{
+		fence->on_submit( *this );
+	}
+
 	vkQueueSubmit(
 		_vk_queue,
 		(uint32_t)_pending_submit_info.size(),
@@ -174,13 +181,6 @@ void vulkan_queue::submit_pending( std::shared_ptr< vulkan_poset_fence > fence )
 	_pending_command_buffers.clear();
 	_pending_semaphores.clear();
 	_pending_wait_stage_flags.clear();
-
-	++_submit_index;
-
-	if ( fence )
-	{
-		fence->on_submit( *this );
-	}
 
 	if ( _trigger_abandon )
 	{
