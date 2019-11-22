@@ -30,6 +30,8 @@ implement actual write combining. buffers smaller than some threshold all share 
 
 implement preserved memory type for vulkan_buffer and vulkan image
 
+poset fence should look at submit index stored in queue, as opposed to storing one locally 
+
 
 //////////////////////////////////////
 (CURRENT PROGRESS POINT)

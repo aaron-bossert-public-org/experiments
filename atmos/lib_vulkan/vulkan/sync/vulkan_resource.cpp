@@ -70,6 +70,18 @@ void vulkan_resource::barrier_record_ref(
 	resource_state().barrier_record_ref = record_ref;
 }
 
+const vulkan_staging_manager::record_ref& vulkan_resource::staging_record_ref()
+	const
+{
+	return resource_state().staging_record_ref;
+}
+
+void vulkan_resource::staging_record_ref(
+	const vulkan_staging_manager::record_ref& record_ref )
+{
+	resource_state().staging_record_ref = record_ref;
+}
+
 ptrdiff_t vulkan_resource::write_count() const
 {
 	return resource_state().write_count;

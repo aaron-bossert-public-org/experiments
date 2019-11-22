@@ -54,7 +54,7 @@ void vulkan_job::submit_activated_dependency_barriers(
 		dependencies->record_dependencies( barrier_manager );
 	}
 
-	barrier_manager->submit_recorded_barriers( queue );
+	barrier_manager->push_recorded_barriers( queue );
 
 #if ATMOS_DEBUG_BARRIERS
 	for ( auto* dependencies : activated_deps )

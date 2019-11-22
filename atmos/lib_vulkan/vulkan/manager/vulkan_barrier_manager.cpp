@@ -20,15 +20,14 @@ using namespace igpu;
 namespace
 {
 	template < typename T >
-	void one_time_command(
+	void push_one_cb(
 		const scoped_ptr< vulkan_queue > queue,
 		T&& builder,
 		uint32_t wait_count = 0,
-		const VkSemaphore* p_wait_semaphores = nullptr,
-		const VkPipelineStageFlags* p_wait_stages = nullptr,
+		VkSemaphore* p_wait_semaphores = nullptr,
+		VkPipelineStageFlags* p_wait_stages = nullptr,
 		uint32_t signal_count = 0,
-		const VkSemaphore* p_signal_semaphores = nullptr,
-		std::shared_ptr< vulkan_poset_fence > fence = nullptr )
+		VkSemaphore* p_signal_semaphores = nullptr )
 	{
 		vulkan_command_buffer command_buffer( {
 			queue->command_pool(),
@@ -45,19 +44,19 @@ namespace
 		builder( vk_cmds );
 		vkEndCommandBuffer( vk_cmds );
 
-		queue->submit_commands(
+		auto* p_commands = &command_buffer;
+		queue->push_commands(
 			wait_count,
 			p_wait_semaphores,
 			p_wait_stages,
 			1,
-			&command_buffer,
+			&p_commands,
 			signal_count,
-			p_signal_semaphores,
-			fence );
+			p_signal_semaphores );
 	}
 }
 
-void vulkan_barrier_manager::submit_frame_job(
+void vulkan_barrier_manager::push_frame_job(
 	const scoped_ptr< vulkan_queue > queue,
 	const std::initializer_list< frame_job_barrier >& frame_job_barriers,
 	const std::function< void( VkCommandBuffer ) >& builder )
@@ -69,9 +68,9 @@ void vulkan_barrier_manager::submit_frame_job(
 		record_barrier( barrier.resource, barrier.layout, barrier.job_scope );
 	}
 
-	submit_recorded_barriers( queue );
+	push_recorded_barriers( queue );
 
-	one_time_command( queue, builder );
+	push_one_cb( queue, builder );
 }
 
 
@@ -153,7 +152,7 @@ void vulkan_barrier_manager::record_barrier(
 	}
 }
 
-void vulkan_barrier_manager::submit_recorded_barriers(
+void vulkan_barrier_manager::push_recorded_barriers(
 	const scoped_ptr< vulkan_queue >& queue )
 {
 	if ( !_recording_barriers )
@@ -222,8 +221,10 @@ void vulkan_barrier_manager::submit_recorded_barriers(
 				VkPipelineStageFlags top_of_pipe =
 					VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 
-				one_time_command(
-					_cfg.queue_manager->cfg().queue_family_table[src_family],
+				const auto& transfer_src_queue =
+					_cfg.queue_manager->cfg().queue_family_table[src_family];
+				push_one_cb(
+					transfer_src_queue,
 					[&]( VkCommandBuffer vk_cmds ) {
 						vkCmdPipelineBarrier(
 							vk_cmds,
@@ -242,7 +243,7 @@ void vulkan_barrier_manager::submit_recorded_barriers(
 					&top_of_pipe,
 					1,
 					&signal_sem[queue_transfers] );
-
+				transfer_src_queue->submit_pending();
 				++queue_transfers;
 			}
 		}
@@ -251,7 +252,7 @@ void vulkan_barrier_manager::submit_recorded_barriers(
 		if ( barrier.buffer_memory_barriers.size() ||
 			 barrier.image_memory_barriers.size() )
 		{
-			one_time_command(
+			push_one_cb(
 				queue,
 				[&]( VkCommandBuffer vk_cmds ) {
 					vkCmdPipelineBarrier(
@@ -271,6 +272,7 @@ void vulkan_barrier_manager::submit_recorded_barriers(
 				transfer_stages.data(),
 				(uint32_t)queue_transfers,
 				wait_sem.data() );
+			queue->submit_pending();
 		}
 
 

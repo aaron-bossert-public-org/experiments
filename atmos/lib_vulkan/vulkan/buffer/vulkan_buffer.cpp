@@ -226,7 +226,7 @@ void vulkan_buffer::copy_from(
 	{
 		reset( other.mapped_view().byte_size() );
 
-		barrier_manager.submit_frame_job(
+		barrier_manager.push_frame_job(
 
 			_cfg.vk.queue_manager->cfg().transfer_queue,
 			{

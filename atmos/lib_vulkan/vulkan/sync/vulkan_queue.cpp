@@ -13,45 +13,6 @@
 
 using namespace igpu;
 
-namespace
-{
-	void submit(
-		VkQueue vk_queue,
-		uint32_t wait_count,
-		const VkSemaphore* p_wait_semaphores,
-		const VkPipelineStageFlags* p_wait_stages,
-		uint32_t command_buffer_count,
-		const vulkan_command_buffer* command_buffers,
-		VkCommandBuffer* command_buffers_backing,
-		uint32_t signal_count,
-		const VkSemaphore* p_signal_semaphores,
-		VkFence fence )
-	{
-		// copy vulkan command buffer vk pointers to backing
-		VkCommandBuffer* at = command_buffers_backing;
-		while ( at < command_buffers_backing + command_buffer_count )
-		{
-			*at = command_buffers->vk_cmds();
-			++at;
-			++command_buffers;
-		}
-
-		VkSubmitInfo info = {
-			VK_STRUCTURE_TYPE_SUBMIT_INFO,
-			nullptr,
-			wait_count,
-			p_wait_semaphores,
-			p_wait_stages,
-			command_buffer_count,
-			command_buffers_backing,
-			signal_count,
-			p_signal_semaphores,
-		};
-
-		vkQueueSubmit( vk_queue, 1, &info, fence );
-	}
-}
-
 std::shared_ptr< vulkan_queue > vulkan_queue::make( const config& cfg )
 {
 	VkQueue vk_queue = nullptr;
@@ -105,21 +66,97 @@ void vulkan_queue::trigger_abandon()
 	_trigger_abandon = true;
 }
 
-void vulkan_queue::submit_command( const vulkan_command_buffer& command_buffer )
+void vulkan_queue::push_command( vulkan_command_buffer& command_buffer )
 {
-	submit_commands( 0, nullptr, nullptr, 0, &command_buffer, 0, nullptr );
+	vulkan_command_buffer* p_command_buffer = &command_buffer;
+	push_commands( 0, nullptr, nullptr, 0, &p_command_buffer, 0, nullptr );
 }
 
-void vulkan_queue::submit_commands(
+void vulkan_queue::push_commands(
 	uint32_t wait_count,
-	const VkSemaphore* p_wait_semaphores,
-	const VkPipelineStageFlags* p_wait_stages,
+	VkSemaphore* p_wait_semaphores,
+	VkPipelineStageFlags* p_wait_stages,
 	uint32_t command_buffer_count,
-	const vulkan_command_buffer* command_buffers,
+	vulkan_command_buffer** command_buffers,
 	uint32_t signal_count,
-	const VkSemaphore* p_signal_semaphores,
-	std::shared_ptr< vulkan_poset_fence > fence )
+	VkSemaphore* p_signal_semaphores )
 {
+	_pending_semaphores.insert(
+		_pending_semaphores.end(),
+		p_wait_semaphores,
+		p_wait_semaphores + wait_count );
+
+	_pending_wait_stage_flags.insert(
+		_pending_wait_stage_flags.end(),
+		p_wait_stages,
+		p_wait_stages + wait_count );
+
+	_pending_semaphores.insert(
+		_pending_semaphores.end(),
+		p_signal_semaphores,
+		p_signal_semaphores + signal_count );
+
+	_pending_command_buffers.reserve(
+		_pending_command_buffers.size() + command_buffer_count );
+
+	for ( size_t i = 0; i < command_buffer_count; ++i )
+	{
+		auto& cb = command_buffers[i];
+		if ( cb->queue().get() != this )
+		{
+			LOG_CRITICAL( "command buffer was not created for this queue" );
+		}
+		else
+		{
+			_pending_command_buffers.push_back( cb->vk_cmds() );
+		}
+	}
+
+	_pending_submit_info.push_back( {
+		VK_STRUCTURE_TYPE_SUBMIT_INFO,
+		nullptr,
+		wait_count,
+		nullptr,
+		nullptr,
+		command_buffer_count,
+		nullptr,
+		signal_count,
+		nullptr,
+	} );
+}
+
+void vulkan_queue::submit_pending( std::shared_ptr< vulkan_poset_fence > fence )
+{
+	auto at_cb = _pending_command_buffers.begin();
+	auto at_sem = _pending_semaphores.begin();
+	auto at_flags = _pending_wait_stage_flags.begin();
+	for ( auto& submit_info : _pending_submit_info )
+	{
+		if ( submit_info.waitSemaphoreCount )
+		{
+			submit_info.pWaitSemaphores = &*at_sem;
+			at_sem += submit_info.waitSemaphoreCount;
+		}
+
+		if ( submit_info.waitSemaphoreCount )
+		{
+			submit_info.pWaitDstStageMask = &*at_flags;
+			at_flags += submit_info.waitSemaphoreCount;
+		}
+
+		if ( submit_info.commandBufferCount )
+		{
+			submit_info.pCommandBuffers = &*at_cb;
+			at_cb += submit_info.commandBufferCount;
+		}
+
+		if ( submit_info.signalSemaphoreCount )
+		{
+			submit_info.pSignalSemaphores = &*at_sem;
+			at_sem += submit_info.signalSemaphoreCount;
+		}
+	}
+
 	if ( _trigger_abandon && !fence )
 	{
 		fence = vulkan_poset_fence::make( { _cfg.device } );
@@ -127,37 +164,16 @@ void vulkan_queue::submit_commands(
 
 	VkFence vk_fence = fence ? fence->vk_fence() : nullptr;
 
-	// avoid dynamic allocation if there are fewer than 16 command buffers
-	if ( command_buffer_count <= 16 )
-	{
-		std::array< VkCommandBuffer, 16 > backing;
-		submit(
-			_vk_queue,
-			wait_count,
-			p_wait_semaphores,
-			p_wait_stages,
-			command_buffer_count,
-			command_buffers,
-			backing.data(),
-			signal_count,
-			p_signal_semaphores,
-			vk_fence );
-	}
-	else
-	{
-		std::vector< VkCommandBuffer > backing( command_buffer_count );
-		submit(
-			_vk_queue,
-			wait_count,
-			p_wait_semaphores,
-			p_wait_stages,
-			command_buffer_count,
-			command_buffers,
-			backing.data(),
-			signal_count,
-			p_signal_semaphores,
-			vk_fence );
-	}
+	vkQueueSubmit(
+		_vk_queue,
+		(uint32_t)_pending_submit_info.size(),
+		_pending_submit_info.data(),
+		vk_fence );
+
+	_pending_submit_info.clear();
+	_pending_command_buffers.clear();
+	_pending_semaphores.clear();
+	_pending_wait_stage_flags.clear();
 
 	++_submit_index;
 

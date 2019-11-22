@@ -53,7 +53,7 @@ namespace igpu
 			size_t record_index = SIZE_MAX;
 		};
 
-		void submit_frame_job(
+		void push_frame_job(
 			const scoped_ptr< vulkan_queue >,
 			const std::initializer_list< frame_job_barrier >&,
 			const std::function< void( VkCommandBuffer ) >& );
@@ -66,7 +66,7 @@ namespace igpu
 			VkImageLayout layout,
 			const vulkan_job_scope& job_scope );
 
-		void submit_recorded_barriers( const scoped_ptr< vulkan_queue >& );
+		void push_recorded_barriers( const scoped_ptr< vulkan_queue >& );
 
 		// invoked in indirectly via finish_dependency_barriers
 		void push_barrier(

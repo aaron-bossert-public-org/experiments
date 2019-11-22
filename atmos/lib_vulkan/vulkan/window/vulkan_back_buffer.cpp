@@ -351,16 +351,17 @@ VkResult vulkan_back_buffer::do_end_raster()
 		}
 	}
 
+	auto* p_cmds = frame_state.raster_cmds.get();
 	const auto& raster_queue = vulkan_draw_target::raster_queue();
-	raster_queue->submit_commands(
+	raster_queue->push_commands(
 		1,
 		&aquire_sem,
 		&aquire_stage,
 		1,
-		frame_state.raster_cmds.get(),
+		&p_cmds,
 		1,
-		&raster_sem,
-		frame_state.raster_fence );
+		&raster_sem );
+	raster_queue->submit_pending( frame_state.raster_fence );
 
 	VkPresentInfoKHR present_info = {};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;

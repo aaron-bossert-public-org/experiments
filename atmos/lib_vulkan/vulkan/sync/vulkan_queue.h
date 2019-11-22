@@ -5,8 +5,7 @@
 
 #include "framework/utility/scoped_ptr.h"
 
-#include <functional>
-#include <list>
+#include <vector>
 
 namespace igpu
 {
@@ -24,10 +23,7 @@ namespace igpu
 			uint32_t family_index = ~0U;
 		};
 
-		using command_builder_t = std::function< void( VkCommandBuffer& ) >;
-
 		static std::shared_ptr< vulkan_queue > make( const config& );
-
 
 		const config& cfg() const;
 
@@ -39,16 +35,18 @@ namespace igpu
 
 		void trigger_abandon();
 
-		void submit_command( const vulkan_command_buffer& command_buffer );
+		void push_command( vulkan_command_buffer& command_buffer );
 
-		void submit_commands(
+		void push_commands(
 			uint32_t wait_count,
-			const VkSemaphore* p_wait_semaphores,
-			const VkPipelineStageFlags* p_wait_stages,
+			VkSemaphore* p_wait_semaphores,
+			VkPipelineStageFlags* p_wait_stages,
 			uint32_t command_buffer_count,
-			const vulkan_command_buffer* command_buffers,
+			vulkan_command_buffer** command_buffers,
 			uint32_t signal_count,
-			const VkSemaphore* p_signal_semaphores,
+			VkSemaphore* p_signal_semaphores );
+
+		void submit_pending(
 			std::shared_ptr< vulkan_poset_fence > fence = nullptr );
 
 		VkResult submit_present( const VkPresentInfoKHR& present_info );
@@ -61,6 +59,11 @@ namespace igpu
 		VkQueue _vk_queue = nullptr;
 		std::shared_ptr< vulkan_abandon_manager > _abandon_manager;
 		std::shared_ptr< vulkan_command_pool > _command_pool;
+
+		std::vector< VkSubmitInfo > _pending_submit_info;
+		std::vector< VkCommandBuffer > _pending_command_buffers;
+		std::vector< VkSemaphore > _pending_semaphores;
+		std::vector< VkPipelineStageFlags > _pending_wait_stage_flags;
 
 		bool _trigger_abandon = false;
 		ptrdiff_t _submit_index = 0;

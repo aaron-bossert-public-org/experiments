@@ -2,6 +2,7 @@
 #pragma once
 
 #include "vulkan/manager/vulkan_barrier_manager.h"
+#include "vulkan/manager/vulkan_staging_manager.h"
 #include "vulkan/shader/vulkan_parameter.h"
 #include "vulkan/sync/vulkan_job_scope.h"
 
@@ -29,6 +30,11 @@ namespace igpu
 		const vulkan_barrier_manager::record_ref& barrier_record_ref() const;
 
 		void barrier_record_ref( const vulkan_barrier_manager::record_ref& );
+
+
+		const vulkan_staging_manager::record_ref& staging_record_ref() const;
+
+		void staging_record_ref( const vulkan_staging_manager::record_ref& );
 
 
 		ptrdiff_t write_count() const;
@@ -73,6 +79,7 @@ namespace igpu
 			vulkan_job_scope combined_read_scope;
 
 			vulkan_barrier_manager::record_ref barrier_record_ref;
+			vulkan_staging_manager::record_ref staging_record_ref;
 		};
 
 		virtual vulkan_resource::state& resource_state() = 0;

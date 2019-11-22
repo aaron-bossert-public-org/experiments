@@ -6,6 +6,7 @@
 #include "vulkan/manager/vulkan_barrier_manager.h"
 #include "vulkan/manager/vulkan_queue_manager.h"
 #include "vulkan/shader/vulkan_parameter.h"
+#include "vulkan/sync/vulkan_queue.h"
 
 #include <algorithm>
 
@@ -299,7 +300,7 @@ void vulkan_image::copy_from(
 {
 	if ( _cfg.memory == memory_type::WRITE_COMBINED )
 	{
-		barrier_manager.submit_frame_job(
+		barrier_manager.push_frame_job(
 			_cfg.queue_manager->cfg().transfer_queue,
 			{
 				frame_job_barrier(
@@ -361,7 +362,7 @@ void vulkan_image::generate_mipmaps( vulkan_barrier_manager& barrier_manager )
 	}
 	else
 	{
-		barrier_manager.submit_frame_job(
+		barrier_manager.push_frame_job(
 
 			_cfg.queue_manager->cfg().graphics_queue,
 			{
