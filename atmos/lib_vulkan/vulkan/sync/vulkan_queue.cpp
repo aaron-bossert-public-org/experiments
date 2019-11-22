@@ -5,7 +5,7 @@
 #include "vulkan/context/vulkan_abandon_manager.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_command_pool.h"
-#include "vulkan/sync/vulkan_fence.h"
+#include "vulkan/sync/vulkan_poset_fence.h"
 
 #include "framework/logging/log.h"
 
@@ -118,11 +118,11 @@ void vulkan_queue::submit_commands(
 	const vulkan_command_buffer* command_buffers,
 	uint32_t signal_count,
 	const VkSemaphore* p_signal_semaphores,
-	std::shared_ptr< vulkan_fence > fence )
+	std::shared_ptr< vulkan_poset_fence > fence )
 {
 	if ( _trigger_abandon && !fence )
 	{
-		fence = vulkan_fence::make( { _cfg.device } );
+		fence = vulkan_poset_fence::make( { _cfg.device } );
 	}
 
 	VkFence vk_fence = fence ? fence->vk_fence() : nullptr;

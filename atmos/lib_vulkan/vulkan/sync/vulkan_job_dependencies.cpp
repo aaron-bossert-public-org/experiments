@@ -2,8 +2,8 @@
 #include "vulkan/sync/vulkan_job_dependencies.h"
 
 #include "vulkan/sync/vulkan_dependency.h"
-#include "vulkan/sync/vulkan_fence.h"
 #include "vulkan/sync/vulkan_job.h"
+#include "vulkan/sync/vulkan_poset_fence.h"
 
 using namespace igpu;
 

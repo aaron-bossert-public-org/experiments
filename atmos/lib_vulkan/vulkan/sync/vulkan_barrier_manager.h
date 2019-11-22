@@ -15,8 +15,8 @@ namespace igpu
 
 	class vulkan_buffer;
 	class vulkan_dependency;
-	class vulkan_fence;
 	class vulkan_image;
+	class vulkan_poset_fence;
 	class vulkan_queue;
 	class vulkan_resource;
 	class vulkan_semaphore;

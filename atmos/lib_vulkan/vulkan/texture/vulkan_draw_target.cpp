@@ -113,6 +113,11 @@ const vulkan_draw_target::config& vulkan_draw_target::cfg() const
 	return _cfg;
 }
 
+const scoped_ptr< vulkan_queue >& vulkan_draw_target::raster_queue() const
+{
+	return _cfg.vk.queues->cfg().graphics_queue;
+}
+
 VkRenderPass vulkan_draw_target::render_pass() const
 {
 	return _state.render_pass;

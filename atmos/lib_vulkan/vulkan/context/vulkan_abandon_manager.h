@@ -10,7 +10,7 @@
 
 namespace igpu
 {
-	class vulkan_fence;
+	class vulkan_poset_fence;
 	class vulkan_queue;
 
 	template < typename... ARGS >
@@ -67,7 +67,7 @@ namespace igpu
 
 		using pending_t = std::vector< std::queue< payload_t > >;
 
-		void trigger_abandon( const std::shared_ptr< vulkan_fence >& );
+		void trigger_abandon( const std::shared_ptr< vulkan_poset_fence >& );
 
 		static std::unique_ptr< vulkan_abandon_manager > make();
 
@@ -90,7 +90,7 @@ namespace igpu
 		struct abandoned
 		{
 			size_t submit_index = 0;
-			std::shared_ptr< vulkan_fence > fence;
+			std::shared_ptr< vulkan_poset_fence > fence;
 			std::vector< payload_category > categories;
 		};
 

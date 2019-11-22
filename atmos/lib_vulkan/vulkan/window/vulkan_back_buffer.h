@@ -11,7 +11,7 @@
 namespace igpu
 {
 	class vulkan_context;
-	class vulkan_fence;
+	class vulkan_poset_fence;
 	class vulkan_queue;
 	class vulkan_semaphore;
 	class vulkan_command_pool;
@@ -28,8 +28,7 @@ namespace igpu
 				VkSurfaceKHR surface = nullptr;
 				VkSurfaceCapabilitiesKHR surface_caps;
 				VkColorSpaceKHR color_space;
-				uint32_t present_queue_family = 0;
-				uint32_t graphics_queue_family = 0;
+				bool vsync = true;
 			};
 
 			back_buffer back_buffer;
@@ -41,9 +40,7 @@ namespace igpu
 
 		scoped_ptr< vulkan_command_buffer > raster_cmds() override;
 
-		scoped_ptr< vulkan_fence > raster_fence() const override;
-
-		scoped_ptr< vulkan_queue > raster_queue() const override;
+		scoped_ptr< vulkan_poset_fence > raster_fence() const override;
 
 		void end_raster() override;
 
@@ -66,7 +63,7 @@ namespace igpu
 			std::shared_ptr< vulkan_command_buffer > raster_cmds;
 			std::shared_ptr< vulkan_semaphore > aquire_sem;
 			std::shared_ptr< vulkan_semaphore > raster_sem;
-			std::shared_ptr< vulkan_fence > raster_fence;
+			std::shared_ptr< vulkan_poset_fence > raster_fence;
 		};
 
 		struct state

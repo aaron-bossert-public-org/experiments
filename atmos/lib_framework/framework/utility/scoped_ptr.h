@@ -223,7 +223,7 @@ public:
 	}
 
 private:
-	void* _ptr = nullptr;
+	T* _ptr = nullptr;
 };
 
 namespace std

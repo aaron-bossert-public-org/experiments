@@ -46,19 +46,19 @@ namespace igpu
 {
 	struct debug
 	{
-		struct callback_info
-		{
-			logging::severity severity;
-			const char* message;
-		};
-
-
 		static std::string to_string( VkResult );
 		static std::string to_string( VkImageLayout );
 		static std::string to_stages_string( VkPipelineStageFlags );
 		static std::string to_access_string( VkAccessFlags );
 
 #if ATMOS_DEBUG
+
+		struct callback_info
+		{
+			logging::severity severity;
+			const char* message;
+		};
+
 		static void validate(
 			const char* file,
 			int line,

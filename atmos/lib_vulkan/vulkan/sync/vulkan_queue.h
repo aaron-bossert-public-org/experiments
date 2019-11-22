@@ -13,7 +13,7 @@ namespace igpu
 	class vulkan_abandon_manager;
 	class vulkan_command_buffer;
 	class vulkan_command_pool;
-	class vulkan_fence;
+	class vulkan_poset_fence;
 
 	class vulkan_queue
 	{
@@ -49,7 +49,7 @@ namespace igpu
 			const vulkan_command_buffer* command_buffers,
 			uint32_t signal_count,
 			const VkSemaphore* p_signal_semaphores,
-			std::shared_ptr< vulkan_fence > fence = nullptr );
+			std::shared_ptr< vulkan_poset_fence > fence = nullptr );
 
 		VkResult submit_present( const VkPresentInfoKHR& present_info );
 

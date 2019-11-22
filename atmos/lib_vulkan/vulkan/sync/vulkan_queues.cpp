@@ -5,7 +5,7 @@
 #include "vulkan/context/vulkan_abandon_manager.h"
 #include "vulkan/defines/vulkan_includes.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
-#include "vulkan/sync/vulkan_fence.h"
+#include "vulkan/sync/vulkan_poset_fence.h"
 #include "vulkan/sync/vulkan_queue.h"
 #include "vulkan/texture/vulkan_image.h"
 

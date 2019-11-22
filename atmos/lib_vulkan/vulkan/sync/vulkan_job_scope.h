@@ -9,8 +9,8 @@ namespace igpu
 	struct vulkan_job_scope
 	{
 		decorator decorators = decorator::NOTHING;
-		VkPipelineStageFlagBits stages = ( VkPipelineStageFlagBits )0;
-		VkAccessFlagBits access = ( VkAccessFlagBits )0;
+		VkPipelineStageFlagBits stages = (VkPipelineStageFlagBits)0;
+		VkAccessFlagBits access = (VkAccessFlagBits)0;
 
 		bool validate() const;
 		bool is_empty() const;

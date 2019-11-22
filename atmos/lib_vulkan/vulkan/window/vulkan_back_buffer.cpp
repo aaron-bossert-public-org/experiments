@@ -4,7 +4,7 @@
 #include "vulkan/context/vulkan_context.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_command_pool.h"
-#include "vulkan/sync/vulkan_fence.h"
+#include "vulkan/sync/vulkan_poset_fence.h"
 #include "vulkan/sync/vulkan_queue.h"
 #include "vulkan/sync/vulkan_queues.h"
 #include "vulkan/sync/vulkan_semaphore.h"
@@ -99,15 +99,18 @@ namespace
 
 		VkPresentModeKHR best_mode = VK_PRESENT_MODE_FIFO_KHR;
 
-		for ( const auto& present_mode : present_modes )
+		if ( !cfg.back_buffer.vsync )
 		{
-			if ( present_mode == VK_PRESENT_MODE_MAILBOX_KHR )
+			for ( const auto& present_mode : present_modes )
 			{
-				return present_mode;
-			}
-			else if ( present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR )
-			{
-				best_mode = present_mode;
+				if ( present_mode == VK_PRESENT_MODE_MAILBOX_KHR )
+				{
+					return present_mode;
+				}
+				else if ( present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR )
+				{
+					best_mode = present_mode;
+				}
 			}
 		}
 
@@ -139,8 +142,8 @@ namespace
 			cfg.back_buffer.surface_caps.currentTransform;
 
 		uint32_t queue_family_indices[2] = {
-			cfg.back_buffer.present_queue_family,
-			cfg.back_buffer.graphics_queue_family,
+			cfg.vk.queues->cfg().graphics_queue->cfg().family_index,
+			cfg.vk.queues->cfg().present_queue->cfg().family_index,
 		};
 
 		if ( queue_family_indices[0] != queue_family_indices[1] )
@@ -245,7 +248,7 @@ void vulkan_back_buffer::begin_raster()
 
 	if ( !frame_state.raster_fence )
 	{
-		frame_state.raster_fence = vulkan_fence::make( {
+		frame_state.raster_fence = vulkan_poset_fence::make( {
 			_cfg.vk.device,
 		} );
 	}
@@ -295,14 +298,9 @@ scoped_ptr< vulkan_command_buffer > vulkan_back_buffer::raster_cmds()
 	return _st.swap_states[_st.swap_index].raster_cmds;
 }
 
-scoped_ptr< vulkan_fence > vulkan_back_buffer::raster_fence() const
+scoped_ptr< vulkan_poset_fence > vulkan_back_buffer::raster_fence() const
 {
 	return _st.swap_states[_st.swap_index].raster_fence;
-}
-
-scoped_ptr< vulkan_queue > vulkan_back_buffer::raster_queue() const
-{
-	return _cfg.vk.queues->cfg().graphics_queue;
 }
 
 void vulkan_back_buffer::end_raster()
@@ -353,8 +351,8 @@ VkResult vulkan_back_buffer::do_end_raster()
 		}
 	}
 
-	const auto& graphics_queue = _cfg.vk.queues->cfg().graphics_queue;
-	graphics_queue->submit_commands(
+	const auto& raster_queue = vulkan_draw_target::raster_queue();
+	raster_queue->submit_commands(
 		1,
 		&aquire_sem,
 		&aquire_stage,
@@ -387,7 +385,10 @@ VkResult vulkan_back_buffer::do_end_raster()
 
 	if ( const auto& fence = next_frame_state.raster_fence )
 	{
-		fence->wait( fence->submit_index() );
+		if ( !_cfg.back_buffer.vsync )
+		{
+			fence->wait_or_skip( fence->submit_index() );
+		}
 		VkFence vk_fence = fence->vk_fence();
 		vkResetFences( _cfg.vk.device, 1, &vk_fence );
 		vkResetCommandBuffer(

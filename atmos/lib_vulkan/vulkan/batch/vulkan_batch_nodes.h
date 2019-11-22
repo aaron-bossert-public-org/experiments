@@ -19,9 +19,9 @@ namespace igpu
 	class vulkan_batch_binding;
 	class vulkan_command_buffer;
 	class vulkan_draw_target;
-	class vulkan_fence;
 	class vulkan_job_attributes;
 	class vulkan_job_primitives;
+	class vulkan_poset_fence;
 	class vulkan_pipeline_cache;
 	class vulkan_graphics_pipeline;
 
@@ -34,7 +34,7 @@ namespace igpu
 	struct vulkan_batch_raster_state : batch::raster_state
 	{
 		scoped_ptr< vulkan_command_buffer > command_buffer;
-		scoped_ptr< vulkan_fence > fence;
+		scoped_ptr< vulkan_poset_fence > fence;
 
 		struct
 		{

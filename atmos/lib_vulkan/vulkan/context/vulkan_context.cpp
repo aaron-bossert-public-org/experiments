@@ -594,6 +594,7 @@ namespace
 			st.window->surface(),
 			surface_caps,
 			VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+			cfg.vsync,
 		} );
 	}
 }

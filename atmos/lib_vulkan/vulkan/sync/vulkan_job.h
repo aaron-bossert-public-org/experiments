@@ -11,8 +11,8 @@
 namespace igpu
 {
 	class vulkan_barrier_manager;
-	class vulkan_fence;
 	class vulkan_job_dependencies;
+	class vulkan_poset_fence;
 	class vulkan_queue;
 
 	class vulkan_job
@@ -24,7 +24,7 @@ namespace igpu
 
 			bool recording = false;
 			ptrdiff_t fence_submit_index = 0;
-			scoped_ptr< vulkan_fence > fence;
+			scoped_ptr< vulkan_poset_fence > fence;
 			std::vector< vulkan_job_dependencies* > recorded_dependencies;
 		};
 
@@ -39,7 +39,7 @@ namespace igpu
 		void wait_on_fence();
 
 	protected:
-		void fence( const scoped_ptr< vulkan_fence >& );
+		void fence( const scoped_ptr< vulkan_poset_fence >& );
 
 		virtual state& job_state() = 0;
 

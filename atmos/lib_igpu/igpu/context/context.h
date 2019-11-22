@@ -39,6 +39,7 @@ namespace igpu
 			std::string name;
 			color_format color_format = color_format::INT_R8G8B8A8;
 			depth_format depth_format = depth_format::D24S8;
+			bool vsync = true;
 			bool enable_validation
 #if ATMOS_DEBUG
 				= true;

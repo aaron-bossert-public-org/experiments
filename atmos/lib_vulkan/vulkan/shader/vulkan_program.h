@@ -16,7 +16,7 @@ namespace igpu
 	class batch;
 	class batch_binding;
 	class vulkan_context;
-	class vulkan_fence;
+	class vulkan_poset_fence;
 	class vulkan_fragment_shader;
 	class vulkan_vertex_shader;
 

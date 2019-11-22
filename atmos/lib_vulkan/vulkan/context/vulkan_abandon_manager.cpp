@@ -1,7 +1,7 @@
 
 #include "vulkan/context/vulkan_abandon_manager.h"
 
-#include "vulkan/sync/vulkan_fence.h"
+#include "vulkan/sync/vulkan_poset_fence.h"
 #include "vulkan/sync/vulkan_queue.h"
 
 #include "framework/logging/log.h"
@@ -235,7 +235,7 @@ void igpu::abandon<>(
 }
 
 void vulkan_abandon_manager::trigger_abandon(
-	const std::shared_ptr< vulkan_fence >& fence )
+	const std::shared_ptr< vulkan_poset_fence >& fence )
 {
 	if ( !fence )
 	{
@@ -301,7 +301,7 @@ vulkan_abandon_manager::~vulkan_abandon_manager()
 	while ( !_abandoned.empty() )
 	{
 		abandoned& abandon = _abandoned.front();
-		abandon.fence->wait( abandon.submit_index );
+		abandon.fence->wait_or_skip( abandon.submit_index );
 		for ( auto& category : abandon.categories )
 		{
 			while ( !category.payloads.empty() )

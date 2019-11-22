@@ -29,14 +29,16 @@ implement deferred upload. when uploading data to gpu, wait until resource to be
 
 move vulkan abandon manager. cpp/h to /sync/
 
-get release and relwithdebinfo working
-fix shutdown crashes
 
 
 //////////////////////////////////////
 (CURRENT PROGRESS POINT)
 //////////////////////////////////////
 
+
+
+get release and relwithdebinfo working
+fix shutdown crashes
 
 fix abandon manager so it separates objects by queue and respects queue execution progress 
 wrap ability to submit to vulkan_queue behind a member function so that fences can be automatically/periodically be inserted into the command stream. add ability to pass in fences, which will be inserted into the abandon queue. add a generation to fences so it is possible to tell if the fence was reset.

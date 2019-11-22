@@ -131,34 +131,6 @@ namespace
 	};
 }
 
-static debug::callback_info s_callback_info = {
-	logging::severity::VERBOSE,
-};
-
-#if ATMOS_DEBUG
-void debug::set_callback_info( callback_info info )
-{
-	s_callback_info = info;
-	logging::log_context(
-		s_scope.file,
-		s_scope.line,
-		s_scope.func,
-		s_callback_info.severity,
-		"%s\n\t%s",
-		s_scope.vk,
-		s_callback_info.message );
-}
-
-bool debug::consume_debug_break()
-{
-	bool should_break = logging::severity::DEBUG > s_callback_info.severity;
-
-	s_callback_info = {
-		logging::severity::VERBOSE,
-	};
-	return should_break;
-}
-
 std::string debug::to_string( VkResult result )
 {
 	switch ( result )
@@ -320,6 +292,36 @@ std::string debug::to_access_string( VkAccessFlags access )
 	}
 
 	return result;
+}
+
+
+#if ATMOS_DEBUG
+
+static debug::callback_info s_callback_info = {
+	logging::severity::VERBOSE,
+};
+
+void debug::set_callback_info( callback_info info )
+{
+	s_callback_info = info;
+	logging::log_context(
+		s_scope.file,
+		s_scope.line,
+		s_scope.func,
+		s_callback_info.severity,
+		"%s\n\t%s",
+		s_scope.vk,
+		s_callback_info.message );
+}
+
+bool debug::consume_debug_break()
+{
+	bool should_break = logging::severity::DEBUG > s_callback_info.severity;
+
+	s_callback_info = {
+		logging::severity::VERBOSE,
+	};
+	return should_break;
 }
 
 void debug::validate(

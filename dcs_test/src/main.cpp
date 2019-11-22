@@ -1,11 +1,26 @@
 
 #include "vulkan/context/vulkan_context.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <dcs_test/include/dcs_test.h>
 #include <thread>
 
+#if ATMOS_BUILD_WINDOWS
+
+#	include <windows.h>
+
+int WinMain(
+	HINSTANCE hInstance,
+	HINSTANCE hPrevInstance,
+	LPSTR lpCmdLine,
+	int nShowCmd )
+
+#else
+
 int main()
+
+#endif {
 {
 	igpu::vulkan_context::config context_cfg = {};
 	context_cfg.name = "test vulkan context";
@@ -17,7 +32,6 @@ int main()
 
 	while ( test->advance() )
 	{
-		std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
 	}
 	return EXIT_SUCCESS;
 }

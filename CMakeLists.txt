@@ -47,7 +47,6 @@ function(configure_target target source_folders)
     endif()
 
     target_compile_options(${target} PRIVATE "$<$<CONFIG:DEBUG>:/DATMOS_DEBUG=1>")
-    target_compile_options(${target} PRIVATE "$<$<CONFIG:RELWITHDEBINFO>:/DATMOS_DEBUG=1>")
 
     # add source folders to project, in MSVC this means addings filters corrisponding to each source folder.
     foreach(folder ${source_folders})
@@ -93,7 +92,7 @@ function(BUILD_EXE exe source_folders)
     
     set_sources(${exe} ${source_folders})
 
-    add_executable(${exe} ${sources})
+    add_executable(${exe} WIN32 ${sources})
 
     configure_target(${exe} ${source_folders})
 endfunction()

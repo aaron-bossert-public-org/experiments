@@ -3,8 +3,8 @@
 
 #include "vulkan/sync/vulkan_barrier_manager.h"
 #include "vulkan/sync/vulkan_dependency.h"
-#include "vulkan/sync/vulkan_fence.h"
 #include "vulkan/sync/vulkan_job_dependencies.h"
+#include "vulkan/sync/vulkan_poset_fence.h"
 
 using namespace igpu;
 
@@ -64,12 +64,12 @@ void vulkan_job::wait_on_fence()
 	auto& state = job_state();
 	if ( const auto& fence = state.fence )
 	{
-		fence->wait( state.fence_submit_index );
+		fence->wait_or_skip( state.fence_submit_index );
 	}
 
 	state.fence = nullptr;
 }
-void vulkan_job::fence( const scoped_ptr< vulkan_fence >& fence )
+void vulkan_job::fence( const scoped_ptr< vulkan_poset_fence >& fence )
 {
 	auto& state = job_state();
 	state.fence = fence;

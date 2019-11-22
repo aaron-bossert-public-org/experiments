@@ -7,7 +7,7 @@
 
 namespace igpu
 {
-	class vulkan_fence;
+	class vulkan_poset_fence;
 
 	class vulkan_primitives : public primitives
 	{

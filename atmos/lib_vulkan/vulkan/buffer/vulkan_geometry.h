@@ -10,7 +10,8 @@
 namespace igpu
 {
 	VkPrimitiveTopology to_vulkan_topology( topology topology );
-	class vulkan_fence;
+
+	class vulkan_poset_fence;
 
 	class vulkan_geometry : public geometry
 	{
