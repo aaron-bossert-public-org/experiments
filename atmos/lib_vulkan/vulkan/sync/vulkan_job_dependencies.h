@@ -14,6 +14,7 @@ namespace igpu
 	class vulkan_command_buffer;
 	class vulkan_dependency;
 	class vulkan_job;
+	class vulkan_staging_manager;
 
 	class vulkan_job_dependencies
 	{
@@ -23,13 +24,22 @@ namespace igpu
 			std::vector< vulkan_dependency > read_deps;
 			std::vector< vulkan_dependency > write_deps;
 			std::vector< vulkan_dependency* > read_hazards;
+			std::vector< vulkan_dependency* > staged_transfers;
 		};
 
 		bool is_activated();
 
+		void activate_staged_transfer( vulkan_dependency* );
+
 		void activate_read_hazard( vulkan_dependency* );
 
-		void record_dependencies( vulkan_barrier_manager* );
+		void record_transfers( vulkan_staging_manager* );
+
+		void record_barriers( vulkan_barrier_manager* );
+
+		bool validate_staged_transfers() const;
+
+		bool validate_transfers() const;
 
 		bool validate_hazards() const;
 

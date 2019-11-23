@@ -21,6 +21,7 @@ namespace igpu
 	class vulkan_draw_target;
 	class vulkan_job_attributes;
 	class vulkan_job_primitives;
+	class vulkan_managers;
 	class vulkan_poset_fence;
 	class vulkan_pipeline_cache;
 	class vulkan_graphics_pipeline;
@@ -193,6 +194,7 @@ namespace igpu
 		{
 			vulkan_context* context = nullptr;
 			size_t swap_count = 0;
+			scoped_ptr< vulkan_managers > managers;
 			scoped_ptr< vulkan_draw_target > draw_target;
 			scoped_ptr< vulkan_pipeline_cache > pipeline_cache;
 			std::shared_ptr< vulkan_primitives > primitives;

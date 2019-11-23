@@ -2,6 +2,7 @@
 
 #include "vulkan/context/vulkan_context.h"
 #include "vulkan/manager/vulkan_abandon_manager.h"
+#include "vulkan/manager/vulkan_managers.h"
 #include "vulkan/manager/vulkan_queue_manager.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_command_pool.h"
@@ -141,9 +142,10 @@ namespace
 		create_info.preTransform =
 			cfg.back_buffer.surface_caps.currentTransform;
 
+		const auto& queues = cfg.vk.managers->cfg().queues;
 		uint32_t queue_family_indices[2] = {
-			cfg.vk.queue_manager->cfg().graphics_queue->cfg().family_index,
-			cfg.vk.queue_manager->cfg().present_queue->cfg().family_index,
+			queues->cfg().graphics_queue->cfg().family_index,
+			queues->cfg().present_queue->cfg().family_index,
 		};
 
 		if ( queue_family_indices[0] != queue_family_indices[1] )
@@ -343,7 +345,8 @@ VkResult vulkan_back_buffer::do_end_raster()
 	// after triggering abandon, the next submit will generate a fence if one is
 	// not provided. Trigger abandon right before the graphics submit since it
 	// always provides a fence.
-	for ( const auto& queue : _cfg.vk.queue_manager->cfg().queue_family_table )
+	const auto& queues = _cfg.vk.managers->cfg().queues;
+	for ( const auto& queue : queues->cfg().queue_family_table )
 	{
 		if ( queue )
 		{
@@ -362,8 +365,7 @@ VkResult vulkan_back_buffer::do_end_raster()
 		1,
 		&raster_sem );
 	raster_queue->submit_pending( frame_state.raster_fence );
-	frame_state.submit_index =
-		frame_state.raster_fence->submit_index();
+	frame_state.submit_index = frame_state.raster_fence->submit_index();
 
 	VkPresentInfoKHR present_info = {};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -375,7 +377,7 @@ VkResult vulkan_back_buffer::do_end_raster()
 
 
 	VkResult present_errors =
-		_cfg.vk.queue_manager->cfg().present_queue->submit_present(
+		_cfg.vk.managers->cfg().queues->cfg().present_queue->submit_present(
 			present_info );
 
 	if ( present_errors )
@@ -422,8 +424,11 @@ std::unique_ptr< vulkan_back_buffer > vulkan_back_buffer::make(
 		cfg.back_buffer.color_space,
 	};
 
+	const auto& graphics_queue =
+		cfg.vk.managers->cfg().queues->cfg().graphics_queue;
+
 	st.command_pool = vulkan_command_pool::make( {
-		cfg.vk.queue_manager->cfg().graphics_queue,
+		graphics_queue,
 		VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
 	} );
 

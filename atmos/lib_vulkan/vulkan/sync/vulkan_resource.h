@@ -27,14 +27,14 @@ namespace igpu
 		void remove_dependency( const link& );
 
 
-		const vulkan_barrier_manager::record_ref& barrier_record_ref() const;
-
-		void barrier_record_ref( const vulkan_barrier_manager::record_ref& );
-
-
 		const vulkan_staging_manager::record_ref& staging_record_ref() const;
 
 		void staging_record_ref( const vulkan_staging_manager::record_ref& );
+
+
+		const vulkan_barrier_manager::record_ref& barrier_record_ref() const;
+
+		void barrier_record_ref( const vulkan_barrier_manager::record_ref& );
 
 
 		ptrdiff_t write_count() const;
@@ -54,6 +54,10 @@ namespace igpu
 		bool validate_barrier( VkImageLayout, const vulkan_job_scope& ) const;
 
 		virtual bool is_valid_layout( VkImageLayout ) const = 0;
+
+		virtual void push_transfer() = 0;
+
+		virtual void finalize_transfer() = 0;
 
 		virtual void update_descriptor_set(
 			VkDescriptorSet descriptor_set,
@@ -81,6 +85,10 @@ namespace igpu
 			vulkan_barrier_manager::record_ref barrier_record_ref;
 			vulkan_staging_manager::record_ref staging_record_ref;
 		};
+
+		void stage_transfer();
+
+		virtual bool has_staged_transfer() const = 0;
 
 		virtual vulkan_resource::state& resource_state() = 0;
 

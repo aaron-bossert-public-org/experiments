@@ -108,11 +108,6 @@ std::unique_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
 
 		read_deps.emplace_back( resource, unique.get(), layout, job_scope );
 
-		if ( unique->is_activated() )
-		{
-			unique->job().activate_dependencies( unique.get() );
-		}
-
 		return unique;
 	}
 

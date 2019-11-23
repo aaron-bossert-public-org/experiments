@@ -14,8 +14,7 @@
 namespace igpu
 {
 	class vulkan_buffer;
-	class vulkan_barrier_manager;
-	class vulkan_queue_manager;
+	class vulkan_managers;
 
 	class vulkan_image : public vulkan_resource
 	{
@@ -24,12 +23,13 @@ namespace igpu
 		{
 			VkPhysicalDevice physical_device = nullptr;
 			VkDevice device = nullptr;
-			scoped_ptr< vulkan_queue_manager > queue_manager;
+			scoped_ptr< vulkan_managers > managers;
 			memory_type memory = memory_type::UNDEFINED;
 			VkMemoryPropertyFlagBits memory_properties;
 			VkImageCreateInfo image_info = {};
 			VkImageViewCreateInfo view_info = {};
 			VkSamplerCreateInfo sampler_info = {};
+			bool generate_mipmaps = false;
 		};
 
 		vulkan_image( const config& cfg );
@@ -40,15 +40,16 @@ namespace igpu
 
 		const config& cfg() const;
 
+		bool is_empty() const;
+
 		VkImageView vk_image_view() const;
 
 		VkSampler vk_sampler() const;
 
+
 		void reset( const config* = nullptr );
 
-		void copy_from( vulkan_barrier_manager&, vulkan_buffer& );
-
-		void generate_mipmaps( vulkan_barrier_manager& );
+		void stage_copy( vulkan_buffer*, bool generate_mipmaps );
 
 		static bool can_generate_mipmaps(
 			VkPhysicalDevice,
@@ -60,9 +61,17 @@ namespace igpu
 		bool is_valid_layout( VkImageLayout ) const override;
 
 	private:
+		bool has_staged_transfer() const override;
+
 		vulkan_resource::state& resource_state() override;
 
 		const vulkan_resource::state& resource_state() const override;
+
+		bool validate_staged() const;
+
+		void push_transfer() override;
+
+		void finalize_transfer() override;
 
 		void update_descriptor_set(
 			VkDescriptorSet descriptor_set,
@@ -85,12 +94,17 @@ namespace igpu
 
 		struct
 		{
+			VkMemoryAllocateInfo info = {};
 			VkImage image = nullptr;
 			VkDeviceMemory device_memory = nullptr;
 			VkImageView image_view = nullptr;
 			VkSampler sampler = nullptr;
-
 		} _allocation;
+
+		struct
+		{
+			vulkan_buffer* buffer = nullptr;
+		} _staged;
 
 		vulkan_resource::state _resource_state;
 

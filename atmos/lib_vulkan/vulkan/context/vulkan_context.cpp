@@ -557,7 +557,7 @@ namespace
 				cfg.vk.physical_device,
 				cfg.vk.device,
 				cfg.vk.vma,
-				st.queue_manager,
+				st.managers,
 				to_vulkan_format( cfg.color_format ),
 				cfg.vk.sample_count,
 				VK_SHARING_MODE_EXCLUSIVE,
@@ -573,7 +573,7 @@ namespace
 				cfg.vk.physical_device,
 				cfg.vk.device,
 				cfg.vk.vma,
-				st.queue_manager,
+				st.managers,
 				to_vulkan_format( cfg.depth_format ),
 				cfg.vk.sample_count,
 				VK_SHARING_MODE_EXCLUSIVE,
@@ -586,8 +586,7 @@ namespace
 			std::static_pointer_cast< depth_buffer, vulkan_depth_buffer >(
 				depth ),
 			cfg.vk.device,
-			st.queue_manager,
-			st.barrier_manager,
+			st.managers,
 			color,
 			depth,
 			cfg.vk.swap_count,
@@ -643,8 +642,7 @@ std::unique_ptr< draw_target > vulkan_context::make(
 	return vulkan_draw_target::make( {
 		base_cfg,
 		_cfg.vk.device,
-		_st.queue_manager,
-		_st.barrier_manager,
+		_st.managers,
 		color,
 		depth,
 		_cfg.vk.swap_count,
@@ -659,7 +657,7 @@ std::unique_ptr< render_buffer > vulkan_context::make(
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
 		_cfg.vk.vma,
-		_st.queue_manager,
+		_st.managers,
 		to_vulkan_format( base_cfg.format ),
 		_cfg.vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
@@ -674,7 +672,7 @@ std::unique_ptr< render_texture2d > vulkan_context::make(
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
 		_cfg.vk.vma,
-		_st.queue_manager,
+		_st.managers,
 		to_vulkan_format( base_cfg.format ),
 		_cfg.vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
@@ -689,7 +687,7 @@ std::unique_ptr< depth_buffer > vulkan_context::make(
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
 		_cfg.vk.vma,
-		_st.queue_manager,
+		_st.managers,
 		to_vulkan_format( base_cfg.format ),
 		_cfg.vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
@@ -704,7 +702,7 @@ std::unique_ptr< depth_texture2d > vulkan_context::make(
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
 		_cfg.vk.vma,
-		_st.queue_manager,
+		_st.managers,
 		to_vulkan_format( base_cfg.format ),
 		_cfg.vk.sample_count,
 		VK_SHARING_MODE_EXCLUSIVE,
@@ -770,44 +768,38 @@ std::unique_ptr< geometry > vulkan_context::make( const geometry::config& cfg )
 std::unique_ptr< vertex_buffer > vulkan_context::make(
 	const vertex_buffer::config& cfg )
 {
-	return vulkan_vertex_buffer::make(
-		{
-			cfg,
-			_cfg.vk.device,
-			&_cfg.vk.physical_device_properties,
-			_cfg.vk.vma,
-		},
-		_st.queue_manager,
-		_st.barrier_manager );
+	return vulkan_vertex_buffer::make( {
+		cfg,
+		_cfg.vk.device,
+		&_cfg.vk.physical_device_properties,
+		_cfg.vk.vma,
+		_st.managers,
+	} );
 }
 
 std::unique_ptr< index_buffer > vulkan_context::make(
 	const index_buffer::config& base_cfg )
 {
-	return vulkan_index_buffer::make(
-		{
-			base_cfg,
-			_cfg.vk.device,
-			&_cfg.vk.physical_device_properties,
-			_cfg.vk.vma,
-			to_vulkan_format( base_cfg.format ),
-		},
-		_st.queue_manager,
-		_st.barrier_manager );
+	return vulkan_index_buffer::make( {
+		base_cfg,
+		_cfg.vk.device,
+		&_cfg.vk.physical_device_properties,
+		_cfg.vk.vma,
+		to_vulkan_format( base_cfg.format ),
+		_st.managers,
+	} );
 }
 
 std::unique_ptr< compute_buffer > vulkan_context::make(
 	const compute_buffer::config& cfg )
 {
-	return vulkan_compute_buffer::make(
-		{
-			cfg,
-			_cfg.vk.device,
-			&_cfg.vk.physical_device_properties,
-			_cfg.vk.vma,
-		},
-		_st.queue_manager,
-		_st.barrier_manager );
+	return vulkan_compute_buffer::make( {
+		cfg,
+		_cfg.vk.device,
+		&_cfg.vk.physical_device_properties,
+		_cfg.vk.vma,
+		_st.managers,
+	} );
 }
 
 std::unique_ptr< texture2d > vulkan_context::make(
@@ -819,8 +811,7 @@ std::unique_ptr< texture2d > vulkan_context::make(
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
 		_cfg.vk.vma,
-		_st.queue_manager,
-		_st.barrier_manager,
+		_st.managers,
 	} );
 }
 
@@ -844,6 +835,7 @@ std::unique_ptr< opaque_batch > vulkan_context::make(
 		base_cfg,
 		this,
 		_cfg.vk.swap_count,
+		_st.managers,
 		draw_target,
 		_st.pipeline_cache,
 		primitives,
@@ -864,6 +856,7 @@ std::unique_ptr< transparent_batch > vulkan_context::make(
 		base_cfg,
 		this,
 		_cfg.vk.swap_count,
+		_st.managers,
 		draw_target,
 		_st.pipeline_cache,
 		primitives,
@@ -1011,15 +1004,25 @@ std::unique_ptr< vulkan_context > vulkan_context::make(
 		st.queue_manager,
 	} );
 
+	st.staging_manager = vulkan_staging_manager::make( {
+		st.barrier_manager,
+		st.queue_manager,
+	} );
+
+	st.managers = vulkan_managers::make( {
+		st.barrier_manager,
+		st.queue_manager,
+		st.staging_manager,
+	} );
 
 	if ( !st.pipeline_cache )
 	{
 		LOG_CRITICAL( "failed to create pipeline_cache" );
 	}
-	// else if ( !st.managers )
-	//{
-	//	LOG_CRITICAL( "failed to create managers container" );
-	//}
+	else if ( !st.managers )
+	{
+		LOG_CRITICAL( "failed to create managers container" );
+	}
 	else
 	{
 		return std::unique_ptr< vulkan_context >(

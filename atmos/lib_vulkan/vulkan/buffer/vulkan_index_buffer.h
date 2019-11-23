@@ -12,9 +12,8 @@ namespace igpu
 {
 	VkIndexType to_vulkan_format( index_format format );
 
+	class vulkan_managers;
 	class vulkan_buffer;
-	class vulkan_barrier_manager;
-	class vulkan_queue_manager;
 
 	class vulkan_index_buffer : public index_buffer
 	{
@@ -27,6 +26,7 @@ namespace igpu
 				const VkPhysicalDeviceProperties* device_properties = nullptr;
 				VmaAllocator vma = nullptr;
 				VkIndexType index_type;
+				scoped_ptr< vulkan_managers > managers;
 			};
 
 			vulkan vk;
@@ -42,10 +42,7 @@ namespace igpu
 
 		virtual size_t byte_size() const = 0;
 
-		static std::unique_ptr< vulkan_index_buffer > make(
-			const config&,
-			const scoped_ptr< vulkan_queue_manager >&,
-			const scoped_ptr< vulkan_barrier_manager >& );
+		static std::unique_ptr< vulkan_index_buffer > make( const config& );
 
 	protected:
 		vulkan_index_buffer( const config& );

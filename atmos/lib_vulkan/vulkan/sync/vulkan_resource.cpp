@@ -16,25 +16,35 @@ vulkan_resource::link vulkan_resource::add_dependency(
 	{
 		LOG_CRITICAL( "dependency is null" );
 	}
-	else if ( dependency->job_scope().is_writable() )
-	{
-		auto& dependencies = resource_state().write_deps;
-
-		dependencies.push_front( dependency );
-		return dependencies.begin();
-	}
 	else
 	{
-		auto& dependencies = resource_state().read_deps;
-		auto& read_scope = resource_state().combined_read_scope;
-
-		if ( !read_scope.contains( dependency->job_scope() ) )
+		if ( has_staged_transfer() )
 		{
-			dependency->job_dependencies().activate_read_hazard( dependency );
+			dependency->job_dependencies().activate_staged_transfer(
+				dependency );
 		}
 
-		dependencies.push_front( dependency );
-		return dependencies.begin();
+		if ( dependency->job_scope().is_writable() )
+		{
+			auto& dependencies = resource_state().write_deps;
+
+			dependencies.push_front( dependency );
+			return dependencies.begin();
+		}
+		else
+		{
+			auto& dependencies = resource_state().read_deps;
+			auto& read_scope = resource_state().combined_read_scope;
+
+			if ( !read_scope.contains( dependency->job_scope() ) )
+			{
+				dependency->job_dependencies().activate_read_hazard(
+					dependency );
+			}
+
+			dependencies.push_front( dependency );
+			return dependencies.begin();
+		}
 	}
 
 	return {};
@@ -97,6 +107,22 @@ void vulkan_resource::wait_pending_jobs() const
 		for ( vulkan_dependency* dependency : *deps )
 		{
 			dependency->job_dependencies().wait_pending_job();
+		}
+	}
+}
+
+
+void vulkan_resource::stage_transfer()
+{
+	for ( auto* deps : {
+			  &resource_state().read_deps,
+			  &resource_state().write_deps,
+		  } )
+	{
+		for ( vulkan_dependency* dependency : *deps )
+		{
+			dependency->job_dependencies().activate_staged_transfer(
+				dependency );
 		}
 	}
 }

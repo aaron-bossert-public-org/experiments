@@ -22,6 +22,10 @@ namespace igpu
 
 		~vulkan_dependency();
 
+		bool is_staged() const;
+
+		void is_staged( bool );
+
 		bool is_hazard() const;
 
 		void is_hazard( bool );
@@ -39,6 +43,7 @@ namespace igpu
 		const vulkan_job_scope& job_scope() const;
 
 	private:
+		bool _is_staged = false;
 		bool _is_hazard = false;
 		vulkan_resource* const _resource;
 		vulkan_job_dependencies* const _job_dependencies;

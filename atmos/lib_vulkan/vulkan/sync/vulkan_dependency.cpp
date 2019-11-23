@@ -27,6 +27,16 @@ vulkan_dependency ::~vulkan_dependency()
 	_resource->remove_dependency( _link );
 }
 
+bool vulkan_dependency::is_staged() const
+{
+	return _is_staged;
+}
+
+void vulkan_dependency::is_staged( bool is_staged )
+{
+	_is_staged = is_staged;
+}
+
 bool vulkan_dependency::is_hazard() const
 {
 	return _is_hazard;

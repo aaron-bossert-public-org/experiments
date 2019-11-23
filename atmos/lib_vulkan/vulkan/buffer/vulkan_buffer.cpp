@@ -2,6 +2,7 @@
 #include "vulkan/buffer/vulkan_buffer.h"
 
 #include "vulkan/manager/vulkan_abandon_manager.h"
+#include "vulkan/manager/vulkan_managers.h"
 #include "vulkan/manager/vulkan_queue_manager.h"
 #include "vulkan/shader/vulkan_parameter.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
@@ -171,9 +172,6 @@ void vulkan_buffer::reset( size_t byte_size )
 
 		if ( byte_size )
 		{
-			_allocation.memory_size = {
-				byte_size,
-			};
 			_allocation.mapped_view = buffer_view< char >( byte_size, nullptr );
 
 			_mem_metric.add( byte_size );
@@ -182,29 +180,28 @@ void vulkan_buffer::reset( size_t byte_size )
 			vma_info.usage = _cfg.vk.vma_usage;
 			vma_info.flags = _cfg.vk.vma_flags;
 
-			VkBufferCreateInfo info = {};
-			info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-			info.size = byte_size;
-			info.usage = _cfg.vk.usage;
-			info.sharingMode = _cfg.vk.sharing_mode;
+			_allocation.info = {};
+			_allocation.info.size = byte_size;
+			_allocation.info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+			_allocation.info.size = byte_size;
+			_allocation.info.usage = _cfg.vk.usage;
+			_allocation.info.sharingMode = _cfg.vk.sharing_mode;
 
-			if ( info.size >
+			if ( _allocation.info.size >
 				 _cfg.vk.device_properties->limits.maxUniformBufferRange )
 			{
-				info.usage &=
+				_allocation.info.usage &=
 					~( VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |
 					   VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT );
 			}
 
 			vmaCreateBuffer(
 				_cfg.vk.vma,
-				&info,
+				&_allocation.info,
 				&vma_info,
 				&_allocation.buffer,
 				&_allocation.vma_allocation,
 				nullptr );
-
-			_allocation.memory_size = info.size;
 		}
 
 		vulkan_resource::reinitialized(
@@ -218,49 +215,23 @@ void vulkan_buffer::reset( size_t byte_size )
 	}
 }
 
-void vulkan_buffer::copy_from(
-	vulkan_barrier_manager& barrier_manager,
-	vulkan_buffer& other )
+void vulkan_buffer::stage_copy( vulkan_buffer* buffer )
 {
-	if ( _cfg.memory == memory_type::WRITE_COMBINED )
+	_staged = { buffer };
+
+	if ( !validate_staged() )
 	{
-		reset( other.mapped_view().byte_size() );
-
-		barrier_manager.push_frame_job(
-
-			_cfg.vk.queue_manager->cfg().transfer_queue,
-			{
-				frame_job_barrier(
-					&other,
-					decorator::READABLE,
-					VK_PIPELINE_STAGE_TRANSFER_BIT,
-					VK_ACCESS_TRANSFER_READ_BIT ),
-
-				frame_job_barrier(
-					this,
-					decorator::WRITABLE,
-					VK_PIPELINE_STAGE_TRANSFER_BIT,
-					VK_ACCESS_TRANSFER_WRITE_BIT ),
-			},
-			[&]( VkCommandBuffer command_buffer ) {
-				VkBufferCopy region = {};
-				region.srcOffset = 0;
-				region.dstOffset = 0;
-				region.size = (uint32_t)other.mapped_view().byte_size();
-
-
-				vkCmdCopyBuffer(
-					command_buffer,
-					other._allocation.buffer,
-					_allocation.buffer,
-					1,
-					&region );
-			} );
+		_staged = {};
 	}
 	else
 	{
-		LOG_CRITICAL( "%s not handled", to_string( _cfg.memory ).data() );
+		vulkan_resource::stage_transfer();
 	}
+}
+
+bool vulkan_buffer::has_staged_transfer() const
+{
+	return nullptr != _staged.buffer;
 }
 
 bool vulkan_buffer::is_valid_layout( VkImageLayout layout ) const
@@ -276,6 +247,36 @@ vulkan_resource::state& vulkan_buffer::resource_state()
 const vulkan_resource::state& vulkan_buffer::resource_state() const
 {
 	return _resource_state;
+}
+
+bool vulkan_buffer::validate_staged() const
+{
+	if ( !_allocation.buffer )
+	{
+		LOG_CRITICAL( "attempting to stage copy to empty image" );
+	}
+	else if ( !_staged.buffer )
+	{
+		LOG_CRITICAL( "buffer is null" );
+	}
+	else if ( !_staged.buffer->vk_buffer() )
+	{
+		LOG_CRITICAL( "buffer is empty" );
+	}
+	else if (
+		_staged.buffer->mapped_view().byte_size() < _allocation.info.size )
+	{
+		LOG_CRITICAL(
+			"buffer mapped memory size(%d) is less than image size(%d)",
+			(int)_staged.buffer->mapped_view().byte_size(),
+			(int)_allocation.info.size );
+	}
+	else
+	{
+		return true;
+	}
+
+	return false;
 }
 
 void vulkan_buffer::update_descriptor_set(
@@ -330,4 +331,71 @@ void vulkan_buffer::push_barrier(
 		src_scope.stages,
 		dst_scope.stages,
 		barrier );
+}
+
+void vulkan_buffer::push_transfer()
+{
+	if ( !validate_staged() )
+	{
+		return;
+	}
+
+	if ( _cfg.memory == memory_type::WRITE_COMBINED )
+	{
+		_cfg.vk.managers->cfg().staging->push_transfer(
+
+			{
+				frame_job_barrier(
+					_staged.buffer,
+					decorator::READABLE,
+					VK_PIPELINE_STAGE_TRANSFER_BIT,
+					VK_ACCESS_TRANSFER_READ_BIT ),
+
+				frame_job_barrier(
+					this,
+					decorator::WRITABLE,
+					VK_PIPELINE_STAGE_TRANSFER_BIT,
+					VK_ACCESS_TRANSFER_WRITE_BIT ),
+			},
+			[&]( VkCommandBuffer command_buffer ) {
+				VkBufferCopy region = {};
+				region.srcOffset = 0;
+				region.dstOffset = 0;
+				region.size =
+					(uint32_t)_staged.buffer->mapped_view().byte_size();
+
+
+				vkCmdCopyBuffer(
+					command_buffer,
+					_staged.buffer->_allocation.buffer,
+					_allocation.buffer,
+					1,
+					&region );
+			} );
+	}
+	else
+	{
+		LOG_CRITICAL(
+			"not implemented for type %s",
+			to_string( _cfg.memory ).data() );
+	}
+}
+
+void vulkan_buffer::finalize_transfer()
+{
+	if ( _staged.buffer )
+	{
+		if ( _staged.buffer->cfg().memory == memory_type::WRITE_COMBINED )
+		{
+			_staged.buffer->reset();
+		}
+		else
+		{
+			LOG_CRITICAL(
+				"not implemented for type %s",
+				to_string( _cfg.memory ).data() );
+		}
+
+		_staged = {};
+	}
 }

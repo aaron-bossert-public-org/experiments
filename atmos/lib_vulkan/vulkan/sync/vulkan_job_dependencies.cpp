@@ -11,7 +11,39 @@ bool vulkan_job_dependencies::is_activated()
 {
 	auto& state = job_dependency_state();
 
-	return state.read_hazards.size() || state.write_deps.size();
+	return state.staged_transfers.size() || state.read_hazards.size() ||
+		state.write_deps.size();
+}
+
+void vulkan_job_dependencies::activate_staged_transfer(
+	vulkan_dependency* dependency )
+{
+	auto& state = job_dependency_state();
+	auto was_activated = is_activated();
+
+	size_t write_index = ( size_t )( dependency - state.write_deps.data() );
+	size_t read_index = ( size_t )( dependency - state.read_deps.data() );
+
+	// use capacity here because we need to be able to activeate staged
+	// transfers while we are emplacing dependencies into read_deps and
+	// write_deps. also read_deps and write_deps do not get resized after they
+	// are initially filled.
+	if ( write_index >= state.write_deps.capacity() &&
+		 read_index >= state.read_deps.capacity() )
+	{
+		LOG_CRITICAL(
+			"resource dependency does not belong to these job dependencies" );
+	}
+	else if ( !dependency->is_staged() )
+	{
+		dependency->is_staged( true );
+		state.staged_transfers.push_back( dependency );
+
+		if ( !was_activated )
+		{
+			job().activate_dependencies( this );
+		}
+	}
 }
 
 void vulkan_job_dependencies::activate_read_hazard(
@@ -48,7 +80,19 @@ void vulkan_job_dependencies::activate_read_hazard(
 	}
 }
 
-void vulkan_job_dependencies::record_dependencies(
+void vulkan_job_dependencies::record_transfers(
+	vulkan_staging_manager* staging_manager )
+{
+	auto& state = job_dependency_state();
+	for ( auto& staged_transfer : state.staged_transfers )
+	{
+		staging_manager->record_transfer( &staged_transfer->resource() );
+	}
+
+	state.staged_transfers.clear();
+}
+
+void vulkan_job_dependencies::record_barriers(
 	vulkan_barrier_manager* barrier_manager )
 {
 	auto& state = job_dependency_state();

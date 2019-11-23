@@ -10,8 +10,7 @@
 namespace igpu
 {
 	class vulkan_buffer;
-	class vulkan_barrier_manager;
-	class vulkan_queue_manager;
+	class vulkan_managers;
 
 	class vulkan_vertex_buffer : public vertex_buffer
 	{
@@ -23,6 +22,7 @@ namespace igpu
 				VkDevice device = nullptr;
 				const VkPhysicalDeviceProperties* device_properties = nullptr;
 				VmaAllocator vma = nullptr;
+				scoped_ptr< vulkan_managers > managers;
 			};
 
 			vulkan vk;
@@ -36,10 +36,7 @@ namespace igpu
 
 		virtual size_t byte_size() const = 0;
 
-		static std::unique_ptr< vulkan_vertex_buffer > make(
-			const config&,
-			const scoped_ptr< vulkan_queue_manager >&,
-			const scoped_ptr< vulkan_barrier_manager >& );
+		static std::unique_ptr< vulkan_vertex_buffer > make( const config& );
 
 	protected:
 		vulkan_vertex_buffer( const config& );

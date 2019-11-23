@@ -3,7 +3,6 @@
 
 #include "vulkan/buffer/vulkan_buffer.h"
 #include "vulkan/defines/vulkan_includes.h"
-#include "vulkan/manager/vulkan_queue_manager.h"
 
 #include "framework/utility/buffer_view.h"
 using namespace igpu;
@@ -74,7 +73,7 @@ vulkan_staged_buffer::vulkan_staged_buffer( const config& cfg )
 		  cfg.device,
 		  cfg.device_properties,
 		  cfg.vma,
-		  cfg.queue_manager,
+		  cfg.managers,
 		  cpu_vma_usage( cfg.memory ),
 		  cpu_usage( cfg.memory ),
 	  } )
@@ -83,7 +82,7 @@ vulkan_staged_buffer::vulkan_staged_buffer( const config& cfg )
 		  cfg.device,
 		  cfg.device_properties,
 		  cfg.vma,
-		  cfg.queue_manager,
+		  cfg.managers,
 		  gpu_vma_usage( cfg.memory ),
 		  gpu_usage( cfg.memory ) | cfg.vk_usage_flags,
 	  } )
@@ -101,8 +100,9 @@ void vulkan_staged_buffer::map( buffer_view_base* out_buffer_view )
 void vulkan_staged_buffer::unmap()
 {
 	_staging_buffer.unmap();
-	_gpu_buffer.copy_from( *_cfg.barrier_manager, _staging_buffer );
-	_staging_buffer.reset();
+
+	_gpu_buffer.reset( _staging_buffer.mapped_view().byte_size() );
+	_gpu_buffer.stage_copy( &_staging_buffer );
 }
 
 vulkan_buffer& vulkan_staged_buffer::gpu_buffer()

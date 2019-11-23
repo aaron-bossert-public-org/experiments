@@ -18,9 +18,9 @@ namespace igpu
 	class vulkan_image;
 	class vulkan_poset_fence;
 	class vulkan_queue;
+	class vulkan_queue_manager;
 	class vulkan_resource;
 	class vulkan_semaphore;
-	class vulkan_queue_manager;
 
 	class vulkan_barrier_manager
 	{
@@ -53,11 +53,10 @@ namespace igpu
 			size_t record_index = SIZE_MAX;
 		};
 
-		void push_frame_job(
-			const scoped_ptr< vulkan_queue >,
-			const std::initializer_list< frame_job_barrier >&,
-			const std::function< void( VkCommandBuffer ) >& );
-
+		void submit_frame_job_barriers(
+			const scoped_ptr< vulkan_queue >&,
+			size_t job_barrier_count,
+			const frame_job_barrier* job_barriers );
 
 		void start_recording_barriers();
 
@@ -108,27 +107,4 @@ namespace igpu
 			_semaphore_family_tables;
 	};
 
-	class frame_job_barrier
-	{
-	public:
-		frame_job_barrier(
-			vulkan_buffer* buffer,
-			decorator decorators,
-			VkPipelineStageFlagBits stage,
-			VkAccessFlagBits access );
-
-		frame_job_barrier(
-			vulkan_image* image,
-			VkImageLayout layout_,
-			decorator decorators,
-			VkPipelineStageFlagBits stage,
-			VkAccessFlagBits access );
-
-	private:
-		friend class vulkan_barrier_manager;
-
-		vulkan_resource* resource = nullptr;
-		VkImageLayout layout = VK_IMAGE_LAYOUT_MAX_ENUM;
-		vulkan_job_scope job_scope;
-	};
 }

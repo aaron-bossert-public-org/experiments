@@ -4,6 +4,7 @@
 #include "vulkan/buffer/vulkan_buffer.h"
 #include "vulkan/manager/vulkan_abandon_manager.h"
 #include "vulkan/manager/vulkan_barrier_manager.h"
+#include "vulkan/manager/vulkan_managers.h"
 #include "vulkan/manager/vulkan_queue_manager.h"
 #include "vulkan/shader/vulkan_parameter.h"
 #include "vulkan/sync/vulkan_queue.h"
@@ -268,17 +269,19 @@ void vulkan_image::reset( const config* p_cfg )
 			_cfg = *p_cfg;
 
 			_allocation.image = create_image( _cfg );
-			auto alloc_info = create_alloc_info( _cfg, _allocation.image );
+			_allocation.info = create_alloc_info( _cfg, _allocation.image );
 
-			_allocation.device_memory =
-				create_device_memory( _cfg, alloc_info, _allocation.image );
+			_allocation.device_memory = create_device_memory(
+				_cfg,
+				_allocation.info,
+				_allocation.image );
 
 			_allocation.image_view =
 				create_image_view( _cfg, _allocation.image );
 
 			_allocation.sampler = create_sampler( _cfg );
 
-			_gpu_mem_metric.add( alloc_info.allocationSize );
+			_gpu_mem_metric.add( _allocation.info.allocationSize );
 		}
 
 		vulkan_resource::reinitialized(
@@ -294,136 +297,106 @@ void vulkan_image::reset( const config* p_cfg )
 	}
 }
 
-void vulkan_image::copy_from(
-	vulkan_barrier_manager& barrier_manager,
-	vulkan_buffer& buffer )
+void vulkan_image::stage_copy( vulkan_buffer* buffer, bool generate_mipmaps )
 {
-	if ( _cfg.memory == memory_type::WRITE_COMBINED )
+	_staged = { buffer };
+
+
+	if ( !validate_staged() )
 	{
-		barrier_manager.push_frame_job(
-			_cfg.queue_manager->cfg().transfer_queue,
-			{
-				frame_job_barrier(
-					&buffer,
-					decorator::READABLE,
-					VK_PIPELINE_STAGE_TRANSFER_BIT,
-					VK_ACCESS_TRANSFER_READ_BIT ),
-
-				frame_job_barrier(
-					this,
-					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-					decorator::WRITABLE,
-					VK_PIPELINE_STAGE_TRANSFER_BIT,
-					VK_ACCESS_TRANSFER_WRITE_BIT ),
-			},
-			[&]( VkCommandBuffer command_buffer ) {
-				VkBufferImageCopy region = {};
-				region.bufferOffset = 0;
-				region.bufferRowLength = 0;
-				region.bufferImageHeight = 0;
-				region.imageSubresource.aspectMask =
-					_cfg.view_info.subresourceRange.aspectMask;
-				region.imageSubresource.mipLevel = 0;
-				region.imageSubresource.baseArrayLayer = 0;
-				region.imageSubresource.layerCount = 1;
-				region.imageOffset = {};
-				region.imageExtent = _cfg.image_info.extent;
-
-
-				vkCmdCopyBufferToImage(
-					command_buffer,
-					buffer.vk_buffer(),
-					_allocation.image,
-					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-					1,
-					&region );
-			} );
+		_staged = {};
 	}
 	else
 	{
-		LOG_CRITICAL(
-			"not implemented for type %s",
-			to_string( _cfg.memory ).data() );
+		vulkan_resource::stage_transfer();
+		if ( generate_mipmaps )
+		{
+			if ( !can_generate_mipmaps(
+					 _cfg.physical_device,
+					 _cfg.image_info.format,
+					 _cfg.image_info.tiling ) )
+			{
+				LOG_CRITICAL(
+					"cannot generate mipmaos because vk format %d does not "
+					"support "
+					"blitting for tiling mode %d",
+					(int)_cfg.image_info.format,
+					(int)_cfg.image_info.tiling );
+			}
+			else
+			{
+				_cfg.managers->push_frame_job(
+
+					_cfg.managers->cfg().queues->cfg().graphics_queue,
+					{
+						frame_job_barrier(
+							this,
+							VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+							decorator::WRITABLE,
+							VK_PIPELINE_STAGE_TRANSFER_BIT,
+							VK_ACCESS_TRANSFER_WRITE_BIT ),
+					},
+					[&]( VkCommandBuffer command_buffer ) {
+						int32_t mip_width = _cfg.image_info.extent.width;
+						int32_t mip_height = _cfg.image_info.extent.height;
+
+						uint32_t mip_count =
+							_cfg.view_info.subresourceRange.levelCount;
+
+						for ( uint32_t i = 1; i < mip_count; ++i )
+						{
+							mip_transfer_barrier(
+								command_buffer,
+								_allocation.image,
+								i - 1,
+								decorator::READABLE );
+
+							VkImageBlit blit = {};
+
+							blit.srcSubresource.aspectMask =
+								VK_IMAGE_ASPECT_COLOR_BIT;
+							blit.srcSubresource.mipLevel = i - 1;
+							blit.srcSubresource.baseArrayLayer = 0;
+							blit.srcSubresource.layerCount = 1;
+							blit.srcOffsets[0] = {};
+							blit.srcOffsets[1] = { mip_width, mip_height, 1 };
+
+							mip_width = std::max( 1, mip_width / 2 );
+							mip_height = std::max( 1, mip_height / 2 );
+
+							blit.dstSubresource.aspectMask =
+								VK_IMAGE_ASPECT_COLOR_BIT;
+							blit.dstSubresource.mipLevel = i;
+							blit.dstSubresource.baseArrayLayer = 0;
+							blit.dstSubresource.layerCount = 1;
+							blit.dstOffsets[0] = {};
+							blit.dstOffsets[1] = { mip_width, mip_height, 1 };
+
+							vkCmdBlitImage(
+								command_buffer,
+								_allocation.image,
+								VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+								_allocation.image,
+								VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+								1,
+								&blit,
+								VK_FILTER_LINEAR );
+
+							mip_transfer_barrier(
+								command_buffer,
+								_allocation.image,
+								i - 1,
+								decorator::WRITABLE );
+						}
+					} );
+			}
+		}
 	}
 }
 
-void vulkan_image::generate_mipmaps( vulkan_barrier_manager& barrier_manager )
+bool vulkan_image::has_staged_transfer() const
 {
-	if ( !can_generate_mipmaps(
-			 _cfg.physical_device,
-			 _cfg.image_info.format,
-			 _cfg.image_info.tiling ) )
-	{
-		LOG_CRITICAL(
-			"cannot generate mipmaos because vk format %d does not support "
-			"blitting for tiling mode %d",
-			(int)_cfg.image_info.format,
-			(int)_cfg.image_info.tiling );
-	}
-	else
-	{
-		barrier_manager.push_frame_job(
-
-			_cfg.queue_manager->cfg().graphics_queue,
-			{
-				frame_job_barrier(
-					this,
-					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-					decorator::WRITABLE,
-					VK_PIPELINE_STAGE_TRANSFER_BIT,
-					VK_ACCESS_TRANSFER_WRITE_BIT ),
-			},
-			[&]( VkCommandBuffer command_buffer ) {
-				int32_t mip_width = _cfg.image_info.extent.width;
-				int32_t mip_height = _cfg.image_info.extent.height;
-
-				uint32_t mip_count = _cfg.view_info.subresourceRange.levelCount;
-
-				for ( uint32_t i = 1; i < mip_count; ++i )
-				{
-					mip_transfer_barrier(
-						command_buffer,
-						_allocation.image,
-						i - 1,
-						decorator::READABLE );
-
-					VkImageBlit blit = {};
-
-					blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-					blit.srcSubresource.mipLevel = i - 1;
-					blit.srcSubresource.baseArrayLayer = 0;
-					blit.srcSubresource.layerCount = 1;
-					blit.srcOffsets[0] = {};
-					blit.srcOffsets[1] = { mip_width, mip_height, 1 };
-
-					mip_width = std::max( 1, mip_width / 2 );
-					mip_height = std::max( 1, mip_height / 2 );
-
-					blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-					blit.dstSubresource.mipLevel = i;
-					blit.dstSubresource.baseArrayLayer = 0;
-					blit.dstSubresource.layerCount = 1;
-					blit.dstOffsets[0] = {};
-					blit.dstOffsets[1] = { mip_width, mip_height, 1 };
-
-					vkCmdBlitImage(
-						command_buffer,
-						_allocation.image,
-						VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-						_allocation.image,
-						VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-						1,
-						&blit,
-						VK_FILTER_LINEAR );
-
-					mip_transfer_barrier(
-						command_buffer,
-						_allocation.image,
-						i - 1,
-						decorator::WRITABLE );
-				}
-			} );
-	}
+	return nullptr != _staged.buffer;
 }
 
 bool vulkan_image::can_generate_mipmaps(
@@ -546,6 +519,37 @@ const vulkan_resource::state& vulkan_image::resource_state() const
 	return _resource_state;
 }
 
+bool vulkan_image::validate_staged() const
+{
+	if ( !_allocation.image )
+	{
+		LOG_CRITICAL( "attempting to stage copy to empty image" );
+	}
+	else if ( !_staged.buffer )
+	{
+		LOG_CRITICAL( "buffer is null" );
+	}
+	else if ( !_staged.buffer->vk_buffer() )
+	{
+		LOG_CRITICAL( "buffer is empty" );
+	}
+	else if (
+		_staged.buffer->mapped_view().byte_size() >
+		_allocation.info.allocationSize )
+	{
+		LOG_CRITICAL(
+			"buffer mapped memory size(%d) is greater than image size(%d)",
+			(int)_staged.buffer->mapped_view().byte_size(),
+			(int)_allocation.info.allocationSize );
+	}
+	else
+	{
+		return true;
+	}
+
+	return false;
+}
+
 void vulkan_image::update_descriptor_set(
 	VkDescriptorSet descriptor_set,
 	const vulkan_parameter::config& parameter_config,
@@ -598,6 +602,79 @@ void vulkan_image::push_barrier(
 		src_scope.stages,
 		dst_scope.stages,
 		barrier );
+}
+
+void vulkan_image::push_transfer()
+{
+	if ( !validate_staged() )
+	{
+		return;
+	}
+
+	if ( _cfg.memory == memory_type::WRITE_COMBINED )
+	{
+		_cfg.managers->cfg().staging->push_transfer(
+			{
+				frame_job_barrier(
+					_staged.buffer,
+					decorator::READABLE,
+					VK_PIPELINE_STAGE_TRANSFER_BIT,
+					VK_ACCESS_TRANSFER_READ_BIT ),
+
+				frame_job_barrier(
+					this,
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+					decorator::WRITABLE,
+					VK_PIPELINE_STAGE_TRANSFER_BIT,
+					VK_ACCESS_TRANSFER_WRITE_BIT ),
+			},
+			[&]( VkCommandBuffer command_buffer ) {
+				VkBufferImageCopy region = {};
+				region.bufferOffset = 0;
+				region.bufferRowLength = 0;
+				region.bufferImageHeight = 0;
+				region.imageSubresource.aspectMask =
+					_cfg.view_info.subresourceRange.aspectMask;
+				region.imageSubresource.mipLevel = 0;
+				region.imageSubresource.baseArrayLayer = 0;
+				region.imageSubresource.layerCount = 1;
+				region.imageOffset = {};
+				region.imageExtent = _cfg.image_info.extent;
+
+
+				vkCmdCopyBufferToImage(
+					command_buffer,
+					_staged.buffer->vk_buffer(),
+					_allocation.image,
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+					1,
+					&region );
+			} );
+	}
+	else
+	{
+		LOG_CRITICAL(
+			"not implemented for type %s",
+			to_string( _cfg.memory ).data() );
+	}
+}
+
+void vulkan_image::finalize_transfer()
+{
+	if ( _staged.buffer )
+	{
+		if ( _staged.buffer->cfg().memory == memory_type::WRITE_COMBINED )
+		{
+			_staged.buffer->reset();
+		}
+		else
+		{
+			LOG_CRITICAL(
+				"not implemented for type %s",
+				to_string( _cfg.memory ).data() );
+		}
+		_staged = {};
+	}
 }
 
 std::unique_ptr< vulkan_image > vulkan_image::make( const config& cfg )

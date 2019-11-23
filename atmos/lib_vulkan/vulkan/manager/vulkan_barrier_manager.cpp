@@ -2,6 +2,7 @@
 #include "vulkan/manager/vulkan_barrier_manager.h"
 
 #include "vulkan/buffer/vulkan_buffer.h"
+#include "vulkan/manager/vulkan_managers.h"
 #include "vulkan/manager/vulkan_queue_manager.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_dependency.h"
@@ -14,8 +15,9 @@
 
 #include <array>
 
-using namespace igpu;
+#define ATMOS_DEBUG_BARRIERS ATMOS_DEBUG
 
+using namespace igpu;
 
 namespace
 {
@@ -56,23 +58,36 @@ namespace
 	}
 }
 
-void vulkan_barrier_manager::push_frame_job(
-	const scoped_ptr< vulkan_queue > queue,
-	const std::initializer_list< frame_job_barrier >& frame_job_barriers,
-	const std::function< void( VkCommandBuffer ) >& builder )
+void vulkan_barrier_manager::submit_frame_job_barriers(
+	const scoped_ptr< vulkan_queue >& queue,
+	size_t job_barrier_count,
+	const frame_job_barrier* job_barriers )
 {
 	start_recording_barriers();
 
-	for ( const auto& barrier : frame_job_barriers )
+	for ( const auto* job_barrier = job_barriers;
+		  job_barrier < job_barriers + job_barrier_count;
+		  ++job_barrier )
 	{
-		record_barrier( barrier.resource, barrier.layout, barrier.job_scope );
+		record_barrier(
+			job_barrier->resource(),
+			job_barrier->layout(),
+			job_barrier->job_scope() );
 	}
 
 	push_recorded_barriers( queue );
 
-	push_one_cb( queue, builder );
+#if ATMOS_DEBUG_BARRIERS
+	for ( const auto* job_barrier = job_barriers;
+		  job_barrier < job_barriers + job_barrier_count;
+		  ++job_barrier )
+	{
+		job_barrier->resource()->validate_barrier(
+			job_barrier->layout(),
+			job_barrier->job_scope() );
+	}
+#endif
 }
-
 
 void vulkan_barrier_manager::start_recording_barriers()
 {
@@ -438,29 +453,4 @@ vulkan_barrier_manager::record* vulkan_barrier_manager::resolve(
 	}
 
 	return nullptr;
-}
-
-frame_job_barrier::frame_job_barrier(
-	vulkan_buffer* buffer,
-	decorator decorators,
-	VkPipelineStageFlagBits stage,
-	VkAccessFlagBits access )
-	: resource( buffer )
-	, job_scope( { decorators, stage, access } )
-{
-	ASSERT_CONTEXT( job_scope.validate() );
-}
-
-frame_job_barrier::frame_job_barrier(
-	vulkan_image* image,
-	VkImageLayout layout_,
-	decorator decorators,
-	VkPipelineStageFlagBits stage,
-	VkAccessFlagBits access )
-	: resource( image )
-	, layout( layout_ )
-	, job_scope( { decorators, stage, access } )
-{
-	ASSERT_CONTEXT( image->is_valid_layout( layout ) );
-	ASSERT_CONTEXT( job_scope.validate() );
 }

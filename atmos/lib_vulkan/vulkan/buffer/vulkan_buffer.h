@@ -14,7 +14,7 @@
 
 namespace igpu
 {
-	class vulkan_queue_manager;
+	class vulkan_managers;
 
 	class vulkan_buffer
 		: public buffer
@@ -28,7 +28,7 @@ namespace igpu
 				VkDevice device = nullptr;
 				const VkPhysicalDeviceProperties* device_properties;
 				VmaAllocator vma = nullptr;
-				scoped_ptr< vulkan_queue_manager > queue_manager;
+				scoped_ptr< vulkan_managers > managers;
 				VmaMemoryUsage vma_usage;
 				VkBufferUsageFlags usage;
 				VmaAllocationCreateFlagBits vma_flags = {};
@@ -55,14 +55,22 @@ namespace igpu
 
 		void reset( size_t = 0 );
 
-		void copy_from( vulkan_barrier_manager&, vulkan_buffer& );
+		void stage_copy( vulkan_buffer* );
 
 	private:
+		bool has_staged_transfer() const override;
+
 		bool is_valid_layout( VkImageLayout ) const override;
 
 		vulkan_resource::state& resource_state() override;
 
 		const vulkan_resource::state& resource_state() const override;
+
+		bool validate_staged() const;
+
+		void push_transfer() override;
+
+		void finalize_transfer() override;
 
 		void update_descriptor_set(
 			VkDescriptorSet descriptor_set,
@@ -83,11 +91,16 @@ namespace igpu
 
 		struct
 		{
-			size_t memory_size = 0;
+			VkBufferCreateInfo info = {};
 			buffer_view< char > mapped_view = {};
 			VkBuffer buffer = nullptr;
 			VmaAllocation vma_allocation = nullptr;
 		} _allocation;
+
+		struct
+		{
+			vulkan_buffer* buffer = nullptr;
+		} _staged;
 
 		vulkan_resource::state _resource_state;
 

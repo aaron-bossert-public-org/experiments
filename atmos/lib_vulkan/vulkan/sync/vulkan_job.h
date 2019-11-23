@@ -10,10 +10,12 @@
 
 namespace igpu
 {
-	class vulkan_barrier_manager;
 	class vulkan_job_dependencies;
+	class vulkan_barrier_manager;
+	class vulkan_managers;
 	class vulkan_poset_fence;
 	class vulkan_queue;
+	class vulkan_staging_manager;
 
 	class vulkan_job
 	{
@@ -31,13 +33,19 @@ namespace igpu
 
 		void deactivate_dependencies( vulkan_job_dependencies* );
 
-		void submit_activated_dependency_barriers(
+		void submit_activated_dependencies(
 			const scoped_ptr< vulkan_queue >&,
-			vulkan_barrier_manager* );
+			vulkan_managers* );
 
 		void wait_on_fence();
 
 	protected:
+		void submit_staged_copies( vulkan_staging_manager* );
+
+		void submit_dependency_barriers(
+			const scoped_ptr< vulkan_queue >&,
+			vulkan_barrier_manager* );
+
 		void fence( const scoped_ptr< vulkan_poset_fence >& );
 
 		virtual state& job_state() = 0;

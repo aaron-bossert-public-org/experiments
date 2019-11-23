@@ -69,7 +69,7 @@ void vulkan_queue::trigger_abandon()
 void vulkan_queue::push_command( vulkan_command_buffer& command_buffer )
 {
 	vulkan_command_buffer* p_command_buffer = &command_buffer;
-	push_commands( 0, nullptr, nullptr, 0, &p_command_buffer, 0, nullptr );
+	push_commands( 0, nullptr, nullptr, 1, &p_command_buffer, 0, nullptr );
 }
 
 void vulkan_queue::push_commands(

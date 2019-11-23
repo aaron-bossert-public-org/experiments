@@ -11,8 +11,6 @@
 
 namespace igpu
 {
-	class vulkan_queue_manager;
-
 	class vulkan_staged_texture2d : public vulkan_texture2d
 	{
 	public:
