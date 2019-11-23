@@ -2,6 +2,7 @@
 #include "vulkan/buffer/vulkan_buffer.h"
 
 #include "vulkan/manager/vulkan_abandon_manager.h"
+#include "vulkan/manager/vulkan_managers.h"
 #include "vulkan/manager/vulkan_queue_manager.h"
 #include "vulkan/shader/vulkan_parameter.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
@@ -218,17 +219,15 @@ void vulkan_buffer::reset( size_t byte_size )
 	}
 }
 
-void vulkan_buffer::copy_from(
-	vulkan_barrier_manager& barrier_manager,
-	vulkan_buffer& other )
+void vulkan_buffer::copy_from( vulkan_buffer& other )
 {
 	if ( _cfg.memory == memory_type::WRITE_COMBINED )
 	{
 		reset( other.mapped_view().byte_size() );
 
-		barrier_manager.submit_frame_job(
+		_cfg.vk.managers->cfg().barrier->submit_frame_job(
 
-			_cfg.vk.queue_manager->cfg().transfer_queue,
+			_cfg.vk.managers->cfg().queues->cfg().transfer_queue,
 			{
 				frame_job_barrier(
 					&other,

@@ -3,7 +3,7 @@
 
 #include "vulkan/buffer/vulkan_buffer.h"
 #include "vulkan/manager/vulkan_abandon_manager.h"
-#include "vulkan/manager/vulkan_barrier_manager.h"
+#include "vulkan/manager/vulkan_managers.h"
 #include "vulkan/manager/vulkan_queue_manager.h"
 #include "vulkan/shader/vulkan_parameter.h"
 
@@ -293,14 +293,12 @@ void vulkan_image::reset( const config* p_cfg )
 	}
 }
 
-void vulkan_image::copy_from(
-	vulkan_barrier_manager& barrier_manager,
-	vulkan_buffer& buffer )
+void vulkan_image::copy_from( vulkan_buffer& buffer )
 {
 	if ( _cfg.memory == memory_type::WRITE_COMBINED )
 	{
-		barrier_manager.submit_frame_job(
-			_cfg.queue_manager->cfg().transfer_queue,
+		_cfg.managers->cfg().barrier->submit_frame_job(
+			_cfg.managers->cfg().queues->cfg().transfer_queue,
 			{
 				frame_job_barrier(
 					&buffer,
@@ -346,7 +344,7 @@ void vulkan_image::copy_from(
 	}
 }
 
-void vulkan_image::generate_mipmaps( vulkan_barrier_manager& barrier_manager )
+void vulkan_image::generate_mipmaps()
 {
 	if ( !can_generate_mipmaps(
 			 _cfg.physical_device,
@@ -361,9 +359,9 @@ void vulkan_image::generate_mipmaps( vulkan_barrier_manager& barrier_manager )
 	}
 	else
 	{
-		barrier_manager.submit_frame_job(
+		_cfg.managers->cfg().barrier->submit_frame_job(
 
-			_cfg.queue_manager->cfg().graphics_queue,
+			_cfg.managers->cfg().queues->cfg().graphics_queue,
 			{
 				frame_job_barrier(
 					this,

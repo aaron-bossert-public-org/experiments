@@ -25,10 +25,6 @@ std::unique_ptr< vulkan_managers > vulkan_managers::make( const config& cfg )
 	{
 		LOG_CRITICAL( "failed to create vulkan_queue_manager" );
 	}
-	else if ( !cfg.staging )
-	{
-		LOG_CRITICAL( "failed to create vulkan_staging_manager" );
-	}
 	else
 	{
 		return std::unique_ptr< vulkan_managers >( new vulkan_managers( cfg ) );

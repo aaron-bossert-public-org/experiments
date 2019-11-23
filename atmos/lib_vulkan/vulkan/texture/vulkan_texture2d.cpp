@@ -1,7 +1,6 @@
 
 #include "vulkan/texture/vulkan_texture2d.h"
 
-#include "vulkan/manager/vulkan_queue_manager.h"
 #include "vulkan/texture/vulkan_staged_texture2d.h"
 
 using namespace igpu;

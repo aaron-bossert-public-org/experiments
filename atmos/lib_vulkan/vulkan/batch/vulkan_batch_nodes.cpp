@@ -7,7 +7,6 @@
 #include "vulkan/buffer/vulkan_compute_buffer.h"
 #include "vulkan/buffer/vulkan_index_buffer.h"
 #include "vulkan/context/vulkan_context.h"
-#include "vulkan/manager/vulkan_queue_manager.h"
 #include "vulkan/shader/vulkan_graphics_pipeline.h"
 #include "vulkan/shader/vulkan_pipeline_cache.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
@@ -272,7 +271,7 @@ void vulkan_root_batch::start_raster(
 
 	vulkan_job::submit_activated_dependency_barriers(
 		_vk.draw_target->raster_queue(),
-		_vk.draw_target->cfg().vk.barrier_manager.get() );
+		_vk.draw_target->cfg().vk.managers.get() );
 }
 
 void vulkan_root_batch::stop_raster()

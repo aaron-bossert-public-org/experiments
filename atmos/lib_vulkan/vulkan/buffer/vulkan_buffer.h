@@ -14,7 +14,7 @@
 
 namespace igpu
 {
-	class vulkan_queue_manager;
+	class vulkan_managers;
 
 	class vulkan_buffer
 		: public buffer
@@ -28,7 +28,7 @@ namespace igpu
 				VkDevice device = nullptr;
 				const VkPhysicalDeviceProperties* device_properties;
 				VmaAllocator vma = nullptr;
-				scoped_ptr< vulkan_queue_manager > queue_manager;
+				scoped_ptr< vulkan_managers > managers;
 				VmaMemoryUsage vma_usage;
 				VkBufferUsageFlags usage;
 				VmaAllocationCreateFlagBits vma_flags = {};
@@ -55,7 +55,7 @@ namespace igpu
 
 		void reset( size_t = 0 );
 
-		void copy_from( vulkan_barrier_manager&, vulkan_buffer& );
+		void copy_from( vulkan_buffer& );
 
 	private:
 		bool is_valid_layout( VkImageLayout ) const override;

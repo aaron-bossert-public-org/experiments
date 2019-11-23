@@ -19,16 +19,29 @@ remove raw vulkan type accessors (vulkan_context->device etc...)
 
 implement composite context for profiling, constructs profiler_texture2d which owns vulkan_texture and forward all calls to wrapping them with callstack timers
 
-implement implicit readback. when mapping a buffer, check to see if there are pending write jobs from the gpu side. sync and copy to cpuside if so. if buffer is peresistent it needs to wait for the last copy to complete.
 
-add support for compute shaders
+-- implement readback.
+add function to check if job has requested writable access to buffer
+add readback() function that shares same parameters as map but also requires 'decorator' to tell if readable/writable
+dispatch copy command to graphics queue to copy to staging buffer
+add a fence to make sure job completes 
+readback has template overload that requores buffer_view to be const if not writable 
 
+---implement preserved memory type for vulkan_buffer and vulkan image
+add a wait on transfer fence to map(), it can be owned by the staging manager
+dont reallocate unless there is a resize required, this goes for map/unmap as well as staged transfer
+when reallocaing for map,  copy old contents into new buffer 
+make sure memory has optimal flags for non write combining
+switch particle example to use a preserved buffer
 
-implement deferred upload. when uploading data to gpu, wait until resource to be used by a readable job before uploading, and record/barrier all transfer together for a job into one command buffer.
+---add support for compute shaders
+port cpu particle example to use this persistent storage to read and update particles each frame
+compute batching system? need to add write barriers between compute jobs writing to the same resource, probably need to sort compute jobs topologically
 
-implement actual write combining. buffers smaller than some threshold all share the same 10 mb staging ring buffer. keep fence to track each queues progress 
+replace passing of barrier and queue managers with vulkan managers
+remove extra forward declarations of barrier manager/queue manager
+move submit frame job into vulkan managers
 
-implement preserved memory type for vulkan_buffer and vulkan image
 
 
 //////////////////////////////////////

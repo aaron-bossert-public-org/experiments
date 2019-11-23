@@ -10,8 +10,9 @@
 
 namespace igpu
 {
-	class vulkan_barrier_manager;
 	class vulkan_job_dependencies;
+	class vulkan_barrier_manager;
+	class vulkan_managers;
 	class vulkan_poset_fence;
 	class vulkan_queue;
 
@@ -33,7 +34,7 @@ namespace igpu
 
 		void submit_activated_dependency_barriers(
 			const scoped_ptr< vulkan_queue >&,
-			vulkan_barrier_manager* );
+			vulkan_managers* );
 
 		void wait_on_fence();
 

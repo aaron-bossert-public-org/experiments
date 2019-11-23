@@ -2,6 +2,7 @@
 #include "vulkan/sync/vulkan_job.h"
 
 #include "vulkan/manager/vulkan_barrier_manager.h"
+#include "vulkan/manager/vulkan_managers.h"
 #include "vulkan/sync/vulkan_dependency.h"
 #include "vulkan/sync/vulkan_job_dependencies.h"
 #include "vulkan/sync/vulkan_poset_fence.h"
@@ -35,10 +36,11 @@ void vulkan_job::deactivate_dependencies(
 
 void vulkan_job::submit_activated_dependency_barriers(
 	const scoped_ptr< vulkan_queue >& queue,
-	vulkan_barrier_manager* barrier_manager )
+	vulkan_managers* managers )
 {
 	auto& state = job_state();
 	auto& activated_deps = state.activated_dependencies;
+	auto& barrier_manager = managers->cfg().barrier;
 
 #if ATMOS_DEBUG_BARRIERS
 	for ( auto* dependencies : activated_deps )
@@ -51,7 +53,7 @@ void vulkan_job::submit_activated_dependency_barriers(
 
 	for ( auto* dependencies : activated_deps )
 	{
-		dependencies->record_dependencies( barrier_manager );
+		dependencies->record_dependencies( barrier_manager.get() );
 	}
 
 	barrier_manager->submit_recorded_barriers( queue );

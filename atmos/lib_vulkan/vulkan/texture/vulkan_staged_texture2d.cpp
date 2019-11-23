@@ -2,7 +2,7 @@
 #include "vulkan/texture/vulkan_staged_texture2d.h"
 
 #include "vulkan/buffer/vulkan_buffer.h"
-#include "vulkan/manager/vulkan_queue_manager.h"
+#include "vulkan/manager/vulkan_managers.h"
 #include "vulkan/texture/vulkan_image.h"
 #include "vulkan/texture/vulkan_image_t.h"
 
@@ -20,7 +20,7 @@ vulkan_staged_texture2d::vulkan_staged_texture2d( const config& cfg )
 		  cfg.vk.device,
 		  cfg.vk.device_properties,
 		  cfg.vk.vma,
-		  cfg.vk.queue_manager,
+		  cfg.vk.managers,
 		  VMA_MEMORY_USAGE_CPU_ONLY,
 		  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 	  } )
@@ -207,10 +207,10 @@ void vulkan_staged_texture2d::upload(
 		_current_state = state;
 		_current_state.mipmap_count = mipmap_count;
 
-		_gpu_image.copy_from( *_cfg.vk.barrier_manager, _staging_buffer );
+		_gpu_image.copy_from( _staging_buffer );
 		if ( generate_mipmaps )
 		{
-			_gpu_image.generate_mipmaps( *_cfg.vk.barrier_manager );
+			_gpu_image.generate_mipmaps();
 		}
 	}
 

@@ -15,7 +15,6 @@ namespace igpu
 	class vulkan_pipeline_cache;
 	class vulkan_queue;
 	class vulkan_queue_manager;
-	class vulkan_staging_manager;
 	class vulkan_window;
 
 	class vulkan_context : public context
@@ -46,7 +45,6 @@ namespace igpu
 			std::shared_ptr< vulkan_queue > transfer_queue;
 			std::shared_ptr< vulkan_queue_manager > queue_manager;
 			std::shared_ptr< vulkan_barrier_manager > barrier_manager;
-			std::shared_ptr< vulkan_staging_manager > staging_manager;
 			std::shared_ptr< vulkan_managers > managers;
 			std::shared_ptr< vulkan_back_buffer > back_buffer;
 			std::shared_ptr< vulkan_pipeline_cache > pipeline_cache;

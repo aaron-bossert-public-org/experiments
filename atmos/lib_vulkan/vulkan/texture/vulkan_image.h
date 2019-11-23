@@ -14,8 +14,7 @@
 namespace igpu
 {
 	class vulkan_buffer;
-	class vulkan_barrier_manager;
-	class vulkan_queue_manager;
+	class vulkan_managers;
 
 	class vulkan_image : public vulkan_resource
 	{
@@ -24,7 +23,7 @@ namespace igpu
 		{
 			VkPhysicalDevice physical_device = nullptr;
 			VkDevice device = nullptr;
-			scoped_ptr< vulkan_queue_manager > queue_manager;
+			scoped_ptr< vulkan_managers > managers;
 			memory_type memory = memory_type::UNDEFINED;
 			VkMemoryPropertyFlagBits memory_properties;
 			VkImageCreateInfo image_info = {};
@@ -46,9 +45,9 @@ namespace igpu
 
 		void reset( const config* = nullptr );
 
-		void copy_from( vulkan_barrier_manager&, vulkan_buffer& );
+		void copy_from( vulkan_buffer& );
 
-		void generate_mipmaps( vulkan_barrier_manager& );
+		void generate_mipmaps();
 
 		static bool can_generate_mipmaps(
 			VkPhysicalDevice,

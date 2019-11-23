@@ -10,7 +10,6 @@ namespace igpu
 {
 	class vulkan_barrier_manager;
 	class vulkan_queue_manager;
-	class vulkan_staging_manager;
 
 	class vulkan_managers
 	{
@@ -19,7 +18,6 @@ namespace igpu
 		{
 			scoped_ptr< vulkan_barrier_manager > barrier;
 			scoped_ptr< vulkan_queue_manager > queues;
-			scoped_ptr< vulkan_staging_manager > staging;
 		};
 
 		const config& cfg() const;

@@ -48,7 +48,7 @@ namespace igpu
 
 	private:
 		const config _cfg;
-		const VkFence _fence;
+		const VkFence _vk_fence;
 		ptrdiff_t _submit_index = 0;
 	};
 }
