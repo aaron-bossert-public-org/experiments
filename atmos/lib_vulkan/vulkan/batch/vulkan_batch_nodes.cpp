@@ -7,10 +7,12 @@
 #include "vulkan/buffer/vulkan_compute_buffer.h"
 #include "vulkan/buffer/vulkan_index_buffer.h"
 #include "vulkan/context/vulkan_context.h"
+#include "vulkan/manager/vulkan_managers.h"
 #include "vulkan/shader/vulkan_graphics_pipeline.h"
 #include "vulkan/shader/vulkan_pipeline_cache.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_job_attributes.h"
+#include "vulkan/sync/vulkan_job_buffers.h"
 #include "vulkan/sync/vulkan_job_primitives.h"
 #include "vulkan/sync/vulkan_job_scope.h"
 #include "vulkan/sync/vulkan_poset_fence.h"
@@ -30,33 +32,31 @@ bool vulkan_instance_batch::can_raster(
 {
 	if ( _enabled )
 	{
-		raster_state->resolved.instance_count =
-			(uint32_t)_instance_count.value_or(
-				raster_state->fallback.instance_count );
-
-		raster_state->resolved.element_count =
-			(uint32_t)_element_count.value_or(
-				raster_state->fallback.element_count );
-
-		if ( raster_state->resolved.instance_count &&
-			 raster_state->resolved.element_count )
+		if ( std::holds_alternative< draw_indirect_parameters >(
+				 _draw_params ) )
 		{
-			if ( !_visibility_sphere ||
-				 utility::intersects(
-					 raster_state->frustum,
-					 _visibility_sphere.value() ) )
-			{
-				raster_state->resolved.base_vertex =
-					(int32_t)_base_vertex.value_or(
-						raster_state->fallback.base_vertex );
-				raster_state->resolved.instance_start =
-					(uint32_t)_instance_start.value_or(
-						raster_state->fallback.instance_start );
-				raster_state->resolved.element_start =
-					(uint32_t)_element_start.value_or(
-						raster_state->fallback.element_start );
+			const draw_indirect_parameters& indirect_params =
+				std::get< draw_indirect_parameters >( _draw_params );
 
-				return true;
+			return _indirect_draw_dependency && indirect_params.count;
+		}
+		else
+		{
+			const draw_parameters* draw_params =
+				std::holds_alternative< no_draw_params >( _draw_params )
+				? &raster_state->fallback
+				: std::holds_alternative< draw_parameters >( _draw_params )
+					? &std::get< draw_parameters >( _draw_params )
+					: nullptr;
+
+
+			if ( draw_params )
+			{
+				return draw_params->index_count && draw_params->instance_count;
+			}
+			else
+			{
+				LOG_CRITICAL( "unhandled variant" );
 			}
 		}
 	}
@@ -72,13 +72,63 @@ void vulkan_instance_batch::rasterize(
 		_job_primitives->record_cmds( raster_state.command_buffer );
 	}
 
-	vkCmdDrawIndexed(
-		raster_state.command_buffer->vk_cmds(),
-		raster_state.resolved.element_count,
-		raster_state.resolved.instance_count,
-		raster_state.resolved.element_start,
-		raster_state.resolved.base_vertex,
-		raster_state.resolved.instance_start );
+	if ( std::holds_alternative< draw_indirect_parameters >( _draw_params ) )
+	{
+		const draw_indirect_parameters& indirect_params =
+			std::get< draw_indirect_parameters >( _draw_params );
+
+		auto buffer =
+			ASSERT_CAST( vulkan_compute_buffer*, indirect_params.buffer.get() );
+
+		_indirect_draw_dependency->record_cmds( raster_state.command_buffer );
+
+		if ( _root_batch->vk()
+				 .managers->cfg()
+				 .device_features.multiDrawIndirect )
+		{
+			vkCmdDrawIndexedIndirect(
+				raster_state.command_buffer->vk_cmds(),
+				buffer->gpu_object().vk_buffer(),
+				indirect_params.offset,
+				indirect_params.count,
+				indirect_params.stride );
+		}
+		else
+		{
+			// If multi draw is not available, we must issue separate draw
+			// commands
+			for ( uint32_t j = 0; j < indirect_params.count; j++ )
+			{
+				vkCmdDrawIndexedIndirect(
+					raster_state.command_buffer->vk_cmds(),
+					buffer->gpu_object().vk_buffer(),
+					j * indirect_params.stride + indirect_params.offset,
+					1,
+					indirect_params.stride );
+			}
+		}
+	}
+	else
+	{
+		const draw_parameters* draw_params =
+			std::holds_alternative< no_draw_params >( _draw_params )
+			? &raster_state.fallback
+			: std::holds_alternative< draw_parameters >( _draw_params )
+				? &std::get< draw_parameters >( _draw_params )
+				: nullptr;
+
+
+		if ( draw_params )
+		{
+			vkCmdDrawIndexed(
+				raster_state.command_buffer->vk_cmds(),
+				draw_params->index_count,
+				draw_params->instance_count,
+				draw_params->first_index,
+				draw_params->vertex_offset,
+				draw_params->first_instance );
+		}
+	}
 }
 
 vulkan_material_batch::vulkan_material_batch( const config& cfg )
@@ -162,11 +212,7 @@ bool vulkan_geometry_batch::pre_raster(
 		return false;
 	}
 
-	raster_state->fallback.instance_start = (uint32_t)geometry.instance_start();
-	raster_state->fallback.instance_count = (uint32_t)geometry.instance_count();
-	raster_state->fallback.element_start = (uint32_t)geometry.element_start();
-	raster_state->fallback.element_count = (uint32_t)geometry.element_count();
-	raster_state->fallback.base_vertex = (int32_t)geometry.base_vertex();
+	raster_state->fallback = geometry.draw_parameters();
 
 	return true;
 }

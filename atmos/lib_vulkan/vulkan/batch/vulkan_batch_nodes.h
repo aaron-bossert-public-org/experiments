@@ -47,14 +47,7 @@ namespace igpu
 			vulkan_instance_batch* instance = nullptr;
 		} batches;
 
-		struct
-		{
-			int32_t base_vertex = 0;
-			uint32_t instance_start = 0;
-			uint32_t instance_count = 0;
-			uint32_t element_start = 0;
-			uint32_t element_count = 0;
-		} fallback, resolved;
+		draw_parameters fallback;
 	};
 
 	class vulkan_material_batch

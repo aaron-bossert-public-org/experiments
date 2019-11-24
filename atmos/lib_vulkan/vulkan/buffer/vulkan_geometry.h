@@ -28,25 +28,7 @@ namespace igpu
 
 		const config& cfg() const override;
 
-		void base_vertex( ptrdiff_t ) override;
-
-		void instance_start( size_t ) override;
-
-		void instance_count( size_t ) override;
-
-		void element_start( size_t ) override;
-
-		void element_count( const std::optional< size_t >& ) override;
-
-		ptrdiff_t base_vertex() const override;
-
-		size_t instance_start() const override;
-
-		size_t instance_count() const override;
-
-		size_t element_start() const override;
-
-		size_t element_count() const override;
+		igpu::draw_parameters draw_parameters() const override;
 
 		vulkan_index_buffer& index_buffer() override;
 

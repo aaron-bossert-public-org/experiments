@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "igpu/batch/draw_parameters.h"
 #include "igpu/buffer/topology.h"
 
 #include <memory>
@@ -32,25 +33,7 @@ namespace igpu
 
 		virtual const config& cfg() const = 0;
 
-		virtual void base_vertex( ptrdiff_t ) = 0;
-
-		virtual void instance_start( size_t ) = 0;
-
-		virtual void instance_count( size_t ) = 0;
-
-		virtual void element_start( size_t ) = 0;
-
-		virtual void element_count( const std::optional< size_t >& ) = 0;
-
-		virtual ptrdiff_t base_vertex() const = 0;
-
-		virtual size_t instance_start() const = 0;
-
-		virtual size_t instance_count() const = 0;
-
-		virtual size_t element_start() const = 0;
-
-		virtual size_t element_count() const = 0;
+		virtual igpu::draw_parameters draw_parameters() const = 0;
 
 		virtual igpu::index_buffer& index_buffer() = 0;
 

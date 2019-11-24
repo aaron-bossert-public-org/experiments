@@ -45,56 +45,9 @@ const vulkan_geometry::config& vulkan_geometry::cfg() const
 	return _cfg;
 }
 
-void vulkan_geometry::base_vertex( ptrdiff_t base_vertex )
+igpu::draw_parameters vulkan_geometry::draw_parameters() const
 {
-	_base_vertex = base_vertex;
-}
-
-void vulkan_geometry::instance_start( size_t instance_start )
-{
-	_instance_start = instance_start;
-}
-
-void vulkan_geometry::instance_count( size_t instance_count )
-{
-	_instance_count = instance_count;
-}
-
-void vulkan_geometry::element_start( size_t element_start )
-{
-	_element_start = element_start;
-}
-
-void vulkan_geometry::element_count(
-	const std::optional< size_t >& element_count )
-{
-	_element_count = element_count;
-}
-
-ptrdiff_t vulkan_geometry::base_vertex() const
-{
-	return _base_vertex;
-}
-
-size_t vulkan_geometry::instance_start() const
-{
-	return _instance_start;
-}
-
-size_t vulkan_geometry::instance_count() const
-{
-	return _instance_count;
-}
-
-size_t vulkan_geometry::element_start() const
-{
-	return _element_start;
-}
-
-size_t vulkan_geometry::element_count() const
-{
-	return _element_count.has_value() ? _element_count.value()
-									  : _index_buffer->element_count();
+	return { (uint32_t)_index_buffer->element_count(), 1, 0, 0, 0 };
 }
 
 vulkan_index_buffer& vulkan_geometry::index_buffer()
