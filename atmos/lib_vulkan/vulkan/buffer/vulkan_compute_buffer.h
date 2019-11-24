@@ -20,7 +20,6 @@ namespace igpu
 			struct vulkan
 			{
 				VkDevice device = nullptr;
-				const VkPhysicalDeviceProperties* device_properties = nullptr;
 				VmaAllocator vma = nullptr;
 				scoped_ptr< vulkan_managers > managers;
 			};

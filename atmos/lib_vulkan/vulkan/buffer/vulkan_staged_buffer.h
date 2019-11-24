@@ -17,7 +17,6 @@ namespace igpu
 		struct config
 		{
 			VkDevice device = nullptr;
-			const VkPhysicalDeviceProperties* device_properties = nullptr;
 			VmaAllocator vma = nullptr;
 			VkBufferUsageFlagBits vk_usage_flags = (VkBufferUsageFlagBits)0;
 			scoped_ptr< vulkan_managers > managers;

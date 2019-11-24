@@ -41,7 +41,11 @@ const vulkan_job& vulkan_job_attributes::job() const
 std::unique_ptr< vulkan_job_attributes > vulkan_job_attributes::make(
 	const config& cfg )
 {
-	if ( !cfg.device )
+	if ( !cfg.job )
+	{
+		LOG_CRITICAL( "job is null" );
+	}
+	else if ( !cfg.device )
 	{
 		LOG_CRITICAL( "device is null" );
 	}

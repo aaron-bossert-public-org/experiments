@@ -18,7 +18,6 @@ vulkan_staged_texture2d::vulkan_staged_texture2d( const config& cfg )
 	, _staging_buffer( {
 		  cfg.memory,
 		  cfg.vk.device,
-		  cfg.vk.device_properties,
 		  cfg.vk.vma,
 		  cfg.vk.managers,
 		  VMA_MEMORY_USAGE_CPU_ONLY,

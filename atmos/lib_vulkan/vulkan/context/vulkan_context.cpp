@@ -770,7 +770,6 @@ std::unique_ptr< vertex_buffer > vulkan_context::make(
 	return vulkan_vertex_buffer::make( {
 		cfg,
 		_cfg.vk.device,
-		&_cfg.vk.physical_device_properties,
 		_cfg.vk.vma,
 		_st.managers,
 	} );
@@ -782,7 +781,6 @@ std::unique_ptr< index_buffer > vulkan_context::make(
 	return vulkan_index_buffer::make( {
 		base_cfg,
 		_cfg.vk.device,
-		&_cfg.vk.physical_device_properties,
 		_cfg.vk.vma,
 		to_vulkan_format( base_cfg.format ),
 		_st.managers,
@@ -795,7 +793,6 @@ std::unique_ptr< compute_buffer > vulkan_context::make(
 	return vulkan_compute_buffer::make( {
 		cfg,
 		_cfg.vk.device,
-		&_cfg.vk.physical_device_properties,
 		_cfg.vk.vma,
 		_st.managers,
 	} );
@@ -806,7 +803,6 @@ std::unique_ptr< texture2d > vulkan_context::make(
 {
 	return vulkan_texture2d::make( {
 		cfg,
-		&_cfg.vk.physical_device_properties,
 		_cfg.vk.physical_device,
 		_cfg.vk.device,
 		_cfg.vk.vma,
@@ -917,6 +913,10 @@ std::unique_ptr< vulkan_context > vulkan_context::make(
 		cfg.vk.physical_device,
 		&cfg.vk.physical_device_properties );
 
+	vkGetPhysicalDeviceFeatures(
+		cfg.vk.physical_device,
+		&cfg.vk.physical_device_features );
+
 	cfg.vk.device = create_device( cfg.vk.physical_device, families );
 	if ( !cfg.vk.device )
 	{
@@ -1005,6 +1005,8 @@ std::unique_ptr< vulkan_context > vulkan_context::make(
 
 
 	st.managers = vulkan_managers::make( {
+		cfg.vk.physical_device_properties,
+		cfg.vk.physical_device_features,
 		st.barrier_manager,
 		st.queue_manager,
 	} );

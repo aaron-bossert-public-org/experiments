@@ -21,7 +21,6 @@ namespace igpu
 		{
 			struct vulkan
 			{
-				const VkPhysicalDeviceProperties* device_properties = nullptr;
 				VkPhysicalDevice physical_device = nullptr;
 				VkDevice device = nullptr;
 				VmaAllocator vma = nullptr;

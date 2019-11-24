@@ -30,6 +30,7 @@ namespace igpu
 				VkDevice device = nullptr;
 				VmaAllocator vma = nullptr;
 				VkPhysicalDeviceProperties physical_device_properties;
+				VkPhysicalDeviceFeatures physical_device_features;
 				VkSampleCountFlagBits sample_count = (VkSampleCountFlagBits)0;
 				uint32_t swap_count = 0;
 			};

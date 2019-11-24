@@ -179,12 +179,6 @@ namespace
 			index_format::UNSIGNED_INT,
 		} );
 
-		vertex_buffer::attribute attr = {
-			"pos",
-			to_components( ( *( (Vertex*)0 ) ).pos ),
-			( ( size_t ) & ( ( (Vertex*)0 )->pos ) ),
-		};
-
 		auto vertex_buffer = cfg.context->make_shared(
 			IGPU_VERT_CFG_OF( Vertex, pos, col, uv0 ) );
 

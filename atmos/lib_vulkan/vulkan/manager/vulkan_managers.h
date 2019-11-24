@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "vulkan/defines/vulkan_includes.h"
+
 #include "framework/utility/scoped_ptr.h"
 
 #include <memory>
@@ -16,6 +18,8 @@ namespace igpu
 	public:
 		struct config
 		{
+			VkPhysicalDeviceProperties device_properties = {};
+			VkPhysicalDeviceFeatures device_features = {};
 			scoped_ptr< vulkan_barrier_manager > barrier;
 			scoped_ptr< vulkan_queue_manager > queues;
 		};

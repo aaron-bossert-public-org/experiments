@@ -41,7 +41,11 @@ const vulkan_job& vulkan_job_primitives::job() const
 std::unique_ptr< vulkan_job_primitives > vulkan_job_primitives::make(
 	const config& cfg )
 {
-	if ( !cfg.queue )
+	if ( !cfg.job )
+	{
+		LOG_CRITICAL( "job is null" );
+	}
+	else if ( !cfg.queue )
 	{
 		LOG_CRITICAL( "queue is null" );
 	}

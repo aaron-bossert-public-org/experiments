@@ -190,7 +190,8 @@ void vulkan_buffer::reset( size_t byte_size )
 			info.sharingMode = _cfg.vk.sharing_mode;
 
 			if ( info.size >
-				 _cfg.vk.device_properties->limits.maxUniformBufferRange )
+				 _cfg.vk.managers->cfg()
+					 .device_properties.limits.maxUniformBufferRange )
 			{
 				info.usage &=
 					~( VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |

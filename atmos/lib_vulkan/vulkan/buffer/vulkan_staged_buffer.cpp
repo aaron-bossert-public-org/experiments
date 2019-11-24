@@ -71,7 +71,6 @@ vulkan_staged_buffer::vulkan_staged_buffer( const config& cfg )
 	, _staging_buffer( {
 		  cfg.memory,
 		  cfg.device,
-		  cfg.device_properties,
 		  cfg.vma,
 		  cfg.managers,
 		  cpu_vma_usage( cfg.memory ),
@@ -80,7 +79,6 @@ vulkan_staged_buffer::vulkan_staged_buffer( const config& cfg )
 	, _gpu_buffer( {
 		  memory_type::WRITE_COMBINED,
 		  cfg.device,
-		  cfg.device_properties,
 		  cfg.vma,
 		  cfg.managers,
 		  gpu_vma_usage( cfg.memory ),
