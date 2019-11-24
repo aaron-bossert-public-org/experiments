@@ -4,6 +4,8 @@
 #include "igpu/texture/depth_texture2d.h"
 #include "igpu/texture/texture2d.h"
 
+#include "framework/utility/hash_utils.h"
+
 using namespace igpu;
 
 parameter::type primitive::type() const
@@ -27,4 +29,33 @@ parameter::type primitive::type() const
 	};
 
 	return parameter::type::UNDEFINED;
+}
+
+size_t primitive::config::hash() const
+{
+	size_t h = hash_utils::hash( name );
+
+	std::visit(
+		[&]( auto&& shared ) { hash_utils::hash_combine( &h, shared ); },
+		value );
+
+	return h;
+}
+
+ptrdiff_t primitive::config::compare( const config& other ) const
+{
+	if ( int name_cmp = name.compare( other.name ) )
+	{
+		return name_cmp;
+	}
+
+	const char* l_addr = std::visit(
+		[&]( auto&& shared ) { return (const char*)shared.get(); },
+		value );
+
+	const char* r_addr = std::visit(
+		[&]( auto&& shared ) { return (const char*)shared.get(); },
+		other.value );
+
+	return l_addr - r_addr;
 }

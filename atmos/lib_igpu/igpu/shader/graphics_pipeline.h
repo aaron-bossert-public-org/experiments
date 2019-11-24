@@ -24,9 +24,9 @@ namespace igpu
 			igpu::topology topology = igpu::topology::UNDEFINED;
 			std::vector< vertex_buffer::config > compact_vertex_format;
 
-			static size_t hash( const config& );
+			size_t hash() const;
 
-			static ptrdiff_t compare( const config&, const config& );
+			ptrdiff_t compare( const config& ) const;
 		};
 
 		virtual ~graphics_pipeline() = default;

@@ -112,9 +112,9 @@ namespace igpu
 			stencil_mode stencil;
 			depth_mode depth;
 
-			static size_t hash( const config& );
+			size_t hash() const;
 
-			static ptrdiff_t compare( const config&, const config& );
+			ptrdiff_t compare( const config& ) const;
 		};
 #pragma pack( pop )
 

@@ -21,9 +21,9 @@ namespace igpu
 			std::shared_ptr< vertex_shader > vertex;
 			std::shared_ptr< fragment_shader > fragment;
 
-			static size_t hash( const config& );
+			size_t hash() const;
 
-			static ptrdiff_t compare( const config&, const config& );
+			ptrdiff_t compare( const config& ) const;
 		};
 
 		virtual const config& cfg() const = 0;

@@ -8,8 +8,9 @@
 
 using namespace igpu;
 
-bool primitives::find_expected( const std::string& name, size_t* p_expected )
-	const
+bool primitives::find_expected(
+	const std::string_view& name,
+	size_t* p_expected ) const
 {
 	size_t count = primitive_count();
 	size_t expected = *p_expected;
@@ -39,52 +40,30 @@ bool primitives::find_expected( const std::string& name, size_t* p_expected )
 	return false;
 }
 
-
-size_t primitives::config::hash( const config& cfg )
+size_t primitives::config::hash() const
 {
 	size_t h = 0;
 
-	for ( size_t i = 0; i < cfg.primitives.size(); ++i )
+	for ( size_t i = 0; i < primitives.size(); ++i )
 	{
-		hash_utils::hash_combine( &h, cfg.primitives[i].name );
-
-		std::visit(
-			[&]( auto&& shared ) { hash_utils::hash_combine( &h, shared ); },
-			cfg.primitives[i].value );
+		hash_utils::hash_combine( &h, primitives[i].hash() );
 	}
 
 	return h;
 }
 
-ptrdiff_t primitives::config::compare( const config& lhs, const config& rhs )
+ptrdiff_t primitives::config::compare( const config& other ) const
 {
-	size_t prim_count =
-		std::min( lhs.primitives.size(), rhs.primitives.size() );
+	size_t prim_count = std::min( primitives.size(), other.primitives.size() );
 
 	for ( size_t i = 0; i < prim_count; ++i )
 	{
-		const primitive::config& l_prim = lhs.primitives[i];
-		const primitive::config& r_prim = rhs.primitives[i];
-
-
-		if ( int name_cmp = l_prim.name.compare( r_prim.name ) )
+		if ( ptrdiff_t prim_cmp = primitives[i] .compare(
+				 other.primitives[i] ) )
 		{
-			return name_cmp;
-		}
-
-		const char* l_addr = std::visit(
-			[&]( auto&& shared ) { return (const char*)shared.get(); },
-			l_prim.value );
-
-		const char* r_addr = std::visit(
-			[&]( auto&& shared ) { return (const char*)shared.get(); },
-			rhs.primitives[i].value );
-
-		if ( l_addr != r_addr )
-		{
-			return l_addr - r_addr;
+			return prim_cmp;
 		}
 	}
 
-	return lhs.primitives.size() - rhs.primitives.size();
+	return primitives.size() - other.primitives.size();
 }

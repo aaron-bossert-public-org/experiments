@@ -31,6 +31,10 @@ namespace igpu
 		{
 			std::string name;
 			variant_t value;
+
+			size_t hash() const;
+
+			ptrdiff_t compare( const config& ) const;
 		};
 
 		virtual const config& cfg() const = 0;

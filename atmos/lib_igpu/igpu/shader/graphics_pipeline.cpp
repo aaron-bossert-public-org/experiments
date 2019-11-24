@@ -62,15 +62,15 @@ graphics_pipeline::config graphics_pipeline::make_config(
 	return cfg;
 }
 
-size_t graphics_pipeline::config::hash( const config& cfg )
+size_t graphics_pipeline::config::hash() const
 {
 	size_t h = hash_utils::hash_combine(
-		cfg.draw_target,
-		cfg.program,
-		cfg.render_states,
-		(size_t)cfg.topology );
+		draw_target,
+		program,
+		render_states,
+		(size_t)topology );
 
-	for ( const auto& buffer_config : cfg.compact_vertex_format )
+	for ( const auto& buffer_config : compact_vertex_format )
 	{
 		h = hash_utils::hash_combine( h, buffer_config.stride );
 		for ( const auto& attribute : buffer_config.attributes )
@@ -86,38 +86,36 @@ size_t graphics_pipeline::config::hash( const config& cfg )
 	return h;
 }
 
-ptrdiff_t graphics_pipeline::config::compare(
-	const config& lhs,
-	const config& rhs )
+ptrdiff_t graphics_pipeline::config::compare( const config& other ) const
 {
-	if ( lhs.draw_target != rhs.draw_target )
+	if ( draw_target != other.draw_target )
 	{
-		return lhs.draw_target.get() - rhs.draw_target.get();
+		return draw_target.get() - other.draw_target.get();
 	}
 
-	if ( lhs.program != rhs.program )
+	if ( program != other.program )
 	{
-		return lhs.program.get() - rhs.program.get();
+		return program.get() - other.program.get();
 	}
 
-	if ( lhs.render_states != rhs.render_states )
+	if ( render_states != other.render_states )
 	{
-		return lhs.render_states.get() - rhs.render_states.get();
+		return render_states.get() - other.render_states.get();
 	}
 
-	if ( lhs.topology != rhs.topology )
+	if ( topology != other.topology )
 	{
-		return (ptrdiff_t)lhs.topology - (ptrdiff_t)rhs.topology;
+		return (ptrdiff_t)topology - (ptrdiff_t)other.topology;
 	}
 
 	size_t compare_buffer_count = std::min(
-		lhs.compact_vertex_format.size(),
-		rhs.compact_vertex_format.size() );
+		compact_vertex_format.size(),
+		other.compact_vertex_format.size() );
 
 	for ( size_t b = 0; b < compare_buffer_count; ++b )
 	{
-		const vertex_buffer::config& l_buff = lhs.compact_vertex_format[b];
-		const vertex_buffer::config& r_buff = rhs.compact_vertex_format[b];
+		const vertex_buffer::config& l_buff = compact_vertex_format[b];
+		const vertex_buffer::config& r_buff = other.compact_vertex_format[b];
 
 		if ( l_buff.stride != r_buff.stride )
 		{
@@ -144,5 +142,5 @@ ptrdiff_t graphics_pipeline::config::compare(
 		}
 	}
 
-	return lhs.compact_vertex_format.size() - rhs.compact_vertex_format.size();
+	return compact_vertex_format.size() - other.compact_vertex_format.size();
 }

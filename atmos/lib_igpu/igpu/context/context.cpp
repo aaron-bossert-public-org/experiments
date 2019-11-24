@@ -158,7 +158,7 @@ namespace
 		{
 			std::size_t operator()( const CONFIG_T* k ) const
 			{
-				return typename T::config::hash( *k );
+				return k->hash();
 			}
 		};
 
@@ -171,7 +171,7 @@ namespace
 
 			bool operator()( const CONFIG_T* lhs, const CONFIG_T* rhs ) const
 			{
-				return 0 == typename T::config::compare( *lhs, *rhs );
+				return lhs->compare( *rhs );
 			}
 		};
 

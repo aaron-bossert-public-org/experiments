@@ -14,9 +14,9 @@ namespace igpu
 		{
 			std::vector< primitive::config > primitives;
 
-			static size_t hash( const config& );
+			size_t hash() const;
 
-			static ptrdiff_t compare( const config&, const config& );
+			ptrdiff_t compare( const config& ) const;
 		};
 
 		virtual const config& cfg() const = 0;
@@ -25,7 +25,7 @@ namespace igpu
 
 		virtual const igpu::primitive& primitive( size_t ) const = 0;
 
-		bool find_expected( const std::string&, size_t* p_expected ) const;
+		bool find_expected( const std::string_view&, size_t* p_expected ) const;
 
 		virtual ~primitives() = default;
 	};

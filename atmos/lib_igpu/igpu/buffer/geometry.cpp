@@ -11,7 +11,7 @@
 using namespace igpu;
 
 bool geometry::find_expected_vertex_param(
-	const std::string& name,
+	const std::string_view& name,
 	size_t* p_expected_buff,
 	size_t* p_expected_attr ) const
 {
@@ -64,68 +64,65 @@ bool geometry::find_expected_vertex_param(
 	return false;
 }
 
-size_t geometry::config::hash( const config& cfg )
+size_t geometry::config::hash() const
 {
-	size_t h = hash_utils::hash_combine(
-		cfg.topology,
-		cfg.index_buffer,
-		cfg.ibuff_byte_offset );
+	size_t h =
+		hash_utils::hash_combine( topology, index_buffer, ibuff_byte_offset );
 
-	for ( size_t i = 0; i < cfg.vertex_buffers.size(); ++i )
+	for ( size_t i = 0; i < vertex_buffers.size(); ++i )
 	{
-		hash_utils::hash_combine( &h, cfg.vertex_buffers[i] );
-		if ( i < cfg.vbuff_byte_offsets.size() )
+		hash_utils::hash_combine( &h, vertex_buffers[i] );
+		if ( i < vbuff_byte_offsets.size() )
 		{
-			hash_utils::hash_combine( &h, cfg.vbuff_byte_offsets[i] );
+			hash_utils::hash_combine( &h, vbuff_byte_offsets[i] );
 		}
 	}
 
 	return h;
 }
 
-ptrdiff_t geometry::config::compare( const config& lhs, const config& rhs )
+ptrdiff_t geometry::config::compare( const config& other ) const
 {
-	if ( lhs.topology != rhs.topology )
+	if ( topology != other.topology )
 	{
-		return (ptrdiff_t)lhs.topology - (ptrdiff_t)rhs.topology;
+		return (ptrdiff_t)topology - (ptrdiff_t)other.topology;
 	}
 
-	if ( lhs.index_buffer != rhs.index_buffer )
+	if ( index_buffer != other.index_buffer )
 	{
-		return lhs.index_buffer.get() - rhs.index_buffer.get();
+		return index_buffer.get() - other.index_buffer.get();
 	}
 
-	if ( lhs.ibuff_byte_offset != rhs.ibuff_byte_offset )
+	if ( ibuff_byte_offset != other.ibuff_byte_offset )
 	{
-		return lhs.ibuff_byte_offset - rhs.ibuff_byte_offset;
+		return ibuff_byte_offset - other.ibuff_byte_offset;
 	}
 
 	size_t buff_count =
-		std::min( lhs.vertex_buffers.size(), rhs.vertex_buffers.size() );
+		std::min( vertex_buffers.size(), other.vertex_buffers.size() );
 
 	for ( size_t i = 0; i < buff_count; ++i )
 	{
-		if ( lhs.vertex_buffers[i] != rhs.vertex_buffers[i] )
+		if ( vertex_buffers[i] != other.vertex_buffers[i] )
 		{
-			return lhs.vertex_buffers[i].get() - rhs.vertex_buffers[i].get();
+			return vertex_buffers[i].get() - other.vertex_buffers[i].get();
 		}
 	}
 
-	size_t offset_count = std::min(
-		lhs.vbuff_byte_offsets.size(),
-		rhs.vbuff_byte_offsets.size() );
+	size_t offset_count =
+		std::min( vbuff_byte_offsets.size(), other.vbuff_byte_offsets.size() );
 	for ( size_t i = 0; i < offset_count; ++i )
 	{
-		if ( lhs.vbuff_byte_offsets[i] != rhs.vbuff_byte_offsets[i] )
+		if ( vbuff_byte_offsets[i] != other.vbuff_byte_offsets[i] )
 		{
-			return lhs.vbuff_byte_offsets[i] - rhs.vbuff_byte_offsets[i];
+			return vbuff_byte_offsets[i] - other.vbuff_byte_offsets[i];
 		}
 	}
 
-	if ( lhs.vertex_buffers.size() != rhs.vertex_buffers.size() )
+	if ( vertex_buffers.size() != other.vertex_buffers.size() )
 	{
-		return lhs.vertex_buffers.size() - rhs.vertex_buffers.size();
+		return vertex_buffers.size() - other.vertex_buffers.size();
 	}
 
-	return lhs.vbuff_byte_offsets.size() - rhs.vbuff_byte_offsets.size();
+	return vbuff_byte_offsets.size() - other.vbuff_byte_offsets.size();
 }

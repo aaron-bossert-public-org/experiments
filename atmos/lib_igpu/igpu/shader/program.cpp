@@ -10,17 +10,17 @@
 
 using namespace igpu;
 
-size_t program::config::hash( const config& cfg )
+size_t program::config::hash() const
 {
-	return hash_utils::hash_combine( cfg.vertex, cfg.fragment );
+	return hash_utils::hash_combine( vertex, fragment );
 }
 
-ptrdiff_t program::config::compare( const config& lhs, const config& rhs )
+ptrdiff_t program::config::compare( const config& other ) const
 {
-	if ( lhs.vertex != rhs.vertex )
+	if ( vertex != other.vertex )
 	{
-		return lhs.vertex.get() - rhs.vertex.get();
+		return vertex.get() - other.vertex.get();
 	}
 
-	return lhs.fragment.get() - rhs.fragment.get();
+	return fragment.get() - other.fragment.get();
 }

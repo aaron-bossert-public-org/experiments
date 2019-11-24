@@ -34,13 +34,13 @@ int igpu::mem_compare( const depth_mode& lhs, const depth_mode& rhs )
 	return memcmp( &lhs, &rhs, sizeof( lhs ) );
 }
 
-size_t render_states::config::hash( const config& cfg )
+size_t render_states::config::hash() const
 {
-	std::string_view sv( (char*)&cfg, sizeof cfg );
+	std::string_view sv( (char*)this, sizeof *this );
 	return hash_utils::hash( sv );
 }
 
-ptrdiff_t render_states::config::compare( const config& lhs, const config& rhs )
+ptrdiff_t render_states::config::compare( const config& other ) const
 {
-	return mem_compare( lhs, rhs );
+	return mem_compare( *this, other );
 }
