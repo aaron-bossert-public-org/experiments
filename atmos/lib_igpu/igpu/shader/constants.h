@@ -10,10 +10,8 @@ namespace igpu
 	class constants
 	{
 	public:
-		struct config
+		struct config : std::vector< constant >
 		{
-			std::vector< constant > constants;
-
 			size_t find( const std::string_view& ) const;
 
 			size_t hash() const;

@@ -110,11 +110,11 @@ std::unique_ptr< vulkan_primitives > vulkan_primitives::make(
 	const config& cfg )
 {
 	std::vector< vulkan_primitive > primitives;
-	primitives.reserve( cfg.primitives.size() );
+	primitives.reserve( cfg.size() );
 
 	bool success = true;
 
-	for ( const auto& prim_cfg : cfg.primitives )
+	for ( const auto& prim_cfg : cfg )
 	{
 		std::visit(
 			[&]( auto&& ptr ) {

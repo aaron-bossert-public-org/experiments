@@ -10,10 +10,8 @@ namespace igpu
 	class primitives
 	{
 	public:
-		struct config
+		struct config : std::vector< primitive::config >
 		{
-			std::vector< primitive::config > primitives;
-
 			size_t hash() const;
 
 			ptrdiff_t compare( const config& ) const;

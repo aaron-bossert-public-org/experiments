@@ -44,9 +44,9 @@ size_t primitives::config::hash() const
 {
 	size_t h = 0;
 
-	for ( size_t i = 0; i < primitives.size(); ++i )
+	for ( size_t i = 0; i < size(); ++i )
 	{
-		hash_utils::hash_combine( &h, primitives[i].hash() );
+		hash_utils::hash_combine( &h, at( i ).hash() );
 	}
 
 	return h;
@@ -54,16 +54,15 @@ size_t primitives::config::hash() const
 
 ptrdiff_t primitives::config::compare( const config& other ) const
 {
-	size_t prim_count = std::min( primitives.size(), other.primitives.size() );
+	size_t prim_count = std::min( size(), other.size() );
 
 	for ( size_t i = 0; i < prim_count; ++i )
 	{
-		if ( ptrdiff_t prim_cmp = primitives[i] .compare(
-				 other.primitives[i] ) )
+		if ( ptrdiff_t prim_cmp = at( i ).compare( other.at( i ) ) )
 		{
 			return prim_cmp;
 		}
 	}
 
-	return primitives.size() - other.primitives.size();
+	return size() - other.size();
 }
