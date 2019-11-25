@@ -69,6 +69,8 @@ size_t geometry::config::hash() const
 	size_t h =
 		hash_utils::hash_combine( topology, index_buffer, ibuff_byte_offset );
 
+	hash_utils::hash_combine( &h, constants.hash() );
+
 	for ( size_t i = 0; i < vertex_buffers.size(); ++i )
 	{
 		hash_utils::hash_combine( &h, vertex_buffers[i] );
@@ -86,6 +88,11 @@ ptrdiff_t geometry::config::compare( const config& other ) const
 	if ( topology != other.topology )
 	{
 		return (ptrdiff_t)topology - (ptrdiff_t)other.topology;
+	}
+
+	if ( ptrdiff_t cmp_constants = constants.compare( other.constants ) )
+	{
+		return cmp_constants;
 	}
 
 	if ( index_buffer != other.index_buffer )

@@ -20,6 +20,10 @@ namespace igpu
 
 		virtual VkPipelineShaderStageCreateInfo stage_info() const = 0;
 
+		virtual size_t constant_count() const = 0;
+
+		virtual const constant_parameter::config& constant( size_t ) const = 0;
+
 		virtual size_t parameter_count() const = 0;
 
 		virtual const parameter::config& parameter( size_t ) const = 0;

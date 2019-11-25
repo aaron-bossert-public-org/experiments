@@ -2,6 +2,7 @@
 #pragma once
 
 #include "igpu/batch/batch_binding.h"
+#include "igpu/shader/constants.h"
 #include "igpu/shader/primitives.h"
 #include "igpu/utility/utility_types.h"
 
@@ -21,6 +22,7 @@ namespace igpu
 		{
 			scoped_ptr< draw_target > draw_target;
 			std::shared_ptr< igpu::primitives > primitives;
+			constants::config constants;
 		};
 
 		struct raster_state

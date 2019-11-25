@@ -11,6 +11,7 @@
 #include "igpu/batch/batch.h"
 #include "igpu/batch/batch_nodes.h"
 #include "igpu/batch/batch_utility.h"
+#include "igpu/shader/constants.h"
 
 #include "framework/utility/scoped_ptr.h"
 
@@ -191,6 +192,7 @@ namespace igpu
 			scoped_ptr< vulkan_draw_target > draw_target;
 			scoped_ptr< vulkan_pipeline_cache > pipeline_cache;
 			std::shared_ptr< vulkan_primitives > primitives;
+			constants::config constants;
 		};
 
 		const vulkan& vk() const;

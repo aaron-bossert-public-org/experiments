@@ -3,6 +3,7 @@
 
 #include "vulkan/context/vulkan_context.h"
 #include "vulkan/defines/vulkan_includes.h"
+#include "vulkan/shader/vulkan_constant_parameters.h"
 #include "vulkan/shader/vulkan_shader.h"
 #include "vulkan/shader/vulkan_vertex_parameter.h"
 
@@ -28,6 +29,10 @@ namespace igpu
 
 		VkPipelineShaderStageCreateInfo stage_info() const;
 
+		size_t constant_count() const;
+
+		const constant_parameter::config& constant( size_t ) const;
+
 		size_t parameter_count() const;
 
 		const parameter::config& parameter( size_t ) const;
@@ -45,6 +50,7 @@ namespace igpu
 
 		VkShaderModule _shader_module = nullptr;
 		std::vector< uint32_t > _memory;
+		std::vector< constant_parameter::config > _constants;
 		std::vector< parameter::config > _parameters;
 		std::vector< vertex_parameter::config > _vertex_parameters;
 
@@ -73,6 +79,16 @@ namespace igpu
 		VkPipelineShaderStageCreateInfo stage_info() const override
 		{
 			return _shader.stage_info();
+		}
+
+		size_t constant_count() const override
+		{
+			return _shader.constant_count();
+		}
+
+		const constant_parameter::config& constant( size_t i ) const
+		{
+			return _shader.constant( i );
 		}
 
 		size_t parameter_count() const override

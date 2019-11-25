@@ -9,6 +9,12 @@
 
 using namespace igpu;
 
+constant_type constant::type() const
+{
+	return std::visit(
+		[]( auto& value ) { return to_constant_type( value ); },
+		value );
+}
 size_t constant::hash() const
 {
 	size_t h = hash_utils::hash( name );
@@ -45,4 +51,44 @@ ptrdiff_t constant::compare( const constant& other ) const
 				sizeof value );
 		},
 		value );
+}
+
+constant_type igpu::to_constant_type( const glm::ivec1& )
+{
+	return constant_type::IVEC1;
+}
+
+constant_type igpu::to_constant_type( const glm::ivec2& )
+{
+	return constant_type::IVEC2;
+}
+
+constant_type igpu::to_constant_type( const glm::ivec3& )
+{
+	return constant_type::IVEC3;
+}
+
+constant_type igpu::to_constant_type( const glm::ivec4& )
+{
+	return constant_type::IVEC4;
+}
+
+constant_type igpu::to_constant_type( const glm::vec1& )
+{
+	return constant_type::VEC1;
+}
+
+constant_type igpu::to_constant_type( const glm::vec2& )
+{
+	return constant_type::VEC2;
+}
+
+constant_type igpu::to_constant_type( const glm::vec3& )
+{
+	return constant_type::VEC3;
+}
+
+constant_type igpu::to_constant_type( const glm::vec4& )
+{
+	return constant_type::VEC4;
 }

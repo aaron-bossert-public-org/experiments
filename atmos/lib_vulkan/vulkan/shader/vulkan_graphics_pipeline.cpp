@@ -6,6 +6,7 @@
 #include "vulkan/shader/vulkan_pipeline_cache.h"
 #include "vulkan/shader/vulkan_program.h"
 #include "vulkan/shader/vulkan_render_states.h"
+#include "vulkan/shader/vulkan_specialization_constants.h"
 #include "vulkan/shader/vulkan_vertex_shader.h"
 #include "vulkan/texture/vulkan_draw_target.h"
 
@@ -186,6 +187,19 @@ namespace
 				cfg.vk.program->cfg().vk.vertex->stage_info(),
 				cfg.vk.program->cfg().vk.fragment->stage_info(),
 			};
+
+			vulkan_specialization_constants vertex_specializations(
+				cfg.compact_constants,
+				shader_stages::VERTEX );
+			vulkan_specialization_constants fragment_specializations(
+				cfg.compact_constants,
+				shader_stages::FRAGMENT );
+
+			shader_stages[0].pSpecializationInfo =
+				&vertex_specializations.info();
+
+			shader_stages[1].pSpecializationInfo =
+				&fragment_specializations.info();
 
 			vertex_assembly assembly;
 			build_vertex_assembly(

@@ -1,6 +1,7 @@
 
 #include "igpu/shader/program_parsing.h"
 
+#include "igpu/shader/constant_parameters.h"
 #include "igpu/shader/parameters.h"
 
 #include "framework/utility/buffer_view.h"
@@ -112,6 +113,177 @@ namespace
 		}
 
 		return (spv::ExecutionModel)-1;
+	}
+	// specialization_constants =
+	//	compiler.get_specialization_constants();
+
+	// success &= parse_spirv_specialization_constants(
+	//	compiler,
+	//	stage,
+	//	specialization_constants,
+	//	&parameter_indices,
+	//	out_parameters );
+
+
+	[[nodiscard]] bool parse_spirv_specialization_constants(
+		Compiler& compiler,
+		shader_stages shader_stage,
+		SmallVector< SpecializationConstant >& specialization_constants,
+		std::array< uint8_t, constant_parameters::MAX_COUNT >* out_indices,
+		std::vector< constant_parameter::config >* out_constants )
+	{
+		// print( c.id ); // The ID of the spec constant, useful for further
+		//			   // reflection.
+		// print( c.constant_id ); // 20
+
+		// const SPIRConstant& value = comp.get_constant( c.id );
+		// print( value.scalar_i32() );	// 40
+		// print( comp.get_name( c.id ) ); // Const
+
+		bool success = true;
+
+		for ( const SpecializationConstant& c : specialization_constants )
+		{
+			constant constant = {
+				compiler.get_name( c.id ),
+			};
+			const SPIRConstant& value = compiler.get_constant( c.id );
+			const SPIRType& spir_type =
+				compiler.get_type( value.constant_type );
+			size_t binding = c.constant_id;
+
+			const SPIRConstant::ConstantVector& vec = value.vector();
+
+			if ( spir_type.basetype == SPIRType::Int )
+			{
+				switch ( spir_type.vecsize )
+				{
+				case 1:
+					constant.value = glm::ivec1( vec.r[0].i32 );
+					break;
+				case 2:
+					constant.value = glm::ivec2( vec.r[0].i32, vec.r[1].i32 );
+					break;
+
+				case 3:
+					constant.value =
+						glm::ivec3( vec.r[0].i32, vec.r[1].i32, vec.r[2].i32 );
+					break;
+
+				case 4:
+					constant.value = glm::ivec4(
+						vec.r[0].i32,
+						vec.r[1].i32,
+						vec.r[2].i32,
+						vec.r[4].i32 );
+					break;
+
+				default:
+					success = false;
+					LOG_CRITICAL(
+						"unhandled component count %d",
+						(int)spir_type.vecsize );
+				}
+			}
+			else if ( spir_type.basetype == SPIRType::Float )
+			{
+				switch ( spir_type.vecsize )
+				{
+				case 1:
+					constant.value = glm::vec1( vec.r[0].f32 );
+					break;
+				case 2:
+					constant.value = glm::vec2( vec.r[0].f32, vec.r[1].f32 );
+					break;
+
+				case 3:
+					constant.value =
+						glm::vec3( vec.r[0].f32, vec.r[1].f32, vec.r[2].f32 );
+					break;
+
+				case 4:
+					constant.value = glm::vec4(
+						vec.r[0].f32,
+						vec.r[1].f32,
+						vec.r[2].f32,
+						vec.r[4].f32 );
+
+				default:
+					success = false;
+					LOG_CRITICAL(
+						"unhandled component count %d",
+						(int)spir_type.vecsize );
+				}
+			}
+			else
+			{
+				success = false;
+				LOG_CRITICAL(
+					"%s is %s, not supported as shader constant",
+					constant.name.c_str(),
+					spir_type_string( spir_type.basetype ) );
+			}
+
+			if ( 1 < spir_type.array.size() )
+			{
+				success = false;
+				LOG_CRITICAL(
+					"multidimensional array constants not currently "
+					"supported" );
+			}
+
+			if ( spir_type.columns != 1 )
+			{
+				success = false;
+				LOG_CRITICAL( "matrix constants not currently supported" );
+			}
+
+			uint8_t* index = &( *out_indices )[binding];
+			if ( *index == (uint8_t)-1 )
+			{
+				*index = static_cast< uint8_t >( out_constants->size() );
+
+				out_constants->push_back( {
+					constant,
+					binding,
+					shader_stage,
+				} );
+			}
+			else
+			{
+				constant_parameter::config* constant_cfg =
+					&out_constants->at( *index );
+
+#define ERR_CHECK( EXPECT, ACTUAL, FMT, F_OP )               \
+	if ( EXPECT != ACTUAL )                                  \
+	{                                                        \
+		success = false;                                     \
+		LOG_CRITICAL(                                        \
+			"constant %s binding %d previously seen as " FMT \
+			" but now seen as " FMT,                         \
+			constant.name.c_str(),                           \
+			(int)binding,                                    \
+			F_OP( EXPECT ),                                  \
+			F_OP( ACTUAL ) );                                \
+	}
+
+				ERR_CHECK(
+					constant_cfg->constant.name,
+					constant.name,
+					"%s",
+					[]( const auto& s ) { return s.c_str(); } );
+				ERR_CHECK(
+					constant_cfg->constant.type(),
+					constant.type(),
+					"%s",
+					[]( const auto& t ) { return to_string( t ).data(); } );
+
+#undef ERR_CHECK
+				constant_cfg->shader_stages |= shader_stage;
+			}
+		}
+
+		return success;
 	}
 
 	[[nodiscard]] bool parse_spirv_resources(
@@ -252,12 +424,12 @@ namespace
 						parameter->name,
 						resource.name,
 						"%s",
-						[]( const std::string& s ) { return s.c_str(); } );
+						[]( auto& s ) { return s.c_str(); } );
 					ERR_CHECK(
 						parameter->type,
 						resource_category.type,
 						"%s",
-						[]( const parameter::type& t ) {
+						[]( auto& t ) {
 							return parameter::to_string( t ).data();
 						} );
 					ERR_CHECK( parameter->array_size, array_size, "%d", int );
@@ -361,18 +533,12 @@ namespace
 			F_OP( EXPECT ),                               \
 			F_OP( ACTUAL ) );                             \
 	}
-				ERR_CHECK(
-					config->name,
-					resource.name,
-					"%s",
-					[]( const std::string& s ) { return s.c_str(); } );
-				ERR_CHECK(
-					config->components,
-					comp,
-					"%s",
-					[]( const components& c ) {
-						return to_string( c ).data();
-					} );
+				ERR_CHECK( config->name, resource.name, "%s", []( auto& s ) {
+					return s.c_str();
+				} );
+				ERR_CHECK( config->components, comp, "%s", []( auto& c ) {
+					return to_string( c ).data();
+				} );
 				ERR_CHECK( config->location, location, "%d", int );
 #undef ERR_CHECK
 			}
@@ -386,6 +552,7 @@ bool igpu::spirv_parse(
 	std::vector< uint32_t > spirv,
 	std::string entry_point,
 	shader_stages stages,
+	std::vector< constant_parameter::config >* out_constants,
 	std::vector< parameter::config >* out_parameters,
 	std::vector< vertex_parameter::config >* out_vertex_parameters )
 {
@@ -393,10 +560,13 @@ bool igpu::spirv_parse(
 	Parser parser( std::move( spirv ) );
 	parser.parse();
 
+
+	std::array< uint8_t, parameters::MAX_COUNT > vertex_parameter_indices;
+	std::array< uint8_t, constant_parameters::MAX_COUNT > constant_indices;
 	std::array< std::array< uint8_t, parameters::MAX_COUNT >, 3 >
 		parameter_indices;
-	std::array< uint8_t, parameters::MAX_COUNT > vertex_parameter_indices;
 	memset( &parameter_indices, -1, sizeof parameter_indices );
+	memset( &constant_indices, -1, sizeof constant_indices );
 	memset( &vertex_parameter_indices, -1, sizeof vertex_parameter_indices );
 
 	Compiler compiler( std::move( parser.get_parsed_ir() ) );
@@ -414,6 +584,16 @@ bool igpu::spirv_parse(
 				auto active = compiler.get_active_interface_variables();
 				ShaderResources resources =
 					compiler.get_shader_resources( active );
+
+				SmallVector< SpecializationConstant > specialization_constants =
+					compiler.get_specialization_constants();
+
+				success &= parse_spirv_specialization_constants(
+					compiler,
+					stage,
+					specialization_constants,
+					&constant_indices,
+					out_constants );
 
 				success &= parse_spirv_resources(
 					compiler,

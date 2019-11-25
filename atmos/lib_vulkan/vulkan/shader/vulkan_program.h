@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "vulkan/shader/vulkan_constant_parameters.h"
 #include "vulkan/shader/vulkan_parameters.h"
 #include "vulkan/shader/vulkan_vertex_parameters.h"
 
@@ -37,13 +38,15 @@ namespace igpu
 
 		const config& cfg() const override;
 
+		const vulkan_constant_parameters& constant_parameters() const override;
+
+		const vulkan_vertex_parameters& vertex_parameters() const override;
+
 		const vulkan_parameters& batch_parameters() const override;
 
 		const vulkan_parameters& material_parameters() const override;
 
 		const vulkan_parameters& instance_parameters() const override;
-
-		const vulkan_vertex_parameters& vertex_parameters() const override;
 
 		VkPipelineLayout pipeline_layout() const;
 
@@ -55,6 +58,7 @@ namespace igpu
 		vulkan_program(
 			const config&,
 			VkPipelineLayout,
+			constant_parameters::config&&,
 			std::vector< vulkan_vertex_parameter >&&,
 			vulkan_parameters::config&& batch_cfg,
 			vulkan_parameters::config&& material_cfg,
@@ -64,6 +68,7 @@ namespace igpu
 		const config _cfg;
 
 		VkPipelineLayout _pipeline_layout;
+		vulkan_constant_parameters _constants;
 		vulkan_vertex_parameters _vertex_parameters;
 		vulkan_parameters _batch_parameters;
 		vulkan_parameters _material_parameters;

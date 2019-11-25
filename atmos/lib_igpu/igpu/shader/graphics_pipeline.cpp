@@ -3,6 +3,7 @@
 
 #include "igpu/buffer/geometry.h"
 #include "igpu/shader/attribute_indexer.h"
+#include "igpu/shader/constant_parameters.h"
 #include "igpu/shader/program.h"
 #include "igpu/shader/render_states.h"
 #include "igpu/shader/vertex_parameters.h"
@@ -13,6 +14,7 @@
 using namespace igpu;
 
 graphics_pipeline::config graphics_pipeline::make_config(
+	const constants::config& batch_constants,
 	const attribute_indexer& indexer,
 	const scoped_ptr< draw_target >& draw_target,
 	const scoped_ptr< program >& program,
@@ -59,6 +61,39 @@ graphics_pipeline::config graphics_pipeline::make_config(
 			.attributes.push_back( attribute );
 	}
 
+	const auto& constants = program->constant_parameters().cfg().constants;
+	for ( size_t i = 0; i < constants.size(); ++i )
+	{
+		const constant* found = nullptr;
+		const constant_parameter::config& param = constants[i];
+
+		for ( const constants::config* constant_cfgs : {
+				  &indexer.geometry()->cfg().constants,
+				  &program->cfg().constants,
+				  &batch_constants,
+			  } )
+		{
+			for ( const constant& compare : *constant_cfgs )
+			{
+				if ( compare.name == param.constant.name )
+				{
+					found = &compare;
+					cfg.compact_constants.push_back( {
+						compare,
+						param.binding,
+						param.shader_stages,
+					} );
+
+					break;
+				}
+			}
+			if ( found )
+			{
+				break;
+			}
+		}
+	}
+
 	return cfg;
 }
 
@@ -81,6 +116,11 @@ size_t graphics_pipeline::config::hash() const
 				(size_t)attribute.components,
 				(size_t)attribute.offset );
 		}
+	}
+
+	for ( const auto& constant_cfg : compact_constants )
+	{
+		h = hash_utils::hash_combine( h, constant_cfg.constant.hash() );
 	}
 
 	return h;
@@ -139,6 +179,24 @@ ptrdiff_t graphics_pipeline::config::compare( const config& other ) const
 		if ( l_buff.attributes.size() != r_buff.attributes.size() )
 		{
 			return l_buff.attributes.size() - r_buff.attributes.size();
+		}
+	}
+
+	size_t const_count =
+		std::min( compact_constants.size(), other.compact_constants.size() );
+	for ( size_t i = 0; i < const_count; ++i )
+	{
+		const constant_parameter::config& l_cfg = compact_constants[i];
+		const constant_parameter::config& r_cfg = other.compact_constants[i];
+
+		if ( l_cfg.binding != r_cfg.binding )
+		{
+			return l_cfg.binding != r_cfg.binding;
+		}
+
+		if ( auto cmp = l_cfg.constant.compare( r_cfg.constant ) )
+		{
+			return cmp;
 		}
 	}
 

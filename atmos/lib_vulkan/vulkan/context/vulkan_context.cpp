@@ -834,6 +834,7 @@ std::unique_ptr< opaque_batch > vulkan_context::make(
 		draw_target,
 		_st.pipeline_cache,
 		primitives,
+		base_cfg.constants,
 	} );
 }
 
@@ -855,6 +856,7 @@ std::unique_ptr< transparent_batch > vulkan_context::make(
 		draw_target,
 		_st.pipeline_cache,
 		primitives,
+		base_cfg.constants,
 	} );
 }
 

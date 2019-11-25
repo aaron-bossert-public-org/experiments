@@ -3,6 +3,7 @@
 
 #include "igpu/batch/draw_parameters.h"
 #include "igpu/buffer/topology.h"
+#include "igpu/shader/constants.h"
 
 #include <memory>
 #include <optional>
@@ -25,6 +26,7 @@ namespace igpu
 			std::vector< std::shared_ptr< vertex_buffer > > vertex_buffers;
 			size_t ibuff_byte_offset = 0;
 			std::vector< size_t > vbuff_byte_offsets;
+			constants::config constants;
 
 			size_t hash() const;
 

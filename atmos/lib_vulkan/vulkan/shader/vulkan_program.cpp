@@ -52,10 +52,10 @@ namespace
 			F_OP( parameter.MEMBER ) );                            \
 	}
 
-				ERR_CHECK( name, "%s", []( const std::string& s ) {
+				ERR_CHECK( name, "%s", []( const auto& s ) {
 					return s.c_str();
 				} );
-				ERR_CHECK( type, "%s", []( const igpu::parameter::type& t ) {
+				ERR_CHECK( type, "%s", []( const auto& t ) {
 					return igpu::parameter::to_string( t ).data();
 				} );
 				ERR_CHECK( array_size, "%d", int );
@@ -66,11 +66,67 @@ namespace
 			}
 		}
 	}
+
+	void merge_parameters(
+		const vulkan_shader& shader,
+		std::array< uint8_t, constant_parameters::MAX_COUNT >* out_indices,
+		std::vector< constant_parameter::config >* constant_cfgs )
+	{
+		// Get all sampled images in the shader.
+		for ( size_t i = 0; i < shader.constant_count(); ++i )
+		{
+			const constant_parameter::config& constant = shader.constant( i );
+
+			uint8_t* index = &( *out_indices )[constant.binding];
+			if ( *index == (uint8_t)-1 )
+			{
+				*index = static_cast< uint8_t >( constant_cfgs->size() );
+
+				constant_cfgs->push_back( constant );
+			}
+			else
+			{
+				constant_parameter::config* expect =
+					&constant_cfgs->at( *index );
+
+#define ERR_CHECK( MEMBER, FMT, F_OP )                             \
+	if ( expect->MEMBER != constant.MEMBER )                       \
+	{                                                              \
+		LOG_CRITICAL(                                              \
+			"descriptor set %d binding %d previously seen as " FMT \
+			" but now seen as " FMT,                               \
+			(int)constant.binding,                                 \
+			F_OP( expect->MEMBER ),                                \
+			F_OP( constant.MEMBER ) );                             \
+	}
+
+				ERR_CHECK( constant.name, "%s", []( auto& s ) {
+					return s.c_str();
+				} );
+				ERR_CHECK( constant.type(), "%s", []( const auto& t ) {
+					return igpu::to_string( t ).data();
+				} );
+#undef ERR_CHECK
+
+				expect->shader_stages |= constant.shader_stages;
+			}
+		}
+	}
 }
 
 const vulkan_program::config& vulkan_program::cfg() const
 {
 	return _cfg;
+}
+
+const vulkan_constant_parameters& vulkan_program::constant_parameters() const
+{
+	return _constants;
+}
+
+VkPipelineLayout vulkan_program::pipeline_layout() const
+{
+	return _pipeline_layout;
 }
 
 const vulkan_parameters& vulkan_program::batch_parameters() const
@@ -93,18 +149,13 @@ const vulkan_vertex_parameters& vulkan_program::vertex_parameters() const
 	return _vertex_parameters;
 }
 
-VkPipelineLayout vulkan_program::pipeline_layout() const
-{
-	return _pipeline_layout;
-}
-
-
 std::unique_ptr< vulkan_program > vulkan_program::make( const config& cfg )
 {
 	// create merged list of shader uniform inputs
 	std::array< std::vector< parameter::config >, 3 > base_parameter_cfgs;
-	std::array< std::array< uint8_t, parameters::MAX_COUNT >, 3 > indices = {};
-	memset( &indices, -1, sizeof indices );
+	std::array< std::array< uint8_t, parameters::MAX_COUNT >, 3 >
+		parameter_indices = {};
+	memset( &parameter_indices, -1, sizeof parameter_indices );
 
 	bool shaders_valid = true;
 	if ( !cfg.vk.vertex )
@@ -133,8 +184,14 @@ std::unique_ptr< vulkan_program > vulkan_program::make( const config& cfg )
 		return nullptr;
 	}
 
-	merge_parameters( *cfg.vk.vertex.get(), &indices, &base_parameter_cfgs );
-	merge_parameters( *cfg.vk.fragment.get(), &indices, &base_parameter_cfgs );
+	merge_parameters(
+		*cfg.vk.vertex.get(),
+		&parameter_indices,
+		&base_parameter_cfgs );
+	merge_parameters(
+		*cfg.vk.fragment.get(),
+		&parameter_indices,
+		&base_parameter_cfgs );
 
 	// create shader parameters, descriptor set layouts, and pipeline layout
 	std::array< vulkan_parameters::config, 3 > parameters_cfgs;
@@ -195,6 +252,18 @@ std::unique_ptr< vulkan_program > vulkan_program::make( const config& cfg )
 		nullptr,
 		&pipeline_layout );
 
+	constant_parameters::config constant_cfgs;
+	std::array< uint8_t, constant_parameters::MAX_COUNT > constant_indices = {};
+	memset( &constant_indices, -1, sizeof constant_indices );
+
+	merge_parameters(
+		*cfg.vk.vertex.get(),
+		&constant_indices,
+		&constant_cfgs.constants );
+	merge_parameters(
+		*cfg.vk.fragment.get(),
+		&constant_indices,
+		&constant_cfgs.constants );
 
 	vulkan_vertex_shader& vertex_shader = *cfg.vk.vertex;
 	std::vector< vulkan_vertex_parameter > vertex_parameters;
@@ -207,6 +276,7 @@ std::unique_ptr< vulkan_program > vulkan_program::make( const config& cfg )
 	return std::unique_ptr< vulkan_program >( new vulkan_program(
 		cfg,
 		pipeline_layout,
+		std::move( constant_cfgs ),
 		std::move( vertex_parameters ),
 		std::move( parameters_cfgs[0] ),
 		std::move( parameters_cfgs[1] ),
@@ -221,12 +291,14 @@ vulkan_program::~vulkan_program()
 vulkan_program::vulkan_program(
 	const config& cfg,
 	VkPipelineLayout pipeline_layout,
+	constant_parameters::config&& constant_cfgs,
 	std::vector< vulkan_vertex_parameter >&& vertex_parameters,
 	vulkan_parameters::config&& batch_cfg,
 	vulkan_parameters::config&& material_cfg,
 	vulkan_parameters::config&& instance_cfg )
 	: _cfg( cfg )
 	, _pipeline_layout( pipeline_layout )
+	, _constants( std::move( constant_cfgs ) )
 	, _vertex_parameters( std::move( vertex_parameters ) )
 	, _batch_parameters( std::move( batch_cfg ) )
 	, _material_parameters( std::move( material_cfg ) )

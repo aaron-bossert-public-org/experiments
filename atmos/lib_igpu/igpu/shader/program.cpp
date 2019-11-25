@@ -12,7 +12,11 @@ using namespace igpu;
 
 size_t program::config::hash() const
 {
-	return hash_utils::hash_combine( vertex, fragment );
+	size_t h = hash_utils::hash_combine( vertex, fragment );
+
+	hash_utils::hash_combine( &h, constants.hash() );
+
+	return h;
 }
 
 ptrdiff_t program::config::compare( const config& other ) const
@@ -21,6 +25,10 @@ ptrdiff_t program::config::compare( const config& other ) const
 	{
 		return vertex.get() - other.vertex.get();
 	}
+	if ( fragment != other.fragment )
+	{
+		return fragment.get() - other.fragment.get();
+	}
 
-	return fragment.get() - other.fragment.get();
+	return constants.compare( other.constants );
 }

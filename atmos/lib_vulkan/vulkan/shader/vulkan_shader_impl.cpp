@@ -76,7 +76,7 @@ void vulkan_shader_impl::unmap()
 			nullptr,
 			&_shader_module );
 
-		_parameters.clear();
+		_constants.clear(), _parameters.clear();
 		_vertex_parameters.clear();
 
 		shader_stages stages =
@@ -87,6 +87,7 @@ void vulkan_shader_impl::unmap()
 				 std::move( _memory ),
 				 s_entry_point,
 				 stages,
+				 &_constants,
 				 &_parameters,
 				 &_vertex_parameters ) )
 		{
@@ -105,6 +106,16 @@ VkPipelineShaderStageCreateInfo vulkan_shader_impl::stage_info() const
 	shader_stage_info.module = _shader_module;
 	shader_stage_info.pName = s_entry_point.c_str();
 	return shader_stage_info;
+}
+
+size_t vulkan_shader_impl::constant_count() const
+{
+	return _constants.size();
+}
+
+const constant_parameter::config& vulkan_shader_impl::constant( size_t i ) const
+{
+	return _constants[i];
 }
 
 size_t vulkan_shader_impl::parameter_count() const

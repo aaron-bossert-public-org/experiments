@@ -441,6 +441,7 @@ std::unique_ptr< vulkan_batch_binding > vulkan_root_batch::make_binding(
 
 			auto pipeline =
 				_vk.context->make_shared( graphics_pipeline::make_config(
+					_vk.constants,
 					indexer,
 					_vk.draw_target,
 					cfg.program,
