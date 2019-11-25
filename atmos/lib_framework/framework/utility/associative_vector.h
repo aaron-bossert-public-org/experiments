@@ -39,7 +39,7 @@ public:
 
 		associative_vector* _owner = nullptr;
 		key_t _key;
-		size_t _index = (size_t)-1;
+		size_t _index = ~0U;
 	};
 
 	/// map interface

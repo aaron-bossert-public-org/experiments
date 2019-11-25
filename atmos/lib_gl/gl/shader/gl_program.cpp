@@ -51,7 +51,7 @@
 // add support for STORAGE_BUFFER
 //			parameters.push_back(gl_parameter(
 //				cfg,
-//				(size_t)-1,
+//				~0U,
 //				index,
 //				binding_index));
 //		}
@@ -132,7 +132,7 @@
 // name.c_str()); 				continue;
 //			}
 //			parameters.emplace_back(parameter::config{ name, type, },
-//(size_t)-1,
+//~0U,
 // location, binding_index);
 //        }
 //
@@ -408,7 +408,7 @@
 //		return find->second;
 //	}
 //
-//	return (size_t)-1;
+//	return ~0U;
 //}
 //
 // const primitive& gl_program::default_instance_primitive(size_t

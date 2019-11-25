@@ -7,7 +7,7 @@
 // using namespace igpu;
 //
 // gl_parameter::gl_parameter()
-//	: parameter({}, (size_t)-1)
+//	: parameter({}, ~0U)
 //{}
 //
 // gl_parameter::gl_parameter(

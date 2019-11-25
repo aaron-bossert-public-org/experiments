@@ -16,7 +16,7 @@ namespace igpu
 		{
 			std::string name;
 			components components;
-			size_t location = (size_t)-1;
+			size_t location = ~0U;
 		};
 
 		virtual const config& cfg() const = 0;

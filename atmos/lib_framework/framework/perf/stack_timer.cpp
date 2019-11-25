@@ -461,7 +461,7 @@ void stack_timer::end()
 	callsite_data.thread_callstack_tracker().end_callsite( _stack_entry_index );
 
 	// prevent end slice from being called multiple times
-	_stack_entry_index = (size_t)-1;
+	_stack_entry_index = ~0U;
 }
 
 thread_callstack_tracker* stack_timer::aquire_tracker(
@@ -492,7 +492,7 @@ size_t stack_timer::make_callsite( const std::string& name )
 		return s_callsites.size() - 1;
 	}
 
-	return (size_t)-1;
+	return ~0U;
 }
 
 thread_callstack_tracker* thread_callstack_tracker::s_trackers[100] = {};

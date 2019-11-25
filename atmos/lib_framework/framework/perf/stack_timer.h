@@ -34,7 +34,7 @@ class thread_callstack_tracker;
 class stack_timer
 {
 	const size_t _callsite_index;
-	size_t _stack_entry_index = (size_t)-1;
+	size_t _stack_entry_index = ~0U;
 
 public:
 	stack_timer( size_t callsite_index, const std::string& instance_desc = "" );
