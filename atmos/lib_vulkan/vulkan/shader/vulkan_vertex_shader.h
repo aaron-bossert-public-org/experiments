@@ -21,6 +21,8 @@ namespace igpu
 		virtual const vertex_parameter::config& vertex_parameter(
 			size_t ) const = 0;
 
-		static std::unique_ptr< vulkan_vertex_shader > make( const vulkan& vk );
+		static std::unique_ptr< vulkan_vertex_shader > make(
+			const vulkan& vk,
+			std::vector< uint32_t >&& );
 	};
 }

@@ -86,12 +86,6 @@ namespace igpu
 
 		sp_t< depth_texture2d > make_shared( config_t< depth_texture2d > );
 
-		sp_t< vertex_shader > make_shared( config_t< vertex_shader > );
-
-		sp_t< fragment_shader > make_shared( config_t< fragment_shader > );
-
-		sp_t< compute_shader > make_shared( config_t< compute_shader > );
-
 		sp_t< vertex_buffer > make_shared( config_t< vertex_buffer > );
 
 		sp_t< index_buffer > make_shared( config_t< index_buffer > );
@@ -103,6 +97,18 @@ namespace igpu
 		sp_t< opaque_batch > make_shared( config_t< opaque_batch > );
 
 		sp_t< transparent_batch > make_shared( config_t< transparent_batch > );
+
+		sp_t< vertex_shader > make_shared(
+			config_t< vertex_shader >,
+			std::vector< uint32_t >&& );
+
+		sp_t< fragment_shader > make_shared(
+			config_t< fragment_shader >,
+			std::vector< uint32_t >&& );
+
+		sp_t< compute_shader > make_shared(
+			config_t< compute_shader >,
+			std::vector< uint32_t >&& );
 
 		template < typename T >
 		void visit( const std::function< void( T* ) >& );
@@ -139,15 +145,6 @@ namespace igpu
 		virtual std::unique_ptr< depth_texture2d > make(
 			const depth_texture2d::config& ) = 0;
 
-		virtual std::unique_ptr< vertex_shader > make(
-			const vertex_shader::config& ) = 0;
-
-		virtual std::unique_ptr< fragment_shader > make(
-			const fragment_shader::config& ) = 0;
-
-		virtual std::unique_ptr< compute_shader > make(
-			const compute_shader::config& ) = 0;
-
 		virtual std::unique_ptr< vertex_buffer > make(
 			const vertex_buffer::config& ) = 0;
 
@@ -165,6 +162,18 @@ namespace igpu
 
 		virtual std::unique_ptr< transparent_batch > make(
 			const transparent_batch::config& ) = 0;
+
+		virtual std::unique_ptr< vertex_shader > make(
+			const vertex_shader::config&,
+			std::vector< uint32_t >&& ) = 0;
+
+		virtual std::unique_ptr< fragment_shader > make(
+			const fragment_shader::config&,
+			std::vector< uint32_t >&& ) = 0;
+
+		virtual std::unique_ptr< compute_shader > make(
+			const compute_shader::config&,
+			std::vector< uint32_t >&& ) = 0;
 
 		std::vector< std::shared_ptr< tracker > > _trackers;
 

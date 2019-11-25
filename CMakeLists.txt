@@ -99,7 +99,7 @@ endfunction()
 
 
 # dcs_test
-set(source_folders "include src")
+set(source_folders "src")
 BUILD_EXE(dcs_test ${source_folders})
 
 target_include_directories(dcs_test 

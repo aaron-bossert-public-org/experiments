@@ -2,6 +2,7 @@
 #pragma once
 
 #include "framework/meta_programming/va_macro.h"
+#include "framework/utility/buffer_view.h"
 
 class buffer_view_base;
 

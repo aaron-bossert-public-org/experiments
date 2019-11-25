@@ -91,15 +91,6 @@ namespace igpu
 		std::unique_ptr< compute_program > make(
 			const compute_program::config& ) override;
 
-		std::unique_ptr< vertex_shader > make(
-			const vertex_shader::config& ) override;
-
-		std::unique_ptr< compute_shader > make(
-			const compute_shader::config& ) override;
-
-		std::unique_ptr< fragment_shader > make(
-			const fragment_shader::config& ) override;
-
 		std::unique_ptr< render_states > make(
 			const render_states::config& ) override;
 
@@ -124,6 +115,18 @@ namespace igpu
 
 		std::unique_ptr< transparent_batch > make(
 			const transparent_batch::config& ) override;
+
+		std::unique_ptr< vertex_shader > make(
+			const vertex_shader::config&,
+			std::vector< uint32_t >&& ) override;
+
+		std::unique_ptr< compute_shader > make(
+			const compute_shader::config&,
+			std::vector< uint32_t >&& ) override;
+
+		std::unique_ptr< fragment_shader > make(
+			const fragment_shader::config&,
+			std::vector< uint32_t >&& ) override;
 
 	protected:
 		vulkan_context( config&&, state&& );

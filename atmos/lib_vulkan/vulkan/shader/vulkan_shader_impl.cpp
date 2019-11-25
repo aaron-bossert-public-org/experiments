@@ -15,14 +15,20 @@ namespace
 	const std::string s_entry_point = "main";
 }
 
-vulkan_shader_impl::vulkan_shader_impl( const vulkan_shader::vulkan& vk )
+vulkan_shader_impl::vulkan_shader_impl(
+	const vulkan_shader::vulkan& vk,
+	state&& st )
 	: _vk( vk )
-	, _cpu_mem_metric( perf::category::CPU_MEM_USAGE, "spirv buffer" )
+	, _st( std::move( st ) )
 {}
 
 vulkan_shader_impl::~vulkan_shader_impl()
 {
-	release();
+	if ( _st.shader_module )
+	{
+		// it is safe to destroy shader modules while they are in use
+		vkDestroyShaderModule( _vk.device, _st.shader_module, nullptr );
+	}
 }
 
 const vulkan_shader::vulkan& vulkan_shader_impl::vk() const
@@ -30,71 +36,9 @@ const vulkan_shader::vulkan& vulkan_shader_impl::vk() const
 	return _vk;
 }
 
-VkShaderModule vulkan_shader_impl::shader_module() const
+const vulkan_shader_impl::state& vulkan_shader_impl::st() const
 {
-	return _shader_module;
-}
-
-void vulkan_shader_impl::map( buffer_view_base* out_mapped_view )
-{
-	if ( _memory.size() )
-	{
-		LOG_CRITICAL( "map/unmap mismatch" );
-	}
-	else
-	{
-		_memory.resize( ( out_mapped_view->byte_size() + 3 ) / 4 );
-
-		_cpu_mem_metric.reset();
-		_cpu_mem_metric.add( _memory.size() * sizeof( _memory[0] ) );
-
-		*out_mapped_view = buffer_view_base(
-			out_mapped_view->size(),
-			_memory.data(),
-			out_mapped_view->stride() );
-	}
-}
-
-void vulkan_shader_impl::unmap()
-{
-	if ( !_memory.size() )
-	{
-		LOG_CRITICAL( "map/unmap mismatch" );
-	}
-	else
-	{
-		release();
-
-		VkShaderModuleCreateInfo create_info = {};
-		create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		create_info.codeSize = _memory.size() * sizeof _memory[0];
-		create_info.pCode = _memory.data();
-
-		vkCreateShaderModule(
-			_vk.device,
-			&create_info,
-			nullptr,
-			&_shader_module );
-
-		_constants.clear(), _parameters.clear();
-		_vertex_parameters.clear();
-
-		shader_stages stages =
-			from_vulkan_shader_stage_flags( _vk.stage_flags );
-
-		if ( false ==
-			 spirv_parse(
-				 std::move( _memory ),
-				 s_entry_point,
-				 stages,
-				 &_constants,
-				 &_parameters,
-				 &_vertex_parameters ) )
-		{
-			_parameters.clear();
-			_vertex_parameters.clear();
-		}
-	}
+	return _st;
 }
 
 VkPipelineShaderStageCreateInfo vulkan_shader_impl::stage_info() const
@@ -103,50 +47,52 @@ VkPipelineShaderStageCreateInfo vulkan_shader_impl::stage_info() const
 	shader_stage_info.sType =
 		VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	shader_stage_info.stage = _vk.stage_flags;
-	shader_stage_info.module = _shader_module;
+	shader_stage_info.module = _st.shader_module;
 	shader_stage_info.pName = s_entry_point.c_str();
 	return shader_stage_info;
 }
 
-size_t vulkan_shader_impl::constant_count() const
+bool vulkan_shader_impl::make_state(
+	const vulkan_shader::vulkan& vk,
+	std::vector< uint32_t >&& memory,
+	state* out_st )
 {
-	return _constants.size();
-}
-
-const constant_parameter::config& vulkan_shader_impl::constant( size_t i ) const
-{
-	return _constants[i];
-}
-
-size_t vulkan_shader_impl::parameter_count() const
-{
-	return _parameters.size();
-}
-
-const parameter::config& vulkan_shader_impl::parameter( size_t i ) const
-{
-	return _parameters[i];
-}
-
-size_t vulkan_shader_impl::vertex_parameter_count() const
-{
-	return _vertex_parameters.size();
-}
-
-const vertex_parameter::config& vulkan_shader_impl::vertex_parameter(
-	size_t i ) const
-{
-	return _vertex_parameters[i];
-}
-
-void vulkan_shader_impl::release()
-{
-	if ( _shader_module )
+	if ( !memory.size() )
 	{
-		// it is safe to destroy shader modules while they are in use
-		vkDestroyShaderModule( _vk.device, _shader_module, nullptr );
+		LOG_CRITICAL( "memory is empty" );
 	}
+	else
+	{
+		VkShaderModuleCreateInfo create_info = {};
+		create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+		create_info.codeSize = memory.size() * sizeof memory[0];
+		create_info.pCode = memory.data();
 
-	_parameters.clear();
-	_vertex_parameters.clear();
+		vkCreateShaderModule(
+			vk.device,
+			&create_info,
+			nullptr,
+			&out_st->shader_module );
+		if ( out_st->shader_module )
+		{
+			shader_stages stages =
+				from_vulkan_shader_stage_flags( vk.stage_flags );
+
+			if ( spirv_parse(
+					 std::move( memory ),
+					 s_entry_point,
+					 stages,
+					 &out_st->constants,
+					 &out_st->parameters,
+					 &out_st->vertex_parameters ) )
+			{
+				return true;
+			}
+		}
+	}
+	if ( out_st->shader_module )
+	{
+		vkDestroyShaderModule( vk.device, out_st->shader_module, nullptr );
+	}
+	return false;
 }

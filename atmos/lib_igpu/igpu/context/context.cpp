@@ -298,24 +298,6 @@ std::shared_ptr< depth_texture2d > context::make_shared(
 	return ::emplace( &_trackers, make( cfg ) );
 }
 
-std::shared_ptr< vertex_shader > context::make_shared(
-	const vertex_shader::config& cfg )
-{
-	return ::emplace( &_trackers, make( cfg ) );
-}
-
-std::shared_ptr< fragment_shader > context::make_shared(
-	const fragment_shader::config& cfg )
-{
-	return ::emplace( &_trackers, make( cfg ) );
-}
-
-std::shared_ptr< compute_shader > context::make_shared(
-	const compute_shader::config& cfg )
-{
-	return ::emplace( &_trackers, make( cfg ) );
-}
-
 std::shared_ptr< vertex_buffer > context::make_shared(
 	const vertex_buffer::config& cfg )
 {
@@ -350,6 +332,27 @@ std::shared_ptr< transparent_batch > context::make_shared(
 	const transparent_batch::config& cfg )
 {
 	return ::emplace( &_trackers, make( cfg ) );
+}
+
+std::shared_ptr< vertex_shader > context::make_shared(
+	const vertex_shader::config& cfg,
+	std::vector< uint32_t >&& memory )
+{
+	return ::emplace( &_trackers, make( cfg, std::move( memory ) ) );
+}
+
+std::shared_ptr< fragment_shader > context::make_shared(
+	const fragment_shader::config& cfg,
+	std::vector< uint32_t >&& memory )
+{
+	return ::emplace( &_trackers, make( cfg, std::move( memory ) ) );
+}
+
+std::shared_ptr< compute_shader > context::make_shared(
+	const compute_shader::config& cfg,
+	std::vector< uint32_t >&& memory )
+{
+	return ::emplace( &_trackers, make( cfg, std::move( memory ) ) );
 }
 
 template <>

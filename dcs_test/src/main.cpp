@@ -3,7 +3,7 @@
 
 #include <algorithm>
 #include <cstdlib>
-#include <dcs_test/include/dcs_test.h>
+#include <dcs_test/src/dcs_test.h>
 #include <thread>
 
 #if ATMOS_BUILD_WINDOWS

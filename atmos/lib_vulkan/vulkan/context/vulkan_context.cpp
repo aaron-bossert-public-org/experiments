@@ -743,34 +743,6 @@ std::unique_ptr< compute_program > vulkan_context::make(
 	} );
 }
 
-
-std::unique_ptr< vertex_shader > vulkan_context::make(
-	const vertex_shader::config& )
-{
-	return vulkan_vertex_shader::make( {
-		this->_cfg.vk.device,
-		VK_SHADER_STAGE_VERTEX_BIT,
-	} );
-}
-
-std::unique_ptr< fragment_shader > vulkan_context::make(
-	const fragment_shader::config& )
-{
-	return vulkan_fragment_shader::make( {
-		this->_cfg.vk.device,
-		VK_SHADER_STAGE_FRAGMENT_BIT,
-	} );
-}
-
-std::unique_ptr< compute_shader > vulkan_context::make(
-	const compute_shader::config& )
-{
-	return vulkan_compute_shader::make( {
-		this->_cfg.vk.device,
-		VK_SHADER_STAGE_COMPUTE_BIT,
-	} );
-}
-
 std::unique_ptr< render_states > vulkan_context::make(
 	const render_states::config& base_cfg )
 {
@@ -884,6 +856,42 @@ std::unique_ptr< transparent_batch > vulkan_context::make(
 		primitives,
 		base_cfg.constants,
 	} );
+}
+
+std::unique_ptr< vertex_shader > vulkan_context::make(
+	const vertex_shader::config&,
+	std::vector< uint32_t >&& memory )
+{
+	return vulkan_vertex_shader::make(
+		{
+			this->_cfg.vk.device,
+			VK_SHADER_STAGE_VERTEX_BIT,
+		},
+		std::move( memory ) );
+}
+
+std::unique_ptr< fragment_shader > vulkan_context::make(
+	const fragment_shader::config&,
+	std::vector< uint32_t >&& memory )
+{
+	return vulkan_fragment_shader::make(
+		{
+			this->_cfg.vk.device,
+			VK_SHADER_STAGE_FRAGMENT_BIT,
+		},
+		std::move( memory ) );
+}
+
+std::unique_ptr< compute_shader > vulkan_context::make(
+	const compute_shader::config&,
+	std::vector< uint32_t >&& memory )
+{
+	return vulkan_compute_shader::make(
+		{
+			this->_cfg.vk.device,
+			VK_SHADER_STAGE_COMPUTE_BIT,
+		},
+		std::move( memory ) );
 }
 
 scoped_ptr< draw_target > vulkan_context::back_buffer()

@@ -1,11 +1,9 @@
 
 #pragma once
 
-#include "igpu/buffer/buffer.h"
-
 namespace igpu
 {
-	class shader : public buffer
+	class shader
 	{
 	public:
 		struct config
