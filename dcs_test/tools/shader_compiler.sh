@@ -12,7 +12,7 @@ cd $RAW_DIR
 
 for FILE in *;
 do
-	C:/VulkanSDK/1.1.106.0/Bin32/glslangValidator.exe -V "$FILE" -o "${COOKED_DIR}/${FILE}.spv"
+	C:/VulkanSDK/1.1.126.0/Bin32/glslangValidator.exe -V "$FILE" -o "${COOKED_DIR}/${FILE}.spv"
 done
 
 ./../../../format_source.sh -s;
