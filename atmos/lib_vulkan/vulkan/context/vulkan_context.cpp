@@ -11,6 +11,8 @@
 #include "vulkan/manager/vulkan_barrier_manager.h"
 #include "vulkan/manager/vulkan_managers.h"
 #include "vulkan/manager/vulkan_queue_manager.h"
+#include "vulkan/shader/vulkan_compute_program.h"
+#include "vulkan/shader/vulkan_compute_shader.h"
 #include "vulkan/shader/vulkan_fragment_shader.h"
 #include "vulkan/shader/vulkan_graphics_pipeline.h"
 #include "vulkan/shader/vulkan_pipeline_cache.h"
@@ -727,6 +729,21 @@ std::unique_ptr< program > vulkan_context::make(
 	} );
 }
 
+std::unique_ptr< compute_program > vulkan_context::make(
+	const compute_program::config& base_cfg )
+{
+	auto compute =
+		std::dynamic_pointer_cast< vulkan_compute_shader, compute_shader >(
+			base_cfg.compute );
+
+	return vulkan_compute_program::make( {
+		base_cfg,
+		_cfg.vk.device,
+		compute,
+	} );
+}
+
+
 std::unique_ptr< vertex_shader > vulkan_context::make(
 	const vertex_shader::config& )
 {
@@ -742,6 +759,15 @@ std::unique_ptr< fragment_shader > vulkan_context::make(
 	return vulkan_fragment_shader::make( {
 		this->_cfg.vk.device,
 		VK_SHADER_STAGE_FRAGMENT_BIT,
+	} );
+}
+
+std::unique_ptr< compute_shader > vulkan_context::make(
+	const compute_shader::config& )
+{
+	return vulkan_compute_shader::make( {
+		this->_cfg.vk.device,
+		VK_SHADER_STAGE_COMPUTE_BIT,
 	} );
 }
 

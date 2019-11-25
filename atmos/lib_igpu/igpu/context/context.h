@@ -7,6 +7,8 @@
 #include "igpu/buffer/index_buffer.h"
 #include "igpu/buffer/topology.h"
 #include "igpu/buffer/vertex_buffer.h"
+#include "igpu/shader/compute_program.h"
+#include "igpu/shader/compute_shader.h"
 #include "igpu/shader/fragment_shader.h"
 #include "igpu/shader/graphics_pipeline.h"
 #include "igpu/shader/primitives.h"
@@ -64,6 +66,8 @@ namespace igpu
 
 		sp_t< program > make_shared( config_t< program > );
 
+		sp_t< compute_program > make_shared( config_t< compute_program > );
+
 		sp_t< render_states > make_shared( config_t< render_states > );
 
 		sp_t< geometry > make_shared( config_t< geometry > );
@@ -86,6 +90,8 @@ namespace igpu
 
 		sp_t< fragment_shader > make_shared( config_t< fragment_shader > );
 
+		sp_t< compute_shader > make_shared( config_t< compute_shader > );
+
 		sp_t< vertex_buffer > make_shared( config_t< vertex_buffer > );
 
 		sp_t< index_buffer > make_shared( config_t< index_buffer > );
@@ -103,6 +109,9 @@ namespace igpu
 
 	protected:
 		virtual std::unique_ptr< program > make( const program::config& ) = 0;
+
+		virtual std::unique_ptr< compute_program > make(
+			const compute_program::config& ) = 0;
 
 		virtual std::unique_ptr< render_states > make(
 			const render_states::config& ) = 0;
@@ -135,6 +144,9 @@ namespace igpu
 
 		virtual std::unique_ptr< fragment_shader > make(
 			const fragment_shader::config& ) = 0;
+
+		virtual std::unique_ptr< compute_shader > make(
+			const compute_shader::config& ) = 0;
 
 		virtual std::unique_ptr< vertex_buffer > make(
 			const vertex_buffer::config& ) = 0;

@@ -229,6 +229,14 @@ std::shared_ptr< program > context::make_shared( const program::config& cfg )
 	return ::memoize< program >( &_trackers, cfg, [&] { return make( cfg ); } );
 }
 
+std::shared_ptr< compute_program > context::make_shared(
+	const compute_program::config& cfg )
+{
+	return ::memoize< compute_program >( &_trackers, cfg, [&] {
+		return make( cfg );
+	} );
+}
+
 std::shared_ptr< render_states > context::make_shared(
 	const render_states::config& cfg )
 {
@@ -298,6 +306,12 @@ std::shared_ptr< vertex_shader > context::make_shared(
 
 std::shared_ptr< fragment_shader > context::make_shared(
 	const fragment_shader::config& cfg )
+{
+	return ::emplace( &_trackers, make( cfg ) );
+}
+
+std::shared_ptr< compute_shader > context::make_shared(
+	const compute_shader::config& cfg )
 {
 	return ::emplace( &_trackers, make( cfg ) );
 }
