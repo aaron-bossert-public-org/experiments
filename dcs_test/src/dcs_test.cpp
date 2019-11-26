@@ -67,8 +67,12 @@ std::unique_ptr< dcs_test > dcs_test::make( const config& cfg )
 				dcs_utils::load_mem( cfg.fragment_path.c_str() ) ),
 		} );
 
-		st.geometry =
-			dcs_utils::load_model( cfg.context.get(), cfg.model_path );
+		st.geometry = dcs_utils::load_model(
+						  cfg.context.get(),
+						  cfg.model_path,
+						  dcs_utils::model_flags::JOIN_IDENTICAL_VERTICES |
+							  dcs_utils::model_flags::FLIP_TEXCOORD_Y )
+						  .geometry;
 
 		return std::unique_ptr< dcs_test >(
 			new dcs_test( cfg, std::move( st ) ) );

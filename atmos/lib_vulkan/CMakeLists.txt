@@ -18,7 +18,6 @@ IF (CMAKE_CL_64)
 		"${CMAKE_CURRENT_SOURCE_DIR}" 
 		"${CMAKE_CURRENT_SOURCE_DIR}/../third_party/vulkan/Include/Vulkan"
 		"${CMAKE_CURRENT_SOURCE_DIR}/../third_party/VulkanMemoryAllocator-master"
-		"${CMAKE_CURRENT_SOURCE_DIR}/../third_party/tinyobjloader-master"
 	)
 
 	target_link_libraries(vulkan 
@@ -37,7 +36,6 @@ ELSE()
 		"${CMAKE_CURRENT_SOURCE_DIR}" 
 		"${CMAKE_CURRENT_SOURCE_DIR}/../third_party/vulkan/Include/Vulkan"
 		"${CMAKE_CURRENT_SOURCE_DIR}/../third_party/VulkanMemoryAllocator-master"
-		"${CMAKE_CURRENT_SOURCE_DIR}/../third_party/tinyobjloader-master"
 	)
 	
 	target_link_libraries(vulkan 

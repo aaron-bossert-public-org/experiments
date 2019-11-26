@@ -99,17 +99,20 @@ endfunction()
 
 
 # dcs_test
-set(source_folders "src")
+set(source_folders "src third_party/assimp/assimp" )
 BUILD_EXE(dcs_test ${source_folders})
 
 target_include_directories(dcs_test 
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/dcs_test/third_party/assimp"
 )
 
 # atmos
 add_subdirectory(atmos)
-target_link_libraries(dcs_test vulkan framework_tests)
+target_link_libraries(
+	dcs_test vulkan framework_tests
+	"${CMAKE_CURRENT_SOURCE_DIR}/dcs_test/third_party/assimp/assimp/lib/assimp.lib")
 
 set_property(TARGET dcs_test PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/dcs_test")
 set_property (DIRECTORY PROPERTY VS_STARTUP_PROJECT dcs_test)

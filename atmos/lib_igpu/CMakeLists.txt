@@ -10,7 +10,6 @@ BUILD_LIB(
 target_include_directories(igpu
 	PRIVATE
 		${CMAKE_CURRENT_SOURCE_DIR}/../third_party/stb-master
-		${CMAKE_CURRENT_SOURCE_DIR}/../third_party/tinyobjloader-master
 
 	PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}
