@@ -19,16 +19,12 @@ layout( set = 2, binding = 3 ) uniform instance_data
 instance;
 
 layout( location = 0 ) in vec3 pos;
-layout( location = 1 ) in vec3 col;
 layout( location = 2 ) in vec2 uv0;
 
-layout( location = 0 ) out vec3 fragColor;
-layout( location = 1 ) out vec2 fragTexCoord;
+layout( location = 0 ) out vec2 fragTexCoord;
 
 void main()
 {
 	gl_Position = batch.proj * batch.view * instance.model * vec4( pos, 1.0 );
-
-	fragColor = col;
 	fragTexCoord = uv0;
 }
