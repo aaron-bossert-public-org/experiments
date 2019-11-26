@@ -3,8 +3,6 @@
 
 #include "igpu/buffer/components.h"
 
-#include "framework/meta_programming/va_macro.h"
-
 #include <string>
 
 namespace igpu

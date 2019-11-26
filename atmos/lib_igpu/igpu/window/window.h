@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "framework/meta_programming/va_macro.h"
-
 #include "glm/vec2.hpp"
 #include <memory>
 

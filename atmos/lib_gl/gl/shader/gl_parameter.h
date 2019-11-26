@@ -3,8 +3,6 @@
 
 #include "igpu/shader/parameter.h"
 
-#include "framework/meta_programming/va_macro.h"
-
 #include <optional>
 
 namespace igpu

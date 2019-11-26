@@ -5,8 +5,6 @@
 
 #include "igpu/shader/program_parsing.h"
 
-#include "framework/meta_programming/va_macro.h"
-
 namespace igpu
 {
 	class vulkan_parameter : public parameter
