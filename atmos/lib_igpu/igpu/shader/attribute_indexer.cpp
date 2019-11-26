@@ -78,7 +78,7 @@ bool attribute_indexer::reset(
 		// increase attr index of where we expect the next attribute to be
 		++attr;
 
-		if ( shader_param.cfg().components != attribute.components )
+		if ( shader_param.cfg().components > attribute.components )
 		{
 			LOG_CRITICAL(
 				"attribute (%s) expected to be (%s) but geometry (%s) uses "
