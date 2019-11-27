@@ -75,7 +75,7 @@ N=16
 		
 			echo "Format shaders in directory: ${FORMAT_TARGET} ..."
 			cd $"${FORMAT_TARGET}"
-			for file in **/*.{vert,frag} 
+			for file in **/*.{vert,frag,comp} 
 			do 
 			   ((i=i%N)); 
 			   ((i++==0)) && wait
