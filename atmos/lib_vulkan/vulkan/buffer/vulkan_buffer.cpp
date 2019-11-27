@@ -283,6 +283,24 @@ void vulkan_buffer::update_descriptor_set(
 	const vulkan_parameter::config& parameter_config,
 	size_t array_element ) const
 {
+	if ( _allocation.memory_size >
+		 _cfg.vk.managers->cfg()
+			 .device_properties.limits.maxUniformBufferRange )
+	{
+		if ( parameter_config.type == parameter::type::UNIFORM_BUFFER )
+		{
+			LOG_CRITICAL(
+				"failed to bind %s to uniform because of its size: %d bytes. "
+				"Reduce buffer size or use storage buffer instead of uniform "
+				"buffer in shader. Current GPUs uniform range limit: %d bytes",
+				parameter_config.name.c_str(),
+				_allocation.memory_size,
+				_cfg.vk.managers->cfg()
+					.device_properties.limits.maxUniformBufferRange );
+			return;
+		}
+	}
+
 	VkDescriptorBufferInfo buffer_descriptor{
 		_allocation.buffer,
 		0,
