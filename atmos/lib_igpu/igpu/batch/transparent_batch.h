@@ -1,14 +1,14 @@
 
 #pragma once
 
-#include "igpu/batch/batch.h"
+#include "igpu/batch/raster_batch.h"
 
 namespace igpu
 {
-	class transparent_batch : public batch
+	class transparent_batch : public raster_batch
 	{
 	public:
-		struct config : batch::config
+		struct config : raster_batch::config
 		{};
 
 		virtual ~transparent_batch() = default;

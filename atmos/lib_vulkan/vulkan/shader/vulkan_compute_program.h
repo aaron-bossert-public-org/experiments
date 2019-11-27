@@ -11,7 +11,7 @@
 namespace igpu
 {
 	class batch;
-	class batch_binding;
+	class raster_binding;
 	class vulkan_context;
 	class vulkan_poset_fence;
 	class vulkan_compute_shader;

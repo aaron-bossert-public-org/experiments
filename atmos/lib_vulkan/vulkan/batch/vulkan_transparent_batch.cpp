@@ -2,7 +2,7 @@
 
 #include "vulkan/batch/vulkan_transparent_batch.h"
 
-#include "vulkan/batch/vulkan_batch_nodes.h"
+#include "vulkan/batch/vulkan_raster_nodes.h"
 
 using namespace igpu;
 
@@ -19,22 +19,24 @@ void vulkan_transparent_batch::raster(
 	const raster_state& )
 {
 	LOG_CRITICAL( "not implemented" );
-	// batch_utility::render_transparent(*_raster_batch, frustum);
+	// raster_utility::render_transparent(*_raster_batch_root, frustum);
 }
 
-std::unique_ptr< batch_binding > vulkan_transparent_batch::make_binding(
+std::unique_ptr< raster_binding > vulkan_transparent_batch::make_binding(
 	const instance_batch::config& cfg )
 {
-	return _raster_batch->make_binding( cfg );
+	return _raster_batch_root->make_binding( cfg );
 }
 
 std::unique_ptr< vulkan_transparent_batch > vulkan_transparent_batch::make(
 	const config& cfg )
 {
-	if ( auto raster_batch = vulkan_raster_batch::make( cfg.vk ) )
+	if ( auto raster_batch_root = vulkan_raster_batch_root::make( cfg.vk ) )
 	{
 		return std::unique_ptr< vulkan_transparent_batch >(
-			new vulkan_transparent_batch( cfg, std::move( raster_batch ) ) );
+			new vulkan_transparent_batch(
+				cfg,
+				std::move( raster_batch_root ) ) );
 	}
 
 	return nullptr;
@@ -42,7 +44,7 @@ std::unique_ptr< vulkan_transparent_batch > vulkan_transparent_batch::make(
 
 vulkan_transparent_batch::vulkan_transparent_batch(
 	const config& cfg,
-	std::unique_ptr< vulkan_raster_batch > raster_batch )
+	std::unique_ptr< vulkan_raster_batch_root > raster_batch_root )
 	: _cfg( cfg )
-	, _raster_batch( std::move( raster_batch ) )
+	, _raster_batch_root( std::move( raster_batch_root ) )
 {}

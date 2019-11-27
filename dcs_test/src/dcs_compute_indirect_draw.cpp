@@ -42,7 +42,7 @@ std::unique_ptr< dcs_compute_indirect_draw > dcs_compute_indirect_draw::make(
 	{
 		state st;
 
-		st.batch_data = cfg.context->make_shared( compute_buffer::config{} );
+		st.raster_data = cfg.context->make_shared( compute_buffer::config{} );
 		st.instance_data = cfg.context->make_shared( compute_buffer::config{} );
 		st.indirect_draw = cfg.context->make_shared(
 			compute_buffer::config{ compute_buff_flag::INDIRECT_DRAW } );
@@ -148,7 +148,7 @@ dcs_compute_indirect_draw::dcs_compute_indirect_draw(
 	_st.opaque_batch = cfg.context->make_shared( opaque_batch::config{
 		cfg.context->back_buffer(),
 		cfg.context->make_shared( primitives::config{ {
-			{ "batch_data", _st.batch_data },
+			{ "raster_data", _st.raster_data },
 		} } ),
 	} );
 
@@ -160,10 +160,10 @@ dcs_compute_indirect_draw::dcs_compute_indirect_draw(
 		{ "instance_data", _st.instance_data },
 	} } );
 
-	_st.batch_bindings.push_back(
+	_st.raster_bindings.push_back(
 		_st.opaque_batch->make_binding( instance_cfg ) );
 
-	_st.batch_bindings.back()->instance_batch().draw_params(
+	_st.raster_bindings.back()->instance_batch().draw_params(
 		igpu::draw_indirect_parameters{
 			s_instance_volume,
 			_st.indirect_draw,
@@ -218,7 +218,7 @@ void dcs_compute_indirect_draw::update()
 		glm::mat4 proj;
 	}* batch_ubo = nullptr;
 
-	_st.batch_data->map( &batch_ubo );
+	_st.raster_data->map( &batch_ubo );
 
 	batch_ubo->view = look * rot;
 
@@ -228,7 +228,7 @@ void dcs_compute_indirect_draw::update()
 		0.5f,
 		1000.0f );
 
-	_st.batch_data->unmap();
+	_st.raster_data->unmap();
 }
 
 void dcs_compute_indirect_draw::handle_input()

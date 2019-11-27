@@ -5,7 +5,7 @@
 
 namespace igpu
 {
-	class batch_binding;
+	class raster_binding;
 	class compute_buffer;
 	class context;
 	class geometry;
@@ -43,13 +43,13 @@ private:
 
 		dcs_utils::model model;
 
-		std::shared_ptr< igpu::compute_buffer > batch_data;
+		std::shared_ptr< igpu::compute_buffer > raster_data;
 		std::shared_ptr< igpu::compute_buffer > instance_data;
 		std::shared_ptr< igpu::compute_buffer > indirect_draw;
 
 		std::shared_ptr< igpu::opaque_batch > opaque_batch;
-		std::unique_ptr< igpu::batch_binding > batch_binding;
-		std::vector< std::unique_ptr< igpu::batch_binding > > batch_bindings;
+		std::unique_ptr< igpu::raster_binding > raster_binding;
+		std::vector< std::unique_ptr< igpu::raster_binding > > raster_bindings;
 	};
 
 	dcs_compute_indirect_draw( const config&, state&& );

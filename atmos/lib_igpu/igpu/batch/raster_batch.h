@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "igpu/batch/batch_binding.h"
+#include "igpu/batch/raster_binding.h"
 #include "igpu/shader/constants.h"
 #include "igpu/shader/primitives.h"
 #include "igpu/utility/utility_types.h"
@@ -15,7 +15,7 @@ namespace igpu
 {
 	class draw_target;
 
-	class batch
+	class raster_batch
 	{
 	public:
 		struct config
@@ -32,7 +32,7 @@ namespace igpu
 
 		virtual const config& cfg() const = 0;
 
-		virtual std::unique_ptr< batch_binding > make_binding(
+		virtual std::unique_ptr< raster_binding > make_binding(
 			const instance_batch::config& ) = 0;
 
 		virtual void raster(
@@ -42,11 +42,11 @@ namespace igpu
 		void visit(
 			const std::function< void( const instance_batch& ) >& visit );
 
-		virtual ~batch() = default;
+		virtual ~raster_batch() = default;
 
 	protected:
-		batch() = default;
-		batch( const batch& ) = delete;
-		batch& operator=( const batch& ) = delete;
+		raster_batch() = default;
+		raster_batch( const raster_batch& ) = delete;
+		raster_batch& operator=( const raster_batch& ) = delete;
 	};
 }

@@ -5,7 +5,7 @@
 
 namespace igpu
 {
-	class batch_binding
+	class raster_binding
 	{
 	public:
 		virtual const instance_batch::config& cfg() const = 0;
@@ -14,6 +14,6 @@ namespace igpu
 
 		virtual const igpu::instance_batch& instance_batch() const = 0;
 
-		virtual ~batch_binding() = default;
+		virtual ~raster_binding() = default;
 	};
 }

@@ -35,7 +35,7 @@ std::unique_ptr< dcs_big_mesh > dcs_big_mesh::make( const config& cfg )
 	{
 		state st;
 
-		st.batch_data = cfg.context->make_shared( compute_buffer::config{} );
+		st.raster_data = cfg.context->make_shared( compute_buffer::config{} );
 		st.instance_data = cfg.context->make_shared( compute_buffer::config{} );
 
 		st.render_states = cfg.context->make_shared( render_states::config{
@@ -90,11 +90,11 @@ dcs_big_mesh::dcs_big_mesh( const config& cfg, state&& st )
 	_st.opaque_batch = cfg.context->make_shared( opaque_batch::config{
 		cfg.context->back_buffer(),
 		cfg.context->make_shared( primitives::config{ {
-			{ "batch_data", _st.batch_data },
+			{ "raster_data", _st.raster_data },
 		} } ),
 	} );
 
-	_st.batch_binding = _st.opaque_batch->make_binding( {
+	_st.raster_binding = _st.opaque_batch->make_binding( {
 		_st.program,
 		_st.render_states,
 		_st.geometry,
@@ -138,7 +138,7 @@ void dcs_big_mesh::update()
 		alignas( 16 ) glm::mat4 proj;
 	}* batch_ubo = nullptr;
 
-	_st.batch_data->map( &batch_ubo );
+	_st.raster_data->map( &batch_ubo );
 
 	batch_ubo->view = glm::lookAt(
 		glm::vec3( 2.0f, 2.0f, 2.0f ),
@@ -150,7 +150,7 @@ void dcs_big_mesh::update()
 		0.1f,
 		10.0f );
 
-	_st.batch_data->unmap();
+	_st.raster_data->unmap();
 
 	// update model transform
 	static auto start_time = std::chrono::high_resolution_clock::now();

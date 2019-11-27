@@ -9,7 +9,7 @@
 
 namespace igpu
 {
-	class batch_binding;
+	class raster_binding;
 	class program;
 	class render_states;
 	class geometry;
@@ -35,7 +35,7 @@ namespace igpu
 			draw_parameters,
 			draw_indirect_parameters >;
 
-		using item_t = batch_binding;
+		using item_t = raster_binding;
 
 		virtual void enabled( bool ) = 0;
 

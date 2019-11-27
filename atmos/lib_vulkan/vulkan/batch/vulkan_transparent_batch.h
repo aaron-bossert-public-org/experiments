@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "vulkan/batch/vulkan_batch_nodes.h"
+#include "vulkan/batch/vulkan_raster_nodes.h"
 #include "vulkan/defines/vulkan_includes.h"
 
 #include "igpu/batch/transparent_batch.h"
@@ -17,7 +17,7 @@ namespace igpu
 	public:
 		struct config : transparent_batch::config
 		{
-			vulkan_raster_batch::vulkan vk;
+			vulkan_raster_batch_root::vulkan vk;
 		};
 
 		const config& cfg() const override;
@@ -27,7 +27,7 @@ namespace igpu
 		void raster( const scoped_ptr< draw_target >&, const raster_state& )
 			override;
 
-		std::unique_ptr< batch_binding > make_binding(
+		std::unique_ptr< raster_binding > make_binding(
 			const instance_batch::config& ) override;
 
 		static std::unique_ptr< vulkan_transparent_batch > make(
@@ -36,10 +36,10 @@ namespace igpu
 	private:
 		vulkan_transparent_batch(
 			const config&,
-			std::unique_ptr< vulkan_raster_batch > );
+			std::unique_ptr< vulkan_raster_batch_root > );
 
 	private:
 		const config _cfg;
-		std::unique_ptr< vulkan_raster_batch > _raster_batch;
+		std::unique_ptr< vulkan_raster_batch_root > _raster_batch_root;
 	};
 }

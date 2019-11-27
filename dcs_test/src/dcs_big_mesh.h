@@ -4,7 +4,7 @@
 
 namespace igpu
 {
-	class batch_binding;
+	class raster_binding;
 	class compute_buffer;
 	class context;
 	class geometry;
@@ -41,12 +41,12 @@ private:
 		std::shared_ptr< igpu::render_states > render_states;
 		std::shared_ptr< igpu::geometry > geometry;
 
-		std::shared_ptr< igpu::compute_buffer > batch_data;
+		std::shared_ptr< igpu::compute_buffer > raster_data;
 		std::shared_ptr< igpu::compute_buffer > instance_data;
 		std::shared_ptr< igpu::texture2d > texture;
 
 		std::shared_ptr< igpu::opaque_batch > opaque_batch;
-		std::unique_ptr< igpu::batch_binding > batch_binding;
+		std::unique_ptr< igpu::raster_binding > raster_binding;
 	};
 
 	dcs_big_mesh( const config&, state&& );

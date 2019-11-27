@@ -2,7 +2,7 @@
 
 #include "vulkan/batch/vulkan_opaque_batch.h"
 
-#include "vulkan/batch/vulkan_batch_nodes.h"
+#include "vulkan/batch/vulkan_raster_nodes.h"
 #include "vulkan/texture/vulkan_draw_target.h"
 
 using namespace igpu;
@@ -25,32 +25,32 @@ void vulkan_opaque_batch::raster(
 	if ( draw_target != _cfg.draw_target )
 	{
 		_cfg.draw_target = draw_target;
-		_raster_batch->rebind_draw_target( vulkan_draw_target );
+		_raster_batch_root->rebind_draw_target( vulkan_draw_target );
 	}
 
-	vulkan_batch_raster_state raster_state = {
+	vulkan_raster_state raster_state = {
 		base_raster_state,
 		vulkan_draw_target->raster_cmds(),
 		vulkan_draw_target->raster_fence(),
 	};
 
-	batch_utility::raster_opaque( *_raster_batch, raster_state );
+	raster_utility::raster_opaque( *_raster_batch_root, raster_state );
 }
 
 
-std::unique_ptr< batch_binding > vulkan_opaque_batch::make_binding(
+std::unique_ptr< raster_binding > vulkan_opaque_batch::make_binding(
 	const instance_batch::config& cfg )
 {
-	return _raster_batch->make_binding( cfg );
+	return _raster_batch_root->make_binding( cfg );
 }
 
 std::unique_ptr< vulkan_opaque_batch > vulkan_opaque_batch::make(
 	const config& cfg )
 {
-	if ( auto raster_batch = vulkan_raster_batch::make( cfg.vk ) )
+	if ( auto raster_batch_root = vulkan_raster_batch_root::make( cfg.vk ) )
 	{
 		return std::unique_ptr< vulkan_opaque_batch >(
-			new vulkan_opaque_batch( cfg, std::move( raster_batch ) ) );
+			new vulkan_opaque_batch( cfg, std::move( raster_batch_root ) ) );
 	}
 
 	return nullptr;
@@ -58,7 +58,7 @@ std::unique_ptr< vulkan_opaque_batch > vulkan_opaque_batch::make(
 
 vulkan_opaque_batch::vulkan_opaque_batch(
 	const opaque_batch::config& cfg,
-	std::unique_ptr< vulkan_raster_batch > raster_batch )
+	std::unique_ptr< vulkan_raster_batch_root > raster_batch_root )
 	: _cfg( cfg )
-	, _raster_batch( std::move( raster_batch ) )
+	, _raster_batch_root( std::move( raster_batch_root ) )
 {}

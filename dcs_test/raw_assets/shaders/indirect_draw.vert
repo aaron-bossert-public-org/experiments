@@ -1,11 +1,11 @@
 #version 450
 
-layout( set = 0, binding = 1 ) uniform batch_data
+layout( set = 0, binding = 1 ) uniform raster_data
 {
 	mat4 view;
 	mat4 proj;
 }
-batch;
+raster;
 
 layout( set = 2, binding = 3 ) readonly buffer instance_data
 {
@@ -31,7 +31,7 @@ void main()
 {
 	vec4 world_pos = instance.models[gl_InstanceIndex] * pos;
 
-	gl_Position = batch.proj * batch.view * world_pos;
+	gl_Position = raster.proj * raster.view * world_pos;
 
 	vec4 lPos = vec4( 1000, -1000, 1000, 1 );
 	outLightVec = lPos.xyz - world_pos.xyz;
