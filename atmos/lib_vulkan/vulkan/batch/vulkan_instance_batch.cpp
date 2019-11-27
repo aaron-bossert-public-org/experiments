@@ -16,7 +16,8 @@ using namespace igpu;
 vulkan_instance_batch::vulkan_instance_batch( const config& cfg )
 	: _root_batch( cfg.vk.root_batch )
 {
-	if ( cfg.vk.instance )
+	const auto& parameters = cfg.vk.program->instance_parameters();
+	if ( cfg.vk.instance && parameters.count() )
 	{
 		_job_primitives =
 			vulkan_job_primitives::make( vulkan_job_primitives::config{
@@ -28,7 +29,7 @@ vulkan_instance_batch::vulkan_instance_batch( const config& cfg )
 				cfg.vk.root_batch,
 				cfg.vk.root_batch->vk().swap_count,
 				2,
-				&cfg.vk.program->instance_parameters(),
+				&parameters,
 				cfg.vk.instance.get(),
 			} );
 	}

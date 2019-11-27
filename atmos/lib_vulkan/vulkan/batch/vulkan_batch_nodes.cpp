@@ -134,7 +134,8 @@ void vulkan_instance_batch::rasterize(
 vulkan_material_batch::vulkan_material_batch( const config& cfg )
 	: _cfg( cfg )
 {
-	if ( cfg.primitives )
+	const auto& parameters = cfg.program->material_parameters();
+	if ( cfg.primitives && parameters.count() )
 	{
 		_job_primitives =
 			vulkan_job_primitives::make( vulkan_job_primitives::config{
@@ -143,7 +144,7 @@ vulkan_material_batch::vulkan_material_batch( const config& cfg )
 				cfg.root_batch,
 				cfg.root_batch->vk().swap_count,
 				1,
-				&cfg.program->material_parameters(),
+				&parameters,
 				cfg.primitives.get(),
 			} );
 	}
@@ -179,7 +180,8 @@ vulkan_geometry_batch::vulkan_geometry_batch( const config& cfg )
 		  cfg.geometry.get(),
 	  } ) )
 {
-	if ( cfg.batch_primitives )
+	const auto& parameters = cfg.program->batch_parameters();
+	if ( cfg.batch_primitives && parameters.count() )
 	{
 		_job_primitives =
 			vulkan_job_primitives::make( vulkan_job_primitives::config{
@@ -188,7 +190,7 @@ vulkan_geometry_batch::vulkan_geometry_batch( const config& cfg )
 				cfg.root_batch,
 				cfg.root_batch->vk().swap_count,
 				0,
-				&cfg.program->batch_parameters(),
+				&parameters,
 				cfg.batch_primitives.get(),
 			} );
 	}
