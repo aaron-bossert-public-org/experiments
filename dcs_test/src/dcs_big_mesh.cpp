@@ -162,11 +162,11 @@ void dcs_big_mesh::update()
 	struct
 	{
 		alignas( 16 ) glm::mat4 model;
-	}* instance_ubo = nullptr;
+	}* instance_storage = nullptr;
 
-	_st.instance_data->map( &instance_ubo );
+	_st.instance_data->map( &instance_storage );
 
-	instance_ubo->model = glm::rotate(
+	instance_storage->model = glm::rotate(
 		glm::mat4( 1.0f ),
 		time * glm::radians( 90.0f ),
 		glm::vec3( 0.0f, 0.0f, 1.0f ) );

@@ -448,6 +448,7 @@ namespace
 		device_features.samplerAnisotropy = VK_TRUE;
 #if ATMOS_DEBUG
 		device_features.robustBufferAccess = VK_TRUE;
+		device_features.multiDrawIndirect = VK_TRUE;
 #endif
 
 		VkDeviceCreateInfo create_info = {};

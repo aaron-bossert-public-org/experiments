@@ -19,9 +19,9 @@ namespace igpu
 
 	struct draw_indirect_parameters
 	{
-		uint32_t offset = 0;
 		uint32_t count = 0;
-		uint32_t stride = sizeof draw_parameters;
 		std::shared_ptr< compute_buffer > buffer;
+		uint32_t offset = 0;
+		uint32_t stride = sizeof draw_parameters;
 	};
 }

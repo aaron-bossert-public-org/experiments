@@ -23,7 +23,6 @@ public:
 	{
 		std::shared_ptr< igpu::context > context;
 		std::string model_path = "cooked_assets/models/suzanne_lods.dae";
-		std::string texture_path = "cooked_assets/textures/chalet.jpg";
 		std::string vertex_path =
 			"cooked_assets/shaders/indirect_draw.vert.spv";
 		std::string fragment_path =
@@ -46,7 +45,7 @@ private:
 
 		std::shared_ptr< igpu::compute_buffer > batch_data;
 		std::shared_ptr< igpu::compute_buffer > instance_data;
-		std::shared_ptr< igpu::texture2d > texture;
+		std::shared_ptr< igpu::compute_buffer > indirect_draw;
 
 		std::shared_ptr< igpu::opaque_batch > opaque_batch;
 		std::unique_ptr< igpu::batch_binding > batch_binding;

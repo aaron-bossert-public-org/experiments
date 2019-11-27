@@ -135,18 +135,27 @@ vulkan_material_batch::vulkan_material_batch( const config& cfg )
 	: _cfg( cfg )
 {
 	const auto& parameters = cfg.program->material_parameters();
-	if ( cfg.primitives && parameters.count() )
+	if ( parameters.count() )
 	{
-		_job_primitives =
-			vulkan_job_primitives::make( vulkan_job_primitives::config{
-				cfg.root_batch->vk().draw_target->raster_queue(),
-				cfg.program->pipeline_layout(),
-				cfg.root_batch,
-				cfg.root_batch->vk().swap_count,
-				1,
-				&parameters,
-				cfg.primitives.get(),
-			} );
+		if ( !cfg.primitives )
+		{
+			LOG_CRITICAL(
+				"program %s expects material parameters but none were provided",
+				cfg.program->cfg().name.c_str() );
+		}
+		else
+		{
+			_job_primitives =
+				vulkan_job_primitives::make( vulkan_job_primitives::config{
+					cfg.root_batch->vk().draw_target->raster_queue(),
+					cfg.program->pipeline_layout(),
+					cfg.root_batch,
+					cfg.root_batch->vk().swap_count,
+					1,
+					&parameters,
+					cfg.primitives.get(),
+				} );
+		}
 	}
 }
 
@@ -181,18 +190,27 @@ vulkan_geometry_batch::vulkan_geometry_batch( const config& cfg )
 	  } ) )
 {
 	const auto& parameters = cfg.program->batch_parameters();
-	if ( cfg.batch_primitives && parameters.count() )
+	if ( parameters.count() )
 	{
-		_job_primitives =
-			vulkan_job_primitives::make( vulkan_job_primitives::config{
-				cfg.root_batch->vk().draw_target->raster_queue(),
-				cfg.program->pipeline_layout(),
-				cfg.root_batch,
-				cfg.root_batch->vk().swap_count,
-				0,
-				&parameters,
-				cfg.batch_primitives.get(),
-			} );
+		if ( !cfg.batch_primitives )
+		{
+			LOG_CRITICAL(
+				"program %s expects batch parameters but none were provided",
+				cfg.program->cfg().name.c_str() );
+		}
+		else
+		{
+			_job_primitives =
+				vulkan_job_primitives::make( vulkan_job_primitives::config{
+					cfg.root_batch->vk().draw_target->raster_queue(),
+					cfg.program->pipeline_layout(),
+					cfg.root_batch,
+					cfg.root_batch->vk().swap_count,
+					0,
+					&parameters,
+					cfg.batch_primitives.get(),
+				} );
+		}
 	}
 }
 
@@ -371,14 +389,6 @@ std::unique_ptr< vulkan_batch_binding > vulkan_root_batch::make_binding(
 	else if ( !geo )
 	{
 		LOG_CRITICAL( "geometry is null" );
-	}
-	else if ( !mat )
-	{
-		LOG_CRITICAL( "material parameters is null" );
-	}
-	else if ( !inst )
-	{
-		LOG_CRITICAL( "instance parameters is null" );
 	}
 	else
 	{

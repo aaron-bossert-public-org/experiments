@@ -53,6 +53,11 @@ namespace igpu
 
 		~vulkan_staged_buffer_t() override{};
 
+		const config& cfg() const override
+		{
+			return _cfg;
+		}
+
 		void map( buffer_view_base* out_buffer_view ) override
 		{
 			_vulkan_staged_buffer.map( out_buffer_view );
@@ -80,25 +85,34 @@ namespace igpu
 
 		template < typename... ARGS >
 		static std::unique_ptr< vulkan_staged_buffer_t > make(
-			const vulkan_staged_buffer::config& cfg,
+			const config& cfg,
+			VkBufferUsageFlagBits vk_usage_flags,
 			const ARGS&... args )
 		{
-			if ( !is_valid( cfg.memory ) )
+			vulkan_staged_buffer::config staged_cfg = {
+				cfg.vk.device,
+				cfg.vk.vma,
+				vk_usage_flags,
+				cfg.vk.managers,
+				cfg.memory,
+			};
+
+			if ( !is_valid( staged_cfg.memory ) )
 			{
-				LOG_CRITICAL( "invalid memory:%d", (int)cfg.memory );
+				LOG_CRITICAL( "invalid memory:%d", (int)staged_cfg.memory );
 			}
-			else if ( 0 == cfg.vk_usage_flags )
+			else if ( 0 == staged_cfg.vk_usage_flags )
 			{
 				LOG_CRITICAL( "vk_usage_flags is 0" );
 			}
-			else if ( !cfg.managers )
+			else if ( !staged_cfg.managers )
 			{
 				LOG_CRITICAL( "vulkan managers object has expired" );
 			}
 			else
 			{
 				return std::unique_ptr< vulkan_staged_buffer_t >(
-					new vulkan_staged_buffer_t( cfg, args... ) );
+					new vulkan_staged_buffer_t( cfg, staged_cfg, args... ) );
 			}
 
 			return nullptr;
@@ -107,13 +121,16 @@ namespace igpu
 	private:
 		template < typename... ARGS >
 		vulkan_staged_buffer_t(
-			const vulkan_staged_buffer::config& cfg,
+			const config& cfg,
+			const vulkan_staged_buffer::config& staged_cfg,
 			const ARGS&... args )
 			: T( args... )
-			, _vulkan_staged_buffer( cfg )
+			, _cfg(cfg)
+			, _vulkan_staged_buffer( staged_cfg )
 		{}
 
 	private:
+		const config _cfg;
 		vulkan_staged_buffer _vulkan_staged_buffer;
 	};
 }

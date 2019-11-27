@@ -44,6 +44,8 @@ std::unique_ptr< dcs_compute_indirect_draw > dcs_compute_indirect_draw::make(
 
 		st.batch_data = cfg.context->make_shared( compute_buffer::config{} );
 		st.instance_data = cfg.context->make_shared( compute_buffer::config{} );
+		st.indirect_draw = cfg.context->make_shared(
+			compute_buffer::config{ compute_buff_flag::INDIRECT_DRAW } );
 
 		st.render_states = cfg.context->make_shared( render_states::config{
 			0b1111, // color write mask
@@ -52,17 +54,6 @@ std::unique_ptr< dcs_compute_indirect_draw > dcs_compute_indirect_draw::make(
 			{ !(bool)"stencil_enabled" },
 			{ (bool)"depth_enabled", (bool)"depth_write", compare::LESS },
 		} );
-
-		st.texture = cfg.context->make_shared( texture2d::config{
-			cfg.texture_path.c_str(),
-			sampler::filter::LINEAR,
-			sampler::filter::LINEAR,
-			sampler::address::WRAP,
-			sampler::address::WRAP,
-			(bool)"can_auto_generate_mips",
-		} );
-
-		dcs_utils::load_buffer( cfg.texture_path.c_str(), st.texture.get() );
 
 		st.program = cfg.context->make_shared( program::config{
 			"test program",
@@ -117,16 +108,10 @@ dcs_compute_indirect_draw::dcs_compute_indirect_draw(
 	: _cfg( cfg )
 	, _st( std::move( st ) )
 {
-	update();
-	struct
-	{
-		glm::mat4 model[s_instance_length][s_instance_length]
-					   [s_instance_length];
-	}* instance_ubo = nullptr;
+	glm::mat4( *mats )[s_instance_length][s_instance_length][s_instance_length];
 
-	_st.instance_data->map( &instance_ubo );
+	_st.instance_data->map( &mats );
 
-	auto& mats = instance_ubo->model;
 	float scale = 5.f;
 	float offset = scale * s_instance_length * -0.5f;
 
@@ -138,10 +123,27 @@ dcs_compute_indirect_draw::dcs_compute_indirect_draw(
 				ident[3][0] = x * scale + offset;
 				ident[3][1] = y * scale + offset;
 				ident[3][2] = z * scale + offset;
-				mats[x][y][z] = ident;
+				( *mats )[x][y][z] = ident;
 			}
 
 	_st.instance_data->unmap();
+
+	draw_parameters( *draw_params )[s_instance_volume];
+
+	_st.indirect_draw->map( &draw_params );
+	for ( uint32_t instance = 0; instance < s_instance_volume; ++instance )
+	{
+		( *draw_params )[instance] = {
+			_st.model.meshes.back().index_count,
+			1,
+			_st.model.meshes.back().first_index,
+			_st.model.meshes.back().base_vertex,
+			instance,
+		};
+	}
+	_st.indirect_draw->unmap();
+
+	update();
 
 	_st.opaque_batch = cfg.context->make_shared( opaque_batch::config{
 		cfg.context->back_buffer(),
@@ -150,25 +152,21 @@ dcs_compute_indirect_draw::dcs_compute_indirect_draw(
 		} } ),
 	} );
 
-	_st.batch_bindings.push_back( _st.opaque_batch->make_binding( {
-		_st.program,
-		_st.render_states,
-		_st.model.geometry,
-		cfg.context->make_shared( primitives::config{ {
-			{ "texSampler", _st.texture },
-		} } ),
-		cfg.context->make_shared( primitives::config{ {
-			{ "instance_data", _st.instance_data },
-		} } ),
-	} ) );
+	instance_batch::config instance_cfg = {};
+	instance_cfg.program = _st.program;
+	instance_cfg.states = _st.render_states;
+	instance_cfg.geometry = _st.model.geometry;
+	instance_cfg.instance = cfg.context->make_shared( primitives::config{ {
+		{ "instance_data", _st.instance_data },
+	} } );
+
+	_st.batch_bindings.push_back(
+		_st.opaque_batch->make_binding( instance_cfg ) );
 
 	_st.batch_bindings.back()->instance_batch().draw_params(
-		igpu::draw_parameters{
-			_st.model.meshes.back().index_count,
+		igpu::draw_indirect_parameters{
 			s_instance_volume,
-			_st.model.meshes.back().first_index,
-			_st.model.meshes.back().base_vertex,
-			0,
+			_st.indirect_draw,
 		} );
 }
 

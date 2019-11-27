@@ -27,6 +27,8 @@ namespace igpu
 			vulkan vk;
 		};
 
+		virtual const config& cfg() const = 0;
+
 		virtual vulkan_buffer& gpu_object() = 0;
 
 		virtual const vulkan_buffer& gpu_object() const = 0;
