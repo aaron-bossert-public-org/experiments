@@ -15,7 +15,7 @@ namespace igpu
 	class window;
 }
 
-class dcs_test
+class dcs_big_mesh
 {
 public:
 	struct config
@@ -24,13 +24,13 @@ public:
 
 		std::string model_path = "cooked_assets/models/chalet.obj";
 		std::string texture_path = "cooked_assets/textures/chalet.jpg";
-		std::string vertex_path = "cooked_assets/shaders/shader.vert.spv";
-		std::string fragment_path = "cooked_assets/shaders/shader.frag.spv";
+		std::string vertex_path = "cooked_assets/shaders/textured.vert.spv";
+		std::string fragment_path = "cooked_assets/shaders/textured.frag.spv";
 	};
 
-	static std::unique_ptr< dcs_test > make( const config& );
+	static std::unique_ptr< dcs_big_mesh > make( const config& );
 
-	~dcs_test();
+	~dcs_big_mesh();
 
 	bool advance();
 
@@ -49,7 +49,7 @@ private:
 		std::unique_ptr< igpu::batch_binding > batch_binding;
 	};
 
-	dcs_test( const config&, state&& );
+	dcs_big_mesh( const config&, state&& );
 
 	void update();
 

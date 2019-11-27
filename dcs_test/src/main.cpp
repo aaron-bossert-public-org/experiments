@@ -3,7 +3,7 @@
 
 #include <algorithm>
 #include <cstdlib>
-#include <dcs_test/src/dcs_test.h>
+#include <dcs_test/src/dcs_big_mesh.h>
 #include <thread>
 
 #if ATMOS_BUILD_WINDOWS
@@ -28,7 +28,7 @@ int main()
 	std::shared_ptr< igpu::vulkan_context > context =
 		igpu::vulkan_context::make( context_cfg, glm::ivec2( 800, 600 ) );
 
-	auto test = dcs_test::make( { context } );
+	auto test = dcs_big_mesh::make( { context } );
 
 	while ( test->advance() )
 	{
