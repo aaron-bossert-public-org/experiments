@@ -234,14 +234,8 @@ void igpu::abandon<>(
 	impl( queue.get(), device, obj );
 }
 
-void vulkan_abandon_manager::trigger_abandon(
-	const std::shared_ptr< vulkan_poset_fence >& fence )
+void vulkan_abandon_manager::trigger_abandon()
 {
-	if ( !fence )
-	{
-		LOG_CRITICAL( "fence is null" );
-	}
-	else
 	{
 		abandoned abandon;
 		for ( size_t type_index = 0; type_index < _pending.size();
@@ -257,8 +251,7 @@ void vulkan_abandon_manager::trigger_abandon(
 
 		if ( abandon.categories.size() )
 		{
-			abandon.fence = fence;
-			abandon.submit_index = fence->submit_index();
+			abandon.fence = vulkan_poset_fence::current( _cfg.queue );
 			_abandoned.push( std::move( abandon ) );
 		}
 	}
@@ -267,7 +260,7 @@ void vulkan_abandon_manager::trigger_abandon(
 	{
 		abandoned& abandon = _abandoned.front();
 
-		if ( !abandon.fence->is_ready( abandon.submit_index ) )
+		if ( !abandon.fence.is_ready() )
 		{
 			break;
 		}
@@ -301,7 +294,7 @@ vulkan_abandon_manager::~vulkan_abandon_manager()
 	while ( !_abandoned.empty() )
 	{
 		abandoned& abandon = _abandoned.front();
-		abandon.fence->wait_or_skip( abandon.submit_index );
+		abandon.fence.wait_or_skip();
 		for ( auto& category : abandon.categories )
 		{
 			while ( !category.payloads.empty() )
@@ -325,11 +318,13 @@ vulkan_abandon_manager::~vulkan_abandon_manager()
 	}
 }
 
-std::unique_ptr< vulkan_abandon_manager > vulkan_abandon_manager::make()
+std::unique_ptr< vulkan_abandon_manager > vulkan_abandon_manager::make(
+	const config& cfg )
 {
 	return std::unique_ptr< vulkan_abandon_manager >(
-		new vulkan_abandon_manager() );
+		new vulkan_abandon_manager( cfg ) );
 }
 
-vulkan_abandon_manager::vulkan_abandon_manager()
+vulkan_abandon_manager::vulkan_abandon_manager( const config& cfg )
+	: _cfg( cfg )
 {}

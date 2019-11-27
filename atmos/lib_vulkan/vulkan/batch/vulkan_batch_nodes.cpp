@@ -297,10 +297,6 @@ void vulkan_root_batch::start_raster(
 	{
 		LOG_CRITICAL( "command buffer is null" );
 	}
-	if ( !raster_state.fence )
-	{
-		LOG_CRITICAL( "fence is null" );
-	}
 	else if (
 		raster_state.command_buffer->queue() !=
 		_vk.draw_target->raster_queue() )
@@ -314,7 +310,8 @@ void vulkan_root_batch::start_raster(
 	}
 	else
 	{
-		vulkan_job::fence( raster_state.fence );
+		vulkan_job::fence( vulkan_poset_fence::current(
+			_vk.draw_target->raster_queue().get() ) );
 	}
 
 	vulkan_job::submit_activated_dependency_barriers(

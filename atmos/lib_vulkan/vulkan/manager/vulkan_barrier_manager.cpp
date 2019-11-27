@@ -27,8 +27,7 @@ namespace
 		const VkSemaphore* p_wait_semaphores = nullptr,
 		const VkPipelineStageFlags* p_wait_stages = nullptr,
 		uint32_t signal_count = 0,
-		const VkSemaphore* p_signal_semaphores = nullptr,
-		std::shared_ptr< vulkan_poset_fence > fence = nullptr )
+		const VkSemaphore* p_signal_semaphores = nullptr )
 	{
 		vulkan_command_buffer command_buffer( {
 			queue->command_pool(),
@@ -52,8 +51,7 @@ namespace
 			1,
 			&command_buffer,
 			signal_count,
-			p_signal_semaphores,
-			fence );
+			p_signal_semaphores );
 	}
 }
 

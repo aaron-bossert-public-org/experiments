@@ -5,50 +5,28 @@
 
 namespace igpu
 {
+	class vulkan_fence;
 	class vulkan_queue;
 
-	// waiting on a VkFence requires that the fence has not been reset to
-	// its initial state, and has the side effect of flushing/invalidating
-	// gpu caches.
+	// waiting on a VkFence requires that the fence not be in an initial or
+	// reset state, and has the side effect of flushing/invalidating gpu caches.
 
-	// partially ordered fence has no such requirements and may not sync caches.
-	// This makes it lighter weight but forces code using it to rely
-	// barriers/semaphores for read/write memory synchronization.
+	// poset (partially ordered) has no such requirements and cannot be relied
+	// upon to sync caches. This makes it lighter weight but forces code using
+	// it to rely barriers/semaphores for read/write memory synchronization.
 	class vulkan_poset_fence
 	{
 	public:
-		struct config
-		{
-			VkDevice device = nullptr;
-			VkFenceCreateInfo info = {
-				VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
-				nullptr,
-				0,
-			};
-		};
+		bool is_ready();
 
-		static std::unique_ptr< vulkan_poset_fence > make( const config& );
+		void wait_or_skip();
 
-		const config& cfg() const;
+		static vulkan_poset_fence current( vulkan_queue* );
 
-		VkFence vk_fence() const;
-
-		bool is_ready( ptrdiff_t submit_index );
-
-
-		void wait_or_skip( ptrdiff_t submit_index );
-
-		void on_submit( const vulkan_queue& );
-
-		ptrdiff_t submit_index() const;
-
-		vulkan_poset_fence( const config& );
-
-		~vulkan_poset_fence();
+		static vulkan_poset_fence past( vulkan_queue*, ptrdiff_t submit_index );
 
 	private:
-		const config _cfg;
-		const VkFence _vk_fence;
-		ptrdiff_t _submit_index = 0;
+		vulkan_queue* _queue;
+		ptrdiff_t _submit_index;
 	};
 }

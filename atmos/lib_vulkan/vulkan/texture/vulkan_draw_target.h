@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "vulkan/sync/vulkan_poset_fence.h"
 #include "vulkan/texture/vulkan_depth_buffer.h"
 #include "vulkan/texture/vulkan_render_buffer.h"
 
@@ -14,7 +15,6 @@ namespace igpu
 {
 	class vulkan_command_buffer;
 	class vulkan_managers;
-	class vulkan_poset_fence;
 	class vulkan_queue;
 
 	class vulkan_draw_target : public draw_target
@@ -40,7 +40,7 @@ namespace igpu
 
 		virtual scoped_ptr< vulkan_command_buffer > raster_cmds() = 0;
 
-		virtual scoped_ptr< vulkan_poset_fence > raster_fence() const = 0;
+		virtual const vulkan_poset_fence& raster_fence() const = 0;
 
 		virtual void end_raster() = 0;
 

@@ -1,5 +1,6 @@
 
 #include "vulkan/defines/vulkan_includes.h"
+#include "vulkan/sync/vulkan_poset_fence.h"
 
 #include "framework/utility/scoped_ptr.h"
 
@@ -63,13 +64,18 @@ namespace igpu
 	class vulkan_abandon_manager
 	{
 	public:
+		struct config
+		{
+			vulkan_queue* queue;
+		};
+
 		using payload_t = std::tuple< void*, void*, void*, void* >;
 
 		using pending_t = std::vector< std::queue< payload_t > >;
 
-		void trigger_abandon( const std::shared_ptr< vulkan_poset_fence >& );
+		void trigger_abandon();
 
-		static std::unique_ptr< vulkan_abandon_manager > make();
+		static std::unique_ptr< vulkan_abandon_manager > make( const config& );
 
 		pending_t& pending();
 
@@ -78,7 +84,7 @@ namespace igpu
 		~vulkan_abandon_manager();
 
 	private:
-		vulkan_abandon_manager();
+		vulkan_abandon_manager( const config& );
 
 	private:
 		struct payload_category
@@ -89,10 +95,11 @@ namespace igpu
 
 		struct abandoned
 		{
-			size_t submit_index = 0;
-			std::shared_ptr< vulkan_poset_fence > fence;
+			vulkan_poset_fence fence;
 			std::vector< payload_category > categories;
 		};
+
+		const config _cfg;
 
 		pending_t _pending;
 
@@ -102,5 +109,4 @@ namespace igpu
 		vulkan_abandon_manager& operator=( const vulkan_abandon_manager& ) =
 			delete;
 	};
-
 }

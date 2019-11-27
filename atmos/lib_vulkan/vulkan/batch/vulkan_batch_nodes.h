@@ -7,6 +7,7 @@
 #include "vulkan/shader/vulkan_program.h"
 #include "vulkan/shader/vulkan_render_states.h"
 #include "vulkan/sync/vulkan_job.h"
+#include "vulkan/sync/vulkan_poset_fence.h"
 
 #include "igpu/batch/batch.h"
 #include "igpu/batch/batch_nodes.h"
@@ -23,7 +24,6 @@ namespace igpu
 	class vulkan_job_attributes;
 	class vulkan_job_primitives;
 	class vulkan_managers;
-	class vulkan_poset_fence;
 	class vulkan_pipeline_cache;
 	class vulkan_graphics_pipeline;
 
@@ -36,7 +36,7 @@ namespace igpu
 	struct vulkan_batch_raster_state : batch::raster_state
 	{
 		scoped_ptr< vulkan_command_buffer > command_buffer;
-		scoped_ptr< vulkan_poset_fence > fence;
+		vulkan_poset_fence fence;
 
 		struct
 		{

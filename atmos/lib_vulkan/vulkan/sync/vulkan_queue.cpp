@@ -5,7 +5,7 @@
 #include "vulkan/manager/vulkan_abandon_manager.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_command_pool.h"
-#include "vulkan/sync/vulkan_poset_fence.h"
+#include "vulkan/sync/vulkan_fence.h"
 
 #include "framework/logging/log.h"
 
@@ -90,11 +90,6 @@ scoped_ptr< vulkan_command_pool > vulkan_queue::command_pool() const
 	return _command_pool;
 }
 
-ptrdiff_t vulkan_queue::submit_index() const
-{
-	return _submit_index;
-}
-
 vulkan_abandon_manager& vulkan_queue::abandon_manager() const
 {
 	return *_abandon_manager;
@@ -117,15 +112,25 @@ void vulkan_queue::submit_commands(
 	uint32_t command_buffer_count,
 	const vulkan_command_buffer* command_buffers,
 	uint32_t signal_count,
-	const VkSemaphore* p_signal_semaphores,
-	std::shared_ptr< vulkan_poset_fence > fence )
+	const VkSemaphore* p_signal_semaphores )
 {
-	if ( _trigger_abandon && !fence )
+	// invoke is_ready to flush pending fences, just reducing code f
+	flush_pending_fences();
+
+	++_submit_index;
+
+	if ( _recycled_fences.size() )
 	{
-		fence = vulkan_poset_fence::make( { _cfg.device } );
+		_pending_fences.push( std::move( _recycled_fences.back() ) );
+		_pending_fences.back()->re_submit( _submit_index );
+		_recycled_fences.pop_back();
+	}
+	else
+	{
+		_pending_fences.push( vulkan_fence::make( { this }, _submit_index ) );
 	}
 
-	VkFence vk_fence = fence ? fence->vk_fence() : nullptr;
+	VkFence vk_fence = _pending_fences.back()->vk_fence();
 
 	// avoid dynamic allocation if there are fewer than 16 command buffers
 	if ( command_buffer_count <= 16 )
@@ -159,23 +164,82 @@ void vulkan_queue::submit_commands(
 			vk_fence );
 	}
 
-	++_submit_index;
-
-	if ( fence )
-	{
-		fence->on_submit( *this );
-	}
-
 	if ( _trigger_abandon )
 	{
 		_trigger_abandon = false;
-		_abandon_manager->trigger_abandon( fence );
+		_abandon_manager->trigger_abandon();
+	}
+}
+
+ptrdiff_t vulkan_queue::submit_index() const
+{
+	return _submit_index;
+}
+
+bool vulkan_queue::is_ready( ptrdiff_t submit_index )
+{
+	if ( 0 > ( _submit_index - submit_index ) )
+	{
+		LOG_CRITICAL( "sumission %d has not occurred yet ", submit_index );
+		return false;
+	}
+
+	flush_pending_fences();
+	if ( _pending_fences.empty() )
+	{
+		return true;
+	}
+
+	ptrdiff_t cmp = _pending_fences.front()->submit_index() - submit_index;
+
+	return _pending_fences.empty() || 0 < cmp;
+}
+
+void vulkan_queue::wait( ptrdiff_t submit_index )
+{
+	if ( 0 > ( _submit_index - submit_index ) )
+	{
+		LOG_CRITICAL( "sumission %d has not occurred yet ", submit_index );
+	}
+	else
+	{
+		while ( !_pending_fences.empty() )
+		{
+			ptrdiff_t cmp =
+				_pending_fences.front()->submit_index() - submit_index;
+
+			if ( 0 >= cmp )
+			{
+				if ( 0 == cmp )
+				{
+					_pending_fences.front()->wait();
+				}
+
+				_recycled_fences.push_back(
+					std::move( _pending_fences.front() ) );
+				_pending_fences.pop();
+			}
+
+			if ( 0 <= cmp )
+			{
+				break;
+			}
+		}
 	}
 }
 
 VkResult vulkan_queue::submit_present( const VkPresentInfoKHR& present_info )
 {
 	return vkQueuePresentKHR( _vk_queue, &present_info );
+}
+
+void vulkan_queue::flush_pending_fences()
+{
+	while ( !_pending_fences.empty() && _pending_fences.front()->is_ready() )
+	{
+		_recycled_fences.push_back( std::move( _pending_fences.front() ) );
+		_pending_fences.pop();
+	}
 }
 
 vulkan_queue::~vulkan_queue()
@@ -193,5 +257,5 @@ vulkan_queue::~vulkan_queue()
 vulkan_queue::vulkan_queue( const config& cfg, VkQueue vk_queue )
 	: _cfg( cfg )
 	, _vk_queue( vk_queue )
-	, _abandon_manager( vulkan_abandon_manager::make() )
+	, _abandon_manager( vulkan_abandon_manager::make( { this } ) )
 {}

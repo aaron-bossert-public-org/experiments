@@ -77,17 +77,10 @@ void vulkan_job::submit_activated_dependency_barriers(
 
 void vulkan_job::wait_on_fence()
 {
-	auto& state = job_state();
-	if ( const auto& fence = state.fence )
-	{
-		fence->wait_or_skip( state.fence_submit_index );
-	}
-
-	state.fence = nullptr;
+	job_state().fence.wait_or_skip();
 }
-void vulkan_job::fence( const scoped_ptr< vulkan_poset_fence >& fence )
+
+void vulkan_job::fence( const vulkan_poset_fence& fence )
 {
-	auto& state = job_state();
-	state.fence = fence;
-	state.fence_submit_index = fence->submit_index();
+	job_state().fence = fence;
 }

@@ -248,13 +248,6 @@ void vulkan_back_buffer::begin_raster()
 {
 	swap_state& frame_state = frame_swap_state();
 
-	if ( !frame_state.raster_fence )
-	{
-		frame_state.raster_fence = vulkan_poset_fence::make( {
-			_cfg.vk.device,
-		} );
-	}
-
 	VkCommandBuffer vk_cmds = frame_state.raster_cmds->vk_cmds();
 	VkCommandBufferBeginInfo begin_info = {};
 
@@ -300,7 +293,7 @@ scoped_ptr< vulkan_command_buffer > vulkan_back_buffer::raster_cmds()
 	return _st.swap_states[_st.swap_index].raster_cmds;
 }
 
-scoped_ptr< vulkan_poset_fence > vulkan_back_buffer::raster_fence() const
+const vulkan_poset_fence& vulkan_back_buffer::raster_fence() const
 {
 	return _st.swap_states[_st.swap_index].raster_fence;
 }
@@ -362,8 +355,9 @@ VkResult vulkan_back_buffer::do_end_raster()
 		1,
 		frame_state.raster_cmds.get(),
 		1,
-		&raster_sem,
-		frame_state.raster_fence );
+		&raster_sem );
+	frame_state.raster_fence =
+		vulkan_poset_fence::current( raster_queue.get() );
 
 	VkPresentInfoKHR present_info = {};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -387,15 +381,14 @@ VkResult vulkan_back_buffer::do_end_raster()
 
 	swap_state& next_frame_state = frame_swap_state();
 
-	if ( const auto& fence = next_frame_state.raster_fence )
-	{
-		fence->wait_or_skip( next_frame_state.submit_index );
-		VkFence vk_fence = fence->vk_fence();
-		vkResetFences( _cfg.vk.device, 1, &vk_fence );
-		vkResetCommandBuffer(
-			next_frame_state.raster_cmds->vk_cmds(),
-			(VkCommandBufferResetFlags)0 );
-	}
+	static int cntr = 0;
+	LOG_DEBUG( "frane: %d", cntr );
+	++cntr;
+
+	next_frame_state.raster_fence.wait_or_skip();
+	vkResetCommandBuffer(
+		next_frame_state.raster_cmds->vk_cmds(),
+		(VkCommandBufferResetFlags)0 );
 
 	return VK_SUCCESS;
 }

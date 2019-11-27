@@ -11,7 +11,6 @@
 namespace igpu
 {
 	class vulkan_context;
-	class vulkan_poset_fence;
 	class vulkan_queue;
 	class vulkan_semaphore;
 	class vulkan_command_pool;
@@ -40,7 +39,7 @@ namespace igpu
 
 		scoped_ptr< vulkan_command_buffer > raster_cmds() override;
 
-		scoped_ptr< vulkan_poset_fence > raster_fence() const override;
+		const vulkan_poset_fence& raster_fence() const override;
 
 		void end_raster() override;
 
@@ -63,8 +62,7 @@ namespace igpu
 			std::shared_ptr< vulkan_command_buffer > raster_cmds;
 			std::shared_ptr< vulkan_semaphore > aquire_sem;
 			std::shared_ptr< vulkan_semaphore > raster_sem;
-			std::shared_ptr< vulkan_poset_fence > raster_fence;
-			ptrdiff_t submit_index = 0;
+			vulkan_poset_fence raster_fence;
 		};
 
 		struct state

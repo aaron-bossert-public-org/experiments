@@ -7,13 +7,14 @@
 
 #include <functional>
 #include <list>
+#include <queue>
 
 namespace igpu
 {
 	class vulkan_abandon_manager;
 	class vulkan_command_buffer;
 	class vulkan_command_pool;
-	class vulkan_poset_fence;
+	class vulkan_fence;
 
 	class vulkan_queue
 	{
@@ -28,12 +29,9 @@ namespace igpu
 
 		static std::shared_ptr< vulkan_queue > make( const config& );
 
-
 		const config& cfg() const;
 
 		scoped_ptr< vulkan_command_pool > command_pool() const;
-
-		ptrdiff_t submit_index() const;
 
 		vulkan_abandon_manager& abandon_manager() const;
 
@@ -48,12 +46,20 @@ namespace igpu
 			uint32_t command_buffer_count,
 			const vulkan_command_buffer* command_buffers,
 			uint32_t signal_count,
-			const VkSemaphore* p_signal_semaphores,
-			std::shared_ptr< vulkan_poset_fence > fence = nullptr );
+			const VkSemaphore* p_signal_semaphores );
 
 		VkResult submit_present( const VkPresentInfoKHR& present_info );
 
+		ptrdiff_t submit_index() const;
+
+		bool is_ready( ptrdiff_t submit_index );
+
+		void wait( ptrdiff_t submit_index );
+
 		~vulkan_queue();
+
+	private:
+		void flush_pending_fences();
 
 	private:
 		vulkan_queue( const config&, VkQueue );
@@ -61,8 +67,10 @@ namespace igpu
 		VkQueue _vk_queue = nullptr;
 		std::shared_ptr< vulkan_abandon_manager > _abandon_manager;
 		std::shared_ptr< vulkan_command_pool > _command_pool;
+		std::queue< std::unique_ptr< vulkan_fence > > _pending_fences;
+		std::vector< std::unique_ptr< vulkan_fence > > _recycled_fences;
+		ptrdiff_t _submit_index = 0;
 
 		bool _trigger_abandon = false;
-		ptrdiff_t _submit_index = 0;
 	};
 }

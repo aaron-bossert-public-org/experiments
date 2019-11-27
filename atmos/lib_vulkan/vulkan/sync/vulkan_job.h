@@ -2,6 +2,7 @@
 #pragma once
 
 #include "vulkan/defines/vulkan_includes.h"
+#include "vulkan/sync/vulkan_poset_fence.h"
 
 #include "framework/utility/scoped_ptr.h"
 
@@ -13,7 +14,6 @@ namespace igpu
 	class vulkan_job_dependencies;
 	class vulkan_barrier_manager;
 	class vulkan_managers;
-	class vulkan_poset_fence;
 	class vulkan_queue;
 
 	class vulkan_job
@@ -23,8 +23,7 @@ namespace igpu
 		{
 			friend class vulkan_job;
 
-			ptrdiff_t fence_submit_index = 0;
-			scoped_ptr< vulkan_poset_fence > fence;
+			vulkan_poset_fence fence;
 			std::vector< vulkan_job_dependencies* > activated_dependencies;
 		};
 
@@ -39,7 +38,7 @@ namespace igpu
 		void wait_on_fence();
 
 	protected:
-		void fence( const scoped_ptr< vulkan_poset_fence >& );
+		void fence( const vulkan_poset_fence& );
 
 		virtual state& job_state() = 0;
 
