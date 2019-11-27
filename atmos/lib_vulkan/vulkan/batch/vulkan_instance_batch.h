@@ -11,7 +11,7 @@ namespace igpu
 	class vulkan_job_buffers;
 	class vulkan_program;
 	class vulkan_primitives;
-	class vulkan_root_batch;
+	class vulkan_raster_batch;
 
 	class vulkan_instance_batch : public instance_batch
 	{
@@ -20,7 +20,7 @@ namespace igpu
 		{
 			struct vulkan
 			{
-				vulkan_root_batch* root_batch = nullptr;
+				vulkan_raster_batch* raster_batch = nullptr;
 				std::shared_ptr< vulkan_program > program;
 				std::shared_ptr< vulkan_primitives > instance;
 			};
@@ -48,7 +48,7 @@ namespace igpu
 
 	private:
 		bool _enabled = true;
-		vulkan_root_batch* _root_batch = nullptr;
+		vulkan_raster_batch* _raster_batch = nullptr;
 		variant_t _draw_params;
 		std::shared_ptr< vulkan_job_primitives > _job_primitives;
 		std::shared_ptr< vulkan_job_buffers > _indirect_draw_dependency;

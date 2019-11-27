@@ -14,7 +14,7 @@
 using namespace igpu;
 
 vulkan_instance_batch::vulkan_instance_batch( const config& cfg )
-	: _root_batch( cfg.vk.root_batch )
+	: _raster_batch( cfg.vk.raster_batch )
 {
 	const auto& parameters = cfg.vk.program->instance_parameters();
 	if ( parameters.count() )
@@ -29,13 +29,13 @@ vulkan_instance_batch::vulkan_instance_batch( const config& cfg )
 		{
 			_job_primitives =
 				vulkan_job_primitives::make( vulkan_job_primitives::config{
-					cfg.vk.root_batch->vk()
+					cfg.vk.raster_batch->vk()
 						.managers->cfg()
 						.queues->cfg()
 						.graphics_queue,
 					cfg.vk.program->pipeline_layout(),
-					cfg.vk.root_batch,
-					cfg.vk.root_batch->vk().swap_count,
+					cfg.vk.raster_batch,
+					cfg.vk.raster_batch->vk().swap_count,
 					2,
 					&parameters,
 					cfg.vk.instance.get(),
@@ -82,7 +82,7 @@ void vulkan_instance_batch::draw_params( const variant_t& draw_params )
 		else
 		{
 			_indirect_draw_dependency = vulkan_job_buffers::make(
-				{ _root_batch,
+				{ _raster_batch,
 				  { {
 					  {
 						  decorator::READABLE,

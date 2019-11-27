@@ -10,7 +10,7 @@
 
 namespace igpu
 {
-	class vulkan_root_batch;
+	class vulkan_raster_batch;
 	class vulkan_pipeline_cache;
 
 	class vulkan_opaque_batch : public opaque_batch
@@ -18,7 +18,7 @@ namespace igpu
 	public:
 		struct config : opaque_batch::config
 		{
-			vulkan_root_batch::vulkan vk;
+			vulkan_raster_batch::vulkan vk;
 		};
 
 		const opaque_batch::config& cfg() const override;
@@ -36,10 +36,10 @@ namespace igpu
 	private:
 		vulkan_opaque_batch(
 			const opaque_batch::config&,
-			std::unique_ptr< vulkan_root_batch > );
+			std::unique_ptr< vulkan_raster_batch > );
 
 	private:
 		opaque_batch::config _cfg;
-		std::unique_ptr< vulkan_root_batch > _root_batch;
+		std::unique_ptr< vulkan_raster_batch > _raster_batch;
 	};
 }

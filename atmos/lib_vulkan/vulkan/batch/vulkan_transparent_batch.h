@@ -17,7 +17,7 @@ namespace igpu
 	public:
 		struct config : transparent_batch::config
 		{
-			vulkan_root_batch::vulkan vk;
+			vulkan_raster_batch::vulkan vk;
 		};
 
 		const config& cfg() const override;
@@ -36,10 +36,10 @@ namespace igpu
 	private:
 		vulkan_transparent_batch(
 			const config&,
-			std::unique_ptr< vulkan_root_batch > );
+			std::unique_ptr< vulkan_raster_batch > );
 
 	private:
 		const config _cfg;
-		std::unique_ptr< vulkan_root_batch > _root_batch;
+		std::unique_ptr< vulkan_raster_batch > _raster_batch;
 	};
 }

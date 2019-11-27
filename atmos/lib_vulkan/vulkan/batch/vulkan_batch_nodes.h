@@ -27,7 +27,7 @@ namespace igpu
 	class vulkan_pipeline_cache;
 	class vulkan_graphics_pipeline;
 
-	class vulkan_root_batch;
+	class vulkan_raster_batch;
 	class vulkan_program_batch;
 	class vulkan_states_batch;
 	class vulkan_geometry_batch;
@@ -40,7 +40,7 @@ namespace igpu
 
 		struct
 		{
-			vulkan_root_batch* root = nullptr;
+			vulkan_raster_batch* root = nullptr;
 			vulkan_program_batch* program = nullptr;
 			vulkan_states_batch* states = nullptr;
 			vulkan_geometry_batch* geometry = nullptr;
@@ -60,7 +60,7 @@ namespace igpu
 	public:
 		struct config
 		{
-			vulkan_root_batch* root_batch = nullptr;
+			vulkan_raster_batch* raster_batch = nullptr;
 			std::shared_ptr< vulkan_program > program;
 			std::shared_ptr< vulkan_primitives > primitives;
 		};
@@ -90,7 +90,7 @@ namespace igpu
 	public:
 		struct config
 		{
-			vulkan_root_batch* root_batch = nullptr;
+			vulkan_raster_batch* raster_batch = nullptr;
 			std::shared_ptr< vulkan_program > program;
 			std::shared_ptr< vulkan_primitives > batch_primitives;
 			std::shared_ptr< vulkan_geometry > geometry;
@@ -129,7 +129,7 @@ namespace igpu
 	public:
 		struct config
 		{
-			vulkan_root_batch* root_batch = nullptr;
+			vulkan_raster_batch* raster_batch = nullptr;
 			std::shared_ptr< vulkan_render_states > states;
 		};
 
@@ -155,7 +155,7 @@ namespace igpu
 	public:
 		struct config
 		{
-			vulkan_root_batch* root_batch = nullptr;
+			vulkan_raster_batch* raster_batch = nullptr;
 			std::shared_ptr< vulkan_program > program;
 		};
 
@@ -174,9 +174,9 @@ namespace igpu
 		config _cfg;
 	};
 
-	class vulkan_root_batch
+	class vulkan_raster_batch
 		: public batch_utility::batch_impl_t<
-			  root_batch,
+			  raster_batch,
 			  vulkan_primitives,
 			  vulkan_program_batch >
 		, public vulkan_job
@@ -209,12 +209,12 @@ namespace igpu
 		std::unique_ptr< vulkan_batch_binding > make_binding(
 			const instance_batch::config& );
 
-		static std::unique_ptr< vulkan_root_batch > make( const vulkan& );
+		static std::unique_ptr< vulkan_raster_batch > make( const vulkan& );
 
-		~vulkan_root_batch();
+		~vulkan_raster_batch();
 
 	private:
-		vulkan_root_batch( const vulkan& );
+		vulkan_raster_batch( const vulkan& );
 
 		vulkan_job::state& job_state() override;
 
@@ -226,11 +226,11 @@ namespace igpu
 	};
 
 	class vulkan_batch_binding
-		: public batch_utility::batch_binding_t< vulkan_root_batch >
+		: public batch_utility::batch_binding_t< vulkan_raster_batch >
 	{
 	public:
 		using batch_utility::batch_binding_t<
-			vulkan_root_batch >::batch_binding_t;
+			vulkan_raster_batch >::batch_binding_t;
 		~vulkan_batch_binding();
 	};
 }

@@ -82,7 +82,7 @@ void vulkan_instance_batch::rasterize(
 
 		_indirect_draw_dependency->record_cmds( raster_state.command_buffer );
 
-		if ( _root_batch->vk()
+		if ( _raster_batch->vk()
 				 .managers->cfg()
 				 .device_features.multiDrawIndirect )
 		{
@@ -147,10 +147,10 @@ vulkan_material_batch::vulkan_material_batch( const config& cfg )
 		{
 			_job_primitives =
 				vulkan_job_primitives::make( vulkan_job_primitives::config{
-					cfg.root_batch->vk().draw_target->raster_queue(),
+					cfg.raster_batch->vk().draw_target->raster_queue(),
 					cfg.program->pipeline_layout(),
-					cfg.root_batch,
-					cfg.root_batch->vk().swap_count,
+					cfg.raster_batch,
+					cfg.raster_batch->vk().swap_count,
 					1,
 					&parameters,
 					cfg.primitives.get(),
@@ -182,9 +182,9 @@ void vulkan_material_batch::stop_raster()
 vulkan_geometry_batch::vulkan_geometry_batch( const config& cfg )
 	: _cfg( cfg )
 	, _job_attributes( vulkan_job_attributes::make( {
-		  cfg.root_batch->vk().context->cfg().vk.device,
-		  cfg.root_batch,
-		  cfg.root_batch->vk().swap_count,
+		  cfg.raster_batch->vk().context->cfg().vk.device,
+		  cfg.raster_batch,
+		  cfg.raster_batch->vk().swap_count,
 		  cfg.active_vertex_buffers,
 		  cfg.geometry.get(),
 	  } ) )
@@ -202,10 +202,10 @@ vulkan_geometry_batch::vulkan_geometry_batch( const config& cfg )
 		{
 			_job_primitives =
 				vulkan_job_primitives::make( vulkan_job_primitives::config{
-					cfg.root_batch->vk().draw_target->raster_queue(),
+					cfg.raster_batch->vk().draw_target->raster_queue(),
 					cfg.program->pipeline_layout(),
-					cfg.root_batch,
-					cfg.root_batch->vk().swap_count,
+					cfg.raster_batch,
+					cfg.raster_batch->vk().swap_count,
 					0,
 					&parameters,
 					cfg.batch_primitives.get(),
@@ -298,17 +298,17 @@ void vulkan_program_batch::start_raster( const vulkan_batch_raster_state& )
 void vulkan_program_batch::stop_raster()
 {}
 
-const vulkan_root_batch::vulkan& vulkan_root_batch::vk() const
+const vulkan_raster_batch::vulkan& vulkan_raster_batch::vk() const
 {
 	return _vk;
 }
 
-vulkan_primitives& vulkan_root_batch::item() const
+vulkan_primitives& vulkan_raster_batch::item() const
 {
 	return *_vk.primitives;
 }
 
-void vulkan_root_batch::start_raster(
+void vulkan_raster_batch::start_raster(
 	const vulkan_batch_raster_state& raster_state )
 {
 	if ( !raster_state.command_buffer )
@@ -337,10 +337,10 @@ void vulkan_root_batch::start_raster(
 		_vk.draw_target->cfg().vk.managers.get() );
 }
 
-void vulkan_root_batch::stop_raster()
+void vulkan_raster_batch::stop_raster()
 {}
 
-void vulkan_root_batch::rebind_draw_target(
+void vulkan_raster_batch::rebind_draw_target(
 	const scoped_ptr< vulkan_draw_target >& vulkan_draw_target )
 {
 	_vk.draw_target = vulkan_draw_target;
@@ -357,7 +357,7 @@ void vulkan_root_batch::rebind_draw_target(
 	}
 }
 
-std::unique_ptr< vulkan_batch_binding > vulkan_root_batch::make_binding(
+std::unique_ptr< vulkan_batch_binding > vulkan_raster_batch::make_binding(
 	const instance_batch::config& cfg )
 {
 	auto prog =
@@ -511,7 +511,8 @@ std::unique_ptr< vulkan_batch_binding > vulkan_root_batch::make_binding(
 		} ) );
 }
 
-std::unique_ptr< vulkan_root_batch > vulkan_root_batch::make( const vulkan& vk )
+std::unique_ptr< vulkan_raster_batch > vulkan_raster_batch::make(
+	const vulkan& vk )
 {
 	if ( !vk.context )
 	{
@@ -535,26 +536,26 @@ std::unique_ptr< vulkan_root_batch > vulkan_root_batch::make( const vulkan& vk )
 	}
 	else
 	{
-		return std::unique_ptr< vulkan_root_batch >(
-			new vulkan_root_batch( vk ) );
+		return std::unique_ptr< vulkan_raster_batch >(
+			new vulkan_raster_batch( vk ) );
 	}
 
 	return nullptr;
 }
 
-vulkan_root_batch::vulkan_root_batch( const vulkan& vk )
+vulkan_raster_batch::vulkan_raster_batch( const vulkan& vk )
 	: _vk( vk )
 {}
 
-vulkan_root_batch::~vulkan_root_batch()
+vulkan_raster_batch::~vulkan_raster_batch()
 {}
 
-vulkan_job::state& vulkan_root_batch::job_state()
+vulkan_job::state& vulkan_raster_batch::job_state()
 {
 	return _job_state;
 }
 
-const vulkan_job::state& vulkan_root_batch::job_state() const
+const vulkan_job::state& vulkan_raster_batch::job_state() const
 {
 	return _job_state;
 }

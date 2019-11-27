@@ -45,11 +45,11 @@ namespace igpu
 	class program_batch : public batch_api_t< program, states_batch >
 	{};
 
-	class root_batch : public batch_api_t< primitives, program_batch >
+	class raster_batch : public batch_api_t< primitives, program_batch >
 	{
 	protected:
-		root_batch() = default;
-		root_batch( const root_batch& ) = delete;
-		root_batch& operator=( const root_batch& ) = delete;
+		raster_batch() = default;
+		raster_batch( const raster_batch& ) = delete;
+		raster_batch& operator=( const raster_batch& ) = delete;
 	};
 }

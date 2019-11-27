@@ -22,10 +22,12 @@ namespace igpu
 			return map.find( key );
 		}
 
-		template < typename ROOT_BATCH, typename RASTER_STATE >
-		void raster_opaque( ROOT_BATCH& root_batch, RASTER_STATE& raster_state )
+		template < typename RASTER_BATCH, typename RASTER_STATE >
+		void raster_opaque(
+			RASTER_BATCH& raster_batch,
+			RASTER_STATE& raster_state )
 		{
-			for ( auto& program_batch : root_batch )
+			for ( auto& program_batch : raster_batch )
 			{
 				for ( auto& states_batch : program_batch )
 				{
@@ -60,10 +62,10 @@ namespace igpu
 												if ( !raster_state.batches
 														  .root )
 												{
-													root_batch.start_raster(
+													raster_batch.start_raster(
 														raster_state );
 													raster_state.batches.root =
-														&root_batch;
+														&raster_batch;
 												}
 												program_batch.start_raster(
 													raster_state );
@@ -116,7 +118,7 @@ namespace igpu
 			if ( raster_state.batches.root )
 			{
 				raster_state.batches.root = nullptr;
-				root_batch.stop_raster();
+				raster_batch.stop_raster();
 			}
 		}
 
@@ -189,12 +191,12 @@ namespace igpu
 			map_t _map;
 		};
 
-		template < typename ROOT_BATCH >
+		template < typename RASTER_BATCH >
 		class batch_binding_t : public batch_binding
 		{
 		public:
-			using root_batch_t = typename ROOT_BATCH;
-			using program_batch_t = typename root_batch_t::child_t;
+			using raster_batch_t = typename RASTER_BATCH;
+			using program_batch_t = typename raster_batch_t::child_t;
 			using states_batch_t = typename program_batch_t::child_t;
 			using geometry_batch_t = typename states_batch_t::child_t;
 			using material_batch_t = typename geometry_batch_t::child_t;
@@ -205,7 +207,7 @@ namespace igpu
 			using bptr_t =
 				typename scoped_ptr< typename T::map_t::element_ref >;
 
-			using program_ptr_t = bptr_t< root_batch_t >;
+			using program_ptr_t = bptr_t< raster_batch_t >;
 			using states_ptr_t = bptr_t< program_batch_t >;
 			using geometry_ptr_t = bptr_t< states_batch_t >;
 			using material_ptr_t = bptr_t< geometry_batch_t >;
@@ -213,15 +215,15 @@ namespace igpu
 
 			template < typename... ARGS >
 			batch_binding_t(
-				root_batch_t* root_batch,
+				raster_batch_t* raster_batch,
 				program_batch_t* program_batch,
 				states_batch_t* states_batch,
 				geometry_batch_t* geometry_batch,
 				material_batch_t* material_batch,
 				const config_t& cfg,
 				ARGS&&... args )
-				: _root_batch( root_batch )
-				, _program_ptr( root_batch->ptr( program_batch ) )
+				: _raster_batch( raster_batch )
+				, _program_ptr( raster_batch->ptr( program_batch ) )
 				, _states_ptr( program_batch->ptr( states_batch ) )
 				, _geometry_ptr( states_batch->ptr( geometry_batch ) )
 				, _material_ptr( geometry_batch->ptr( material_batch ) )
@@ -282,7 +284,7 @@ namespace igpu
 					}
 				}
 
-				auto& map = _root_batch->map();
+				auto& map = _raster_batch->map();
 				map.erase( map.find( &program.item() ) );
 			}
 
@@ -302,7 +304,7 @@ namespace igpu
 			}
 
 		private:
-			root_batch_t* _root_batch;
+			raster_batch_t* _raster_batch;
 			program_ptr_t _program_ptr;
 			states_ptr_t _states_ptr;
 			geometry_ptr_t _geometry_ptr;
