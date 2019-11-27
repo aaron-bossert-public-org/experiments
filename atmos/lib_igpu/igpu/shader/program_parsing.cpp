@@ -159,7 +159,7 @@ namespace
 				switch ( spir_type.vecsize )
 				{
 				case 1:
-					constant.value = glm::ivec1( vec.r[0].i32 );
+					constant.value = vec.r[0].i32;
 					break;
 				case 2:
 					constant.value = glm::ivec2( vec.r[0].i32, vec.r[1].i32 );
@@ -190,7 +190,7 @@ namespace
 				switch ( spir_type.vecsize )
 				{
 				case 1:
-					constant.value = glm::vec1( vec.r[0].f32 );
+					constant.value = vec.r[0].f32;
 					break;
 				case 2:
 					constant.value = glm::vec2( vec.r[0].f32, vec.r[1].f32 );

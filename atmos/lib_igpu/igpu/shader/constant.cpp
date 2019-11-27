@@ -53,9 +53,9 @@ ptrdiff_t constant::compare( const constant& other ) const
 		value );
 }
 
-constant_type igpu::to_constant_type( const glm::ivec1& )
+constant_type igpu::to_constant_type( const int32_t& )
 {
-	return constant_type::IVEC1;
+	return constant_type::INT32;
 }
 
 constant_type igpu::to_constant_type( const glm::ivec2& )
@@ -73,9 +73,9 @@ constant_type igpu::to_constant_type( const glm::ivec4& )
 	return constant_type::IVEC4;
 }
 
-constant_type igpu::to_constant_type( const glm::vec1& )
+constant_type igpu::to_constant_type( const float& )
 {
-	return constant_type::VEC1;
+	return constant_type::F32;
 }
 
 constant_type igpu::to_constant_type( const glm::vec2& )
