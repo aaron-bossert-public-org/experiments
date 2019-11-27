@@ -359,6 +359,8 @@ model dcs_utils::load_model(
 
 
 		bool consistent_vert_formats = true;
+		m.meshes.resize( scene->mNumMeshes );
+
 		for ( size_t i = 1; i < scene->mNumMeshes; ++i )
 		{
 			auto* mesh = scene->mMeshes[i];
@@ -448,89 +450,81 @@ model dcs_utils::load_model(
 
 		for ( unsigned int i = 0; i < scene->mNumMeshes; ++i )
 		{
-			// Load meshes
-			m.meshes.resize( scene->mNumMeshes );
-			for ( unsigned int i = 0; i < scene->mNumMeshes; ++i )
+			const aiMesh* mesh = scene->mMeshes[i];
+
+			utility::aabb aabb = {};
 			{
-				const aiMesh* mesh = scene->mMeshes[i];
+				// append positions
+				const aiVector3D* src_at = (aiVector3D*)mesh->mVertices;
+				const aiVector3D* src_end = src_at + mesh->mNumVertices;
+				glm::vec4* dst_at = vertex_start + pos_view.data();
 
-				utility::aabb aabb = {};
+				for ( ; src_at < src_end; ++src_at, ++dst_at )
 				{
-					// append positions
-					const aiVector3D* src_at = (aiVector3D*)mesh->mVertices;
-					const aiVector3D* src_end = src_at + mesh->mNumVertices;
-					glm::vec4* dst_at = vertex_start + pos_view.data();
+					memcpy( dst_at, src_at, sizeof *src_at );
+					dst_at->w = 1;
 
-					for ( ; src_at < src_end; ++src_at, ++dst_at )
-					{
-						memcpy( dst_at, src_at, sizeof *src_at );
-						dst_at->w = 1;
+					aabb.max.x = fmax( src_at->x, aabb.max.x );
+					aabb.max.y = fmax( src_at->y, aabb.max.y );
+					aabb.max.z = fmax( src_at->z, aabb.max.z );
 
-						aabb.max.x = fmax( src_at->x, aabb.max.x );
-						aabb.max.y = fmax( src_at->y, aabb.max.y );
-						aabb.max.z = fmax( src_at->z, aabb.max.z );
-
-						aabb.min.x = fmin( src_at->x, aabb.min.x );
-						aabb.min.y = fmin( src_at->y, aabb.min.y );
-						aabb.min.z = fmin( src_at->z, aabb.min.z );
-					}
+					aabb.min.x = fmin( src_at->x, aabb.min.x );
+					aabb.min.y = fmin( src_at->y, aabb.min.y );
+					aabb.min.z = fmin( src_at->z, aabb.min.z );
 				}
-
-				// append non positional vertex data
-				for ( const auto& active_handler : active_handlers )
-				{
-					size_t csz = sizeof( float ) *
-						size_t( active_handler.attr.components );
-
-					const char* src_at = (char*)active_handler.get_attr( mesh );
-					const char* src_end =
-						src_at + mesh->mNumVertices * active_handler.stride;
-					char* dst_at = vertex_start * vert_cfg.stride +
-						active_handler.attr.offset + vertex_view.data();
-
-					for ( ; src_at < src_end; src_at += active_handler.stride,
-											  dst_at += vert_cfg.stride )
-					{
-						memcpy( dst_at, src_at, csz );
-					}
-				}
-
-				{ // append indices
-					const aiFace* src_at = mesh->mFaces;
-					const aiFace* src_end = mesh->mFaces + mesh->mNumFaces;
-					uint32_t* dst_at = index_start + index_view.data();
-					for ( ; src_at < src_end; ++src_at, dst_at += 3 )
-					{
-						if ( src_at->mNumIndices != 3 )
-						{
-							LOG_CRITICAL( "all meshes must be triangulated" );
-							return {};
-						}
-
-						memcpy(
-							dst_at,
-							src_at->mIndices,
-							3 * sizeof( uint32_t ) );
-					}
-				}
-
-				aiColor3D color( 0.f, 0.f, 0.f );
-				scene->mMaterials[mesh->mMaterialIndex]->Get(
-					AI_MATKEY_COLOR_DIFFUSE,
-					color );
-
-				m.meshes[i].base_vertex = vertex_start;
-				m.meshes[i].vertex_count = mesh->mNumVertices;
-				m.meshes[i].index_start = index_start;
-				m.meshes[i].index_count = mesh->mNumFaces * 3;
-				m.meshes[i].aabb = aabb;
-				m.meshes[i].material_color =
-					glm::vec4( color.r, color.g, color.b, 1 );
-
-
-				vertex_start += mesh->mNumVertices;
-				index_start += 3 * mesh->mNumFaces;
 			}
+
+			// append non positional vertex data
+			for ( const auto& active_handler : active_handlers )
+			{
+				size_t csz =
+					sizeof( float ) * size_t( active_handler.attr.components );
+
+				const char* src_at = (char*)active_handler.get_attr( mesh );
+				const char* src_end =
+					src_at + mesh->mNumVertices * active_handler.stride;
+				char* dst_at = vertex_start * vert_cfg.stride +
+					active_handler.attr.offset + vertex_view.data();
+
+				for ( ; src_at < src_end; src_at += active_handler.stride,
+										  dst_at += vert_cfg.stride )
+				{
+					memcpy( dst_at, src_at, csz );
+				}
+			}
+
+			{ // append indices
+				const aiFace* src_at = mesh->mFaces;
+				const aiFace* src_end = mesh->mFaces + mesh->mNumFaces;
+				uint32_t* dst_at = index_start + index_view.data();
+				for ( ; src_at < src_end; ++src_at, dst_at += 3 )
+				{
+					if ( src_at->mNumIndices != 3 )
+					{
+						LOG_CRITICAL( "all meshes must be triangulated" );
+						return {};
+					}
+
+					memcpy( dst_at, src_at->mIndices, 3 * sizeof( uint32_t ) );
+				}
+			}
+
+			aiColor3D color( 0.f, 0.f, 0.f );
+			scene->mMaterials[mesh->mMaterialIndex]->Get(
+				AI_MATKEY_COLOR_DIFFUSE,
+				color );
+
+			m.meshes[i].base_vertex = vertex_start;
+			m.meshes[i].vertex_count = mesh->mNumVertices;
+			m.meshes[i].index_start = index_start;
+			m.meshes[i].index_count = mesh->mNumFaces * 3;
+			m.meshes[i].aabb = aabb;
+			m.meshes[i].material_color =
+				glm::vec4( color.r, color.g, color.b, 1 );
+
+
+			vertex_start += mesh->mNumVertices;
+			index_start += 3 * mesh->mNumFaces;
 		}
 
 		pos_buffer->unmap();
