@@ -171,7 +171,7 @@ namespace
 
 			bool operator()( const CONFIG_T* lhs, const CONFIG_T* rhs ) const
 			{
-				return lhs->compare( *rhs );
+				return 0 == lhs->compare( *rhs );
 			}
 		};
 
