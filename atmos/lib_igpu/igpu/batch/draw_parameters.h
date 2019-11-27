@@ -13,7 +13,7 @@ namespace igpu
 		uint32_t index_count = 0;
 		uint32_t instance_count = 0;
 		uint32_t first_index = 0;
-		int32_t vertex_offset = 0;
+		int32_t base_vertex = 0;
 		uint32_t first_instance = 0;
 	};
 

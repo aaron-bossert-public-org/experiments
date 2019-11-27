@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <dcs_test/src/dcs_big_mesh.h>
+#include <dcs_test/src/dcs_compute_indirect_draw.h>
 #include <thread>
 
 #if ATMOS_BUILD_WINDOWS
@@ -28,7 +29,8 @@ int main()
 	std::shared_ptr< igpu::vulkan_context > context =
 		igpu::vulkan_context::make( context_cfg, glm::ivec2( 800, 600 ) );
 
-	auto test = dcs_big_mesh::make( { context } );
+	// auto test = dcs_big_mesh::make( { context } );
+	auto test = dcs_compute_indirect_draw::make( { context } );
 
 	while ( test->advance() )
 	{

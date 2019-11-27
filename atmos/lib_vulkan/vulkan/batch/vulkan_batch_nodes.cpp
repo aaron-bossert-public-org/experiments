@@ -125,7 +125,7 @@ void vulkan_instance_batch::rasterize(
 				draw_params->index_count,
 				draw_params->instance_count,
 				draw_params->first_index,
-				draw_params->vertex_offset,
+				draw_params->base_vertex,
 				draw_params->first_instance );
 		}
 	}

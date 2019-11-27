@@ -381,10 +381,6 @@ VkResult vulkan_back_buffer::do_end_raster()
 
 	swap_state& next_frame_state = frame_swap_state();
 
-	static int cntr = 0;
-	LOG_DEBUG( "frane: %d", cntr );
-	++cntr;
-
 	next_frame_state.raster_fence.wait_or_skip();
 	vkResetCommandBuffer(
 		next_frame_state.raster_cmds->vk_cmds(),

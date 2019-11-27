@@ -445,8 +445,8 @@ model dcs_utils::load_model(
 		vertex_buffer->map( &vertex_view );
 		index_buffer->map( &index_view );
 
-		size_t vertex_start = 0;
-		size_t index_start = 0;
+		int32_t base_vertex = 0;
+		uint32_t first_index = 0;
 
 		for ( unsigned int i = 0; i < scene->mNumMeshes; ++i )
 		{
@@ -457,7 +457,7 @@ model dcs_utils::load_model(
 				// append positions
 				const aiVector3D* src_at = (aiVector3D*)mesh->mVertices;
 				const aiVector3D* src_end = src_at + mesh->mNumVertices;
-				glm::vec4* dst_at = vertex_start + pos_view.data();
+				glm::vec4* dst_at = base_vertex + pos_view.data();
 
 				for ( ; src_at < src_end; ++src_at, ++dst_at )
 				{
@@ -483,7 +483,7 @@ model dcs_utils::load_model(
 				const char* src_at = (char*)active_handler.get_attr( mesh );
 				const char* src_end =
 					src_at + mesh->mNumVertices * active_handler.stride;
-				char* dst_at = vertex_start * vert_cfg.stride +
+				char* dst_at = base_vertex * vert_cfg.stride +
 					active_handler.attr.offset + vertex_view.data();
 
 				for ( ; src_at < src_end; src_at += active_handler.stride,
@@ -496,7 +496,7 @@ model dcs_utils::load_model(
 			{ // append indices
 				const aiFace* src_at = mesh->mFaces;
 				const aiFace* src_end = mesh->mFaces + mesh->mNumFaces;
-				uint32_t* dst_at = index_start + index_view.data();
+				uint32_t* dst_at = first_index + index_view.data();
 				for ( ; src_at < src_end; ++src_at, dst_at += 3 )
 				{
 					if ( src_at->mNumIndices != 3 )
@@ -514,17 +514,17 @@ model dcs_utils::load_model(
 				AI_MATKEY_COLOR_DIFFUSE,
 				color );
 
-			m.meshes[i].base_vertex = vertex_start;
+			m.meshes[i].base_vertex = base_vertex;
 			m.meshes[i].vertex_count = mesh->mNumVertices;
-			m.meshes[i].index_start = index_start;
+			m.meshes[i].first_index = first_index;
 			m.meshes[i].index_count = mesh->mNumFaces * 3;
 			m.meshes[i].aabb = aabb;
 			m.meshes[i].material_color =
 				glm::vec4( color.r, color.g, color.b, 1 );
 
 
-			vertex_start += mesh->mNumVertices;
-			index_start += 3 * mesh->mNumFaces;
+			base_vertex += mesh->mNumVertices;
+			first_index += 3 * mesh->mNumFaces;
 		}
 
 		pos_buffer->unmap();
