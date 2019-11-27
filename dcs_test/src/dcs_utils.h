@@ -38,9 +38,13 @@ namespace dcs_utils
 			size_t index_start = ~0U;
 			size_t index_count = ~0U;
 			size_t base_vertex = ~0U;
+			size_t vertex_count = ~0U;
 			utility::aabb aabb;
+			glm::vec4 material_color;
 		};
 
+		size_t vertex_count = ~0U;
+		size_t index_count = ~0U;
 		std::vector< mesh > meshes;
 		std::shared_ptr< igpu::geometry > geometry;
 	};

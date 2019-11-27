@@ -94,7 +94,7 @@ namespace
 	{
 		if ( !_ifs )
 		{
-			LOG_CRITICAL( "Could not \"%s\"!", path.data() );
+			LOG_CRITICAL( "Could not load \"%s\"!", path.data() );
 		}
 		else
 		{
@@ -297,8 +297,8 @@ model dcs_utils::load_model(
 
 		aiMesh* first_mesh = *scene->mMeshes;
 		vertex_buffer::config vert_cfg = {};
-		size_t vertex_count = first_mesh->mNumVertices;
-		size_t index_count = first_mesh->mNumFaces * 3;
+		m.vertex_count = first_mesh->mNumVertices;
+		m.index_count = first_mesh->mNumFaces * 3;
 
 		// verify consistent vertex formats
 		std::vector< attrib_handler > active_handlers;
@@ -362,8 +362,8 @@ model dcs_utils::load_model(
 		for ( size_t i = 1; i < scene->mNumMeshes; ++i )
 		{
 			auto* mesh = scene->mMeshes[i];
-			vertex_count += mesh->mNumVertices;
-			index_count += mesh->mNumFaces * 3;
+			m.vertex_count += mesh->mNumVertices;
+			m.index_count += mesh->mNumFaces * 3;
 
 			if ( num_uvs != mesh->GetNumUVChannels() )
 			{
@@ -374,14 +374,25 @@ model dcs_utils::load_model(
 					(int)i );
 				consistent_vert_formats = false;
 			}
-			if ( first_mesh->mNumUVComponents != mesh->mNumUVComponents )
+			else
 			{
-				LOG_CRITICAL(
-					"mesh %s index %d does not have same number of uv "
-					"components (x/y/z) as first mesh in scene",
-					mesh->mName.C_Str(),
-					(int)i );
-				consistent_vert_formats = false;
+				for ( size_t iuv = 0; iuv < num_uvs; ++iuv )
+				{
+					if ( first_mesh->mNumUVComponents[iuv] !=
+						 mesh->mNumUVComponents[iuv] )
+					{
+						LOG_CRITICAL(
+							"mesh:%s index:%d uv chanel:%d does not have same "
+							"number of uv "
+							"components:%d as first mesh in scene %d",
+							mesh->mName.C_Str(),
+							i,
+							iuv,
+							mesh->mNumUVComponents[iuv],
+							first_mesh->mNumUVComponents[iuv] );
+						consistent_vert_formats = false;
+					}
+				}
 			}
 			if ( num_cls != mesh->GetNumColorChannels() )
 			{
@@ -421,20 +432,19 @@ model dcs_utils::load_model(
 		auto index_buffer = context->make_shared(
 			index_buffer::config{ index_format::UNSIGNED_INT } );
 
-		buffer_view< uint32_t > index_view( index_count, nullptr );
-		buffer_view< glm::vec4 > pos_view( vertex_count, nullptr );
+		buffer_view< uint32_t > index_view( m.index_count, nullptr );
+		buffer_view< glm::vec4 > pos_view( m.vertex_count, nullptr );
 
 		buffer_view< char > vertex_view(
-			vertex_count * vert_cfg.stride,
+			m.vertex_count * vert_cfg.stride,
 			nullptr );
 
 		pos_buffer->map( &pos_view );
 		vertex_buffer->map( &vertex_view );
 		index_buffer->map( &index_view );
 
-		size_t base_vertex = 0;
-
-		pos_view[199420].w = 1;
+		size_t vertex_start = 0;
+		size_t index_start = 0;
 
 		for ( unsigned int i = 0; i < scene->mNumMeshes; ++i )
 		{
@@ -449,7 +459,7 @@ model dcs_utils::load_model(
 					// append positions
 					const aiVector3D* src_at = (aiVector3D*)mesh->mVertices;
 					const aiVector3D* src_end = src_at + mesh->mNumVertices;
-					glm::vec4* dst_at = base_vertex + pos_view.data();
+					glm::vec4* dst_at = vertex_start + pos_view.data();
 
 					for ( ; src_at < src_end; ++src_at, ++dst_at )
 					{
@@ -475,7 +485,7 @@ model dcs_utils::load_model(
 					const char* src_at = (char*)active_handler.get_attr( mesh );
 					const char* src_end =
 						src_at + mesh->mNumVertices * active_handler.stride;
-					char* dst_at = base_vertex * vert_cfg.stride +
+					char* dst_at = vertex_start * vert_cfg.stride +
 						active_handler.attr.offset + vertex_view.data();
 
 					for ( ; src_at < src_end; src_at += active_handler.stride,
@@ -488,7 +498,7 @@ model dcs_utils::load_model(
 				{ // append indices
 					const aiFace* src_at = mesh->mFaces;
 					const aiFace* src_end = mesh->mFaces + mesh->mNumFaces;
-					uint32_t* dst_at = index_view.data();
+					uint32_t* dst_at = index_start + index_view.data();
 					for ( ; src_at < src_end; ++src_at, dst_at += 3 )
 					{
 						if ( src_at->mNumIndices != 3 )
@@ -504,12 +514,22 @@ model dcs_utils::load_model(
 					}
 				}
 
-				m.meshes[i].base_vertex = base_vertex;
-				m.meshes[i].index_start = index_count;
+				aiColor3D color( 0.f, 0.f, 0.f );
+				scene->mMaterials[mesh->mMaterialIndex]->Get(
+					AI_MATKEY_COLOR_DIFFUSE,
+					color );
+
+				m.meshes[i].base_vertex = vertex_start;
+				m.meshes[i].vertex_count = mesh->mNumVertices;
+				m.meshes[i].index_start = index_start;
 				m.meshes[i].index_count = mesh->mNumFaces * 3;
 				m.meshes[i].aabb = aabb;
+				m.meshes[i].material_color =
+					glm::vec4( color.r, color.g, color.b, 1 );
 
-				base_vertex += mesh->mNumVertices;
+
+				vertex_start += mesh->mNumVertices;
+				index_start += 3 * mesh->mNumFaces;
 			}
 		}
 
