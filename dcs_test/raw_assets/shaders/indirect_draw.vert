@@ -23,7 +23,7 @@ layout( location = 2 ) in vec4 cl0;
 
 layout( location = 0 ) out vec3 outNormal;
 layout( location = 1 ) out vec4 outColor;
-layout( location = 3 ) out vec3 outLightVec;
+layout( location = 2 ) out vec3 outLightVec;
 
 out gl_PerVertex
 {
