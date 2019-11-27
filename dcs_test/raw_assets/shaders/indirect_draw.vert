@@ -1,8 +1,5 @@
 #version 450
 
-
-layout( constant_id = 0 ) const int MAX_INSTANCE_ID = 4096;
-
 layout( set = 0, binding = 1 ) uniform batch_data
 {
 	mat4 view;
@@ -12,7 +9,7 @@ batch;
 
 layout( set = 2, binding = 3 ) readonly buffer instance_data
 {
-	mat4 models[MAX_INSTANCE_ID];
+	mat4 models[];
 }
 instance;
 

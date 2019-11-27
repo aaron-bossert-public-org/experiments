@@ -63,7 +63,7 @@ std::unique_ptr< dcs_compute_indirect_draw > dcs_compute_indirect_draw::make(
 			cfg.context->make_shared(
 				fragment_shader::config{},
 				dcs_utils::load_mem( cfg.fragment_path.c_str() ) ),
-			{ { { "MAX_INSTANCE_ID", s_instance_volume } } } } );
+		} );
 
 		st.model = dcs_utils::load_model(
 			cfg.context.get(),

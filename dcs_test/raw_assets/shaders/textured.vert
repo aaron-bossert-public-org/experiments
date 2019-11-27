@@ -1,8 +1,6 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-layout( constant_id = 0 ) const int MAX_INSTANCE_ID = 4096;
-
 struct model
 {
 	vec3 pos;
@@ -19,7 +17,7 @@ batch;
 
 layout( set = 2, binding = 3 ) readonly buffer instance_data
 {
-	mat4 models[MAX_INSTANCE_ID];
+	mat4 models[];
 }
 instance;
 
