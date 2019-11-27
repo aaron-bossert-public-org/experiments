@@ -10,7 +10,7 @@ layout( set = 0, binding = 1 ) uniform batch_data
 }
 batch;
 
-layout( set = 2, binding = 3 ) uniform instance_data
+layout( set = 2, binding = 3 ) readonly buffer instance_data
 {
 	mat4 models[MAX_INSTANCE_ID];
 }
@@ -36,7 +36,7 @@ void main()
 
 	gl_Position = batch.proj * batch.view * world_pos;
 
-	vec4 lPos = vec4( 0.0, 10.0, 50.0, 1.0 );
+	vec4 lPos = vec4( 1000, -1000, 1000, 1 );
 	outLightVec = lPos.xyz - world_pos.xyz;
 	outColor = cl0;
 	outNormal = nrm;

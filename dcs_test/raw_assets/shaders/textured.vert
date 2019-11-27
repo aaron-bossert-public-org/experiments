@@ -1,9 +1,6 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-#define type readonly buffer
-//#define type uniform
-
 layout( constant_id = 0 ) const int MAX_INSTANCE_ID = 4096;
 
 struct model
@@ -12,7 +9,7 @@ struct model
 	float scale;
 };
 
-layout( set = 0, binding = 1 ) type batch_data
+layout( set = 0, binding = 1 ) uniform batch_data
 {
 	mat4 view;
 	mat4 proj;
@@ -20,7 +17,7 @@ layout( set = 0, binding = 1 ) type batch_data
 batch;
 
 
-layout( set = 2, binding = 3 ) uniform instance_data
+layout( set = 2, binding = 3 ) readonly buffer instance_data
 {
 	mat4 models[MAX_INSTANCE_ID];
 }

@@ -11,7 +11,7 @@ void main()
 	outFragColor = vec4( 1, 1, 1, 1 );
 	vec3 N = normalize( inNormal );
 	vec3 L = normalize( inLightVec );
-	vec3 ambient = vec3( 0.75 );
+	vec3 ambient = vec3( 0.5 );
 	vec3 diffuse = vec3( max( dot( N, L ), -0.75 ) * 0.75 );
 	outFragColor = vec4( ( ambient + diffuse ) * inColor.rgb, 1.0 );
 }
