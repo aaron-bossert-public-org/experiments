@@ -17,10 +17,7 @@ bool geometry::find_expected_vertex_param(
 {
 	const config& cfg = this->cfg();
 	const size_t count_buff = cfg.vertex_buffers.size();
-	if ( *p_expected_buff >= count_buff )
-	{
-		p_expected_buff = 0;
-	}
+	*p_expected_buff %= count_buff;
 
 	const auto* attributes =
 		&cfg.vertex_buffers[*p_expected_buff]->cfg().attributes;
@@ -30,10 +27,7 @@ bool geometry::find_expected_vertex_param(
 	{
 		*p_expected_attr = 0;
 		++*p_expected_buff;
-		if ( *p_expected_buff >= count_buff )
-		{
-			p_expected_buff = 0;
-		}
+		*p_expected_buff %= count_buff;
 		attributes = &cfg.vertex_buffers[*p_expected_buff]->cfg().attributes;
 	}
 
@@ -54,15 +48,11 @@ bool geometry::find_expected_vertex_param(
 		{
 			attr = 0;
 			++buff;
-			if ( buff >= count_buff )
-			{
-				buff = 0;
-				attributes = &cfg.vertex_buffers[buff]->cfg().attributes;
-				count_attr = attributes->size();
-			}
+			buff %= count_buff;
+			attributes = &cfg.vertex_buffers[buff]->cfg().attributes;
 		}
 
-	} while ( buff != *p_expected_buff || attr != *p_expected_buff );
+	} while ( buff != *p_expected_buff || attr != *p_expected_attr );
 
 	return false;
 }
