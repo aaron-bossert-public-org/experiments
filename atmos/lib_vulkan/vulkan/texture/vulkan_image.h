@@ -10,6 +10,7 @@
 #include "framework/utility/scoped_ptr.h"
 
 #include "glm/vec2.hpp"
+#include <memory>
 
 namespace igpu
 {

@@ -4,6 +4,8 @@
 #include "vulkan/texture/vulkan_image.h"
 #include "vulkan/texture/vulkan_sampler.h"
 
+#include <memory>
+
 namespace igpu
 {
 	template < typename T >

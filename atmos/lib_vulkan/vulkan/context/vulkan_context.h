@@ -7,6 +7,8 @@
 
 #include "framework/perf/metrics.h"
 
+#include <memory>
+
 namespace igpu
 {
 	class vulkan_back_buffer;

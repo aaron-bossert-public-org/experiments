@@ -3,6 +3,8 @@
 
 #include "igpu/shader/primitive.h"
 
+#include <memory>
+
 namespace igpu
 {
 	class vulkan_compute_buffer;

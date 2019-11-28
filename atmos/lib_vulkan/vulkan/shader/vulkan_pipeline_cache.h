@@ -4,7 +4,7 @@
 #include "vulkan/defines/vulkan_includes.h"
 
 #include <memory>
-#include <unordered_map>
+
 namespace igpu
 {
 	class attribute_indexer;

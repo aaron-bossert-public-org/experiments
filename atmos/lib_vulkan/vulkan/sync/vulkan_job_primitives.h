@@ -4,6 +4,9 @@
 #include "vulkan/defines/vulkan_includes.h"
 #include "vulkan/shader/vulkan_parameter.h"
 #include "vulkan/sync/vulkan_job_dependencies.h"
+
+#include <memory>
+
 namespace igpu
 {
 	class vulkan_descriptor_pool;

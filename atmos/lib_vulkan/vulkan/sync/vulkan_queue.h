@@ -7,6 +7,7 @@
 
 #include <functional>
 #include <list>
+#include <memory>
 #include <queue>
 
 namespace igpu

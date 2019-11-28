@@ -6,6 +6,7 @@
 #include "framework/utility/scoped_ptr.h"
 
 #include <array>
+#include <memory>
 
 namespace igpu
 {

@@ -4,7 +4,6 @@
 #include "igpu/shader/constants.h"
 
 #include <memory>
-#include <unordered_map>
 
 namespace igpu
 {
@@ -38,12 +37,5 @@ namespace igpu
 		virtual const parameters& instance_parameters() const = 0;
 
 		virtual ~compute_program() = default;
-
-	protected:
-		compute_program() = default;
-
-	private:
-		compute_program( const compute_program& ) = delete;
-		compute_program& operator=( const compute_program& ) = delete;
 	};
 }

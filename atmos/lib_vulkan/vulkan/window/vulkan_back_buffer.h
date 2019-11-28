@@ -6,6 +6,7 @@
 #include "vulkan/texture/vulkan_draw_target.h"
 #include "vulkan/texture/vulkan_render_buffer.h"
 
+#include <memory>
 #include <vector>
 
 namespace igpu

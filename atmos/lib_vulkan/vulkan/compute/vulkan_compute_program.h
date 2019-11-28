@@ -7,6 +7,7 @@
 #include "igpu/compute/compute_program.h"
 
 #include <array>
+#include <memory>
 
 namespace igpu
 {

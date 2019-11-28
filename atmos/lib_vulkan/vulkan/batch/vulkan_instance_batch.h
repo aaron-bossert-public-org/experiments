@@ -4,6 +4,8 @@
 #include "igpu/batch/instance_batch.h"
 #include "igpu/batch/raster_binding.h"
 
+#include <memory>
+
 namespace igpu
 {
 	struct vulkan_raster_state;

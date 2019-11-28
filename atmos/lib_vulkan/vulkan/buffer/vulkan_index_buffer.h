@@ -8,6 +8,8 @@
 
 #include "framework/utility/scoped_ptr.h"
 
+#include <memory>
+
 namespace igpu
 {
 	VkIndexType to_vulkan_format( index_format format );

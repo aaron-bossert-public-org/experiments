@@ -5,6 +5,8 @@
 
 #include "igpu/shader/primitives.h"
 
+#include <memory>
+
 namespace igpu
 {
 	class vulkan_poset_fence;

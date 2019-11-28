@@ -9,7 +9,6 @@
 #include "framework/utility/buffer_view.h"
 
 #include "glm/vec2.hpp"
-#include <memory>
 #include <string>
 
 namespace igpu

@@ -7,6 +7,7 @@
 #include "framework/utility/scoped_ptr.h"
 
 #include <initializer_list>
+#include <memory>
 #include <vector>
 
 namespace igpu

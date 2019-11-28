@@ -3,7 +3,6 @@
 
 #include <Windows.h>
 #include <sstream>
-#include <unordered_map>
 
 using namespace igpu;
 namespace

@@ -7,6 +7,8 @@
 
 #include "igpu/buffer/geometry.h"
 
+#include <memory>
+
 namespace igpu
 {
 	VkPrimitiveTopology to_vulkan_topology( topology topology );

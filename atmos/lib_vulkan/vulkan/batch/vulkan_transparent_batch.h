@@ -8,6 +8,8 @@
 
 #include "framework/utility/scoped_ptr.h"
 
+#include <memory>
+
 namespace igpu
 {
 	class vulkan_pipeline_cache;

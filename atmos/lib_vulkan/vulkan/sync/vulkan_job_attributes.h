@@ -4,6 +4,8 @@
 #include "vulkan/defines/vulkan_includes.h"
 #include "vulkan/sync/vulkan_job_dependencies.h"
 
+#include <memory>
+
 namespace igpu
 {
 	class vulkan_geometry;

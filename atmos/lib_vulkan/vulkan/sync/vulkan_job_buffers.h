@@ -5,6 +5,8 @@
 #include "vulkan/sync/vulkan_job_dependencies.h"
 #include "vulkan/sync/vulkan_job_scope.h"
 
+#include <memory>
+
 namespace igpu
 {
 	class vulkan_compute_buffer;

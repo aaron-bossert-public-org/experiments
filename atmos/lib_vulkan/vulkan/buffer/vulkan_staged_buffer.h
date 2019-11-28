@@ -6,6 +6,8 @@
 
 #include "framework/utility/scoped_ptr.h"
 
+#include <memory>
+
 namespace igpu
 {
 	class vulkan_managers;
@@ -125,7 +127,7 @@ namespace igpu
 			const vulkan_staged_buffer::config& staged_cfg,
 			const ARGS&... args )
 			: T( args... )
-			, _cfg(cfg)
+			, _cfg( cfg )
 			, _vulkan_staged_buffer( staged_cfg )
 		{}
 

@@ -8,6 +8,7 @@
 #include "igpu/shader/program.h"
 
 #include <array>
+#include <memory>
 
 namespace igpu
 {

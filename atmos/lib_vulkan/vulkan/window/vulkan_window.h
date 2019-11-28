@@ -6,6 +6,7 @@
 #include "igpu/window/window.h"
 
 #include <functional>
+#include <memory>
 
 struct GLFWwindow;
 

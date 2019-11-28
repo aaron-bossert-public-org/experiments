@@ -6,6 +6,8 @@
 
 #include "igpu/texture/render_texture2d.h"
 
+#include <memory>
+
 namespace igpu
 {
 	class vulkan_image;

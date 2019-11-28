@@ -3,6 +3,8 @@
 
 #include "vulkan/defines/vulkan_includes.h"
 
+#include <memory>
+
 namespace igpu
 {
 	class vulkan_semaphore

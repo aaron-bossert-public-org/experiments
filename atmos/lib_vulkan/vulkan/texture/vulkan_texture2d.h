@@ -7,6 +7,8 @@
 
 #include "framework/utility/scoped_ptr.h"
 
+#include <memory>
+
 namespace igpu
 {
 	VkFormat to_vulkan_format( texture_format );

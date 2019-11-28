@@ -42,12 +42,5 @@ namespace igpu
 		virtual const parameters& instance_parameters() const = 0;
 
 		virtual ~program() = default;
-
-	protected:
-		program() = default;
-
-	private:
-		program( const program& ) = delete;
-		program& operator=( const program& ) = delete;
 	};
 }

@@ -6,6 +6,8 @@
 
 #include "igpu/texture/render_buffer.h"
 
+#include <memory>
+
 namespace igpu
 {
 	VkFormat to_vulkan_format( color_format );

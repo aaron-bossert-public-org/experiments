@@ -6,6 +6,8 @@
 
 #include "igpu/texture/depth_buffer.h"
 
+#include <memory>
+
 namespace igpu
 {
 	VkFormat to_vulkan_format( depth_format format );

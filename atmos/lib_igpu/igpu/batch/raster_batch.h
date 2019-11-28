@@ -43,10 +43,5 @@ namespace igpu
 			const std::function< void( const instance_batch& ) >& visit );
 
 		virtual ~raster_batch() = default;
-
-	protected:
-		raster_batch() = default;
-		raster_batch( const raster_batch& ) = delete;
-		raster_batch& operator=( const raster_batch& ) = delete;
 	};
 }

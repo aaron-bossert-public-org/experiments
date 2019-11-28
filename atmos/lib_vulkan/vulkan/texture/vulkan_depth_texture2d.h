@@ -7,6 +7,8 @@
 
 #include "igpu/texture/depth_texture2d.h"
 
+#include <memory>
+
 namespace igpu
 {
 	class vulkan_image;
