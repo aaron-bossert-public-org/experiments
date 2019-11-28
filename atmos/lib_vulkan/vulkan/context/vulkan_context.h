@@ -73,6 +73,9 @@ namespace igpu
 		std::unique_ptr< graphics_pipeline > make(
 			const graphics_pipeline ::config& ) override;
 
+		std::unique_ptr< compute_pipeline > make(
+			const compute_pipeline ::config& ) override;
+
 		std::unique_ptr< draw_target > make(
 			const draw_target::config& ) override;
 
@@ -117,6 +120,9 @@ namespace igpu
 
 		std::unique_ptr< transparent_batch > make(
 			const transparent_batch::config& ) override;
+
+		std::unique_ptr< compute_binding > make(
+			const compute_binding::config& ) override;
 
 		std::unique_ptr< vertex_shader > make(
 			const vertex_shader::config&,

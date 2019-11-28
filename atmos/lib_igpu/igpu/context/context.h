@@ -6,7 +6,9 @@
 #include "igpu/buffer/index_buffer.h"
 #include "igpu/buffer/topology.h"
 #include "igpu/buffer/vertex_buffer.h"
+#include "igpu/compute/compute_binding.h"
 #include "igpu/compute/compute_buffer.h"
+#include "igpu/compute/compute_pipeline.h"
 #include "igpu/compute/compute_program.h"
 #include "igpu/compute/compute_shader.h"
 #include "igpu/shader/fragment_shader.h"
@@ -76,6 +78,8 @@ namespace igpu
 
 		sp_t< graphics_pipeline > make_shared( config_t< graphics_pipeline > );
 
+		sp_t< compute_pipeline > make_shared( config_t< compute_pipeline > );
+
 		sp_t< draw_target > make_shared( config_t< draw_target > );
 
 		sp_t< render_buffer > make_shared( config_t< render_buffer > );
@@ -97,6 +101,8 @@ namespace igpu
 		sp_t< opaque_batch > make_shared( config_t< opaque_batch > );
 
 		sp_t< transparent_batch > make_shared( config_t< transparent_batch > );
+
+		sp_t< compute_binding > make_shared( config_t< compute_binding > );
 
 		sp_t< vertex_shader > make_shared(
 			config_t< vertex_shader >,
@@ -130,6 +136,9 @@ namespace igpu
 		virtual std::unique_ptr< graphics_pipeline > make(
 			const graphics_pipeline::config& ) = 0;
 
+		virtual std::unique_ptr< compute_pipeline > make(
+			const compute_pipeline::config& ) = 0;
+
 		virtual std::unique_ptr< draw_target > make(
 			const draw_target::config& ) = 0;
 
@@ -162,6 +171,9 @@ namespace igpu
 
 		virtual std::unique_ptr< transparent_batch > make(
 			const transparent_batch::config& ) = 0;
+
+		virtual std::unique_ptr< compute_binding > make(
+			const compute_binding::config& ) = 0;
 
 		virtual std::unique_ptr< vertex_shader > make(
 			const vertex_shader::config&,

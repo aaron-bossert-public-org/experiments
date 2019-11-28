@@ -6,7 +6,9 @@
 #include "vulkan/buffer/vulkan_geometry.h"
 #include "vulkan/buffer/vulkan_index_buffer.h"
 #include "vulkan/buffer/vulkan_vertex_buffer.h"
+#include "vulkan/compute/vulkan_compute_binding.h"
 #include "vulkan/compute/vulkan_compute_buffer.h"
+#include "vulkan/compute/vulkan_compute_pipeline.h"
 #include "vulkan/compute/vulkan_compute_program.h"
 #include "vulkan/compute/vulkan_compute_shader.h"
 #include "vulkan/defines/vulkan_includes.h"
@@ -630,6 +632,21 @@ std::unique_ptr< graphics_pipeline > vulkan_context::make(
 	} );
 }
 
+std::unique_ptr< compute_pipeline > vulkan_context::make(
+	const compute_pipeline::config& base_cfg )
+{
+	auto program =
+		base_cfg.program.dynamic_ptr_cast< vulkan_compute_program >();
+
+	return vulkan_compute_pipeline::make( {
+		base_cfg,
+		_cfg.vk.device,
+		_st.back_buffer->raster_queue(),
+		_st.pipeline_cache,
+		program,
+	} );
+}
+
 std::unique_ptr< draw_target > vulkan_context::make(
 	const draw_target::config& base_cfg )
 {
@@ -854,6 +871,40 @@ std::unique_ptr< transparent_batch > vulkan_context::make(
 		draw_target,
 		primitives,
 		base_cfg.constants,
+	} );
+}
+
+std::unique_ptr< compute_binding > vulkan_context::make(
+	const compute_binding::config& base_cfg )
+{
+	auto program =
+		std::dynamic_pointer_cast< vulkan_compute_program, compute_program >(
+			base_cfg.program );
+
+	auto batch = std::dynamic_pointer_cast< vulkan_primitives, primitives >(
+		base_cfg.batch );
+
+	auto material = std::dynamic_pointer_cast< vulkan_primitives, primitives >(
+		base_cfg.material );
+
+	auto instance = std::dynamic_pointer_cast< vulkan_primitives, primitives >(
+		base_cfg.instance );
+
+	auto pipeline =
+		std::dynamic_pointer_cast< vulkan_compute_pipeline, compute_pipeline >(
+			context::make_shared( compute_pipeline::make_config(
+				base_cfg.constants,
+				base_cfg.program ) ) );
+
+	return vulkan_compute_binding::make( {
+		base_cfg,
+		_st.managers,
+		program,
+		pipeline,
+		batch,
+		material,
+		instance,
+		_cfg.vk.swap_count,
 	} );
 }
 

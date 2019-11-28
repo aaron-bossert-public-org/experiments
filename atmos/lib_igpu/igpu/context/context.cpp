@@ -268,6 +268,14 @@ std::shared_ptr< graphics_pipeline > context::make_shared(
 	} );
 }
 
+std::shared_ptr< compute_pipeline > context::make_shared(
+	const compute_pipeline::config& cfg )
+{
+	return ::memoize< compute_pipeline >( &_trackers, cfg, [&] {
+		return make( cfg );
+	} );
+}
+
 std::shared_ptr< draw_target > context::make_shared(
 	const draw_target::config& cfg )
 {
@@ -330,6 +338,12 @@ std::shared_ptr< opaque_batch > context::make_shared(
 
 std::shared_ptr< transparent_batch > context::make_shared(
 	const transparent_batch::config& cfg )
+{
+	return ::emplace( &_trackers, make( cfg ) );
+}
+
+std::shared_ptr< compute_binding > context::make_shared(
+	const compute_binding::config& cfg )
 {
 	return ::emplace( &_trackers, make( cfg ) );
 }
