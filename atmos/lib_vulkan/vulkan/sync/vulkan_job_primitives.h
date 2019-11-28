@@ -20,6 +20,7 @@ namespace igpu
 		struct config
 		{
 			scoped_ptr< vulkan_queue > queue;
+			VkPipelineBindPoint bind_point = VK_PIPELINE_BIND_POINT_MAX_ENUM;
 			VkPipelineLayout pipeline_layout = nullptr;
 			vulkan_job* job = nullptr;
 			size_t swap_count = 0;

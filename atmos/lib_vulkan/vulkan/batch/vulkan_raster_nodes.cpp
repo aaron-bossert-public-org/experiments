@@ -9,7 +9,6 @@
 #include "vulkan/context/vulkan_context.h"
 #include "vulkan/manager/vulkan_managers.h"
 #include "vulkan/shader/vulkan_graphics_pipeline.h"
-#include "vulkan/shader/vulkan_pipeline_cache.h"
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_job_attributes.h"
 #include "vulkan/sync/vulkan_job_buffers.h"
@@ -146,6 +145,7 @@ vulkan_material_batch::vulkan_material_batch( const config& cfg )
 			_job_primitives =
 				vulkan_job_primitives::make( vulkan_job_primitives::config{
 					cfg.raster_batch_root->vk().draw_target->raster_queue(),
+					VK_PIPELINE_BIND_POINT_GRAPHICS,
 					cfg.program->pipeline_layout(),
 					cfg.raster_batch_root,
 					cfg.raster_batch_root->vk().swap_count,
@@ -201,6 +201,7 @@ vulkan_geometry_batch::vulkan_geometry_batch( const config& cfg )
 			_job_primitives =
 				vulkan_job_primitives::make( vulkan_job_primitives::config{
 					cfg.raster_batch_root->vk().draw_target->raster_queue(),
+					VK_PIPELINE_BIND_POINT_GRAPHICS,
 					cfg.program->pipeline_layout(),
 					cfg.raster_batch_root,
 					cfg.raster_batch_root->vk().swap_count,

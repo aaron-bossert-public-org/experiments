@@ -255,7 +255,7 @@ void vulkan_job_primitives::record_cmds(
 
 	vkCmdBindDescriptorSets(
 		command_buffer->vk_cmds(),
-		VK_PIPELINE_BIND_POINT_GRAPHICS,
+		_cfg.bind_point,
 		_cfg.pipeline_layout,
 		(uint32_t)_cfg.descriptor_index,
 		1,

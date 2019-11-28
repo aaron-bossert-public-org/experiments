@@ -33,6 +33,7 @@ vulkan_instance_batch::vulkan_instance_batch( const config& cfg )
 						.managers->cfg()
 						.queues->cfg()
 						.graphics_queue,
+					VK_PIPELINE_BIND_POINT_GRAPHICS,
 					cfg.vk.program->pipeline_layout(),
 					cfg.vk.raster_batch_root,
 					cfg.vk.raster_batch_root->vk().swap_count,
