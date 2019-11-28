@@ -45,34 +45,13 @@ std::unique_ptr< dcs_compute_indirect_draw > dcs_compute_indirect_draw::make(
 
 		st.raster_data = cfg.context->make_shared( compute_buffer::config{} );
 
+		auto lod_data = cfg.context->make_shared( compute_buffer::config{} );
+
 		auto indirect_draw = cfg.context->make_shared(
 			compute_buffer::config{ compute_buff_flag::INDIRECT_DRAW } );
 
 		auto instance_data =
 			cfg.context->make_shared( compute_buffer::config{} );
-
-		auto lod_data = cfg.context->make_shared( compute_buffer::config{} );
-
-		update( cfg.context->back_buffer()->res(), *st.raster_data );
-
-
-		auto render_states = cfg.context->make_shared( render_states::config{
-			0b1111, // color write mask
-			{ (bool)"cull_enabled", cull::BACK },
-			{ !(bool)"blend_enabled" },
-			{ !(bool)"stencil_enabled" },
-			{ (bool)"depth_enabled", (bool)"depth_write", compare::LESS },
-		} );
-
-		auto program = cfg.context->make_shared( program::config{
-			"test program",
-			cfg.context->make_shared(
-				vertex_shader::config{},
-				dcs_utils::load_mem( cfg.vertex_path.c_str() ) ),
-			cfg.context->make_shared(
-				fragment_shader::config{},
-				dcs_utils::load_mem( cfg.fragment_path.c_str() ) ),
-		} );
 
 		auto model = dcs_utils::load_model(
 			cfg.context.get(),
@@ -80,123 +59,157 @@ std::unique_ptr< dcs_compute_indirect_draw > dcs_compute_indirect_draw::make(
 			dcs_utils::model_flags::JOIN_IDENTICAL_VERTICES |
 				dcs_utils::model_flags::FLIP_TEXCOORD_Y );
 
-		auto geo_cfg = model.geometry->cfg();
-		auto colors = cfg.context->make_shared( vertex_buffer::config{
-			(uint32_t)sizeof( glm::vec4 ),
-			{ { { "cl0", components::FLOAT4 } } } } );
 
-		buffer_view< glm::vec4 > color_view( model.vertex_count, nullptr );
-		colors->map( &color_view );
-		for ( size_t msh = 0; msh < model.meshes.size(); ++msh )
-		{
-			const auto& mesh = model.meshes[msh];
-			for ( size_t i = mesh.base_vertex;
-				  i < mesh.vertex_count + mesh.base_vertex;
-				  ++i )
+		{ // add mesh vertex colors, copied from mesh material color
+			auto geo_cfg = model.geometry->cfg();
+			auto colors = cfg.context->make_shared( vertex_buffer::config{
+				(uint32_t)sizeof( glm::vec4 ),
+				{ { { "cl0", components::FLOAT4 } } } } );
+
+			geo_cfg.vertex_buffers.push_back( colors );
+			model.geometry = cfg.context->make_shared( geo_cfg );
+
+			buffer_view< glm::vec4 > color_view( model.vertex_count, nullptr );
+			colors->map( &color_view );
+			for ( size_t msh = 0; msh < model.meshes.size(); ++msh )
 			{
-				color_view[i] = mesh.material_color;
-				color_view[i].a = (float)msh;
-			}
-		}
-
-		colors->unmap();
-
-		struct lod
-		{
-			uint32_t first_index;
-			uint32_t index_count;
-			int32_t base_vertex;
-			float distance;
-		};
-		buffer_view< lod > lod_view( model.meshes.size(), nullptr );
-
-		lod_data->map( &lod_view );
-
-		float lod_scale = 10;
-		for ( size_t msh = 0; msh < model.meshes.size(); ++msh )
-		{
-			const auto& mesh = model.meshes[msh];
-			lod_view[msh] = {
-				mesh.first_index,
-				mesh.index_count,
-				mesh.base_vertex,
-				lod_scale + msh * lod_scale,
-			};
-		}
-
-		lod_data->unmap();
-
-
-		geo_cfg.vertex_buffers.push_back( colors );
-		model.geometry = cfg.context->make_shared( geo_cfg );
-
-		glm::mat4( *instances )[s_size_1d][s_size_1d][s_size_1d];
-
-		instance_data->map( &instances );
-
-		float scale = 5.f;
-		float offset = scale * s_size_1d * -0.5f;
-
-		glm::mat4x4 ident = glm::mat4( 1.0f );
-		for ( size_t z = 0; z < s_size_1d; ++z )
-			for ( size_t y = 0; y < s_size_1d; ++y )
-				for ( size_t x = 0; x < s_size_1d; ++x )
+				const auto& mesh = model.meshes[msh];
+				for ( size_t i = mesh.base_vertex;
+					  i < mesh.vertex_count + mesh.base_vertex;
+					  ++i )
 				{
-					ident[3][0] = x * scale + offset;
-					ident[3][1] = y * scale + offset;
-					ident[3][2] = z * scale + offset;
-					( *instances )[x][y][z] = ident;
+					color_view[i] = mesh.material_color;
+					color_view[i].a = (float)msh;
 				}
+			}
 
-		instance_data->unmap();
+			colors->unmap();
+		}
 
+		{ // initialize lod vertex and index buffer ranges within the larger
+		  // combined vertex and index buffers
+			struct lod
+			{
+				uint32_t first_index;
+				uint32_t index_count;
+				int32_t base_vertex;
+				float distance;
+			};
+			buffer_view< lod > lod_view( model.meshes.size(), nullptr );
 
-		indirect_draw->reset_gpu_only( sizeof( draw_parameters ) * s_size_3d );
+			lod_data->map( &lod_view );
 
+			float lod_scale = 10;
+			for ( size_t msh = 0; msh < model.meshes.size(); ++msh )
+			{
+				const auto& mesh = model.meshes[msh];
+				lod_view[msh] = {
+					mesh.first_index,
+					mesh.index_count,
+					mesh.base_vertex,
+					lod_scale + msh * lod_scale,
+				};
+			}
 
-		st.opaque_batch = cfg.context->make_shared( opaque_batch::config{
-			cfg.context->back_buffer(),
-			cfg.context->make_shared( primitives::config{ {
-				{ "raster_data", st.raster_data },
-			} } ),
-		} );
+			lod_data->unmap();
+		}
 
-		instance_batch::config instance_cfg = {};
-		instance_cfg.program = program;
-		instance_cfg.states = render_states;
-		instance_cfg.geometry = model.geometry;
-		instance_cfg.instance = cfg.context->make_shared( primitives::config{ {
-			{ "instance_data", instance_data },
-		} } );
+		{ // initialize instance data
+			glm::mat4( *instances )[s_size_1d][s_size_1d][s_size_1d];
 
+			instance_data->map( &instances );
 
-		st.batch_binding = st.opaque_batch->make_binding( instance_cfg );
-		st.batch_binding->instance_batch().draw_params(
-			igpu::draw_indirect_parameters{
-				s_size_3d,
-				indirect_draw,
+			float scale = 5.f;
+			float offset = scale * s_size_1d * -0.5f;
+
+			glm::mat4x4 ident = glm::mat4( 1.0f );
+			for ( size_t z = 0; z < s_size_1d; ++z )
+				for ( size_t y = 0; y < s_size_1d; ++y )
+					for ( size_t x = 0; x < s_size_1d; ++x )
+					{
+						ident[3][0] = x * scale + offset;
+						ident[3][1] = y * scale + offset;
+						ident[3][2] = z * scale + offset;
+						( *instances )[x][y][z] = ident;
+					}
+
+			instance_data->unmap();
+		}
+
+		{ // create raster binding to issue draw calls
+
+			instance_batch::config instance_cfg = {};
+
+			instance_cfg.program = cfg.context->make_shared( program::config{
+				"test program",
+				cfg.context->make_shared(
+					vertex_shader::config{},
+					dcs_utils::load_mem( cfg.vertex_path.c_str() ) ),
+				cfg.context->make_shared(
+					fragment_shader::config{},
+					dcs_utils::load_mem( cfg.fragment_path.c_str() ) ),
 			} );
 
+			instance_cfg
+				.states = cfg.context->make_shared( render_states::config{
+				0b1111, // color write mask
+				{ (bool)"cull_enabled", cull::BACK },
+				{ !(bool)"blend_enabled" },
+				{ !(bool)"stencil_enabled" },
+				{ (bool)"depth_enabled", (bool)"depth_write", compare::LESS },
+			} );
 
-		st.compute_binding =
-			cfg.context->make_shared( igpu::compute_binding::config{
-				cfg.context->make_shared( igpu::compute_program::config{
-					cfg.compute_path,
-					cfg.context->make_shared(
-						compute_shader::config{},
-						dcs_utils::load_mem( cfg.compute_path.c_str() ) ),
-					{ { { "LOCAL_SIZE", s_local_workgroup_size } } },
-				} ),
-				st.opaque_batch->cfg().primitives,
+			instance_cfg.instance =
 				cfg.context->make_shared( primitives::config{ {
-					{ "lod_data", lod_data },
 					{ "instance_data", instance_data },
-					{ "indirect_draw", indirect_draw },
+				} } );
+
+			instance_cfg.geometry = model.geometry;
+
+			// initialize buffer raster and indirect draw buffers so we dont get
+			// errors from them being empty
+			update( cfg.context->back_buffer()->res(), *st.raster_data );
+			indirect_draw->reset_gpu_only(
+				sizeof( draw_parameters ) * s_size_3d );
+
+
+			st.opaque_batch = cfg.context->make_shared( opaque_batch::config{
+				cfg.context->back_buffer(),
+				cfg.context->make_shared( primitives::config{ {
+					{ "raster_data", st.raster_data },
 				} } ),
 			} );
 
-		st.compute_binding->compute_params(
-			{ s_size_3d / s_local_workgroup_size } );
+			st.batch_binding = st.opaque_batch->make_binding( instance_cfg );
+			st.batch_binding->instance_batch().draw_params(
+				igpu::draw_indirect_parameters{
+					s_size_3d,
+					indirect_draw,
+				} );
+		}
+
+		{ // create compute binding to dispatch compute work
+
+			st.compute_binding =
+				cfg.context->make_shared( igpu::compute_binding::config{
+					cfg.context->make_shared( igpu::compute_program::config{
+						cfg.compute_path,
+						cfg.context->make_shared(
+							compute_shader::config{},
+							dcs_utils::load_mem( cfg.compute_path.c_str() ) ),
+						{ { { "LOCAL_SIZE", s_local_workgroup_size } } },
+					} ),
+					st.opaque_batch->cfg().primitives,
+					cfg.context->make_shared( primitives::config{ {
+						{ "lod_data", lod_data },
+						{ "instance_data", instance_data },
+						{ "indirect_draw", indirect_draw },
+					} } ),
+				} );
+
+			st.compute_binding->compute_params(
+				{ s_size_3d / s_local_workgroup_size } );
+		}
 
 		return std::unique_ptr< dcs_compute_indirect_draw >(
 			new dcs_compute_indirect_draw( cfg, std::move( st ) ) );
