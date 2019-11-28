@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "vulkan/buffer/vulkan_compute_buffer.h"
+#include "vulkan/compute/vulkan_compute_buffer.h"
 #include "vulkan/sync/vulkan_job_dependencies.h"
 #include "vulkan/sync/vulkan_job_scope.h"
 

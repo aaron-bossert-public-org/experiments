@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include "igpu/shader/compute_program.h"
+#include "igpu/compute/compute_program.h"
 
-#include "igpu/shader/compute_shader.h"
+#include "igpu/compute/compute_shader.h"
 
 #include "framework/utility/hash_utils.h"
 

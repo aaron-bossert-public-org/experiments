@@ -1,7 +1,7 @@
 ﻿
-#include "vulkan/shader/vulkan_compute_program.h"
+#include "vulkan/compute/vulkan_compute_program.h"
 
-#include "vulkan/shader/vulkan_compute_shader.h"
+#include "vulkan/compute/vulkan_compute_shader.h"
 #include "vulkan/shader/vulkan_program_impl.h"
 
 #include "framework/logging/log.h"

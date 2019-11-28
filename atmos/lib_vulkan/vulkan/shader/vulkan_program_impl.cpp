@@ -1,7 +1,7 @@
 ﻿
 #include "vulkan/shader/vulkan_program_impl.h"
 
-#include "vulkan/shader/vulkan_compute_shader.h"
+#include "vulkan/compute/vulkan_compute_shader.h"
 #include "vulkan/shader/vulkan_parameter.h"
 
 #include "igpu/shader/program_parsing.h"

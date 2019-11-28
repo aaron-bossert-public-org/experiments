@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.1)
 
 BUILD_LIB(
 	vulkan 
-	"batch buffer context defines manager shader sync system texture utility window")
+	"batch buffer compute context defines manager shader sync system texture utility window")
 
 IF (CMAKE_CL_64)
 

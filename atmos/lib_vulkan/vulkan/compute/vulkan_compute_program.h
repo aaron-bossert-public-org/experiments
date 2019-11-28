@@ -4,7 +4,7 @@
 #include "vulkan/shader/vulkan_constant_parameters.h"
 #include "vulkan/shader/vulkan_parameters.h"
 
-#include "igpu/shader/compute_program.h"
+#include "igpu/compute/compute_program.h"
 
 #include <array>
 

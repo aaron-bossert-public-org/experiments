@@ -1,5 +1,5 @@
 ﻿
-#include "vulkan/shader/vulkan_compute_shader.h"
+#include "vulkan/compute/vulkan_compute_shader.h"
 
 #include "vulkan/shader/vulkan_shader_impl.h"
 

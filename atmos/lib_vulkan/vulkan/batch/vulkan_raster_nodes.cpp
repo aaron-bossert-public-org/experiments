@@ -4,8 +4,8 @@
 #include "vulkan/batch/vulkan_raster_nodes.h"
 
 #include "vulkan/buffer/vulkan_buffer.h"
-#include "vulkan/buffer/vulkan_compute_buffer.h"
 #include "vulkan/buffer/vulkan_index_buffer.h"
+#include "vulkan/compute/vulkan_compute_buffer.h"
 #include "vulkan/context/vulkan_context.h"
 #include "vulkan/manager/vulkan_managers.h"
 #include "vulkan/shader/vulkan_graphics_pipeline.h"

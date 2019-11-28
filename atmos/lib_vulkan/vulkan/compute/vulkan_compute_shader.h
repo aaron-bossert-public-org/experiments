@@ -4,7 +4,7 @@
 #include "vulkan/defines/vulkan_includes.h"
 #include "vulkan/shader/vulkan_shader.h"
 
-#include "igpu/shader/compute_shader.h"
+#include "igpu/compute/compute_shader.h"
 
 #include <memory>
 

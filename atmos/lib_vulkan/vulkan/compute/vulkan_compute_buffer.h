@@ -3,7 +3,7 @@
 
 #include "vulkan/defines/vulkan_includes.h"
 
-#include "igpu/buffer/compute_buffer.h"
+#include "igpu/compute/compute_buffer.h"
 
 #include "framework/utility/scoped_ptr.h"
 
