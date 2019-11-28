@@ -102,7 +102,7 @@ void vulkan_queue::trigger_abandon()
 
 void vulkan_queue::submit_command( const vulkan_command_buffer& command_buffer )
 {
-	submit_commands( 0, nullptr, nullptr, 0, &command_buffer, 0, nullptr );
+	submit_commands( 0, nullptr, nullptr, 1, &command_buffer, 0, nullptr );
 }
 
 void vulkan_queue::submit_commands(

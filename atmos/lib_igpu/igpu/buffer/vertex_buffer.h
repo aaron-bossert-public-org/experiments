@@ -45,6 +45,8 @@ namespace igpu
 
 		virtual const config& cfg() const = 0;
 
+		virtual void reset_gpu_only( size_t byte_size ) = 0;
+
 		virtual ~vertex_buffer() = default;
 	};
 }

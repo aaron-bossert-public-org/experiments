@@ -9,9 +9,8 @@ raster;
 
 layout( set = 2, binding = 3 ) readonly buffer instance_data
 {
-	mat4 models[];
-}
-instance;
+	mat4 instances[];
+};
 
 // Vertex attributes
 layout( location = 0 ) in vec4 pos;
@@ -29,7 +28,7 @@ out gl_PerVertex
 
 void main()
 {
-	vec4 world_pos = instance.models[gl_InstanceIndex] * pos;
+	vec4 world_pos = instances[gl_InstanceIndex] * pos;
 
 	gl_Position = raster.proj * raster.view * world_pos;
 

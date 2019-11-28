@@ -7,6 +7,7 @@ namespace igpu
 {
 	class raster_binding;
 	class compute_buffer;
+	class compute_binding;
 	class context;
 	class geometry;
 	class opaque_batch;
@@ -23,10 +24,15 @@ public:
 	{
 		std::shared_ptr< igpu::context > context;
 		std::string model_path = "cooked_assets/models/suzanne_lods.dae";
+
 		std::string vertex_path =
 			"cooked_assets/shaders/indirect_draw.vert.spv";
+
 		std::string fragment_path =
 			"cooked_assets/shaders/indirect_draw.frag.spv";
+
+		std::string compute_path =
+			"cooked_assets/shaders/indirect_cull.comp.spv";
 	};
 
 	static std::unique_ptr< dcs_compute_indirect_draw > make( const config& );
@@ -38,23 +44,17 @@ public:
 private:
 	struct state
 	{
-		std::shared_ptr< igpu::program > program;
-		std::shared_ptr< igpu::render_states > render_states;
-
-		dcs_utils::model model;
-
 		std::shared_ptr< igpu::compute_buffer > raster_data;
-		std::shared_ptr< igpu::compute_buffer > instance_data;
-		std::shared_ptr< igpu::compute_buffer > indirect_draw;
-
 		std::shared_ptr< igpu::opaque_batch > opaque_batch;
-		std::unique_ptr< igpu::raster_binding > raster_binding;
-		std::vector< std::unique_ptr< igpu::raster_binding > > raster_bindings;
+		std::shared_ptr< igpu::raster_binding > batch_binding;
+		std::shared_ptr< igpu::compute_binding > compute_binding;
 	};
 
 	dcs_compute_indirect_draw( const config&, state&& );
 
-	void update();
+	static void update(
+		const glm::ivec2& res,
+		igpu::compute_buffer& raster_data );
 
 	void handle_input();
 	void render();

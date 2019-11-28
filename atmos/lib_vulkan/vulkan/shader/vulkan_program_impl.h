@@ -23,7 +23,6 @@ namespace igpu
 		{
 			VkDevice device;
 			std::vector< std::shared_ptr< vulkan_shader > > shaders;
-			constants::config constants;
 		};
 
 		struct internal_config
@@ -68,27 +67,27 @@ namespace igpu
 	public:
 		const vulkan_constant_parameters& constant_parameters() const override
 		{
-			return _program.constant_parameters();
+			return _program_impl.constant_parameters();
 		}
 
 		const vulkan_parameters& batch_parameters() const override
 		{
-			return _program.batch_parameters();
+			return _program_impl.batch_parameters();
 		}
 
 		const vulkan_parameters& material_parameters() const override
 		{
-			return _program.material_parameters();
+			return _program_impl.material_parameters();
 		}
 
 		const vulkan_parameters& instance_parameters() const override
 		{
-			return _program.instance_parameters();
+			return _program_impl.instance_parameters();
 		}
 
 		VkPipelineLayout pipeline_layout() const
 		{
-			return _program.pipeline_layout();
+			return _program_impl.pipeline_layout();
 		}
 
 		template < typename... ARGS >
@@ -97,10 +96,10 @@ namespace igpu
 			vulkan_program_impl::internal_config&& internal,
 			ARGS&&... args )
 			: T( std::forward< ARGS >( args )... )
-			, _program( cfg, std::move( internal ) )
+			, _program_impl( cfg, std::move( internal ) )
 		{}
 
 	private:
-		vulkan_program_impl _program;
+		vulkan_program_impl _program_impl;
 	};
 }

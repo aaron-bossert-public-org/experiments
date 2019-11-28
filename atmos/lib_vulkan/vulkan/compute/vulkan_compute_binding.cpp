@@ -8,6 +8,7 @@
 #include "vulkan/sync/vulkan_command_buffer.h"
 #include "vulkan/sync/vulkan_command_pool.h"
 #include "vulkan/sync/vulkan_job_primitives.h"
+#include "vulkan/sync/vulkan_queue.h"
 
 using namespace igpu;
 
@@ -24,16 +25,19 @@ void vulkan_compute_binding::dispatch()
 		queue,
 		_cfg.vk.managers.get() );
 
-	auto fence = vulkan_poset_fence::next_submit( queue.get() );
-
-	vulkan_job::fence( fence );
 
 	auto& swap_state = current_swap_state();
-
+	auto vk_cmds = swap_state.cmds->vk_cmds();
 	swap_state.fence.wait_or_skip();
+	VkCommandBufferBeginInfo begin_info = {};
+
+	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	vkBeginCommandBuffer( vk_cmds, &begin_info );
 
 	vkCmdBindPipeline(
-		swap_state.cmds->vk_cmds(),
+		vk_cmds,
 		VK_PIPELINE_BIND_POINT_COMPUTE,
 		_cfg.vk.pipeline->vk_pipeline() );
 
@@ -51,11 +55,16 @@ void vulkan_compute_binding::dispatch()
 	}
 
 	vkCmdDispatch(
-		swap_state.cmds->vk_cmds(),
+		vk_cmds,
 		_st.compute_params.group_count_x,
 		_st.compute_params.group_count_y,
 		_st.compute_params.group_count_z );
 
+	vkEndCommandBuffer( vk_cmds );
+	queue->submit_command( *swap_state.cmds );
+
+	swap_state.fence = vulkan_poset_fence::prev_submit( queue.get() );
+	vulkan_job::fence( swap_state.fence );
 	_st.swap_index = ( _st.swap_index + 1 ) % _cfg.vk.swap_count;
 }
 
@@ -153,7 +162,7 @@ std::unique_ptr< vulkan_compute_binding > vulkan_compute_binding::make(
 						program->pipeline_layout(),
 						unique.get(),
 						cfg.vk.swap_count,
-						0,
+						1,
 						&material_parameters,
 						cfg.vk.material.get(),
 					} );
@@ -179,7 +188,7 @@ std::unique_ptr< vulkan_compute_binding > vulkan_compute_binding::make(
 						program->pipeline_layout(),
 						unique.get(),
 						cfg.vk.swap_count,
-						0,
+						2,
 						&instance_parameters,
 						cfg.vk.instance.get(),
 					} );

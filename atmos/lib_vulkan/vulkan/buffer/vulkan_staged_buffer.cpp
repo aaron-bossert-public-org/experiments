@@ -102,6 +102,11 @@ void vulkan_staged_buffer::unmap()
 	_staging_buffer.reset();
 }
 
+void vulkan_staged_buffer::reset_gpu_only( size_t byte_size )
+{
+	_gpu_buffer.reset( byte_size );
+}
+
 vulkan_buffer& vulkan_staged_buffer::gpu_buffer()
 {
 	return _gpu_buffer;

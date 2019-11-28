@@ -41,10 +41,12 @@ namespace utility
 		return dimensions( a ) / 2.f;
 	}
 
-	inline float dist( const plane& normalized_plane, glm::vec3 point )
+	inline float dist_plane(
+		const glm::vec4& normalized_plane,
+		glm::vec3 point )
 	{
-		return normalized_plane.n.x * point.x + normalized_plane.n.y * point.y +
-			normalized_plane.n.z * point.z + normalized_plane.d;
+		return normalized_plane.x * point.x + normalized_plane.y * point.y +
+			normalized_plane.z * point.z + normalized_plane.w;
 	}
 
 	inline aabb move_bounds( const aabb& a, const glm::vec3& d )
@@ -116,25 +118,23 @@ namespace utility
 
 	//------------------------------------------------------------------------------
 
-	inline bool intersects(
-		const frustum& normalized_frustum,
-		const sphere& sphere )
+	inline bool intersects( const frustum& norm_frust, const sphere& sphere )
 	{
 		/* approximate: this does not accurately detect intersection
 		 * a small percentage of comparisons will return true despite
 		 * the shapes not intersecting.
 		 */
-		if ( dist( normalized_frustum.left, sphere.center ) < -sphere.radius )
+		if ( dist_plane( norm_frust.left, sphere.center ) < -sphere.radius )
 			return false;
-		if ( dist( normalized_frustum.right, sphere.center ) < -sphere.radius )
+		if ( dist_plane( norm_frust.right, sphere.center ) < -sphere.radius )
 			return false;
-		if ( dist( normalized_frustum.bottom, sphere.center ) < -sphere.radius )
+		if ( dist_plane( norm_frust.bottom, sphere.center ) < -sphere.radius )
 			return false;
-		if ( dist( normalized_frustum.top, sphere.center ) < -sphere.radius )
+		if ( dist_plane( norm_frust.top, sphere.center ) < -sphere.radius )
 			return false;
-		if ( dist( normalized_frustum.near, sphere.center ) < -sphere.radius )
+		if ( dist_plane( norm_frust.near, sphere.center ) < -sphere.radius )
 			return false;
-		if ( dist( normalized_frustum.far, sphere.center ) < -sphere.radius )
+		if ( dist_plane( norm_frust.far, sphere.center ) < -sphere.radius )
 			return false;
 
 		return true;
@@ -176,30 +176,27 @@ namespace utility
 
 	//------------------------------------------------------------------------------
 
-	inline plane normalize( const plane& rhs )
+	inline glm::vec4 norm_plane( const glm::vec4& rhs )
 	{
-		float l = glm::length( rhs.n );
-		return {
-			rhs.n / l,
-			rhs.d / l,
-		};
+		glm::vec3 n( rhs.x, rhs.y, rhs.z );
+		return rhs / glm::length( n );
 	}
 
 	inline frustum normalize( const frustum& rhs )
 	{
 		return {
-			normalize( rhs.left ),
-			normalize( rhs.right ),
-			normalize( rhs.bottom ),
-			normalize( rhs.top ),
-			normalize( rhs.near ),
-			normalize( rhs.far ),
+			norm_plane( rhs.left ),
+			norm_plane( rhs.right ),
+			norm_plane( rhs.bottom ),
+			norm_plane( rhs.top ),
+			norm_plane( rhs.near ),
+			norm_plane( rhs.far ),
 		};
 	}
 
 	//------------------------------------------------------------------------------
 
-	inline plane make_plane( const glm::vec3& p, const glm::vec3& n )
+	inline glm::vec4 make_plane( const glm::vec3& p, const glm::vec3& n )
 	{
 		return {
 			n,
@@ -207,7 +204,7 @@ namespace utility
 		};
 	}
 
-	inline plane make_plane(
+	inline glm::vec4 make_plane(
 		const glm::vec3& p0,
 		const glm::vec3& p1,
 		const glm::vec3& p2 )
@@ -220,23 +217,42 @@ namespace utility
 	inline frustum make_frustum( const glm::mat4x4& m )
 	{
 		return normalize( frustum{
-			{ { m[0][3] + m[0][0], m[1][3] + m[1][0], m[2][3] + m[2][0] },
-			  m[3][3] + m[3][0] },
+			// left
+			glm::vec4(
+				m[0][3] + m[0][0],
+				m[1][3] + m[1][0],
+				m[2][3] + m[2][0],
+				m[3][3] + m[3][0] ),
 			// right
-			{ { m[0][3] - m[0][0], m[1][3] - m[1][0], m[2][3] - m[2][0] },
-			  m[3][3] - m[3][0] },
+			glm::vec4(
+				m[0][3] - m[0][0],
+				m[1][3] - m[1][0],
+				m[2][3] - m[2][0],
+				m[3][3] - m[3][0] ),
 			// bottom
-			{ { m[0][3] + m[0][1], m[1][3] + m[1][1], m[2][3] + m[2][1] },
-			  m[3][3] + m[3][1] },
+			glm::vec4(
+				m[0][3] + m[0][1],
+				m[1][3] + m[1][1],
+				m[2][3] + m[2][1],
+				m[3][3] + m[3][1] ),
 			// top
-			{ { m[0][3] - m[0][1], m[1][3] - m[1][1], m[2][3] - m[2][1] },
-			  m[3][3] - m[3][1] },
+			glm::vec4(
+				m[0][3] - m[0][1],
+				m[1][3] - m[1][1],
+				m[2][3] - m[2][1],
+				m[3][3] - m[3][1] ),
 			// near
-			{ { m[0][3] + m[0][2], m[1][3] + m[1][2], m[2][3] + m[2][2] },
-			  m[3][3] + m[3][2] },
+			glm::vec4(
+				m[0][3] + m[0][2],
+				m[1][3] + m[1][2],
+				m[2][3] + m[2][2],
+				m[3][3] + m[3][2] ),
 			// far
-			{ { m[0][3] - m[0][2], m[1][3] - m[1][2], m[2][3] - m[2][2] },
-			  m[3][3] - m[3][2] },
+			glm::vec4(
+				m[0][3] - m[0][2],
+				m[1][3] - m[1][2],
+				m[2][3] - m[2][2],
+				m[3][3] - m[3][2] ),
 		} );
 	}
 }

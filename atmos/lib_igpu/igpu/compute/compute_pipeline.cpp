@@ -20,7 +20,7 @@ compute_pipeline::config compute_pipeline::make_config(
 
 	const auto& constant_params =
 		program->constant_parameters().cfg().constants;
-	for ( size_t i = 0; i < constants.size(); ++i )
+	for ( size_t i = 0; i < constant_params.size(); ++i )
 	{
 		const constant* found = nullptr;
 		const constant_parameter::config& param = constant_params[i];

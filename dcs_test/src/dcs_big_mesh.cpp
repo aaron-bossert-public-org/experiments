@@ -159,14 +159,12 @@ void dcs_big_mesh::update()
 					 current_time - start_time )
 					 .count();
 
-	struct
-	{
-		alignas( 16 ) glm::mat4 model;
-	}* instance_storage = nullptr;
 
-	_st.instance_data->map( &instance_storage );
+	glm::mat4( *instances )[1];
 
-	instance_storage->model = glm::rotate(
+	_st.instance_data->map( &instances );
+
+	( *instances )[0] = glm::rotate(
 		glm::mat4( 1.0f ),
 		time * glm::radians( 90.0f ),
 		glm::vec3( 0.0f, 0.0f, 1.0f ) );

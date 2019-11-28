@@ -33,6 +33,8 @@ namespace igpu
 
 		void unmap();
 
+		void reset_gpu_only( size_t byte_size );
+
 		vulkan_buffer& gpu_buffer();
 
 		const vulkan_buffer& gpu_buffer() const;
@@ -68,6 +70,11 @@ namespace igpu
 		void unmap() override
 		{
 			_vulkan_staged_buffer.unmap();
+		}
+
+		void reset_gpu_only( size_t byte_size ) override
+		{
+			_vulkan_staged_buffer.reset_gpu_only( byte_size );
 		}
 
 		size_t byte_size() const

@@ -6,6 +6,7 @@
 
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
+#include "glm/vec4.hpp"
 
 namespace utility
 {
@@ -35,18 +36,9 @@ namespace utility
 	//--------------------------------------------------------------------------
 	//
 	//
-	struct plane
-	{
-		glm::vec3 n = glm::vec3( 0, 0, 1 );
-		float d = 0;
-	};
-
-	//--------------------------------------------------------------------------
-	//
-	//
 	struct frustum
 	{
-		plane left, right, bottom, top, near, far;
+		glm::vec4 left, right, bottom, top, near, far;
 	};
 
 	//--------------------------------------------------------------------------

@@ -147,6 +147,11 @@ namespace
 			constant constant = {
 				compiler.get_name( c.id ),
 			};
+
+			if ( constant.name == "" )
+			{
+				continue;
+			}
 			const SPIRConstant& value = compiler.get_constant( c.id );
 			const SPIRType& spir_type =
 				compiler.get_type( value.constant_type );
@@ -154,7 +159,8 @@ namespace
 
 			const SPIRConstant::ConstantVector& vec = value.vector();
 
-			if ( spir_type.basetype == SPIRType::Int )
+			if ( spir_type.basetype == SPIRType::Int ||
+				 spir_type.basetype == SPIRType::UInt )
 			{
 				switch ( spir_type.vecsize )
 				{
