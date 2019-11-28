@@ -21,7 +21,9 @@ namespace igpu
 
 		void wait_or_skip();
 
-		static vulkan_poset_fence current( vulkan_queue* );
+		static vulkan_poset_fence prev_submit( vulkan_queue* );
+
+		static vulkan_poset_fence next_submit( vulkan_queue* );
 
 		static vulkan_poset_fence past( vulkan_queue*, ptrdiff_t submit_index );
 

@@ -251,7 +251,7 @@ void vulkan_abandon_manager::trigger_abandon()
 
 		if ( abandon.categories.size() )
 		{
-			abandon.fence = vulkan_poset_fence::current( _cfg.queue );
+			abandon.fence = vulkan_poset_fence::prev_submit( _cfg.queue );
 			_abandoned.push( std::move( abandon ) );
 		}
 	}

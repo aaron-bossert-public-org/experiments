@@ -357,7 +357,7 @@ VkResult vulkan_back_buffer::do_end_raster()
 		1,
 		&raster_sem );
 	frame_state.raster_fence =
-		vulkan_poset_fence::current( raster_queue.get() );
+		vulkan_poset_fence::prev_submit( raster_queue.get() );
 
 	VkPresentInfoKHR present_info = {};
 	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;

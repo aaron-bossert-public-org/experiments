@@ -323,15 +323,13 @@ void vulkan_raster_batch_root::start_raster(
 			"command buffer does not belong to expected queue unexpected "
 			"queue" );
 	}
-	else
-	{
-		vulkan_job::fence( vulkan_poset_fence::current(
-			_vk.draw_target->raster_queue().get() ) );
-	}
 
 	vulkan_job::submit_activated_dependency_barriers(
 		_vk.draw_target->raster_queue(),
 		_vk.draw_target->cfg().vk.managers.get() );
+
+	vulkan_job::fence( vulkan_poset_fence::next_submit(
+		_vk.draw_target->raster_queue().get() ) );
 }
 
 void vulkan_raster_batch_root::stop_raster()

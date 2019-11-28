@@ -23,12 +23,21 @@ void vulkan_poset_fence::wait_or_skip()
 	}
 }
 
-vulkan_poset_fence vulkan_poset_fence::current( vulkan_queue* queue )
+vulkan_poset_fence vulkan_poset_fence::prev_submit( vulkan_queue* queue )
 {
 	ASSERT_CONTEXT( queue );
 	vulkan_poset_fence f;
 	f._queue = queue;
 	f._submit_index = queue->submit_index();
+	return f;
+}
+
+vulkan_poset_fence vulkan_poset_fence::next_submit( vulkan_queue* queue )
+{
+	ASSERT_CONTEXT( queue );
+	vulkan_poset_fence f;
+	f._queue = queue;
+	f._submit_index = queue->submit_index() + 1;
 	return f;
 }
 
