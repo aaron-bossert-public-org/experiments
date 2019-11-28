@@ -128,24 +128,24 @@ size_t graphics_pipeline::config::hash() const
 
 ptrdiff_t graphics_pipeline::config::compare( const config& other ) const
 {
-	if ( draw_target != other.draw_target )
+	if ( auto cmp = draw_target.get() - other.draw_target.get() )
 	{
-		return draw_target.get() - other.draw_target.get();
+		return cmp;
 	}
 
-	if ( program != other.program )
+	if ( auto cmp = program.get() - other.program.get() )
 	{
-		return program.get() - other.program.get();
+		return cmp;
 	}
 
-	if ( render_states != other.render_states )
+	if ( auto cmp = render_states.get() - other.render_states.get() )
 	{
-		return render_states.get() - other.render_states.get();
+		return cmp;
 	}
 
-	if ( topology != other.topology )
+	if ( auto cmp = (ptrdiff_t)topology - (ptrdiff_t)other.topology )
 	{
-		return (ptrdiff_t)topology - (ptrdiff_t)other.topology;
+		return cmp;
 	}
 
 	size_t compare_buffer_count = std::min(
@@ -157,9 +157,9 @@ ptrdiff_t graphics_pipeline::config::compare( const config& other ) const
 		const vertex_buffer::config& l_buff = compact_vertex_format[b];
 		const vertex_buffer::config& r_buff = other.compact_vertex_format[b];
 
-		if ( l_buff.stride != r_buff.stride )
+		if ( auto cmp = l_buff.stride - r_buff.stride )
 		{
-			return l_buff.stride - r_buff.stride;
+			return cmp;
 		}
 
 		size_t compare_attrib_count =
@@ -170,15 +170,15 @@ ptrdiff_t graphics_pipeline::config::compare( const config& other ) const
 			const vertex_buffer::attribute& l_attr = l_buff.attributes[a];
 			const vertex_buffer::attribute& r_attr = r_buff.attributes[a];
 
-			if ( l_attr.offset != r_attr.offset )
+			if ( auto cmp = l_attr.offset - r_attr.offset )
 			{
-				return l_attr.offset - r_attr.offset;
+				return cmp;
 			}
 		}
 
-		if ( l_buff.attributes.size() != r_buff.attributes.size() )
+		if ( auto cmp = l_buff.attributes.size() - r_buff.attributes.size() )
 		{
-			return l_buff.attributes.size() - r_buff.attributes.size();
+			return cmp;
 		}
 	}
 
@@ -189,15 +189,20 @@ ptrdiff_t graphics_pipeline::config::compare( const config& other ) const
 		const constant_parameter::config& l_cfg = compact_constants[i];
 		const constant_parameter::config& r_cfg = other.compact_constants[i];
 
-		if ( l_cfg.binding != r_cfg.binding )
+		if ( auto cmp = l_cfg.binding - r_cfg.binding )
 		{
-			return l_cfg.binding != r_cfg.binding;
+			return cmp;
 		}
 
 		if ( auto cmp = l_cfg.constant.compare( r_cfg.constant ) )
 		{
 			return cmp;
 		}
+	}
+
+	if ( auto cmp = compact_constants.size() - other.compact_constants.size() )
+	{
+		return cmp;
 	}
 
 	return compact_vertex_format.size() - other.compact_vertex_format.size();

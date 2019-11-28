@@ -38,9 +38,9 @@ ptrdiff_t constants::config::compare( const config& other ) const
 
 	for ( size_t i = 0; i < prim_count; ++i )
 	{
-		if ( ptrdiff_t prim_cmp = at( i ).compare( other.at( i ) ) )
+		if ( auto cmp = at( i ).compare( other.at( i ) ) )
 		{
-			return prim_cmp;
+			return cmp;
 		}
 	}
 

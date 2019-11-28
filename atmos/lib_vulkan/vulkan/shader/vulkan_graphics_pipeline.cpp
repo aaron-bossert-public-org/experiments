@@ -117,10 +117,6 @@ namespace
 		{
 			LOG_CRITICAL( "render_states is null" );
 		}
-		else if ( !cfg.vk.render_states )
-		{
-			LOG_CRITICAL( "render_states is null" );
-		}
 		else if ( !cfg.vk.draw_target )
 		{
 			LOG_CRITICAL( "draw_target is null" );

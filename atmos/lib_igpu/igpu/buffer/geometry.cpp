@@ -78,24 +78,24 @@ size_t geometry::config::hash() const
 
 ptrdiff_t geometry::config::compare( const config& other ) const
 {
-	if ( topology != other.topology )
+	if ( auto cmp = (ptrdiff_t)topology - (ptrdiff_t)other.topology )
 	{
-		return (ptrdiff_t)topology - (ptrdiff_t)other.topology;
+		return cmp;
 	}
 
-	if ( ptrdiff_t cmp_constants = constants.compare( other.constants ) )
+	if ( auto cmp = constants.compare( other.constants ) )
 	{
-		return cmp_constants;
+		return cmp;
 	}
 
-	if ( index_buffer != other.index_buffer )
+	if ( auto cmp = index_buffer.get() - other.index_buffer.get() )
 	{
-		return index_buffer.get() - other.index_buffer.get();
+		return cmp;
 	}
 
-	if ( ibuff_byte_offset != other.ibuff_byte_offset )
+	if ( auto cmp = ibuff_byte_offset - other.ibuff_byte_offset )
 	{
-		return ibuff_byte_offset - other.ibuff_byte_offset;
+		return cmp;
 	}
 
 	size_t buff_count =
@@ -103,9 +103,10 @@ ptrdiff_t geometry::config::compare( const config& other ) const
 
 	for ( size_t i = 0; i < buff_count; ++i )
 	{
-		if ( vertex_buffers[i] != other.vertex_buffers[i] )
+		if ( auto cmp =
+				 vertex_buffers[i].get() - other.vertex_buffers[i].get() )
 		{
-			return vertex_buffers[i].get() - other.vertex_buffers[i].get();
+			return cmp;
 		}
 	}
 
@@ -113,15 +114,15 @@ ptrdiff_t geometry::config::compare( const config& other ) const
 		std::min( vbuff_byte_offsets.size(), other.vbuff_byte_offsets.size() );
 	for ( size_t i = 0; i < offset_count; ++i )
 	{
-		if ( vbuff_byte_offsets[i] != other.vbuff_byte_offsets[i] )
+		if ( auto cmp = vbuff_byte_offsets[i] - other.vbuff_byte_offsets[i] )
 		{
-			return vbuff_byte_offsets[i] - other.vbuff_byte_offsets[i];
+			return cmp;
 		}
 	}
 
-	if ( vertex_buffers.size() != other.vertex_buffers.size() )
+	if ( auto cmp = vertex_buffers.size() - other.vertex_buffers.size() )
 	{
-		return vertex_buffers.size() - other.vertex_buffers.size();
+		return cmp;
 	}
 
 	return vbuff_byte_offsets.size() - other.vbuff_byte_offsets.size();

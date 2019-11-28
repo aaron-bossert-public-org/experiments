@@ -26,7 +26,6 @@ namespace igpu
 	class vulkan_job_attributes;
 	class vulkan_job_primitives;
 	class vulkan_managers;
-	class vulkan_pipeline_cache;
 	class vulkan_graphics_pipeline;
 
 	class vulkan_raster_batch_root;
@@ -194,7 +193,6 @@ namespace igpu
 			size_t swap_count = 0;
 			scoped_ptr< vulkan_managers > managers;
 			scoped_ptr< vulkan_draw_target > draw_target;
-			scoped_ptr< vulkan_pipeline_cache > pipeline_cache;
 			std::shared_ptr< vulkan_primitives > primitives;
 			constants::config constants;
 		};

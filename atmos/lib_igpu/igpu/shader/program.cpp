@@ -21,13 +21,13 @@ size_t program::config::hash() const
 
 ptrdiff_t program::config::compare( const config& other ) const
 {
-	if ( vertex != other.vertex )
+	if ( auto cmp = vertex.get() - other.vertex.get() )
 	{
-		return vertex.get() - other.vertex.get();
+		return cmp;
 	}
-	if ( fragment != other.fragment )
+	if ( auto cmp = fragment.get() - other.fragment.get() )
 	{
-		return fragment.get() - other.fragment.get();
+		return cmp;
 	}
 
 	return constants.compare( other.constants );

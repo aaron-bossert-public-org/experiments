@@ -831,7 +831,6 @@ std::unique_ptr< opaque_batch > vulkan_context::make(
 		_cfg.vk.swap_count,
 		_st.managers,
 		draw_target,
-		_st.pipeline_cache,
 		primitives,
 		base_cfg.constants,
 	} );
@@ -853,7 +852,6 @@ std::unique_ptr< transparent_batch > vulkan_context::make(
 		_cfg.vk.swap_count,
 		_st.managers,
 		draw_target,
-		_st.pipeline_cache,
 		primitives,
 		base_cfg.constants,
 	} );

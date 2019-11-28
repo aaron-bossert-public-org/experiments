@@ -523,10 +523,6 @@ std::unique_ptr< vulkan_raster_batch_root > vulkan_raster_batch_root::make(
 	{
 		LOG_CRITICAL( "swap_count is zero" );
 	}
-	else if ( !vk.pipeline_cache )
-	{
-		LOG_CRITICAL( "pipeline_cache is null" );
-	}
 	else if ( !vk.primitives )
 	{
 		LOG_CRITICAL( "primitives is null" );

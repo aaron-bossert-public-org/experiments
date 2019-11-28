@@ -44,9 +44,9 @@ size_t primitive::config::hash() const
 
 ptrdiff_t primitive::config::compare( const config& other ) const
 {
-	if ( int name_cmp = name.compare( other.name ) )
+	if ( auto cmp = name.compare( other.name ) )
 	{
-		return name_cmp;
+		return cmp;
 	}
 
 	const char* l_addr = std::visit(

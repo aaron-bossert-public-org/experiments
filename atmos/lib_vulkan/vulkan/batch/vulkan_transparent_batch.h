@@ -12,8 +12,6 @@
 
 namespace igpu
 {
-	class vulkan_pipeline_cache;
-
 	class vulkan_transparent_batch : public transparent_batch
 	{
 	public:

@@ -16,7 +16,7 @@ namespace igpu
 	{
 	public:
 		static std::unique_ptr< vulkan_compute_shader > make(
-			const vulkan& vk,
+			const vulkan&,
 			std::vector< uint32_t >&& );
 	};
 }

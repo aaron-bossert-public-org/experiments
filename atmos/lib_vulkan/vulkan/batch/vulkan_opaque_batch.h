@@ -13,7 +13,6 @@
 namespace igpu
 {
 	class vulkan_raster_batch_root;
-	class vulkan_pipeline_cache;
 
 	class vulkan_opaque_batch : public opaque_batch
 	{
